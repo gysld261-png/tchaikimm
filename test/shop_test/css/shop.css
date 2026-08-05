@@ -306,27 +306,31 @@
    garment_story
    ========================================================= */
 
-/* 휠 스크롤로 가먼트를 넘기는 동안 화면 상단에 붙어있게 하는 여유 구간.
-   sticky 요소(garment_story_section) 높이보다 더 크게 잡아, 그 차이만큼
-   "붙어있는" 스크롤 구간이 생깁니다 — js/shop.js가 그 구간에서 wheel을
-   가로채 가먼트를 전환하고, 경계(첫/마지막 가먼트)에서는 흘려보내
-   자연스럽게 다음/이전 섹션으로 넘어갑니다. */
+/* 섹션 전체 높이를 바꾸려면 아래 두 곳을 "같이" 바꿔야 합니다:
+   1) .garment_story_section의 height
+   2) .garment_story_scroll의 height (섹션 높이 + 여유 스크롤 구간)
+   .garment_story_frame은 height:100%로 섹션 높이를 그대로 따라가게
+   해뒀으니(따로 손댈 필요 없음) — 이전에 frame에만 height:2000px를 직접
+   줬을 때 정렬이 깨졌던 건, frame이 섹션(1500px)보다 커지면서 섹션의
+   overflow:hidden에 위쪽 기준으로 잘려, 가운데 정렬 축(50%)이 실제
+   보이는 영역의 중앙과 어긋났기 때문입니다. */
 .garment_story_scroll {
   position: relative;
-  height: calc(1500px + 60vh);
+  height: calc(1800px + 60vh);
 }
 
 .garment_story_section {
   position: sticky;
   top: 0;
   width: 100%;
-  height: 1500px;
+  height: 1800px;
   overflow: hidden;
   background-color: #fffdf9;
 }
 
 /* illustration_group의 절대좌표(1920 기준)를 그대로 쓰기 위한 고정 프레임.
-   hero_section_frame과 같은 패턴입니다. */
+   hero_section_frame과 같은 패턴입니다. 높이는 항상 섹션과 동일해야 하므로
+   100%로 둡니다 — 여기에 직접 px 높이를 주지 마세요. */
 .garment_story_frame {
   position: relative;
   display: flex;
@@ -361,6 +365,8 @@
   transform: translateY(calc(-50% - 56px));
 }
 
+/* left/top 초기값은 js/shop.js가 매 프레임 활성 항목 자리에 맞춰
+   다시 계산해 넣습니다(JS 실행 전 기본값과 동일한 좌표). */
 .garment_orbit_marker {
   position: absolute;
   left: 800px;

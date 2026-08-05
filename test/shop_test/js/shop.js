@@ -342,6 +342,7 @@ initHeroGallery();
 
   var section = document.getElementById("garment_story_section");
   var orbitList = document.getElementById("garment_orbit_list");
+  var marker = document.querySelector(".garment_orbit_marker");
   var infoWrap = document.getElementById("garment_info");
   var mediaWrap = document.getElementById("garment_media");
 
@@ -354,11 +355,20 @@ initHeroGallery();
   var STEP_COUNT = ORDER.length;
   var CENTER_X = 400;
   var CENTER_Y = 400;
-  var LABEL_RADIUS = 436;
-  var STEP_ANGLE_DEG = 30;
-  /* deltaY 약 320만큼 굴리면 가먼트 한 칸(30도) 이동 — 시안에 없는 값이라
-     추정치이며, 실제로 보면서 조정이 필요할 수 있습니다. */
-  var WHEEL_SENSITIVITY = 1 / 320;
+  /* 라벨(글자)이 원 중심에서 떨어진 거리 — 늘리면 점(MARKER_RADIUS)과
+     글자 사이 간격이 벌어집니다. */
+  var LABEL_RADIUS = 480;
+  /* 점(마커)이 원 중심에서 떨어진 거리 — 원 그래픽(garment_circle.svg)
+     자체의 반지름(400)과 맞춰뒀습니다. */
+  var MARKER_RADIUS = 400;
+  /* 가먼트 하나당 원 둘레를 도는 각도 — 늘리면 라벨들 사이 간격이
+     넓어집니다(원래 Figma 시안은 30도였습니다). */
+  var STEP_ANGLE_DEG = 40;
+  /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
+     한 항목에 머무르는 시간(=사용자가 쉬는 시간)이 늘어납니다.
+     시안에 없는 값이라 추정치이며, 더 여유를 주고 싶으면 이 숫자를
+     올리세요(예: 1400, 1800...). */
+  var WHEEL_SENSITIVITY = 1 / 1400;
   var STICKY_ENGAGED_TOLERANCE_PX = 2;
 
   var orbitItems = Array.prototype.slice.call(orbitList.querySelectorAll(".garment_orbit_item"));
@@ -385,6 +395,16 @@ initHeroGallery();
       item.style.top = y.toFixed(2) + "px";
       item.style.transform = "translate(-50%, -50%) rotate(" + angleDeg.toFixed(2) + "deg)";
       item.classList.toggle("is_pos_active", itemIndex === roundedIndex);
+
+      /* 마커(점)는 항상 "현재 활성으로 지정된 항목"이 실제로 그려지고 있는
+         자리를 그대로 따라갑니다 — 전환 중에는 그 항목과 함께 부드럽게
+         움직이다가, 활성 항목이 바뀌는 순간 다음 항목의 자리로 휙 넘어갑니다. */
+      if (itemIndex === roundedIndex && marker) {
+        var markerX = CENTER_X + MARKER_RADIUS * Math.cos(angleRad);
+        var markerY = CENTER_Y + MARKER_RADIUS * Math.sin(angleRad);
+        marker.style.left = markerX.toFixed(2) + "px";
+        marker.style.top = markerY.toFixed(2) + "px";
+      }
     });
 
     panels.forEach(function (panel) {
@@ -408,10 +428,13 @@ initHeroGallery();
       rotateTween.kill();
     }
 
+    /* duration을 늘리면 한 칸 넘어갈 때 도는 동작 자체가 더 느리고
+       부드러워집니다. ease를 "power1.out"처럼 더 약한 곡선으로 바꾸면
+       가속이 완만해져서 더 차분한 느낌을 줍니다. */
     rotateTween = gsap.to(state, {
       progress: targetProgress,
-      duration: 0.9,
-      ease: "power3.out",
+      duration: 1.6,
+      ease: "power2.out",
       onUpdate: applyProgress
     });
   }
