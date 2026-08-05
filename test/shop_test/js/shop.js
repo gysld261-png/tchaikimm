@@ -341,43 +341,61 @@ initHeroGallery();
   "use strict";
 
   var section = document.getElementById("garment_story_section");
+  var scrollWrap = document.querySelector(".garment_story_scroll");
   var orbitList = document.getElementById("garment_orbit_list");
   var marker = document.querySelector(".garment_orbit_marker");
   var infoWrap = document.getElementById("garment_info");
   var mediaWrap = document.getElementById("garment_media");
 
-  if (!section || !orbitList || !infoWrap || !mediaWrap || typeof window.gsap === "undefined") {
+  if (
+    !section ||
+    !scrollWrap ||
+    !orbitList ||
+    !infoWrap ||
+    !mediaWrap ||
+    typeof window.gsap === "undefined" ||
+    typeof window.ScrollTrigger === "undefined"
+  ) {
     return;
   }
 
   var gsap = window.gsap;
+  var ScrollTrigger = window.ScrollTrigger;
+  gsap.registerPlugin(ScrollTrigger);
   var ORDER = ["baeja", "cheollik", "geodeul", "sapok_baji"];
   var STEP_COUNT = ORDER.length;
   var CENTER_X = 400;
   var CENTER_Y = 400;
-  /* 라벨(글자)이 원 중심에서 떨어진 거리 — 늘리면 점(MARKER_RADIUS)과
-     글자 사이 간격이 벌어집니다. */
-  var LABEL_RADIUS = 480;
   /* 점(마커)이 원 중심에서 떨어진 거리 — 원 그래픽(garment_circle.svg)
      자체의 반지름(400)과 맞춰뒀습니다. */
   var MARKER_RADIUS = 400;
+  /* 점과 글자 사이 간격 — 라벨을 "안쪽 끝" 기준으로 배치하므로 글자
+     길이와 상관없이 네 항목 모두 이 값 하나로 통일됩니다. 늘리면 모든
+     라벨이 원 바깥쪽으로 똑같이 밀려납니다.
+     (CSS .garment_orbit_item의 left 기본값 418px = 400 + 18과 같은 값입니다.) */
+  var LABEL_GAP = 18;
+  /* 라벨의 안쪽 끝이 놓이는 거리. */
+  var LABEL_RADIUS = MARKER_RADIUS + LABEL_GAP;
   /* 가먼트 하나당 원 둘레를 도는 각도 — 늘리면 라벨들 사이 간격이
      넓어집니다(원래 Figma 시안은 30도였습니다). */
-  var STEP_ANGLE_DEG = 40;
+  var STEP_ANGLE_DEG = 52;
+  /* 설명과 이미지가 맞닿아 보이지 않도록 한 화면 높이보다 더 떨어뜨립니다. */
+  var CONTENT_SPACING_MULTIPLIER = 2;
+  /* 숫자가 클수록 스크롤을 늦게 따라오며 관성이 강해집니다. */
+  var SCROLL_SCRUB_SECONDS = 0.8;
+  /* 숫자가 작을수록 적은 스크롤로 네 콘텐츠를 빠르게 통과합니다. */
+  var SCROLL_DISTANCE_PERCENT = 340;
+  /* 마지막 콘텐츠가 완전히 자리 잡은 뒤 pin이 풀리기 전 유지되는 비율입니다. */
+  var END_HOLD_RATIO = 0.18;
   /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
      한 항목에 머무르는 시간(=사용자가 쉬는 시간)이 늘어납니다.
      시안에 없는 값이라 추정치이며, 더 여유를 주고 싶으면 이 숫자를
      올리세요(예: 1400, 1800...). */
-  var WHEEL_SENSITIVITY = 1 / 1400;
-  var STICKY_ENGAGED_TOLERANCE_PX = 2;
-
   var orbitItems = Array.prototype.slice.call(orbitList.querySelectorAll(".garment_orbit_item"));
   var panels = Array.prototype.slice.call(infoWrap.querySelectorAll(".garment_panel"));
   var mediaImages = Array.prototype.slice.call(mediaWrap.querySelectorAll(".garment_media_img"));
 
-  var state = { progress: ORDER.indexOf("cheollik") };
-  var targetProgress = state.progress;
-  var rotateTween = null;
+  var state = { progress: 0 };
 
   function applyProgress() {
     var roundedIndex = Math.max(0, Math.min(STEP_COUNT - 1, Math.round(state.progress)));
@@ -393,7 +411,9 @@ initHeroGallery();
 
       item.style.left = x.toFixed(2) + "px";
       item.style.top = y.toFixed(2) + "px";
-      item.style.transform = "translate(-50%, -50%) rotate(" + angleDeg.toFixed(2) + "deg)";
+      /* transform-origin이 left center라 세로만 가운데로 당기면 됩니다
+         (가로로 -50% 당기면 다시 글자 길이만큼 간격이 틀어집니다). */
+      item.style.transform = "translate(0, -50%) rotate(" + angleDeg.toFixed(2) + "deg)";
       item.classList.toggle("is_pos_active", itemIndex === roundedIndex);
 
       /* 마커(점)는 항상 "현재 활성으로 지정된 항목"이 실제로 그려지고 있는
@@ -408,10 +428,24 @@ initHeroGallery();
     });
 
     panels.forEach(function (panel) {
+      var panelIndex = ORDER.indexOf(panel.getAttribute("data-garment"));
+      var panelOffset = panelIndex - state.progress;
+      var panelY = panelOffset * infoWrap.clientHeight * CONTENT_SPACING_MULTIPLIER;
+      var panelIsNear = Math.abs(panelOffset) < 1.05;
+
+      panel.style.transform = "translate3d(0, " + panelY.toFixed(2) + "px, 0)";
+      panel.style.opacity = panelIsNear ? "1" : "0";
       panel.classList.toggle("is_active", panel.getAttribute("data-garment") === activeGarment);
     });
 
     mediaImages.forEach(function (img) {
+      var imageIndex = ORDER.indexOf(img.getAttribute("data-garment"));
+      var imageOffset = imageIndex - state.progress;
+      var imageY = imageOffset * mediaWrap.clientHeight * CONTENT_SPACING_MULTIPLIER;
+      var imageIsNear = Math.abs(imageOffset) < 1.05;
+
+      img.style.transform = "translate3d(0, " + imageY.toFixed(2) + "px, 0)";
+      img.style.opacity = imageIsNear ? "1" : "0";
       img.classList.toggle("is_active", img.getAttribute("data-garment") === activeGarment);
     });
   }
@@ -460,9 +494,28 @@ initHeroGallery();
     animateTo(clamped);
   }
 
-  window.addEventListener("wheel", handleWheel, { passive: false });
-
   applyProgress();
+
+  var garmentTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: scrollWrap,
+      start: "top top",
+      end: "+=" + SCROLL_DISTANCE_PERCENT + "%",
+      pin: section,
+      pinSpacing: true,
+      scrub: SCROLL_SCRUB_SECONDS,
+      invalidateOnRefresh: true
+    }
+  });
+
+  garmentTimeline
+    .to(state, {
+      progress: STEP_COUNT - 1,
+      duration: 1 - END_HOLD_RATIO,
+      ease: "none",
+      onUpdate: applyProgress
+    })
+    .to({}, { duration: END_HOLD_RATIO });
 })();
 
 /* Product cards — data-hover-src에 원단 이미지 경로가 들어간 카드만

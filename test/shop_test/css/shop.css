@@ -306,24 +306,25 @@
    garment_story
    ========================================================= */
 
-/* 섹션 전체 높이를 바꾸려면 아래 두 곳을 "같이" 바꿔야 합니다:
-   1) .garment_story_section의 height
+/* 섹션 높이는 반드시 화면 높이(100vh)와 같아야 합니다. sticky top:0으로
+   붙는 순간 보이는 영역은 섹션의 위쪽 100vh뿐인데, 내용은 frame의
+   align-items:center로 "섹션 높이의 절반" 위치에 놓이기 때문입니다.
+   섹션이 화면보다 크면(예전 1600px) 그 중심이 화면 아래로 밀려나
+   내용이 화면 하단에 걸린 채로 스크롤이 잠깁니다.
+
+   높이를 바꿔야 한다면 아래 두 곳을 "같이" 바꿉니다:
+   1) .garment_story_section의 height (= 화면 높이)
    2) .garment_story_scroll의 height (섹션 높이 + 여유 스크롤 구간)
-   .garment_story_frame은 height:100%로 섹션 높이를 그대로 따라가게
-   해뒀으니(따로 손댈 필요 없음) — 이전에 frame에만 height:2000px를 직접
-   줬을 때 정렬이 깨졌던 건, frame이 섹션(1500px)보다 커지면서 섹션의
-   overflow:hidden에 위쪽 기준으로 잘려, 가운데 정렬 축(50%)이 실제
-   보이는 영역의 중앙과 어긋났기 때문입니다. */
+   .garment_story_frame은 height:100%로 섹션 높이를 따라가므로 여기에
+   직접 px 높이를 주지 마세요. */
 .garment_story_scroll {
   position: relative;
-  height: calc(1800px + 60vh);
 }
 
 .garment_story_section {
-  position: sticky;
-  top: 0;
+  position: relative;
   width: 100%;
-  height: 1800px;
+  height: 100vh;
   overflow: hidden;
   background-color: #fffdf9;
 }
@@ -398,11 +399,17 @@
    스타일로 계산해 넣습니다(연속적인 회전이라 CSS transition을 걸면 GSAP의
    자체 보간과 겹쳐 오히려 버벅여서, 위치 관련 속성은 여기서 트랜지션을
    걸지 않습니다). color만 활성/비활성 전환 시 부드럽게 바뀝니다. */
+/* 라벨은 "가운데"가 아니라 "안쪽 끝(원에 가까운 쪽 왼쪽 모서리)"을 기준점에
+   맞춥니다. 가운데를 기준으로 두면 글자가 길수록 안쪽 모서리가 원 쪽으로
+   더 파고들어, 점과 글자 사이 간격이 항목마다 달라집니다(Sapok baji는 점에
+   거의 붙었습니다). transform-origin을 왼쪽 가운데로 두면 그 지점이 회전
+   중심이자 배치 기준점이 되어, 글자 길이와 상관없이 간격이 일정해집니다. */
 .garment_orbit_item {
   position: absolute;
-  left: 400px;
+  left: 418px;
   top: 400px;
-  transform: translate(-50%, -50%);
+  transform-origin: left center;
+  transform: translate(0, -50%);
   margin: 0;
   font-family: var(--font_display);
   font-weight: 500;
@@ -440,7 +447,7 @@
   gap: 39px;
   opacity: 0;
   pointer-events: none;
-  transition: opacity var(--duration_base) var(--easing_base);
+  will-change: transform, opacity;
 }
 
 .garment_panel.is_active {
@@ -511,7 +518,6 @@
   width: 311px;
   height: 576px;
   flex-shrink: 0;
-  overflow: hidden;
 }
 
 .garment_media_img {
@@ -521,7 +527,7 @@
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity var(--duration_base) var(--easing_base);
+  will-change: transform, opacity;
 }
 
 .garment_media_img.is_active {
