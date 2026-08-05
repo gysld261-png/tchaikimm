@@ -1,0 +1,1011 @@
+@charset "utf-8";
+
+/* =========================================================
+   hero — bespoke / shop 2분할
+   ========================================================= */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero_panel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 520px;
+  height: 80vh;
+}
+
+.hero_panel_img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.hero_panel_mark {
+  position: absolute;
+  top: 100px;
+  left: var(--layout_gutter);
+  width: 130px;
+  height: 118px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.hero_panel_body {
+  position: absolute;
+  right: var(--layout_gutter);
+  bottom: 48px;
+  left: var(--layout_gutter);
+}
+
+.hero_panel_title {
+  color: var(--color_text_on_dark);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.hero_panel_desc {
+  max-width: 395px;
+  margin-top: 3px;
+  color: var(--color_text_on_dark_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+.hero_panel_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 36px;
+  padding: 10px 20px;
+  border: 1px solid var(--color_line_on_dark);
+  border-radius: var(--radius_button);
+  color: var(--color_text_on_dark);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 500;
+  line-height: 1.5;
+  transition: background-color var(--duration_fast) var(--easing_base),
+              border-color var(--duration_fast) var(--easing_base);
+}
+
+.hero_panel_button:hover,
+.hero_panel_button:focus-visible {
+  border-color: var(--color_text_on_dark);
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    flex-direction: row;
+  }
+
+  .hero_panel {
+    width: 50%;
+    height: 100vh;
+    min-height: 600px;
+  }
+
+  .hero_panel_body {
+    bottom: 70px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero_panel {
+    height: 986px;
+  }
+
+  .hero_panel_mark {
+    left: 70px;
+  }
+
+  .hero_panel_body {
+    right: auto;
+    left: 80px;
+  }
+}
+
+/* =========================================================
+   intro — 브랜드 한 줄 소개
+   ========================================================= */
+
+.intro {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 60px var(--layout_gutter);
+  border-bottom: 1px solid var(--color_line);
+  text-align: center;
+}
+
+.intro_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.intro_desc {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+@media (min-width: 1280px) {
+  .intro {
+    padding-top: 100px;
+    padding-bottom: 100px;
+  }
+}
+
+/* =========================================================
+   banner
+   ========================================================= */
+
+.banner {
+  padding: 40px 0;
+  background-image: linear-gradient(to bottom, #fffdf9, #fcfcfb);
+}
+
+.banner_img {
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 1280px) {
+  .banner {
+    /* 시안 1920px: 상단 69px, 이미지 720px, 하단 150px */
+    padding: 69px 0 150px;
+  }
+}
+
+/* =========================================================
+   brand — 5개 패널
+   기본(모바일·JS 미동작·모션 감소)은 세로 흐름,
+   is_horizontal이 붙으면 가로 스크롤 배치로 전환
+   ========================================================= */
+
+.brand_track {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand_panel {
+  position: relative;
+  padding: 60px var(--layout_gutter);
+}
+
+.brand_panel_title {
+  margin-bottom: 32px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_64);
+  font-weight: 700;
+  line-height: var(--lh_display_64);
+  letter-spacing: var(--ls_tight);
+  text-align: center;
+}
+
+.brand_panel_figure {
+  width: min(300px, 70%);
+  margin: 0 auto 32px;
+}
+
+.brand_panel_figure img {
+  width: 100%;
+  height: auto;
+}
+
+.brand_panel_body {
+  max-width: 875px;
+  margin: 0 auto;
+}
+
+.brand_panel_text {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_32);
+  font-weight: 600;
+  line-height: var(--lh_display_32);
+  letter-spacing: var(--ls_tight_sm);
+}
+
+.brand_panel_text + .brand_panel_text {
+  margin-top: 1.40625em;
+}
+
+.brand_panel_discover {
+  background-color: #fefefe;
+}
+
+.brand_panel_bg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  width: 68.18%;
+  height: auto;
+  transform: translate(-50%, -50%);
+  opacity: 0.29;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.brand_panel_discover .brand_panel_title {
+  color: #1e1e1e;
+}
+
+.brand_panel_discover .brand_panel_body {
+  text-align: center;
+}
+
+.brand_panel_discover .brand_panel_title,
+.brand_panel_discover .brand_panel_body,
+.brand_panel_discover .brand_panel_button {
+  position: relative;
+  z-index: 1;
+}
+
+.brand_panel_button {
+  display: block;
+  width: fit-content;
+  margin: 32px auto 0;
+  padding: 10px 20px;
+  border: 1px solid var(--color_point);
+  border-radius: var(--radius_button);
+  color: var(--color_text);
+  font-family: var(--font_ui);
+  font-size: var(--fs_body_20);
+  font-weight: 500;
+  line-height: 1.5;
+  transition: background-color var(--duration_fast) var(--easing_base),
+              color var(--duration_fast) var(--easing_base);
+}
+
+.brand_panel_button:hover,
+.brand_panel_button:focus-visible {
+  background-color: var(--color_point);
+  color: var(--color_text_on_dark);
+}
+
+/* --- 가로 스크롤 배치 (JS로 활성화) --- */
+
+@media (min-width: 768px) {
+  .brand.is_horizontal {
+    overflow: hidden;
+    height: 100vh;
+    min-height: 600px;
+  }
+
+  .brand.is_horizontal .brand_track {
+    flex-direction: row;
+    height: 100%;
+  }
+
+  .brand.is_horizontal .brand_panel {
+    overflow: hidden;
+    /* --brand_panel_width는 JS가 스크롤바를 뺀 실제 폭으로 설정합니다 */
+    flex: 0 0 var(--brand_panel_width, 100vw);
+    width: var(--brand_panel_width, 100vw);
+    height: 100%;
+    padding: 0;
+  }
+
+  /* 시안 1920 × 1734 기준 비율 */
+  .brand.is_horizontal .brand_panel_title {
+    position: absolute;
+    top: 3.46%;
+    left: 50%;
+    width: max-content;
+    max-width: 90vw;
+    margin: 0;
+    transform: translateX(-50%);
+  }
+
+  .brand.is_horizontal .brand_panel_figure {
+    position: absolute;
+    top: 21.74%;
+    left: 10.47%;
+    width: auto;
+    height: 59.98%;
+    margin: 0;
+  }
+
+  .brand.is_horizontal .brand_panel_figure img {
+    width: auto;
+    height: 100%;
+  }
+
+  .brand.is_horizontal .brand_panel_body {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: 0;
+    padding: 33px 37px;
+    transform: translateY(-50%);
+  }
+
+  /* 5번 패널은 시안의 세로 좌표(%)를 그대로 쓰면 짧은 화면에서 겹칩니다.
+     시안의 간격 비율(85/1734, 130/1734)을 유지한 중앙 정렬로 배치합니다. */
+  .brand.is_horizontal .brand_panel_discover {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .brand.is_horizontal .brand_panel_discover .brand_panel_title {
+    position: relative;
+    z-index: 1;
+    inset: auto;
+    max-width: 894px;
+    margin: 0 0 clamp(24px, 4.9vh, 85px);
+    transform: none;
+  }
+
+  .brand.is_horizontal .brand_panel_discover .brand_panel_body {
+    position: relative;
+    z-index: 1;
+    inset: auto;
+    width: 875px;
+    max-width: 90vw;
+    margin: 0;
+    padding: 0;
+    transform: none;
+  }
+
+  .brand.is_horizontal .brand_panel_button {
+    position: relative;
+    z-index: 1;
+    margin: clamp(32px, 7.5vh, 130px) 0 0;
+  }
+
+  .brand.is_horizontal .brand_panel_bg {
+    z-index: 0;
+    top: 13.49%;
+    height: 76.47%;
+    transform: translateX(-50%);
+    object-fit: contain;
+  }
+}
+
+/* =========================================================
+   korea — 철릭 한 벌을 전체 → 부위 → 착장 순서로 보여주는 섹션
+   시안(1920 × 5173) 기준 데스크톱 레이아웃입니다.
+   가로 크기는 시안 폭 1920 대비 %로, 세로 간격은 시안 px 그대로 씁니다.
+   ========================================================= */
+
+.korea {
+  padding: 120px 0;
+}
+
+.korea_inner {
+  width: 100%;
+  max-width: 1920px;
+  margin: 0 auto;
+}
+
+.korea_head {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  padding: 0 var(--layout_gutter);
+  text-align: center;
+}
+
+.korea_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.korea_subtitle {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+/* --- 철릭 전체 --- */
+
+.korea_whole {
+  margin-top: 132px;
+}
+
+.korea_whole_img {
+  /* 시안 1810 / 1920 */
+  width: 94.271%;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* --- 부위별 설명 ---
+   4행 모두 같은 철릭 이미지를 쓰고, 행마다 다른 가로 띠만 보여줍니다.
+   --korea_band_aspect  잘라낸 띠의 비율 (원본 가로 1043 : 띠 높이)
+   --korea_band_shift   원본 높이 496 대비 위로 밀어 올리는 양
+   --korea_text_offset  시안에서 글 묶음이 이미지보다 위/아래로 밀린 값
+   --korea_part_gap     앞 행과의 간격 */
+
+.korea_parts {
+  margin-top: 332px;
+}
+
+.korea_part {
+  --korea_band_aspect: 1043 / 114;
+  --korea_band_shift: 0%;
+  --korea_text_offset: 0px;
+  --korea_part_gap: 0px;
+
+  display: flex;
+  align-items: flex-start;
+  margin-top: var(--korea_part_gap);
+}
+
+.korea_part_figure {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  /* 시안 1043 / 1920, 좌측 여백 31 / 1920 */
+  width: 54.323%;
+  margin-left: 1.615%;
+  aspect-ratio: var(--korea_band_aspect);
+}
+
+.korea_part_img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  transform: translateY(var(--korea_band_shift));
+}
+
+.korea_part_text {
+  display: flex;
+  flex-direction: column;
+  /* 시안 23 / 1920 */
+  margin-top: var(--korea_text_offset);
+  margin-left: 1.198%;
+}
+
+.korea_part_title {
+  margin-bottom: 18px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.korea_part_lead {
+  margin-bottom: 7px;
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 500;
+  line-height: 1.2;
+}
+
+.korea_part_desc {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 300;
+  line-height: 1.2;
+}
+
+.korea_part_collar {
+  --korea_band_aspect: 1043 / 114;
+  --korea_band_shift: 0%;
+  --korea_text_offset: 39px;
+}
+
+.korea_part_sleeve {
+  --korea_band_aspect: 1043 / 191;
+  --korea_band_shift: -8.669%; /* 43 / 496 */
+  --korea_part_gap: 260px;
+}
+
+.korea_part_body {
+  --korea_band_aspect: 1043 / 107;
+  --korea_band_shift: -34.073%; /* 169 / 496 */
+  --korea_text_offset: -29px;
+  --korea_part_gap: 233px;
+}
+
+.korea_part_skirt {
+  --korea_band_aspect: 1043 / 248;
+  --korea_band_shift: -50%; /* 248 / 496 */
+  --korea_part_gap: 259px;
+}
+
+/* --- 착장 컷 --- */
+
+.korea_models {
+  margin-top: 289px;
+}
+
+.korea_model + .korea_model {
+  margin-top: 139px;
+}
+
+.korea_model_img {
+  /* 시안 381 / 1920 */
+  width: 19.844%;
+  height: auto;
+  margin: 0 auto;
+}
+
+/* =========================================================
+   아래 섹션들은 시안 1920px 기준 데스크톱 레이아웃만 작성했습니다.
+   태블릿·모바일 대응은 반응형 일괄 작업에서 추가합니다.
+   ========================================================= */
+
+/* =========================================================
+   instagram
+   ========================================================= */
+
+.instagram_img {
+  width: 100%;
+  height: auto;
+}
+
+/* =========================================================
+   promo — bespoke / shop 공통 소개 블록
+   ========================================================= */
+
+.promo {
+  display: flex;
+  align-items: flex-start;
+}
+
+.promo_text {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.promo_figure {
+  flex: 0 0 auto;
+}
+
+.promo_title {
+  margin-bottom: 40px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight_sm);
+  text-transform: uppercase;
+}
+
+.promo_lead_group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 60px;
+}
+
+.promo_lead {
+  color: #1e1e1e;
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  font-weight: 500;
+  line-height: var(--lh_body_24);
+}
+
+.promo_desc {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+.promo_link {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  font-weight: 500;
+  line-height: var(--lh_body_24);
+  text-transform: uppercase;
+}
+
+.promo_img {
+  width: 727px;
+  height: auto;
+}
+
+/* --- bespoke: 글 왼쪽 / 사진 오른쪽 --- */
+
+.promo_bespoke {
+  /* 시안 사진 top 82, 글 left 160, 사진 right 120 */
+  padding: 82px 120px 146px 160px;
+}
+
+.promo_bespoke .promo_text {
+  width: 746px;
+  margin-top: 85px;
+}
+
+.promo_bespoke .promo_figure {
+  margin-left: 167px;
+}
+
+/* =========================================================
+   marquee — 띠 형태 롤링 텍스트
+   같은 내용의 줄을 두 벌 두고 한 벌 길이만큼 밀어 끊김 없이 반복합니다.
+   ========================================================= */
+
+.marquee {
+  overflow: hidden;
+  padding: 54px 0;
+}
+
+.marquee_track {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+  width: max-content;
+  animation: marquee_scroll 32s linear infinite;
+}
+
+.marquee_row {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+}
+
+.marquee_word {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: 50px;
+  font-weight: 500;
+  line-height: 1.22;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.marquee_dot {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--color_text);
+}
+
+/* 두 줄 사이 gap(38px)의 절반을 함께 밀어야 이음매가 맞습니다. */
+@keyframes marquee_scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 19px)); }
+}
+
+/* =========================================================
+   shop
+   ========================================================= */
+
+.shop {
+  padding-bottom: 155px;
+}
+
+.promo_shop {
+  /* 시안 사진 left 210 / top 145 */
+  padding: 145px 0 0 210px;
+}
+
+.promo_shop .promo_text {
+  width: 606px;
+  margin-top: 98px;
+  margin-left: 167px;
+}
+
+/* 확대된 이미지가 잘리지 않도록 위아래 20px을 비워 두고
+   시안의 margin-top 52px은 32 + 20으로 나눠 유지합니다. */
+.shop_marquee {
+  overflow: hidden;
+  margin-top: 32px;
+  padding: 20px 0 20px 10px;
+}
+
+.shop_looks {
+  display: flex;
+  width: max-content;
+  animation: shop_scroll 45s linear infinite;
+}
+
+/* 상품 위에 마우스를 올리면 전체 흐름이 멈춥니다. */
+.shop_marquee:hover .shop_looks {
+  animation-play-state: paused;
+}
+
+.shop_look {
+  flex: 0 0 364px;
+}
+
+.shop_look_img {
+  display: block;
+  width: 364px;
+  height: auto;
+  transition: transform 0.5s ease;
+}
+
+.shop_look:hover .shop_look_img {
+  transform: scale(1.06);
+}
+
+/* 목록을 두 벌로 복제하므로 절반만 밀면 처음 상태로 이어집니다. */
+@keyframes shop_scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+/* =========================================================
+   코디 — 시안 1920 × 1080 좌표를 그대로 배치했습니다.
+   ========================================================= */
+
+.codi {
+  overflow: hidden;
+}
+
+.codi_inner {
+  position: relative;
+  left: 50%;
+  width: 1920px;
+  height: 1080px;
+  transform: translateX(-50%);
+}
+
+.codi_head {
+  position: absolute;
+  top: 35px;
+  left: 512px;
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  width: 894px;
+  text-align: center;
+}
+
+.codi_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.codi_subtitle {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+/* 시안의 다섯 자리를 상태 class로 두고 JS가 자리만 바꿔 끼웁니다. */
+.codi_look {
+  position: absolute;
+  top: 327px;
+  width: 225px;
+  transition: top 0.6s ease, left 0.6s ease, width 0.6s ease;
+}
+
+.codi_look_img {
+  width: 100%;
+  height: auto;
+}
+
+.codi_look.is_pos_far_left { left: 249px; }
+.codi_look.is_pos_left { left: 524px; }
+
+.codi_look.is_pos_center {
+  z-index: 1;
+  top: 245px;
+  left: 801px;
+  width: 316px;
+}
+
+.codi_look.is_pos_right { left: 1170px; }
+.codi_look.is_pos_far_right { left: 1445px; }
+
+.codi_parts {
+  position: absolute;
+  z-index: 2;
+  top: 398px;
+  left: 639px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 70px;
+  width: 243px;
+}
+
+.codi_part {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 35px;
+  font-weight: 400;
+  line-height: 1.74;
+  white-space: nowrap;
+}
+
+.codi_pager {
+  position: absolute;
+  top: 924px;
+  left: 882px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 155px;
+}
+
+.codi_pager_button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.codi_pager_count {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+/* =========================================================
+   셀럽착용
+   ========================================================= */
+
+.celeb {
+  padding: 126px 0;
+}
+
+.celeb_head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 17px;
+  text-align: center;
+}
+
+.celeb_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.celeb_tags {
+  display: flex;
+  gap: 12px;
+}
+
+.celeb_tag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  padding: 8px 12px;
+  border-radius: 16px;
+  background-color: #f2f2f1;
+  color: var(--color_text_sub);
+  font-family: var(--font_ui);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.celeb_button {
+  margin-top: 18px;
+  padding: 5px 15px;
+  border: 1px solid #bebebe;
+  border-radius: var(--radius_button);
+  color: #2c6354;
+  font-family: var(--font_ui);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* 내보낸 이미지가 시안 프레임보다 좌우로 넓어서, 시안과 같은 폭으로 잘라 씁니다. */
+.celeb_figure {
+  overflow: hidden;
+  width: 1760px;
+  max-width: calc(100% - 160px);
+  margin: 56px auto 0;
+}
+
+.celeb_img {
+  width: 1849px;
+  max-width: none;
+  height: auto;
+  margin-left: -45px;
+}
+
+/* =========================================================
+   클로징 — 시안 1920 × 620 좌표를 그대로 배치했습니다.
+   ========================================================= */
+
+.closing {
+  overflow: hidden;
+}
+
+.closing_inner {
+  position: relative;
+  left: 50%;
+  width: 1920px;
+  height: 620px;
+  transform: translateX(-50%);
+}
+
+.closing_head {
+  position: absolute;
+  top: 240px;
+  left: 513px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 894px;
+  text-align: center;
+}
+
+.closing_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 56px;
+  font-weight: 700;
+  /* Trirong 기본 행간 — 시안 텍스트 높이 97 / 56 */
+  line-height: 1.73;
+}
+
+.closing_desc {
+  color: #262626;
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.closing_illust {
+  position: absolute;
+  top: 350px;
+  left: 1471px;
+  width: 280px;
+  height: auto;
+}
