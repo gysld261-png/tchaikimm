@@ -93,15 +93,19 @@
 
 - 대상 화면: Figma `4조 한복판 - 차이킴` node `1523:1094`("shop_박효민"). main 페이지와 별도 폴더에 독립 구현.
   **폴더 위치가 `test/main_test/shop_test/` → `test/shop_test/`(main_test의 형제 폴더)로 이동했습니다.** 헤더 로고 링크(`../main_test/index.html`)와 `.claude/launch.json`의 `shop_test` 설정 경로를 이 위치 기준으로 갱신했습니다.
-- 범위: 반응형 없음, **1920px 데스크톱 고정 레이아웃만** 구현(사용자 명시 지시).
+- 범위: 반응형은 다음 단계 예정. **레이아웃 구조는 main_test와 동일한 방식으로 전환**했습니다 — `body`/`.main`과 각 섹션(`hero_section`/`banner`/`new_arrivals_section`/`shop_section`)은 `width:100%`로 창 너비에 맞춰 늘어나고, Figma 절대좌표(1920 기준)에 의존하는 `hero_section`의 watermark·갤러리·카테고리 내비만 `.hero_section_frame`(1920px 고정, 가운데 정렬)으로 감쌌습니다. main_test가 코디·클로징 섹션에만 쓰는 "1920px 고정 프레임 가운데 정렬" 패턴을 hero_section에 적용한 것과 같은 방식입니다.
+  이전에는 body/.main과 모든 섹션에 `width:1920px`를 직접 걸어서, 창이 1920px보다 넓으면 페이지 전체가 가운데의 작은 고정 박스로 보였습니다(main_test는 대부분 유동적이라 꽉 차 보였음) — 그 차이를 없앤 것입니다. 2560px 창에서 `hero_section_frame`이 정확히 1920px폭·가운데 정렬로 뜨는 것, 1920px 창에서 기존 레이아웃과 픽셀 단위로 동일한 것을 스크립트로 확인했습니다.
 - 구현 완료 섹션: hero_section(카테고리 내비 + 회전 갤러리), banner, new_arrivals_section(2×2 상품 카드), shop(필터바 + 3×2 상품 카드 + View More), 공용 header/footer(main_test와 동일 마크업 재사용).
 - 상품 카드는 `.card_product` 공용 컴포넌트로 작성하고 `.is_size_new`(800×930) / `.is_size_shop`(528×950) modifier로 두 섹션에서 재사용.
 - 상품 이미지·가격·설명·태그는 모두 Figma `get_design_context` 응답의 실제 카피를 그대로 사용(임의 생성 없음). 이미지 URL은 각 카드 인스턴스에서 실제로 보이는(레이어의 hover-opacity가 0이 아닌) 레이어 기준으로 1:1 매칭.
-- **hero_section 갤러리 회전(최종)**: 사용자가 대각선 마스킹 없는 실제 직사각형 사진 4장(`assets/images/gallery_image1~4.png`)을 새로 제공해, 자리·크기를 실제로 이동하는 원통형 회전으로 구현했습니다(`js/shop.js`, `css/shop.css`).
-  - 4장을 2벌씩 복제해 총 8장으로 구성, 8개 카테고리(ALL/NEW·DRESS·TOP·KNIT·BOTTOM·OUTER·ACC·LIVING)에 `data-gallery-index="0"~"7"`로 1:1 고정 매칭했습니다.
-  - 고정된 4개 자리(`is_pos_featured`/`is_pos_b`/`is_pos_c`/`is_pos_d`, 기존 정적 레이아웃의 4개 좌표를 그대로 재사용)를 두고, 8장 중 활성 인덱스 기준으로 가까운 4장만 그 자리에 배정하고 나머지 4장은 숨깁니다(main 페이지 코디 캐러셀과 동일한 "자리 class를 JS가 바꿔 끼우는" 패턴).
-  - **페이지 진입 즉시 자동 회전이 시작**되며 ALL/NEW는 순환 순서상 첫 항목일 뿐 고정 기본값이 아닙니다. 카테고리 hover/focus 시 해당 이미지가 즉시 featured 자리로 오며 자동 회전이 멈추고, 벗어나면 멈춘 지점부터 재개합니다. 3.2초 간격, `prefers-reduced-motion`에서는 자동 회전을 시작하지 않습니다.
-  - 예전에 쓰던 대각선 마스킹 이미지 4장과 `hero_gallery_shadow.svg`(그 이미지 전용 배경 도형)는 더 이상 맞지 않아 삭제했습니다.
+- **hero_section 갤러리 회전(최종, WebGL 3D)**: 사용자가 레퍼런스로 준 `follow.art` 히어로가 실제로는 WebGL 3D 카드 캐러셀(Three.js 계열, `Landing1IntroWebGl` 번들, 카드 이미지 9장)이라는 걸 확인하고, CSS 자리 교체 방식 대신 **Three.js + GSAP로 진짜 3D 원통 회전**을 구현했습니다.
+  - **새 의존성**: Three.js(ESM, importmap으로 `three@0.160.0` jsDelivr 로드), GSAP(`gsap@3.13.0`, main 페이지와 동일 버전을 CDN `<script>`로 추가). `index.html`에 `<script type="importmap">` + `<script type="module" src="js/shop.js">` 로 구성.
+  - `#hero_gallery` 안에 `<canvas id="hero_gallery_canvas">`를 두고, Three.js/WebGL을 못 쓰는 환경(로딩 전·초기화 실패)에서는 정지 이미지 `.hero_gallery_fallback`이 보이다가 초기화 성공 시 `.hero_gallery`에 `is_ready`가 붙어 canvas로 전환됩니다(brand 섹션의 "기본 레이아웃 → 조건부 향상" 패턴과 동일).
+  - 사진 4장(`gallery_image1~4.png`)을 2벌씩 복제해 8장의 `PlaneGeometry` 카드를 반지름 620의 원통 둘레에 45°씩 배치하고, 8개 카테고리(ALL/NEW·DRESS·TOP·KNIT·BOTTOM·OUTER·ACC·LIVING)에 `data-gallery-index="0"~"7"`로 1:1 고정 매칭했습니다.
+  - 회전값(`ring.rotation.y`)은 GSAP로 트윈합니다. **페이지 진입 즉시 무한 자동 회전이 시작**되며(40초/1바퀴) ALL/NEW는 순환 순서상 첫 항목일 뿐 고정 기본값이 아닙니다. 카테고리 hover/focus 시 그 카드가 최단 경로로 정면으로 회전하며(0.8초) 자동 회전이 멈추고, 벗어나면 멈춘 지점부터 재개합니다. `prefers-reduced-motion`에서는 자동 회전을 시작하지 않습니다.
+  - 카드 크기(320×460)·반지름(620)·카메라 거리(1400)·FOV(45)는 시안에 없는 값이라 임의로 잡았습니다. 실제 화면에서 보고 조정이 필요할 가능성이 높습니다.
+  - 예전에 쓰던 대각선 마스킹 이미지 4장과 `hero_gallery_shadow.svg`(그 이미지 전용 배경 도형)는 이 구조와 안 맞아 삭제했습니다.
+  - **검증 관련 중요 사항**: 이 세션의 미리보기 탭은 `document.hasFocus()`가 계속 `false`라, `requestAnimationFrame` 기반인 GSAP 티커가 전혀 진행되지 않았습니다(`gsap.ticker.time`이 0에 고정). 그래서 자동 회전·페이드인·hover 전환 애니메이션 자체는 이 세션에서 재생되는 걸 못 봤습니다. 다만 디버그로 재질에 `opacity=1`을 강제로 주고 수동으로 한 프레임 렌더링했을 때 캔버스에 카드가 실제로 그려지는 건 확인했습니다(카메라·지오메트리·텍스처·셰이더 파이프라인은 정상). 즉 **렌더링 자체는 되는데, 애니메이션이 재생되는 걸 이 환경에서 직접 보지는 못했습니다.** 실제 브라우저(포커스가 있는 일반 탭)에서는 `requestAnimationFrame`이 정상 동작하므로 자동 회전·hover가 보일 것으로 예상하지만, 사용자가 `http://localhost:5602`을 직접 열어 확인 필요합니다.
 - **범위에서 제외한 것(사용자 확인 완료)**:
   - garment_story(컴포넌트 인스턴스), motif_detail(모티프 상세 + 관련상품 캐러셀) 두 섹션은 디자인 상세를 아직 조회하지 않아 **이번 구현에서 제외**.
   - hero_nav의 `nav_item_kids`(1523:1120) 레이어는 Figma에 텍스트 콘텐츠가 없어(빈 노드) 내비게이션에서 제외.

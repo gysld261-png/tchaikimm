@@ -14,6 +14,14 @@
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/layout.css">
 <link rel="stylesheet" href="css/shop.css">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
+  }
+}
+</script>
 </head>
 <body>
 
@@ -65,45 +73,44 @@
       <div class="hero_section_overlay"></div>
     </div>
 
-    <p class="hero_section_watermark" aria-hidden="true">Tchai</p>
+    <!-- Figma 좌표(1920 기준) 그대로 쓰는 절대배치 요소들을 담는 고정 폭 프레임.
+         hero_section 자체는 위 배경처럼 전체 폭에 맞춰 늘어나고, 이 프레임만
+         1920px로 고정한 채 가운데 정렬됩니다. -->
+    <div class="hero_section_frame">
+      <p class="hero_section_watermark" aria-hidden="true">Tchai</p>
 
-    <div class="hero_gallery" id="hero_gallery" role="img" aria-label="A rotating gallery of Tchai Kim hanbok looks">
-      <img class="hero_gallery_image" src="assets/images/gallery_image1.png" alt="A model wearing a bright yellow hanbok top with patterned wide trousers">
-      <img class="hero_gallery_image" src="assets/images/gallery_image2.png" alt="A model wearing a coral pink hanbok jacket and a wide-brimmed hat">
-      <img class="hero_gallery_image" src="assets/images/gallery_image3.png" alt="A model wearing a white blouse over a pleated dark denim skirt">
-      <img class="hero_gallery_image" src="assets/images/gallery_image4.png" alt="A model wearing a white blouse and an orange corseted skirt">
-      <img class="hero_gallery_image" src="assets/images/gallery_image1.png" alt="" aria-hidden="true">
-      <img class="hero_gallery_image" src="assets/images/gallery_image2.png" alt="" aria-hidden="true">
-      <img class="hero_gallery_image" src="assets/images/gallery_image3.png" alt="" aria-hidden="true">
-      <img class="hero_gallery_image" src="assets/images/gallery_image4.png" alt="" aria-hidden="true">
+      <div class="hero_gallery" id="hero_gallery" role="img" aria-label="A rotating gallery of Tchai Kim hanbok looks">
+        <img class="hero_gallery_fallback" src="assets/images/gallery_image1.png" alt="A model wearing a Tchai Kim hanbok look">
+        <canvas class="hero_gallery_canvas" id="hero_gallery_canvas" aria-hidden="true"></canvas>
+      </div>
+
+      <nav class="hero_nav" aria-label="Shop categories">
+        <div class="hero_nav_item hero_nav_item_all_new">
+          <a class="hero_nav_link hero_nav_link_lg" href="#" data-gallery-index="0">ALL / NEW</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_dress">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="1">DRESS</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_top">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="2">TOP</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_knit">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="3">KNIT</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_bottom">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="4">BOTTOM</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_outer">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="5">OUTER</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_acc">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="6">ACC</a>
+        </div>
+        <div class="hero_nav_item hero_nav_item_living">
+          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="7">LIVING</a>
+        </div>
+      </nav>
     </div>
-
-    <nav class="hero_nav" aria-label="Shop categories">
-      <div class="hero_nav_item hero_nav_item_all_new">
-        <a class="hero_nav_link hero_nav_link_lg" href="#" data-gallery-index="0">ALL / NEW</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_dress">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="1">DRESS</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_top">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="2">TOP</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_knit">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="3">KNIT</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_bottom">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="4">BOTTOM</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_outer">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="5">OUTER</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_acc">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="6">ACC</a>
-      </div>
-      <div class="hero_nav_item hero_nav_item_living">
-        <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="7">LIVING</a>
-      </div>
-    </nav>
   </section>
 
   <!-- banner -->
@@ -620,7 +627,8 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="js/common.js"></script>
-<script src="js/shop.js"></script>
+<script type="module" src="js/shop.js"></script>
 </body>
 </html>
