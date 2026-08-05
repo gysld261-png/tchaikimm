@@ -79,36 +79,60 @@ body {
   height: 901px;
 }
 
-.hero_gallery_shadow {
-  position: absolute;
-  left: 16px;
-  top: 0;
-  width: 1062px;
-  height: 859.363px;
-}
-
+/* 8장의 사진이 4개의 고정 자리(원통형 회전)를 돌아가며 채웁니다.
+   JS가 자리 class(is_pos_*)를 매 순환마다 바꿔 끼우고, 자리를 못 받은
+   사진은 is_pos_hidden으로 숨습니다(main 페이지 코디 캐러셀과 같은 구조). */
 .hero_gallery_image {
   position: absolute;
   display: block;
-  width: auto;
-  height: auto;
-  transform-origin: center center;
-  transition: transform var(--duration_base) var(--easing_base),
-              filter var(--duration_base) var(--easing_base);
+  object-fit: cover;
+  opacity: 0;
+  pointer-events: none;
+  transition: left var(--duration_base) var(--easing_base),
+              top var(--duration_base) var(--easing_base),
+              width var(--duration_base) var(--easing_base),
+              height var(--duration_base) var(--easing_base),
+              opacity var(--duration_base) var(--easing_base);
 }
 
-.hero_gallery_image_2 { left: 127.5px; top: 343.5px; width: 524.5px; height: 552px; }
-.hero_gallery_image_3 { left: 469.5px; top: 140.5px; width: 521.5px; height: 625.5px; }
-.hero_gallery_image_4 { left: 809.5px; top: 6.5px; width: 298.5px; height: 548px; }
-.hero_gallery_image_1 { left: 0; top: 500px; width: 313px; height: 401px; }
+.hero_gallery_image.is_pos_featured,
+.hero_gallery_image.is_pos_b,
+.hero_gallery_image.is_pos_c,
+.hero_gallery_image.is_pos_d {
+  opacity: 1;
+  pointer-events: auto;
+}
 
-/* 카테고리 hover/자동 순환 시 강조되는 사진 — 원본 자리·크기는 유지하고
-   확대·밝기로만 회전 효과를 표현합니다(원본이 대각선으로 미리 잘린 이미지라
-   서로 다른 자리로 옮기면 잘림/왜곡이 생겨 위치·크기는 바꾸지 않았습니다). */
-.hero_gallery_image.is_featured {
-  z-index: 5;
-  transform: scale(1.045);
-  filter: brightness(1.05);
+.hero_gallery_image.is_pos_featured {
+  left: 469.5px;
+  top: 140.5px;
+  width: 521.5px;
+  height: 625.5px;
+  z-index: 4;
+}
+
+.hero_gallery_image.is_pos_b {
+  left: 127.5px;
+  top: 343.5px;
+  width: 524.5px;
+  height: 552px;
+  z-index: 3;
+}
+
+.hero_gallery_image.is_pos_c {
+  left: 809.5px;
+  top: 6.5px;
+  width: 298.5px;
+  height: 548px;
+  z-index: 2;
+}
+
+.hero_gallery_image.is_pos_d {
+  left: 0;
+  top: 500px;
+  width: 313px;
+  height: 401px;
+  z-index: 1;
 }
 
 .hero_nav {
