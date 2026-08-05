@@ -106,9 +106,16 @@
   - 카드 크기(320×460)·반지름(620)·카메라 거리(1400)·FOV(45)는 시안에 없는 값이라 임의로 잡았습니다. 실제 화면에서 보고 조정이 필요할 가능성이 높습니다.
   - 예전에 쓰던 대각선 마스킹 이미지 4장과 `hero_gallery_shadow.svg`(그 이미지 전용 배경 도형)는 이 구조와 안 맞아 삭제했습니다.
   - **검증 관련 중요 사항**: 이 세션의 미리보기 탭은 `document.hasFocus()`가 계속 `false`라, `requestAnimationFrame` 기반인 GSAP 티커가 전혀 진행되지 않았습니다(`gsap.ticker.time`이 0에 고정). 그래서 자동 회전·페이드인·hover 전환 애니메이션 자체는 이 세션에서 재생되는 걸 못 봤습니다. 다만 디버그로 재질에 `opacity=1`을 강제로 주고 수동으로 한 프레임 렌더링했을 때 캔버스에 카드가 실제로 그려지는 건 확인했습니다(카메라·지오메트리·텍스처·셰이더 파이프라인은 정상). 즉 **렌더링 자체는 되는데, 애니메이션이 재생되는 걸 이 환경에서 직접 보지는 못했습니다.** 실제 브라우저(포커스가 있는 일반 탭)에서는 `requestAnimationFrame`이 정상 동작하므로 자동 회전·hover가 보일 것으로 예상하지만, 사용자가 `http://localhost:5602`을 직접 열어 확인 필요합니다.
-- **범위에서 제외한 것(사용자 확인 완료)**:
-  - garment_story(컴포넌트 인스턴스), motif_detail(모티프 상세 + 관련상품 캐러셀) 두 섹션은 디자인 상세를 아직 조회하지 않아 **이번 구현에서 제외**.
-  - hero_nav의 `nav_item_kids`(1523:1120) 레이어는 Figma에 텍스트 콘텐츠가 없어(빈 노드) 내비게이션에서 제외.
+- **garment_story 섹션(휠 스크롤 인터랙션)**: banner와 new_arrivals_section 사이, Figma 노드 `1531:2705`(`garment_story_section`으로 리네임 완료) → 컴포넌트 `SECTION/Garment Story`(`1523:1720`)의 `garment` variant 프로퍼티 4개 상태(Baeja/Cheollik/Geodeul/Sapok baji)를 4개 variant 각각 `get_design_context`로 조회해 실제 카피·사진을 그대로 구현했습니다.
+  - 순환 순서는 Figma의 각 variant 라벨 좌표(활성 0°, 나머지 +30/+60/-30°)를 대조해 역산: `Baeja → Cheollik → Geodeul → Sapok baji`(순환). 페이지 기본 활성값은 Figma 페이지에 실제로 배치된 인스턴스와 동일하게 **Cheollik**.
+  - **원형 회전(2차 수정, 연속 회전)**: 처음엔 4개 고정 슬롯 class를 정수 인덱스로 딱딱 전환하는 방식(코디 캐러셀 패턴)으로 만들었는데, 사용자가 레퍼런스(`orionix.framer.website/about` 연도 타임라인)를 다시 짚어주면서 "원이 부드럽게 돈다"는 걸 확인 — 실제 wheel 이벤트를 그 페이지에 직접 dispatch해서 그 구간에서 `preventDefault`가 걸리는 것도 확인했습니다. 그래서 정수 스텝 대신 **실수 `progress` 값**을 두고, 매 wheel 이벤트마다 목표값을 갱신해 GSAP로 관성감 있게(`power3.out`, 0.9초) 따라가게 하고, `onUpdate`마다 4개 라벨의 각도(`offset = itemIndex - progress`, 30도/스텝)를 다시 계산해 `left/top/rotate`를 인라인 스타일로 직접 씁니다. `deltaY` 누적 감도는 320(= 한 스텝)로 임의 설정했고 실제로 보면서 조정이 필요합니다.
+  - **휠 스크롤 인터랙션**: 섹션이 화면 상단에 `position:sticky`로 붙어있는 동안 휠 스크롤을 가로채(`preventDefault`) progress를 이동시킵니다. 첫/마지막 가먼트에서 그 방향으로 더 스크롤하면 가로채지 않고 그대로 흘려보내 다음/이전 섹션으로 자연스럽게 넘어갑니다(사용자 확인: "전자로 하자" — 스크롤재킹 방식). sticky 유지용 여유 스크롤 구간은 `.garment_story_scroll`(높이 1500px + 60vh)로 확보했습니다.
+  - **검증 한계(반복)**: GSAP 트윈도 hero_gallery와 같은 이유로 이 세션(포커스 없는 미리보기 탭)에서는 `onUpdate`가 실제로 재생되는 걸 못 봤습니다. 대신 (a) 초기 렌더는 트윈을 거치지 않고 동기 호출이라 좌표 계산식이 기존 하드코딩 값과 정확히 일치하는 것 확인, (b) wheel 이벤트의 `preventDefault`/경계 릴리즈 판단 로직(트윈 재생과 무관하게 동기적으로 실행됨)은 정상 동작 확인. 실제 회전이 부드럽게 보이는지, 감도(320) 값이 적절한지는 사용자가 직접 확인 필요.
+  - **버그 수정**: 이 작업 중 `.main`에 걸려 있던 `overflow:hidden`이 하위 `position:sticky` 요소를 무력화시키는 걸 발견해 제거했습니다(각 섹션이 이미 자체 `overflow:hidden`으로 bleed를 막고 있어서 `.main` 레벨의 클리핑은 불필요했습니다).
+  - Show Details 버튼은 컴포넌트 설명 그대로 라운드 25px, hover 시 배경이 딥그린(`--color_point`)으로 반전됩니다.
+  - 검증: 2560px sticky 상태에서 `section.getBoundingClientRect().top === 0` 확인, 휠 이벤트를 직접 dispatch해서 진행(cheollik→geodeul→sapok_baji)·경계 릴리즈(마지막 항목 이후 `preventDefault` 안 됨)·역방향 복귀까지 전부 스크립트로 확인. 에셋 7개 전부 200 OK. 실제 마우스 휠 조작(진짜 `:hover`/타이밍 감각)은 이번 세션에서도 확인 못 해 사용자가 직접 확인 필요.
+- **범위에서 제외한 것**: motif_detail(모티프 상세 + 관련상품 캐러셀) 섹션은 디자인 상세를 아직 조회하지 않아 제외.
+  hero_nav의 `nav_item_kids`(1523:1120) 레이어는 Figma에 텍스트 콘텐츠가 없어(빈 노드) 내비게이션에서 제외.
 - 상품 카드 hover는 "원단 디테일컷으로 전환" 대신 **동일 사진의 확대(scale) 효과**로 단순화했습니다. 각 카드의 두 번째(hover) 이미지 URL이 카드마다 신뢰성 있게 식별되지 않아, 확인된 사진 한 장만 사용하고 확대 효과로 대체했습니다.
 - 검색창(`shop_search`)의 "클릭 시 늘어남" 주석은 JS 없이 CSS `:focus-within`으로 구현(포커스 시 400→520px).
 - "All"/"Filter" 버튼은 이번 1차 구현에서 시각적 정적 버튼만 배치(드롭다운/실제 필터링 로직 없음).

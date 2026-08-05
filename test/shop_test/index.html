@@ -25,8 +25,6 @@
 </head>
 <body>
 
-<a class="skip_link" href="#main_content">Skip to content</a>
-
 <header class="header" id="header">
   <a class="header_logo" href="../main_test/index.html">
     <img class="header_logo_img" src="assets/images/header_logo_02.png" alt="Tchai Kim">
@@ -138,6 +136,78 @@
     </div>
   </section>
 
+  <!-- garment story — 섹션 위에서 휠 스크롤 시 페이지가 아니라 가먼트가
+       전환되도록 sticky + 여유 스크롤 구간(garment_story_scroll)으로 감쌉니다. -->
+  <div class="garment_story_scroll">
+  <section class="garment_story_section" id="garment_story_section" aria-labelledby="garment_story_title">
+    <h2 class="a11y_hidden" id="garment_story_title">The story behind the garments</h2>
+
+    <div class="garment_story_frame">
+      <div class="garment_orbit" aria-hidden="true">
+        <img class="garment_orbit_circle" src="assets/icons/garment_circle.svg" alt="">
+        <div class="garment_orbit_marker">
+          <img class="garment_orbit_marker_outer" src="assets/icons/garment_point_outer.svg" alt="">
+          <img class="garment_orbit_marker_inner" src="assets/icons/garment_point_inner.svg" alt="">
+        </div>
+        <ul class="garment_orbit_list" id="garment_orbit_list">
+          <li class="garment_orbit_item" data-garment="baeja">Baeja</li>
+          <li class="garment_orbit_item" data-garment="cheollik">Cheollik</li>
+          <li class="garment_orbit_item" data-garment="geodeul">Geodeul</li>
+          <li class="garment_orbit_item" data-garment="sapok_baji">Sapok baji</li>
+        </ul>
+      </div>
+
+      <div class="garment_content">
+        <div class="garment_info" id="garment_info">
+          <div class="garment_panel" data-garment="baeja">
+            <p class="garment_label">Sleeveless layering vest</p>
+            <h3 class="garment_title">Baeja</h3>
+            <div class="garment_desc">
+              <p>A sleeveless top worn over the jeogori, open down the front and split at the sides, padded or fur-lined for the cold. King Gojong kept one as everyday winterwear.</p>
+              <p>Tchai Kim quilts it in nylon and makes it reversible, with velvet ties at the open sides so you can set the fit yourself.</p>
+            </div>
+            <a class="garment_details_button" href="#">Show details</a>
+          </div>
+          <div class="garment_panel" data-garment="cheollik">
+            <p class="garment_label">Pleated robe dress</p>
+            <h3 class="garment_title">Cheollik</h3>
+            <div class="garment_desc">
+              <p>A robe worn by Joseon officials and military men, made by joining a finely pleated skirt to a fitted bodice at the waist.</p>
+              <p>Tchai Kim keeps the waist seam and the pleats, then reshapes the robe into a dress you can wear to work or to dinner.</p>
+            </div>
+            <a class="garment_details_button" href="#">Show details</a>
+          </div>
+          <div class="garment_panel" data-garment="geodeul">
+            <p class="garment_label">Hitched-up long skirt</p>
+            <h3 class="garment_title">Geodeul</h3>
+            <div class="garment_desc">
+              <p>Women pulled their long skirts up at the waist to walk and work. Geodeul turned that everyday gesture into a fixed fold, and no example is found after the 17th century.</p>
+              <p>Tchai Kim brings the shape back, keeping the raised front line but building it into the skirt so it holds without being retied.</p>
+            </div>
+            <a class="garment_details_button" href="#">Show details</a>
+          </div>
+          <div class="garment_panel" data-garment="sapok_baji">
+            <p class="garment_label">Trousers for a floor-sitting life</p>
+            <h3 class="garment_title">Sapok baji</h3>
+            <div class="garment_desc">
+              <p>Men's trousers built for a life on the floor: a wide seat for sitting cross-legged, a narrow ankle, and one bolt of cloth cut with almost no waste.</p>
+              <p>Tchai Kim keeps the slanted panels and the tapered leg, then opens the waist so the trousers go on without wrapping and tying.</p>
+            </div>
+            <a class="garment_details_button" href="#">Show details</a>
+          </div>
+        </div>
+
+        <div class="garment_media" id="garment_media">
+          <img class="garment_media_img garment_media_img_baeja" data-garment="baeja" src="assets/images/garment_baeja.png" alt="Baeja, a sleeveless quilted layering vest with velvet side ties">
+          <img class="garment_media_img garment_media_img_cheollik" data-garment="cheollik" src="assets/images/garment_cheollik.png" alt="Cheollik, a pleated robe dress in a watercolor floral print">
+          <img class="garment_media_img garment_media_img_geodeul" data-garment="geodeul" src="assets/images/garment_geodeul.png" alt="Geodeul, a hitched-up long denim skirt">
+          <img class="garment_media_img garment_media_img_sapok_baji" data-garment="sapok_baji" src="assets/images/garment_sapok_baji.png" alt="Sapok baji, wide-seated tapered trousers">
+        </div>
+      </div>
+    </div>
+  </section>
+  </div>
+
   <!-- new arrivals -->
   <section class="new_arrivals_section" aria-labelledby="new_arrivals_title">
     <div class="new_arrivals_inner">
@@ -148,7 +218,7 @@
 
           <article class="card_product is_size_new">
             <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_1.png" alt="A model wearing the Flower Quilted Jeogori, a quilted jacket in a watercolor zinnia print with a wrap tie">
+              <img class="card_product_img" src="assets/images/product_new_1.png" data-hover-src="assets/images/product_new_1_hover.png" alt="A model wearing the Flower Quilted Jeogori, a quilted jacket in a watercolor zinnia print with a wrap tie">
               <button class="card_product_action" type="button">
                 <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                 <span class="a11y_hidden">Add Flower Quilted Jeogori to wishlist</span>
@@ -183,7 +253,7 @@
 
           <article class="card_product is_size_new">
             <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_2.png" alt="A model wearing the Ruffle Collar Puff Dress, a semi-loose dress with ruffle trim and puff sleeves">
+              <img class="card_product_img" src="assets/images/product_new_2.png" data-hover-src="" alt="A model wearing the Ruffle Collar Puff Dress, a semi-loose dress with ruffle trim and puff sleeves">
               <button class="card_product_action" type="button">
                 <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                 <span class="a11y_hidden">Add Ruffle Collar Puff Dress to wishlist</span>
@@ -222,7 +292,7 @@
 
           <article class="card_product is_size_new">
             <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_3.png" alt="A model wearing the Git Baenaet Coat, an open-front linen coat with wide sleeves and long side slits">
+              <img class="card_product_img" src="assets/images/product_new_3.png" data-hover-src="assets/images/product_new_3_hover.png" alt="A model wearing the Git Baenaet Coat, an open-front linen coat with wide sleeves and long side slits">
               <button class="card_product_action" type="button">
                 <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                 <span class="a11y_hidden">Add Git Baenaet Coat to wishlist</span>
@@ -257,7 +327,7 @@
 
           <article class="card_product is_size_new">
             <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_4.png" alt="A model wearing the Flower Hill Cheollik Dress, a cropped hanbok jacket in 80-count cotton">
+              <img class="card_product_img" src="assets/images/product_new_4.png" data-hover-src="" alt="A model wearing the Flower Hill Cheollik Dress, a cropped hanbok jacket in 80-count cotton">
               <button class="card_product_action" type="button">
                 <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                 <span class="a11y_hidden">Add Flower Hill Cheollik Dress to wishlist</span>
@@ -324,7 +394,7 @@
 
             <article class="card_product is_size_shop">
               <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_1.png" alt="A model wearing the Dot Jeoksam Jeogori, an oversized puff-sleeve jeogori in a bubble dot print">
+                <img class="card_product_img" src="assets/images/product_shop_1.png" data-hover-src="" alt="A model wearing the Dot Jeoksam Jeogori, an oversized puff-sleeve jeogori in a bubble dot print">
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                   <span class="a11y_hidden">Add Dot Jeoksam Jeogori to wishlist</span>
@@ -358,7 +428,7 @@
 
             <article class="card_product is_size_shop">
               <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_2.png" alt="A model wearing the Four Gracious Plants Jeogori Shirt in a plum, orchid, chrysanthemum and bamboo print">
+                <img class="card_product_img" src="assets/images/product_shop_2.png" data-hover-src="assets/images/product_shop_2_hover.png" alt="A model wearing the Four Gracious Plants Jeogori Shirt in a plum, orchid, chrysanthemum and bamboo print">
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                   <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
@@ -393,7 +463,7 @@
 
             <article class="card_product is_size_shop">
               <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_3.png" alt="A model wearing the Seonhongcho Sheer Scarf, a sheer scarf with a bleeding scarlet floral print">
+                <img class="card_product_img" src="assets/images/product_shop_3.png" data-hover-src="" alt="A model wearing the Seonhongcho Sheer Scarf, a sheer scarf with a bleeding scarlet floral print">
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                   <span class="a11y_hidden">Add Seonhongcho Sheer Scarf to wishlist</span>
@@ -432,7 +502,7 @@
 
             <article class="card_product is_size_shop">
               <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_4.png" alt="A model wearing the Palette Cheollik Dress in a watercolor floral print">
+                <img class="card_product_img" src="assets/images/product_shop_4.png" data-hover-src="" alt="A model wearing the Palette Cheollik Dress in a watercolor floral print">
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                   <span class="a11y_hidden">Add Palette Cheollik Dress to wishlist</span>
@@ -465,7 +535,7 @@
 
             <article class="card_product is_size_shop">
               <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_5.png" alt="A model wearing a wool-check jacket with puff sleeves and a rounded collar">
+                <img class="card_product_img" src="assets/images/product_shop_5.png" data-hover-src="" alt="A model wearing a wool-check jacket with puff sleeves and a rounded collar">
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                   <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
@@ -497,7 +567,7 @@
 
             <article class="card_product is_size_shop">
               <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_6.png" alt="A model wearing the Geodeul Floral Chima, a layered wrap skirt in lightweight linen">
+                <img class="card_product_img" src="assets/images/product_shop_6.png" data-hover-src="" alt="A model wearing the Geodeul Floral Chima, a layered wrap skirt in lightweight linen">
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
                   <span class="a11y_hidden">Add Geodeul Floral Chima to wishlist</span>

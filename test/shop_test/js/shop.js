@@ -24,15 +24,15 @@ var IMAGE_URLS = [
 ];
 
 var CARD_COUNT = IMAGE_URLS.length;
-var CARD_WIDTH = 440;
-var CARD_HEIGHT = 460;
-var RING_RADIUS = 620;
+var CARD_WIDTH = 600;
+var CARD_HEIGHT = 872;
+var RING_RADIUS = 900;
 var CARD_CURVE_SEGMENTS = 32;
 var CARD_HOVER_SCALE = 1.12;
 var FULL_TURN_DURATION_S = 40;
 var FOCUS_TWEEN_DURATION_S = 0.8;
 
-function createCurvedCardGeometry() {
+function createCurvedCardGeometry(cardHeight) {
   var geometry = new THREE.BufferGeometry();
   var positions = [];
   var uvs = [];
@@ -40,7 +40,7 @@ function createCurvedCardGeometry() {
   var arcAngle = CARD_WIDTH / RING_RADIUS;
 
   for (var row = 0; row <= 1; row += 1) {
-    var y = row === 0 ? CARD_HEIGHT / 2 : -CARD_HEIGHT / 2;
+    var y = row === 0 ? cardHeight / 2 : -cardHeight / 2;
 
     for (var column = 0; column <= CARD_CURVE_SEGMENTS; column += 1) {
       var u = column / CARD_CURVE_SEGMENTS;
@@ -72,6 +72,24 @@ function createCurvedCardGeometry() {
   return geometry;
 }
 
+/* 원본 비율은 유지하면서 모든 사진이 동일한 카드 면을 꽉 채우게 합니다.
+   CSS의 object-fit: cover와 같은 방식이라 남는 부분만 중앙 기준으로 잘립니다. */
+function coverTextureWithoutStretching(texture, imageWidth, imageHeight) {
+  var imageAspect = imageWidth / imageHeight;
+  var cardAspect = CARD_WIDTH / CARD_HEIGHT;
+
+  texture.repeat.set(1, 1);
+  texture.offset.set(0, 0);
+
+  if (imageAspect > cardAspect) {
+    texture.repeat.x = cardAspect / imageAspect;
+    texture.offset.x = (1 - texture.repeat.x) / 2;
+  } else {
+    texture.repeat.y = imageAspect / cardAspect;
+    texture.offset.y = (1 - texture.repeat.y) / 2;
+  }
+}
+
 function initHeroGallery() {
   if (!heroGallery || !canvas || typeof window.gsap === "undefined") {
     return;
@@ -99,10 +117,13 @@ function initHeroGallery() {
 
   var scene = new THREE.Scene();
   var camera = new THREE.PerspectiveCamera(45, width / height, 10, 5000);
-  camera.position.set(0, 0, 1400);
+  /* 가장 앞쪽 카드(RING_RADIUS만큼 카메라에 가까움)가 호버로 확대되고
+     원통 전체가 기울어져도 상하가 잘리지 않도록 충분한 프레이밍을 확보합니다. */
+  camera.position.set(0, 0, 2600);
   camera.lookAt(0, 0, 0);
 
   var ring = new THREE.Group();
+  ring.position.x = 80;
   ring.rotation.z = THREE.MathUtils.degToRad(12);
   ring.rotation.x = THREE.MathUtils.degToRad(-4);
   scene.add(ring);
@@ -111,22 +132,38 @@ function initHeroGallery() {
   var cards = [];
 
   IMAGE_URLS.forEach(function (url, index) {
-    var geometry = createCurvedCardGeometry();
-    var material = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 });
+    var geometry = createCurvedCardGeometry(CARD_HEIGHT);
+    var material = new THREE.MeshBasicMaterial({
+      transparent: true,
+      opacity: 0,
+      side: THREE.FrontSide
+    });
+    var backMaterial = new THREE.MeshBasicMaterial({
+      color: 0x191817,
+      side: THREE.BackSide
+    });
+    var card = new THREE.Group();
     var mesh = new THREE.Mesh(geometry, material);
+    var backMesh = new THREE.Mesh(geometry, backMaterial);
+
+    card.add(mesh);
+    card.add(backMesh);
 
     var angle = (index / CARD_COUNT) * Math.PI * 2;
-    mesh.position.set(Math.sin(angle) * RING_RADIUS, 0, Math.cos(angle) * RING_RADIUS);
-    mesh.rotation.y = angle;
+    card.position.set(Math.sin(angle) * RING_RADIUS, 0, Math.cos(angle) * RING_RADIUS);
+    card.rotation.y = angle;
+    card.userData.galleryIndex = index;
     mesh.userData.galleryIndex = index;
+    mesh.userData.hoverTarget = card;
 
-    ring.add(mesh);
+    ring.add(card);
     cards.push(mesh);
 
     loader.load(
       url,
       function handleTextureLoaded(texture) {
         texture.colorSpace = THREE.SRGBColorSpace;
+        coverTextureWithoutStretching(texture, texture.image.width, texture.image.height);
         material.map = texture;
         material.needsUpdate = true;
         gsap.to(material, { opacity: 1, duration: 0.6 });
@@ -190,10 +227,18 @@ function initHeroGallery() {
 
   function handleNavFocusIn(event) {
     var index = Number(event.currentTarget.getAttribute("data-gallery-index"));
+    heroGallery.parentElement.querySelector(".hero_nav").classList.add("has_active");
+    navLinks.forEach(function (link) {
+      link.classList.toggle("is_active", link === event.currentTarget);
+    });
     focusCard(index);
   }
 
   function handleNavFocusOut() {
+    heroGallery.parentElement.querySelector(".hero_nav").classList.remove("has_active");
+    navLinks.forEach(function (link) {
+      link.classList.remove("is_active");
+    });
     pauseReasons.delete("navigation");
     startAutoRotate();
   }
@@ -245,7 +290,9 @@ function initHeroGallery() {
     raycaster.setFromCamera(pointer, camera);
 
     var intersections = raycaster.intersectObjects(cards, false);
-    setHoveredCard(intersections.length ? intersections[0].object : null);
+    setHoveredCard(
+      intersections.length ? intersections[0].object.userData.hoverTarget : null
+    );
   }
 
   canvas.addEventListener("pointermove", handleCanvasPointerMove);
@@ -281,3 +328,149 @@ function initHeroGallery() {
 }
 
 initHeroGallery();
+
+/* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)가 휠 스크롤
+   양에 비례해 연속적으로 부드럽게 도는 원통형 인터랙션입니다(레퍼런스
+   orionix.framer.website/about의 연도 타임라인 참고). 정수 스텝 사이를
+   딱딱 끊어 전환하는 대신, "진행도"를 실수(progress)로 두고 GSAP 트윈으로
+   목표값까지 관성감 있게 따라가게 하면서 매 프레임 각도를 다시 계산합니다.
+   섹션이 화면 상단에 sticky로 붙어있는 동안 휠을 가로채고, 첫/마지막
+   가먼트에서 그 방향으로 더 스크롤하면 그대로 흘려보내 페이지 스크롤이
+   자연스럽게 이어지게 합니다. */
+(function () {
+  "use strict";
+
+  var section = document.getElementById("garment_story_section");
+  var orbitList = document.getElementById("garment_orbit_list");
+  var infoWrap = document.getElementById("garment_info");
+  var mediaWrap = document.getElementById("garment_media");
+
+  if (!section || !orbitList || !infoWrap || !mediaWrap || typeof window.gsap === "undefined") {
+    return;
+  }
+
+  var gsap = window.gsap;
+  var ORDER = ["baeja", "cheollik", "geodeul", "sapok_baji"];
+  var STEP_COUNT = ORDER.length;
+  var CENTER_X = 400;
+  var CENTER_Y = 400;
+  var LABEL_RADIUS = 436;
+  var STEP_ANGLE_DEG = 30;
+  /* deltaY 약 320만큼 굴리면 가먼트 한 칸(30도) 이동 — 시안에 없는 값이라
+     추정치이며, 실제로 보면서 조정이 필요할 수 있습니다. */
+  var WHEEL_SENSITIVITY = 1 / 320;
+  var STICKY_ENGAGED_TOLERANCE_PX = 2;
+
+  var orbitItems = Array.prototype.slice.call(orbitList.querySelectorAll(".garment_orbit_item"));
+  var panels = Array.prototype.slice.call(infoWrap.querySelectorAll(".garment_panel"));
+  var mediaImages = Array.prototype.slice.call(mediaWrap.querySelectorAll(".garment_media_img"));
+
+  var state = { progress: ORDER.indexOf("cheollik") };
+  var targetProgress = state.progress;
+  var rotateTween = null;
+
+  function applyProgress() {
+    var roundedIndex = Math.max(0, Math.min(STEP_COUNT - 1, Math.round(state.progress)));
+    var activeGarment = ORDER[roundedIndex];
+
+    orbitItems.forEach(function (item) {
+      var itemIndex = ORDER.indexOf(item.getAttribute("data-garment"));
+      var offset = itemIndex - state.progress;
+      var angleDeg = offset * STEP_ANGLE_DEG;
+      var angleRad = (angleDeg * Math.PI) / 180;
+      var x = CENTER_X + LABEL_RADIUS * Math.cos(angleRad);
+      var y = CENTER_Y + LABEL_RADIUS * Math.sin(angleRad);
+
+      item.style.left = x.toFixed(2) + "px";
+      item.style.top = y.toFixed(2) + "px";
+      item.style.transform = "translate(-50%, -50%) rotate(" + angleDeg.toFixed(2) + "deg)";
+      item.classList.toggle("is_pos_active", itemIndex === roundedIndex);
+    });
+
+    panels.forEach(function (panel) {
+      panel.classList.toggle("is_active", panel.getAttribute("data-garment") === activeGarment);
+    });
+
+    mediaImages.forEach(function (img) {
+      img.classList.toggle("is_active", img.getAttribute("data-garment") === activeGarment);
+    });
+  }
+
+  function isSectionEngaged() {
+    var rect = section.getBoundingClientRect();
+    return Math.abs(rect.top) <= STICKY_ENGAGED_TOLERANCE_PX;
+  }
+
+  function animateTo(nextTarget) {
+    targetProgress = nextTarget;
+
+    if (rotateTween) {
+      rotateTween.kill();
+    }
+
+    rotateTween = gsap.to(state, {
+      progress: targetProgress,
+      duration: 0.9,
+      ease: "power3.out",
+      onUpdate: applyProgress
+    });
+  }
+
+  function handleWheel(event) {
+    if (!isSectionEngaged()) {
+      return;
+    }
+
+    var atStartGoingUp = targetProgress <= 0 && event.deltaY < 0;
+    var atEndGoingDown = targetProgress >= STEP_COUNT - 1 && event.deltaY > 0;
+
+    if (atStartGoingUp || atEndGoingDown) {
+      /* 첫/마지막 가먼트를 넘어가려는 스크롤은 가로채지 않고 그대로
+         페이지 스크롤로 흘려보냅니다. */
+      return;
+    }
+
+    var proposed = targetProgress + event.deltaY * WHEEL_SENSITIVITY;
+    var clamped = Math.max(0, Math.min(STEP_COUNT - 1, proposed));
+
+    event.preventDefault();
+    animateTo(clamped);
+  }
+
+  window.addEventListener("wheel", handleWheel, { passive: false });
+
+  applyProgress();
+})();
+
+/* Product cards — data-hover-src에 원단 이미지 경로가 들어간 카드만
+   이미지를 미리 불러온 뒤 hover/focus 시 부드럽게 교체합니다. */
+(function initProductImageHover() {
+  var productImages = Array.prototype.slice.call(
+    document.querySelectorAll(".card_product_img[data-hover-src]")
+  );
+
+  productImages.forEach(function (defaultImage) {
+    var hoverSrc = defaultImage.getAttribute("data-hover-src").trim();
+    var media = defaultImage.closest(".card_product_media");
+
+    if (!hoverSrc || !media) {
+      return;
+    }
+
+    var preload = new Image();
+
+    preload.onload = function () {
+      var hoverImage = document.createElement("img");
+      hoverImage.className = "card_product_img card_product_img_hover";
+      hoverImage.src = hoverSrc;
+      hoverImage.alt = "";
+      hoverImage.setAttribute("aria-hidden", "true");
+
+      defaultImage.classList.add("card_product_img_default");
+      media.insertBefore(hoverImage, defaultImage.nextSibling);
+      media.classList.add("has_hover_image");
+    };
+
+    preload.src = hoverSrc;
+  });
+})();
