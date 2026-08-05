@@ -89,6 +89,34 @@
 - 코디 자리 전환은 `top / left / width` transition(0.6s)입니다.
   자리마다 크기가 달라 transform만으로는 시안 좌표를 유지할 수 없습니다.
 
+## Shop 페이지 (`shop_test/`)
+
+- 대상 화면: Figma `4조 한복판 - 차이킴` node `1523:1094`("shop_박효민"). main 페이지와 별도 폴더(`test/main_test/shop_test/`)에 독립 구현.
+- 범위: 반응형 없음, **1920px 데스크톱 고정 레이아웃만** 구현(사용자 명시 지시).
+- 구현 완료 섹션: hero_section(카테고리 내비 + 정적 갤러리), banner, new_arrivals_section(2×2 상품 카드), shop(필터바 + 3×2 상품 카드 + View More), 공용 header/footer(main_test와 동일 마크업 재사용).
+- 상품 카드는 `.card_product` 공용 컴포넌트로 작성하고 `.is_size_new`(800×930) / `.is_size_shop`(528×950) modifier로 두 섹션에서 재사용.
+- 상품 이미지·가격·설명·태그는 모두 Figma `get_design_context` 응답의 실제 카피를 그대로 사용(임의 생성 없음). 이미지 URL은 각 카드 인스턴스에서 실제로 보이는(레이어의 hover-opacity가 0이 아닌) 레이어 기준으로 1:1 매칭.
+- hero_section 갤러리 회전(2차): Figma 주석("원통형으로 카테고리별 사진이 돌아간다 / 기본 ALL·NEW 강조 자동재생 / 카테고리 hover 시 해당 이미지에 멈춤") 반영해 인터랙션을 추가했습니다(`js/shop.js`).
+  - 4장의 갤러리 사진은 미리 대각선으로 잘려 내보내진 이미지라, 서로 다른 자리(크기)로 옮기면 잘림·왜곡이 생깁니다. 그래서 위치·크기는 원래 자리를 유지하고 **"강조(scale 1.045 + brightness)" 상태만 순환**시키는 방식으로 구현했습니다(main 페이지 코디 캐러셀의 "자리 class를 JS가 바꿔 끼우는" 패턴과 동일).
+  - 카테고리 8개(ALL/NEW·DRESS·TOP·KNIT·BOTTOM·OUTER·ACC·LIVING)는 사진 4장에 라운드로빈 매칭(`data-gallery-index`). 실제 카테고리별 상품 사진이 시안에 없어 임의 매칭입니다.
+  - 3.2초 간격 자동 순환, 카테고리 hover/focus 시 즉시 해당 사진 강조 + 정지, 벗어나면 그 지점부터 재개. `prefers-reduced-motion`에서는 자동 순환을 시작하지 않습니다.
+- **범위에서 제외한 것(사용자 확인 완료)**:
+  - garment_story(컴포넌트 인스턴스), motif_detail(모티프 상세 + 관련상품 캐러셀) 두 섹션은 디자인 상세를 아직 조회하지 않아 **이번 구현에서 제외**.
+  - hero_nav의 `nav_item_kids`(1523:1120) 레이어는 Figma에 텍스트 콘텐츠가 없어(빈 노드) 내비게이션에서 제외.
+- 상품 카드 hover는 "원단 디테일컷으로 전환" 대신 **동일 사진의 확대(scale) 효과**로 단순화했습니다. 각 카드의 두 번째(hover) 이미지 URL이 카드마다 신뢰성 있게 식별되지 않아, 확인된 사진 한 장만 사용하고 확대 효과로 대체했습니다.
+- 검색창(`shop_search`)의 "클릭 시 늘어남" 주석은 JS 없이 CSS `:focus-within`으로 구현(포커스 시 400→520px).
+- "All"/"Filter" 버튼은 이번 1차 구현에서 시각적 정적 버튼만 배치(드롭다운/실제 필터링 로직 없음).
+- 실행: `.claude/launch.json`의 `shop_test` 설정(PowerShell 정적 서버, `http://localhost:5602`, 스크립트는 세션 스크래치패드에 위치).
+- 검증: 네트워크 요청 전량 200 OK(자산 경로 오류 없음), 접근성 트리 확인(랜드마크·heading·상품 카드 구조 정상), 웹폰트 9종(Montserrat 400/500/600, Trirong 200/400/500/600 + 600 italic, Pretendard Variable) 정상 로드, hero_section 1920×1770 / main 1920px 폭 확인. **다만 이번 세션에서는 Browser 미리보기 패널이 화면에 표시되지 않아 스크린샷 기반 시각 비교와 실제 hover/focus 상호작용 확인은 하지 못했습니다.** 사용자가 `http://localhost:5602`을 직접 열어 시각적으로 확인 필요.
+
+### Shop 다음 작업
+
+1. garment_story, motif_detail 두 섹션 디자인 컨텍스트 조회 후 구현
+2. 실제 카테고리별 상품 사진이 시안에 추가되면 hero 갤러리의 라운드로빈 매칭을 실제 매핑으로 교체
+3. 상품 카드 hover 시 원단 디테일컷으로 전환하는 기능은 카드별 정확한 이미지 매핑이 필요 — Figma에서 직접 확인 필요
+4. shop 페이지 반응형(360/768/1280) 대응
+5. 실제 브라우저 스크린샷으로 Figma 시안과 픽셀 단위 비교, 실제 마우스 hover(원통형 갤러리 강조, 카드 hover, 검색창 확장) 수동 확인
+
 ## 다음 작업
 
 1. 메인페이지 전체 반응형(360 / 768 / 1280) 일괄 작업

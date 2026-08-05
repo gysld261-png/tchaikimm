@@ -1,0 +1,22 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "shop_test",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:\\Users\\EZEN\\AppData\\Local\\Temp\\claude\\C--Users-EZEN-Desktop-tchaikimm\\838f3ce9-1347-4621-88f8-4272f29b3fca\\scratchpad\\serve.ps1",
+        "-Port",
+        "5602",
+        "-Root",
+        "C:\\Users\\EZEN\\Desktop\\tchaikimm\\test\\main_test\\shop_test"
+      ],
+      "port": 5602,
+      "autoPort": false
+    }
+  ]
+}
