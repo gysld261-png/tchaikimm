@@ -1,0 +1,635 @@
+@charset "utf-8";
+
+/* =========================================================
+   Collection — Figma node 1710:3865 "col_chaikimyoungjin"
+   시안 캔버스 1920 × 9796.75. 이번 구현은 데스크톱(1920) 기준이며
+   반응형(360 / 768 / 1280)은 다음 단계입니다.
+   ========================================================= */
+
+:root {
+  /* 시안 전용 값. 공통 토큰에 없는 색만 여기서 정의합니다. */
+  --collection_dark: #282828;
+  --collection_quote: #dfdfdf;
+  --collection_tag_line: #e2ddd5;
+  --collection_hero_title: #262626;
+  --collection_section_title: #1e1e1e;
+}
+
+/* 시안 좌표(1920 기준)를 그대로 쓰는 절대배치 요소를 담는 고정 폭 프레임.
+   섹션 배경은 화면 폭에 맞춰 늘어나고 이 프레임만 1920px로 고정됩니다.
+   (shop_test의 .hero_section_frame과 같은 방식) */
+.collection_frame {
+  position: relative;
+  width: var(--layout_canvas);
+  /* margin-inline: auto는 프레임이 화면보다 넓어지면 왼쪽으로 붙습니다.
+     1920px보다 좁은 화면에서도 좌우가 똑같이 잘리도록 음수 여백으로 가운데 둡니다. */
+  margin-left: calc(50% - var(--layout_canvas) / 2);
+}
+
+/* =========================================================
+   hero — Fashion_show_video (1710:3866)
+   ========================================================= */
+
+.collection_hero {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* 시안 1920 × 1182 */
+  height: 1182px;
+  background-color: var(--color_bg);
+}
+
+.collection_hero_video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.collection_hero_title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  color: var(--collection_hero_title);
+  font-family: var(--font_display);
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.13;
+  letter-spacing: -1.28px;
+  text-align: center;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+/* =========================================================
+   showcase — arc(1710:3870) + Rounded Background(1710:3872) 위의
+   떠 있는 사진과 문장
+   ========================================================= */
+
+.showcase {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* 시안 1182 → 4516.07 */
+  height: 3335px;
+  background-color: var(--color_bg);
+}
+
+.showcase_bg {
+  position: absolute;
+  inset: 0;
+}
+
+/* arc.svg는 1960 뷰박스 안에서 0~1920 구간만 그려집니다.
+   곡선이 화면 폭에 정확히 맞도록 1960/1920 만큼 넓혀 둡니다. */
+.showcase_arc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 102.0834%;
+  max-width: none;
+  height: 738px;
+}
+
+.showcase_gradient {
+  position: absolute;
+  top: 738px;
+  left: 0;
+  width: 100%;
+  height: 2597px;
+  background-image: linear-gradient(
+    0deg,
+    #fffdf9 0%,
+    #b5b3b1 19.051%,
+    #7d7c7b 42.215%,
+    #5b5b5a 56.53%,
+    #414140 74.49%,
+    var(--collection_dark) 100%
+  );
+}
+
+.showcase_frame {
+  height: 3335px;
+}
+
+/* 시안의 사진 프레임은 모두 10px 안쪽 여백을 가집니다. */
+.showcase_photo {
+  position: absolute;
+  margin: 0;
+  padding: 10px;
+}
+
+.showcase_photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 기울어진 두 장은 프레임 가운데에서 회전합니다.
+   회전 전 사진 크기는 시안과 같은 269.223 × 386.768입니다.
+   가운데 정렬을 translate가 아닌 음수 margin으로 하는 이유:
+   스크롤 인터랙션에서 GSAP이 rotation만 건드리면 되도록 transform을 비워 둡니다. */
+.showcase_photo_tilt {
+  padding: 0;
+}
+
+.showcase_photo_tilt img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 269.223px;
+  height: 386.768px;
+  margin-top: -193.384px;
+  margin-left: -134.6115px;
+}
+
+.showcase_photo_a {
+  top: 247px;
+  left: 95px;
+  width: 378px;
+  height: 465px;
+}
+
+.showcase_photo_a img {
+  transform: rotate(-15.55deg);
+}
+
+.showcase_photo_b {
+  top: 315px;
+  left: 1451px;
+  width: 366px;
+  height: 458px;
+}
+
+.showcase_photo_b img {
+  transform: rotate(13.07deg);
+}
+
+.showcase_photo_c {
+  top: 1250px;
+  left: 605px;
+  width: 710px;
+  height: 959px;
+}
+
+.showcase_photo_d {
+  top: 1513px;
+  left: 1398px;
+  width: 307px;
+  height: 315px;
+}
+
+.showcase_photo_e {
+  top: 1685px;
+  left: 138px;
+  width: 347px;
+  height: 468px;
+}
+
+.showcase_photo_f {
+  top: 2143px;
+  left: 1391px;
+  width: 309px;
+  height: 441px;
+}
+
+.showcase_photo_g {
+  top: 2340px;
+  left: 371px;
+  width: 348px;
+  height: 468px;
+}
+
+/* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다. */
+.showcase_quote {
+  position: absolute;
+  top: 712px;
+  left: 760px;
+  width: 288.5px;
+  height: 311px;
+  margin: 0;
+}
+
+.showcase_quote_line {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 288.5px;
+  height: 82px;
+  color: var(--collection_quote);
+  font-family: var(--font_display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+  white-space: nowrap;
+}
+
+/* stagger를 걸려면 단어마다 개별 요소가 필요합니다. `collection.js`가 이 두 span을 만듭니다.
+   래퍼가 한 겹 필요한 이유: .showcase_quote_line이 flex 컨테이너라 단어 span을 직접 넣으면
+   사이의 공백 텍스트 노드가 무시돼 단어가 붙습니다. 래퍼 안은 일반 inline 흐름입니다.
+   단어는 inline 요소에 transform이 먹지 않아 inline-block으로 둡니다. */
+.showcase_quote_text {
+  white-space: nowrap;
+}
+
+.showcase_quote_word {
+  display: inline-block;
+}
+
+.showcase_quote_line1 {
+  top: 0;
+  left: 0;
+}
+
+.showcase_quote_line2 {
+  top: 117px;
+  left: 266px;
+}
+
+.showcase_quote_line3 {
+  top: 229px;
+  left: 0;
+}
+
+/* 스크롤 인터랙션 대상 — scrub 중 매 프레임 다시 그리므로 합성 레이어를 미리 잡아 둡니다.
+   transform-style: preserve-3d는 3D 자식이 없어 쓰지 않았고, 대신 backface-visibility로
+   회전·확대 중 가장자리 떨림을 막습니다. */
+.showcase_photo_tilt,
+.showcase_photo_c img,
+.showcase_photo_d img,
+.showcase_photo_e img,
+.showcase_photo_f img,
+.showcase_photo_g img,
+.showcase_quote_word {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* 상단 두 장만 blur까지 움직입니다. */
+.showcase_photo_tilt {
+  will-change: transform, opacity, filter;
+}
+
+/* =========================================================
+   archive — card(1710:3873)
+   ========================================================= */
+
+.archive {
+  position: relative;
+  width: 100%;
+  /* overflow: hidden을 쓰면 안쪽 sticky 컬럼이 죽습니다. clip은 스크롤 컨테이너를
+     만들지 않아 sticky를 유지한 채 1920 프레임의 좌우 넘침만 잘라 냅니다. */
+  overflow-x: clip;
+  background-color: var(--color_bg);
+}
+
+.archive_frame {
+  /* 시안 4516.07 → 7271.07 */
+  height: 2755px;
+}
+
+.archive_sticky {
+  width: 566px;
+  height: 2505px;
+  padding: 347px 0 0 120px;
+}
+
+/* 레이어 이름이 sticky입니다. 사진이 지나가는 동안 연도 내비가 따라옵니다. */
+.archive_txt_area {
+  position: sticky;
+  top: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  align-items: flex-start;
+  width: 350px;
+}
+
+.archive_txt {
+  display: flex;
+  flex-direction: column;
+  gap: 61px;
+  align-items: flex-start;
+}
+
+.archive_title {
+  margin: 0;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+}
+
+.archive_year_list {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  align-items: flex-start;
+}
+
+/* inline-block 링크의 line box strut이 시안 간격(19px)을 벌리지 않도록 flex로 둡니다. */
+.archive_year_item {
+  display: flex;
+}
+
+.archive_year_link {
+  display: inline-block;
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+  transition: opacity var(--duration_fast) var(--easing_base);
+}
+
+.archive_year_link:hover {
+  opacity: 0.6;
+}
+
+/* 선택된 연도는 시안대로 41px 들여쓰고 크게 표시합니다. */
+.archive_year_item.is_active {
+  padding-left: 41px;
+}
+
+.archive_year_item.is_active .archive_year_link {
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.archive_photo {
+  position: absolute;
+  margin: 0;
+  padding: 10px;
+}
+
+.archive_photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.archive_photo_4 {
+  top: 197px;
+  left: 710px;
+  width: 462px;
+  height: 568px;
+}
+
+.archive_photo_3 {
+  top: 627px;
+  left: 1054px;
+  width: 750px;
+  height: 717px;
+}
+
+.archive_photo_2 {
+  top: 1121px;
+  left: 566px;
+  width: 595px;
+  height: 568px;
+}
+
+.archive_photo_1 {
+  top: 1494px;
+  left: 1208px;
+  width: 596px;
+  height: 663px;
+}
+
+.archive_photo_5 {
+  top: 1943px;
+  left: 547px;
+  width: 854px;
+  height: 511px;
+}
+
+/* =========================================================
+   banner_crosslink_link — 시안 공용 링크 컴포넌트
+   ========================================================= */
+
+.banner_crosslink_link {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  transition: opacity var(--duration_fast) var(--easing_base);
+}
+
+.banner_crosslink_link:hover {
+  opacity: 0.6;
+}
+
+.banner_crosslink_text {
+  font-family: var(--font_body);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+}
+
+.banner_crosslink_icon {
+  width: 11.25px;
+  height: 9.375px;
+}
+
+/* archive의 링크는 시안에서 20px 아이콘 슬롯 + 16px 본문입니다. */
+.archive_more {
+  height: 27px;
+}
+
+.archive_more .banner_crosslink_text {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.63;
+  letter-spacing: normal;
+}
+
+.archive_more .banner_crosslink_icon {
+  width: 15px;
+  height: 12.5px;
+}
+
+/* =========================================================
+   as worn — colaboration(1710:3903)
+   ========================================================= */
+
+.asworn {
+  width: 100%;
+  padding: 250px 0;
+  background-color: var(--color_bg);
+}
+
+.asworn_head {
+  display: flex;
+  flex-direction: column;
+  gap: 49px;
+  align-items: center;
+  width: 894px;
+  margin: 0 auto 118px;
+}
+
+.asworn_title {
+  margin: 0;
+  color: var(--collection_section_title);
+  font-family: var(--font_display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+  text-align: center;
+}
+
+.asworn_tags {
+  display: flex;
+  gap: 27px;
+  align-items: center;
+}
+
+.asworn_tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: 1px solid var(--collection_tag_line);
+  border-radius: 35px;
+  background-color: #ffffff;
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 1.28px;
+  white-space: nowrap;
+  transition: border-color var(--duration_fast) var(--easing_base),
+              color var(--duration_fast) var(--easing_base);
+}
+
+.asworn_tag:hover,
+.asworn_tag:focus-visible {
+  border-color: var(--color_point);
+  color: var(--color_point);
+}
+
+/* 시안의 세 카드 폭 합계(2475px)가 캔버스(1920px)보다 넓습니다.
+   시안 그대로 두면 세 번째 설명이 잘려 읽을 수 없어 가로 스크롤 트랙으로 둡니다. */
+.asworn_track {
+  width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.asworn_list {
+  display: flex;
+  gap: 34px;
+  align-items: center;
+  width: max-content;
+}
+
+.asworn_item {
+  display: flex;
+  align-items: flex-end;
+}
+
+.asworn_item_1 {
+  gap: 24px;
+}
+
+.asworn_item_2 {
+  gap: 48px;
+}
+
+.asworn_item_3 {
+  gap: 0;
+}
+
+.asworn_figure {
+  flex-shrink: 0;
+  width: 441px;
+  height: 681px;
+  margin: 0;
+}
+
+.asworn_item_2 .asworn_figure {
+  width: 442px;
+}
+
+/* 세 번째 카드만 시안에서 사진 둘레에 20px 여백이 있습니다. */
+.asworn_item_3 .asworn_figure {
+  width: 481px;
+  height: 721px;
+  padding: 20px;
+}
+
+.asworn_figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.asworn_body {
+  flex-shrink: 0;
+  width: 317px;
+}
+
+.asworn_item_3 .asworn_body {
+  width: 337px;
+  padding: 10px;
+}
+
+.asworn_name {
+  margin: 0;
+  padding: 10px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.asworn_item_3 .asworn_name {
+  padding: 10px 0;
+}
+
+.asworn_desc {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  align-items: flex-start;
+  padding: 10px;
+}
+
+.asworn_item_2 .asworn_desc {
+  gap: 21px;
+}
+
+.asworn_item_3 .asworn_desc {
+  gap: 15px;
+  padding: 0;
+}
+
+.asworn_text {
+  width: 289px;
+  margin: 0;
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.asworn_item_3 .asworn_text {
+  width: 341px;
+  padding: 10px 0;
+}

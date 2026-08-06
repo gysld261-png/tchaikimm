@@ -1,0 +1,64 @@
+@charset "utf-8";
+
+/* Tchai Kim shared design tokens.
+   Keep page-specific values in each page stylesheet. */
+:root {
+  --color_bg: #fffdf9;
+  --color_text: #0a0a0a;
+  --color_text_sub: #2e2e2e;
+  --color_point: #1f433f;
+  --color_line: rgba(0, 0, 0, 0.5);
+  --color_text_on_dark: #ffffff;
+  --color_text_on_dark_sub: #dddddd;
+  --color_text_on_dark_menu: rgba(255, 255, 255, 0.85);
+  --color_line_on_dark: rgba(255, 255, 255, 0.6);
+  --color_error: #b3261e;
+
+  --font_display: "Trirong", "Times New Roman", serif;
+  --font_body: "Montserrat", "Pretendard Variable", sans-serif;
+  --font_ui: "Pretendard Variable", "Pretendard", system-ui, sans-serif;
+
+  --fs_display_64: clamp(36px, 4.5vw, 64px);
+  --fs_display_48: clamp(28px, 3.5vw, 48px);
+  --fs_display_32: clamp(24px, 2.4vw, 32px);
+  --fs_body_24: clamp(18px, 1.6vw, 24px);
+  --fs_body_20: clamp(16px, 1.4vw, 20px);
+  --fs_ui_20: 20px;
+  --fs_ui_16: 16px;
+  --fs_ui_15: 15px;
+  --fs_ui_14: 14px;
+
+  --lh_display_64: 1.5;
+  --lh_display_48: 1.292;
+  --lh_display_32: 1.406;
+  --lh_body_24: 1.583;
+  --lh_body_20: 1.6;
+
+  --ls_tight: -0.02em;
+  --ls_tight_sm: -0.01em;
+
+  --layout_canvas: 1920px;
+  --layout_inner: 1600px;
+  --layout_gutter: 20px;
+  --header_height: 64px;
+
+  --radius_button: 5px;
+
+  --duration_fast: 0.2s;
+  --duration_base: 0.4s;
+  --easing_base: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --layout_gutter: 40px;
+    --header_height: 72px;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --layout_gutter: 64px;
+    --header_height: 80px;
+  }
+}

@@ -1,0 +1,122 @@
+@charset "utf-8";
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background-color: var(--color_bg);
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1.5;
+}
+
+.a11y_hidden {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.skip_link {
+  position: absolute;
+  top: -100px;
+  left: var(--layout_gutter);
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: var(--radius_button);
+  background-color: var(--color_point);
+  color: var(--color_text_on_dark);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_16);
+  transition: top var(--duration_fast) var(--easing_base);
+}
+
+.skip_link:focus-visible {
+  top: 12px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color_point);
+  outline-offset: 3px;
+}
+
+.main {
+  display: block;
+}
+
+/* Figma 1920px canvas baseline.
+   Full-bleed backgrounds stay on the section; place only section content here. */
+.common_container {
+  width: 100%;
+  max-width: var(--layout_canvas);
+  margin-inline: auto;
+  padding-inline: var(--layout_gutter);
+}
+
+.common_header_slot {
+  width: 100%;
+}
+
+body[data-header-variant="white"] .common_header_slot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 50;
+}
+
+body[data-header-variant="black"] .common_header_slot {
+  min-height: var(--header_height);
+}
+
+.top_button {
+  position: fixed;
+  right: var(--layout_gutter);
+  bottom: 24px;
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--color_line);
+  border-radius: 50%;
+  background-color: var(--color_bg);
+  color: var(--color_text);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity var(--duration_fast) var(--easing_base),
+              transform var(--duration_fast) var(--easing_base),
+              background-color var(--duration_fast) var(--easing_base),
+              color var(--duration_fast) var(--easing_base);
+}
+
+.top_button.is_visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.top_button:hover,
+.top_button:focus-visible {
+  background-color: var(--color_point);
+  color: var(--color_text_on_dark);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
