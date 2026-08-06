@@ -1,5 +1,47 @@
 import * as THREE from "three";
 
+/* Lenis — 스크롤을 한 칸씩 끊어 뛰지 않고 부드럽게 이어지게 만듭니다. 페이지
+   전체에 걸리는 라이브러리라 motif_hero뿐 아니라 garment_story 등 스크롤에
+   묶인 모든 움직임이 같이 부드러워집니다.
+
+   ScrollTrigger와 같이 쓸 때는 두 가지를 반드시 연결해야 합니다. 안 하면
+   Lenis가 옮긴 스크롤 위치를 ScrollTrigger가 모르고 있어 애니메이션이 실제
+   화면보다 늦게 따라옵니다.
+     1) Lenis가 스크롤할 때마다 ScrollTrigger를 갱신
+     2) Lenis의 프레임 갱신을 GSAP 티커에 얹어 두 애니메이션 루프를 하나로 통일
+   그래서 Lenis 자체 루프(autoRaf)는 끄고 GSAP 티커에 태웁니다. */
+(function initSmoothScroll() {
+  "use strict";
+
+  if (typeof window.Lenis === "undefined" || typeof window.gsap === "undefined") {
+    return;
+  }
+
+  /* 움직임을 줄이도록 설정한 사용자에게는 브라우저 기본 스크롤을 그대로 둡니다. */
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  var gsap = window.gsap;
+  var lenis = new window.Lenis({
+  autoRaf: false,
+  lerp: 0.06,          // 낮을수록 천천히 따라옴
+  wheelMultiplier: 0.75 // 휠 한 번의 이동 거리
+});
+
+  if (window.ScrollTrigger) {
+    lenis.on("scroll", window.ScrollTrigger.update);
+  }
+
+  gsap.ticker.add(function (time) {
+    /* GSAP 티커는 초, Lenis의 raf는 밀리초를 받습니다. */
+    lenis.raf(time * 1000);
+  });
+
+  /* 프레임이 밀렸을 때 GSAP이 시간을 보정하면 Lenis와 어긋나므로 끕니다. */
+  gsap.ticker.lagSmoothing(0);
+})();
+
 /* hero — follow.art 레퍼런스처럼 사진 카드들을 원통 둘레에 실제 3D로 배치하고
    Three.js로 렌더링합니다. 회전값은 GSAP로 트윈합니다(main 페이지가 이미
    GSAP를 쓰고 있어 같은 라이브러리로 통일). 페이지 진입 즉시 자동 회전이
@@ -382,9 +424,9 @@ initHeroGallery();
   /* 설명과 이미지가 맞닿아 보이지 않도록 한 화면 높이보다 더 떨어뜨립니다. */
   var CONTENT_SPACING_MULTIPLIER = 2;
   /* 숫자가 클수록 스크롤을 늦게 따라오며 관성이 강해집니다. */
-  var SCROLL_SCRUB_SECONDS = 1.2;
+  var SCROLL_SCRUB_SECONDS = 1.4;
   /* 숫자가 작을수록 적은 스크롤로 네 콘텐츠를 빠르게 통과합니다. */
-  var SCROLL_DISTANCE_PERCENT = 340;
+  var SCROLL_DISTANCE_PERCENT = 450;
   /* 마지막 콘텐츠가 완전히 자리 잡은 뒤 pin이 풀리기 전 유지되는 비율입니다. */
   var END_HOLD_RATIO = 0.18;
   /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
@@ -518,6 +560,25 @@ initHeroGallery();
     .to({}, { duration: END_HOLD_RATIO });
 })();
 
+/* Product cards — 사진 위 아이콘들이 한꺼번에 나타나지 않고 하나씩 이어서
+   나타나도록, 카드 안에서 몇 번째 아이콘인지를 CSS에 넘겨줍니다. 실제 지연
+   계산은 css/shop.css의 --card_icon_delay / --card_icon_stagger가 합니다.
+   all(shop_section)과 new(new_arrivals) 카드가 같은 클래스를 쓰므로 이 한
+   군데서 양쪽이 같이 처리됩니다. */
+(function initProductActionOrder() {
+  "use strict";
+
+  var mediaBoxes = Array.prototype.slice.call(document.querySelectorAll(".card_product_media"));
+
+  mediaBoxes.forEach(function (media) {
+    var actions = Array.prototype.slice.call(media.querySelectorAll(".card_product_action"));
+
+    actions.forEach(function (action, index) {
+      action.style.setProperty("--card_action_index", String(index));
+    });
+  });
+})();
+
 /* Product cards — data-hover-src에 원단 이미지 경로가 들어간 카드만
    이미지를 미리 불러온 뒤 hover/focus 시 부드럽게 교체합니다. */
 (function initProductImageHover() {
@@ -543,10 +604,185 @@ initHeroGallery();
       hoverImage.setAttribute("aria-hidden", "true");
 
       defaultImage.classList.add("card_product_img_default");
-      media.insertBefore(hoverImage, defaultImage.nextSibling);
+      /* 기본 이미지가 들어있는 상자(.card_product_media_link) 안에, 바로 옆에
+         끼워 넣습니다. media에 직접 붙이면 아이콘들 뒤에 쌓여서 원단 사진이
+         아이콘을 가립니다. */
+      defaultImage.parentNode.insertBefore(hoverImage, defaultImage.nextSibling);
       media.classList.add("has_hover_image");
     };
 
     preload.src = hoverSrc;
+  });
+})();
+
+/* shop — 카테고리 선택 목록. 버튼을 누르면 일곱 개 항목이 위에서부터 하나씩
+   이어서 나타납니다. 실제 지연 계산은 css/shop.css의 --shop_select_delay /
+   --shop_select_stagger가 하고, 여기서는 몇 번째 항목인지만 넘겨줍니다.
+
+   지금은 목록에서 고르면 버튼 글자만 바뀌고 아래 상품은 그대로입니다.
+   상품마다 어느 카테고리인지가 아직 마크업에 없어서, 거를 기준이 없습니다. */
+(function initShopSelect() {
+  "use strict";
+
+  var wrap = document.getElementById("shop_select_wrap");
+  var button = document.getElementById("shop_select_button");
+  var list = document.getElementById("shop_select_list");
+
+  if (!wrap || !button || !list) {
+    return;
+  }
+
+  var label = button.querySelector(".shop_select_label");
+  var items = Array.prototype.slice.call(list.querySelectorAll(".shop_select_item"));
+
+  items.forEach(function (item, index) {
+    item.style.setProperty("--shop_select_index", String(index));
+  });
+
+  function openList() {
+    list.classList.add("is_open");
+    button.setAttribute("aria-expanded", "true");
+  }
+
+  /* focusButton은 Escape나 항목 선택처럼 사용자가 직접 닫은 경우에만 참입니다.
+     바깥을 클릭해서 닫힐 때까지 버튼으로 포커스를 끌어오면, 사용자가 누른
+     곳이 아니라 엉뚱한 데로 포커스가 튑니다. */
+  function closeList(focusButton) {
+    list.classList.remove("is_open");
+    button.setAttribute("aria-expanded", "false");
+
+    if (focusButton) {
+      button.focus();
+    }
+  }
+
+  function isOpen() {
+    return list.classList.contains("is_open");
+  }
+
+  button.addEventListener("click", function () {
+    if (isOpen()) {
+      closeList(false);
+    } else {
+      openList();
+    }
+  });
+
+  items.forEach(function (item) {
+    var option = item.querySelector(".shop_select_option");
+
+    if (!option) {
+      return;
+    }
+
+    option.addEventListener("click", function () {
+      items.forEach(function (other) {
+        other.classList.remove("is_selected");
+        other.setAttribute("aria-selected", "false");
+      });
+
+      item.classList.add("is_selected");
+      item.setAttribute("aria-selected", "true");
+
+      if (label) {
+        label.textContent = option.textContent.trim();
+      }
+
+      closeList(true);
+    });
+  });
+
+  /* 목록 바깥을 누르면 닫힙니다. 버튼도 wrap 안에 있으므로 위 토글 처리와
+     겹치지 않습니다. */
+  document.addEventListener("click", function (event) {
+    if (isOpen() && !wrap.contains(event.target)) {
+      closeList(false);
+    }
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && isOpen()) {
+      closeList(true);
+    }
+  });
+})();
+
+/* motif_detail — 관련 상품 스트립. 카드 크기는 선택된 카드(가장 큼), 그 양옆
+   (중간), 나머지(가장 작음) 3단계이고 크기 규칙은 전부 CSS에 있습니다. 여기서는
+   is_selected 클래스를 옮기는 일만 합니다. hover나 키보드 focus가 들어오면 그
+   카드로 옮기고, 빠져나가도 되돌리지 않아 마지막으로 본 상품에 머무릅니다
+   (Figma 주석: hover 해제 시 현재 선택된 상품 중심으로 복귀). */
+(function initMotifProductStrip() {
+  "use strict";
+
+  var strip = document.getElementById("motif_product_strip");
+
+  if (!strip) {
+    return;
+  }
+
+  var cards = Array.prototype.slice.call(strip.querySelectorAll(".motif_product_card"));
+
+  function selectCard(card) {
+    if (card.classList.contains("is_selected")) {
+      return;
+    }
+
+    cards.forEach(function (item) {
+      item.classList.toggle("is_selected", item === card);
+    });
+  }
+
+  cards.forEach(function (card) {
+    function handleSelect() {
+      selectCard(card);
+    }
+
+    card.addEventListener("mouseenter", handleSelect);
+    /* 키보드로 탭 이동할 때도 따라오게 합니다. 없으면 focus 링만 옮겨다니고
+       크기는 그대로라 지금 어디에 있는지 알아보기 어렵습니다. */
+    card.addEventListener("focus", handleSelect);
+  });
+})();
+
+/* motif_detail — 왼쪽 설명 블록이 오른쪽 영상을 따라 아래로 내려옵니다.
+   영상 위 끝에서 시작해 영상 아래 끝에서 멈추므로, 그 아래 관련 상품 영역까지
+   넘어가지 않습니다. scrub으로 스크롤 위치에 묶어둬서 되감으면 같이 올라옵니다
+   (Figma 주석: "스크롤시 오른쪽 영상을 따라서 밑으로 내려옴"). */
+(function initMotifReferenceScroll() {
+  "use strict";
+
+  var hero = document.querySelector(".motif_hero");
+  var reference = document.getElementById("motif_reference");
+  var video = document.querySelector(".motif_video");
+
+  if (!hero || !reference || !video || typeof window.gsap === "undefined" || !window.ScrollTrigger) {
+    return;
+  }
+
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  var gsap = window.gsap;
+  var ScrollTrigger = window.ScrollTrigger;
+  gsap.registerPlugin(ScrollTrigger);
+
+  gsap.to(reference, {
+    /* 영상 높이에서 글 블록 높이를 뺀 만큼 = 영상 위 끝에서 아래 끝까지.
+       함수로 두면 창 크기가 바뀔 때 invalidateOnRefresh가 다시 계산합니다. */
+    y: function () {
+      return video.offsetHeight - reference.offsetHeight;
+    },
+    ease: "none",
+    scrollTrigger: {
+      trigger: hero,
+      /* 영상 위 끝이 화면 위에 닿을 때 시작해서, 영상 아래 끝이 화면 아래에
+         닿을 때 끝납니다. 이 구간이 곧 "영상이 화면을 지나가는 동안"입니다. */
+      start: "top top",
+      end: "bottom bottom",
+      scrub: 1,
+      invalidateOnRefresh: true
+    }
   });
 })();

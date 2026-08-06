@@ -1,21 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shop — Tchai Kim</title>
-<meta name="description" content="Shop Tchai Kim's ready-to-wear hanbok — new arrivals and the full collection.">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shop — Tchai Kim</title>
+  <meta name="description" content="Shop Tchai Kim's ready-to-wear hanbok — new arrivals and the full collection.">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600&family=Trirong:ital,wght@0,200;0,400;0,500;0,600;1,600&display=swap">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600&family=Trirong:ital,wght@0,200;0,400;0,500;0,600;1,600&display=swap">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 
-<link rel="stylesheet" href="css/base.css">
-<link rel="stylesheet" href="css/layout.css">
-<link rel="stylesheet" href="css/shop.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.css">
 
-<script type="importmap">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/shop.css">
+
+  <script type="importmap">
 {
   "imports": {
     "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"
@@ -23,682 +28,950 @@
 }
 </script>
 </head>
+
 <body>
 
-<header class="header" id="header">
-  <a class="header_logo" href="../main_test/index.html">
-    <img class="header_logo_img" src="assets/images/header_logo_02.png" alt="Tchai Kim">
-  </a>
+  <header class="header" id="header">
+    <a class="header_logo" href="../main_test/index.html">
+      <img class="header_logo_img" src="assets/images/header_logo_02.png" alt="Tchai Kim">
+    </a>
 
-  <button class="header_toggle" type="button" id="header_toggle" aria-expanded="false" aria-controls="header_inner">
-    <span class="header_toggle_bar" aria-hidden="true"></span>
-    <span class="a11y_hidden header_toggle_label">Open menu</span>
-  </button>
+    <button class="header_toggle" type="button" id="header_toggle" aria-expanded="false" aria-controls="header_inner">
+      <span class="header_toggle_bar" aria-hidden="true"></span>
+      <span class="a11y_hidden header_toggle_label">Open menu</span>
+    </button>
 
-  <div class="header_inner" id="header_inner">
-    <nav class="header_nav" aria-label="Main">
-      <ul class="header_menu">
-        <li class="header_menu_item"><a class="header_menu_link" href="#">COLLECTION</a></li>
-        <li class="header_menu_item"><a class="header_menu_link" href="index.html" aria-current="page">SHOP</a></li>
-        <li class="header_menu_item"><a class="header_menu_link" href="#">BESPOKE</a></li>
-        <li class="header_menu_item"><a class="header_menu_link" href="#">BRAND</a></li>
-      </ul>
-    </nav>
-
-    <div class="header_right">
-      <div class="header_currency">
-        <label class="a11y_hidden" for="header_currency_select">Currency</label>
-        <select class="header_currency_select" id="header_currency_select">
-          <option value="usd" selected>USD</option>
-        </select>
-        <img class="header_currency_icon" src="assets/icons/caret_down.svg" alt="" aria-hidden="true" width="13" height="8">
-      </div>
-
-      <a class="header_cart" href="#">
-        <img class="header_cart_icon" src="assets/icons/shopping_bag.svg" alt="" aria-hidden="true" width="21" height="18">
-        <span class="a11y_hidden">Shopping bag</span>
-      </a>
-    </div>
-  </div>
-</header>
-
-<main class="main" id="main_content">
-
-  <!-- hero -->
-  <section class="hero_section" aria-label="Shop category highlights">
-    <div class="hero_section_media" aria-hidden="true">
-      <img class="hero_section_bg" src="assets/images/hero_bg.png" alt="">
-      <div class="hero_section_overlay"></div>
-    </div>
-
-    <!-- Figma 좌표(1920 기준) 그대로 쓰는 절대배치 요소들을 담는 고정 폭 프레임.
-         hero_section 자체는 위 배경처럼 전체 폭에 맞춰 늘어나고, 이 프레임만
-         1920px로 고정한 채 가운데 정렬됩니다. -->
-    <div class="hero_section_frame">
-      <p class="hero_section_watermark" aria-hidden="true">Tchai</p>
-
-      <div class="hero_gallery" id="hero_gallery" role="img" aria-label="A rotating gallery of Tchai Kim hanbok looks">
-        <img class="hero_gallery_fallback" src="assets/images/gallery_image1.png" alt="A model wearing a Tchai Kim hanbok look">
-        <canvas class="hero_gallery_canvas" id="hero_gallery_canvas" aria-hidden="true"></canvas>
-      </div>
-
-      <nav class="hero_nav" aria-label="Shop categories">
-        <div class="hero_nav_item hero_nav_item_all_new">
-          <a class="hero_nav_link hero_nav_link_lg" href="#" data-gallery-index="0">ALL / NEW</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_dress">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="1">DRESS</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_top">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="2">TOP</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_knit">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="3">KNIT</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_bottom">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="4">BOTTOM</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_outer">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="5">OUTER</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_acc">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="6">ACC</a>
-        </div>
-        <div class="hero_nav_item hero_nav_item_living">
-          <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="7">LIVING</a>
-        </div>
+    <div class="header_inner" id="header_inner">
+      <nav class="header_nav" aria-label="Main">
+        <ul class="header_menu">
+          <li class="header_menu_item"><a class="header_menu_link" href="#">COLLECTION</a></li>
+          <li class="header_menu_item"><a class="header_menu_link" href="index.html" aria-current="page">SHOP</a></li>
+          <li class="header_menu_item"><a class="header_menu_link" href="#">BESPOKE</a></li>
+          <li class="header_menu_item"><a class="header_menu_link" href="#">BRAND</a></li>
+        </ul>
       </nav>
-    </div>
-  </section>
 
-  <!-- banner -->
-  <section class="banner" aria-label="Hanbok, reimagined for daily life and modern style">
-    <img class="banner_bg" src="assets/images/banner_bg.png" alt="" aria-hidden="true">
-    <div class="banner_content">
-      <div class="banner_headline_group">
-        <div class="banner_headline_wrap">
-          <p class="banner_eyebrow">TCHAI KIM · READY-TO-WEAR</p>
-          <h2 class="banner_title">
-            <span class="banner_title_em">Hanbok,</span> reimagined for<br>
-            daily life<br>
-            and modern style
-          </h2>
+      <div class="header_right">
+        <div class="header_currency">
+          <label class="a11y_hidden" for="header_currency_select">Currency</label>
+          <select class="header_currency_select" id="header_currency_select">
+            <option value="usd" selected>USD</option>
+          </select>
+          <img class="header_currency_icon" src="assets/icons/caret_down.svg" alt="" aria-hidden="true" width="13"
+            height="8">
         </div>
-        <hr class="banner_divider">
-      </div>
-      <div class="banner_crosslink_group">
-        <p class="banner_crosslink_label">Looking for one of a kind bespoke?</p>
-        <a class="banner_crosslink_link" href="#">
-          <span class="banner_crosslink_text">Visit Tchai Kimyoungjin</span>
-          <img class="banner_crosslink_icon" src="assets/icons/banner_arrow.svg" alt="" aria-hidden="true">
+
+        <a class="header_cart" href="#">
+          <img class="header_cart_icon" src="assets/icons/shopping_bag.svg" alt="" aria-hidden="true" width="21"
+            height="18">
+          <span class="a11y_hidden">Shopping bag</span>
         </a>
       </div>
     </div>
-  </section>
+  </header>
 
-  <!-- garment story — 섹션 위에서 휠 스크롤 시 페이지가 아니라 가먼트가
+  <main class="main" id="main_content">
+
+    <!-- hero -->
+    <section class="hero_section" aria-label="Shop category highlights">
+      <div class="hero_section_media" aria-hidden="true">
+        <img class="hero_section_bg" src="assets/images/hero_bg.png" alt="">
+        <div class="hero_section_overlay"></div>
+      </div>
+
+      <!-- Figma 좌표(1920 기준) 그대로 쓰는 절대배치 요소들을 담는 고정 폭 프레임.
+         hero_section 자체는 위 배경처럼 전체 폭에 맞춰 늘어나고, 이 프레임만
+         1920px로 고정한 채 가운데 정렬됩니다. -->
+      <div class="hero_section_frame">
+        <p class="hero_section_watermark" aria-hidden="true">Tchai</p>
+
+        <div class="hero_gallery" id="hero_gallery" role="img"
+          aria-label="A rotating gallery of Tchai Kim hanbok looks">
+          <img class="hero_gallery_fallback" src="assets/images/gallery_image1.png"
+            alt="A model wearing a Tchai Kim hanbok look">
+          <canvas class="hero_gallery_canvas" id="hero_gallery_canvas" aria-hidden="true"></canvas>
+        </div>
+
+        <nav class="hero_nav" aria-label="Shop categories">
+          <div class="hero_nav_item hero_nav_item_all_new">
+            <a class="hero_nav_link hero_nav_link_lg" href="#" data-gallery-index="0">ALL / NEW</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_dress">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="1">DRESS</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_top">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="2">TOP</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_knit">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="3">KNIT</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_bottom">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="4">BOTTOM</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_outer">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="5">OUTER</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_acc">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="6">ACC</a>
+          </div>
+          <div class="hero_nav_item hero_nav_item_living">
+            <a class="hero_nav_link hero_nav_link_sm" href="#" data-gallery-index="7">LIVING</a>
+          </div>
+        </nav>
+      </div>
+    </section>
+
+    <!-- banner -->
+    <section class="banner" aria-label="Hanbok, reimagined for daily life and modern style">
+      <img class="banner_bg" src="assets/images/banner_bg.png" alt="" aria-hidden="true">
+      <div class="banner_content">
+        <div class="banner_headline_group">
+          <div class="banner_headline_wrap">
+            <p class="banner_eyebrow">TCHAI KIM · READY-TO-WEAR</p>
+            <h2 class="banner_title">
+              <span class="banner_title_em">Hanbok,</span> reimagined for<br>
+              daily life<br>
+              and modern style
+            </h2>
+          </div>
+          <hr class="banner_divider">
+        </div>
+        <div class="banner_crosslink_group">
+          <p class="banner_crosslink_label">Looking for one of a kind bespoke?</p>
+          <a class="banner_crosslink_link" href="#">
+            <span class="banner_crosslink_text">Visit Tchai Kimyoungjin</span>
+            <img class="banner_crosslink_icon" src="assets/icons/banner_arrow.svg" alt="" aria-hidden="true">
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- garment story — 섹션 위에서 휠 스크롤 시 페이지가 아니라 가먼트가
        전환되도록 sticky + 여유 스크롤 구간(garment_story_scroll)으로 감쌉니다. -->
-  <div class="garment_story_scroll">
-  <section class="garment_story_section" id="garment_story_section" aria-labelledby="garment_story_title">
-    <h2 class="a11y_hidden" id="garment_story_title">The story behind the garments</h2>
+    <div class="garment_story_scroll">
+      <section class="garment_story_section" id="garment_story_section" aria-labelledby="garment_story_title">
+        <h2 class="a11y_hidden" id="garment_story_title">The story behind the garments</h2>
 
-    <div class="garment_story_frame">
-      <div class="garment_orbit" aria-hidden="true">
-        <img class="garment_orbit_circle" src="assets/icons/garment_circle.svg" alt="">
-        <div class="garment_orbit_marker">
-          <img class="garment_orbit_marker_outer" src="assets/icons/garment_point_outer.svg" alt="">
-          <img class="garment_orbit_marker_inner" src="assets/icons/garment_point_inner.svg" alt="">
-        </div>
-        <ul class="garment_orbit_list" id="garment_orbit_list">
-          <li class="garment_orbit_item" data-garment="baeja">Baeja</li>
-          <li class="garment_orbit_item" data-garment="cheollik">Cheollik</li>
-          <li class="garment_orbit_item" data-garment="geodeul">Geodeul</li>
-          <li class="garment_orbit_item" data-garment="sapok_baji">Sapok baji</li>
-        </ul>
-      </div>
-
-      <div class="garment_content">
-        <div class="garment_info" id="garment_info">
-          <div class="garment_panel" data-garment="baeja">
-            <p class="garment_label">Sleeveless layering vest</p>
-            <h3 class="garment_title">Baeja</h3>
-            <div class="garment_desc">
-              <p>A sleeveless top worn over the jeogori, open down the front and split at the sides, padded or fur-lined for the cold. King Gojong kept one as everyday winterwear.</p>
-              <p>Tchai Kim quilts it in nylon and makes it reversible, with velvet ties at the open sides so you can set the fit yourself.</p>
+        <div class="garment_story_frame">
+          <div class="garment_orbit" aria-hidden="true">
+            <img class="garment_orbit_circle" src="assets/icons/garment_circle.svg" alt="">
+            <div class="garment_orbit_marker">
+              <img class="garment_orbit_marker_outer" src="assets/icons/garment_point_outer.svg" alt="">
+              <img class="garment_orbit_marker_inner" src="assets/icons/garment_point_inner.svg" alt="">
             </div>
-            <a class="garment_details_button" href="#">Show details</a>
+            <ul class="garment_orbit_list" id="garment_orbit_list">
+              <li class="garment_orbit_item" data-garment="baeja">Baeja</li>
+              <li class="garment_orbit_item" data-garment="cheollik">Cheollik</li>
+              <li class="garment_orbit_item" data-garment="geodeul">Geodeul</li>
+              <li class="garment_orbit_item" data-garment="sapok_baji">Sapok baji</li>
+            </ul>
           </div>
-          <div class="garment_panel" data-garment="cheollik">
-            <p class="garment_label">Pleated robe dress</p>
-            <h3 class="garment_title">Cheollik</h3>
-            <div class="garment_desc">
-              <p>A robe worn by Joseon officials and military men, made by joining a finely pleated skirt to a fitted bodice at the waist.</p>
-              <p>Tchai Kim keeps the waist seam and the pleats, then reshapes the robe into a dress you can wear to work or to dinner.</p>
+
+          <div class="garment_content">
+            <div class="garment_info" id="garment_info">
+              <div class="garment_panel" data-garment="baeja">
+                <p class="garment_label">Sleeveless layering vest</p>
+                <h3 class="garment_title">Baeja</h3>
+                <div class="garment_desc">
+                  <p>A sleeveless top worn over the jeogori, open down the front and split at the sides, padded or
+                    fur-lined for the cold. King Gojong kept one as everyday winterwear.</p>
+                  <p>Tchai Kim quilts it in nylon and makes it reversible, with velvet ties at the open sides so you can
+                    set the fit yourself.</p>
+                </div>
+                <a class="garment_details_button" href="#">Show details</a>
+              </div>
+              <div class="garment_panel" data-garment="cheollik">
+                <p class="garment_label">Pleated robe dress</p>
+                <h3 class="garment_title">Cheollik</h3>
+                <div class="garment_desc">
+                  <p>A robe worn by Joseon officials and military men, made by joining a finely pleated skirt to a
+                    fitted bodice at the waist.</p>
+                  <p>Tchai Kim keeps the waist seam and the pleats, then reshapes the robe into a dress you can wear to
+                    work or to dinner.</p>
+                </div>
+                <a class="garment_details_button" href="#">Show details</a>
+              </div>
+              <div class="garment_panel" data-garment="geodeul">
+                <p class="garment_label">Hitched-up long skirt</p>
+                <h3 class="garment_title">Geodeul</h3>
+                <div class="garment_desc">
+                  <p>Women pulled their long skirts up at the waist to walk and work. Geodeul turned that everyday
+                    gesture into a fixed fold, and no example is found after the 17th century.</p>
+                  <p>Tchai Kim brings the shape back, keeping the raised front line but building it into the skirt so it
+                    holds without being retied.</p>
+                </div>
+                <a class="garment_details_button" href="#">Show details</a>
+              </div>
+              <div class="garment_panel" data-garment="sapok_baji">
+                <p class="garment_label">Trousers for a floor-sitting life</p>
+                <h3 class="garment_title">Sapok baji</h3>
+                <div class="garment_desc">
+                  <p>Men's trousers built for a life on the floor: a wide seat for sitting cross-legged, a narrow ankle,
+                    and one bolt of cloth cut with almost no waste.</p>
+                  <p>Tchai Kim keeps the slanted panels and the tapered leg, then opens the waist so the trousers go on
+                    without wrapping and tying.</p>
+                </div>
+                <a class="garment_details_button" href="#">Show details</a>
+              </div>
             </div>
-            <a class="garment_details_button" href="#">Show details</a>
+
+            <div class="garment_media" id="garment_media">
+              <img class="garment_media_img garment_media_img_baeja" data-garment="baeja"
+                src="assets/images/garment_baeja.png"
+                alt="Baeja, a sleeveless quilted layering vest with velvet side ties">
+              <img class="garment_media_img garment_media_img_cheollik" data-garment="cheollik"
+                src="assets/images/garment_cheollik.png"
+                alt="Cheollik, a pleated robe dress in a watercolor floral print">
+              <img class="garment_media_img garment_media_img_geodeul" data-garment="geodeul"
+                src="assets/images/garment_geodeul.png" alt="Geodeul, a hitched-up long denim skirt">
+              <img class="garment_media_img garment_media_img_sapok_baji" data-garment="sapok_baji"
+                src="assets/images/garment_sapok_baji.png" alt="Sapok baji, wide-seated tapered trousers">
+            </div>
           </div>
-          <div class="garment_panel" data-garment="geodeul">
-            <p class="garment_label">Hitched-up long skirt</p>
-            <h3 class="garment_title">Geodeul</h3>
-            <div class="garment_desc">
-              <p>Women pulled their long skirts up at the waist to walk and work. Geodeul turned that everyday gesture into a fixed fold, and no example is found after the 17th century.</p>
-              <p>Tchai Kim brings the shape back, keeping the raised front line but building it into the skirt so it holds without being retied.</p>
-            </div>
-            <a class="garment_details_button" href="#">Show details</a>
-          </div>
-          <div class="garment_panel" data-garment="sapok_baji">
-            <p class="garment_label">Trousers for a floor-sitting life</p>
-            <h3 class="garment_title">Sapok baji</h3>
-            <div class="garment_desc">
-              <p>Men's trousers built for a life on the floor: a wide seat for sitting cross-legged, a narrow ankle, and one bolt of cloth cut with almost no waste.</p>
-              <p>Tchai Kim keeps the slanted panels and the tapered leg, then opens the waist so the trousers go on without wrapping and tying.</p>
-            </div>
-            <a class="garment_details_button" href="#">Show details</a>
-          </div>
         </div>
-
-        <div class="garment_media" id="garment_media">
-          <img class="garment_media_img garment_media_img_baeja" data-garment="baeja" src="assets/images/garment_baeja.png" alt="Baeja, a sleeveless quilted layering vest with velvet side ties">
-          <img class="garment_media_img garment_media_img_cheollik" data-garment="cheollik" src="assets/images/garment_cheollik.png" alt="Cheollik, a pleated robe dress in a watercolor floral print">
-          <img class="garment_media_img garment_media_img_geodeul" data-garment="geodeul" src="assets/images/garment_geodeul.png" alt="Geodeul, a hitched-up long denim skirt">
-          <img class="garment_media_img garment_media_img_sapok_baji" data-garment="sapok_baji" src="assets/images/garment_sapok_baji.png" alt="Sapok baji, wide-seated tapered trousers">
-        </div>
-      </div>
-    </div>
-  </section>
-  </div>
-
-  <!-- new arrivals -->
-  <section class="new_arrivals_section" aria-labelledby="new_arrivals_title">
-    <div class="new_arrivals_inner">
-      <h2 class="new_arrivals_title" id="new_arrivals_title">New</h2>
-
-      <div class="new_arrivals_grid">
-        <div class="new_arrivals_row">
-
-          <article class="card_product is_size_new">
-            <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_1.png" data-hover-src="assets/images/product_new_1_hover.png" alt="A model wearing the Flower Quilted Jeogori, a quilted jacket in a watercolor zinnia print with a wrap tie">
-              <button class="card_product_action" type="button">
-                <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                <span class="a11y_hidden">Add Flower Quilted Jeogori to wishlist</span>
-              </button>
-              <a class="card_product_action" href="#">
-                <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                <span class="a11y_hidden">View Flower Quilted Jeogori details</span>
-              </a>
-            </div>
-            <div class="card_product_content">
-              <div class="card_product_primary">
-                <div class="card_product_header">
-                  <h3 class="card_product_name">Flower Quilted Jeogori</h3>
-                  <p class="card_product_price">$295</p>
-                </div>
-                <div class="card_product_swatches">
-                  <span class="card_product_swatch" style="background-color:#8f3e3a"></span>
-                  <span class="card_product_swatch" style="background-color:#99b9a3"></span>
-                  <span class="card_product_swatch" style="background-color:#a1ace4"></span>
-                  <span class="card_product_swatch" style="background-color:#d3cda7"></span>
-                </div>
-              </div>
-              <div class="card_product_supporting">
-                <p class="card_product_desc">Quilted jacket in a watercolor zinnia print with a wrap tie</p>
-                <div class="card_product_tags">
-                  <span class="card_product_tag card_product_tag_status">NEW</span>
-                  <span class="card_product_tag">Jeogori</span>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card_product is_size_new">
-            <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_2.png" data-hover-src="assets/images/product_new_2_hover.png" alt="A model wearing the Ruffle Collar Puff Dress, a semi-loose dress with ruffle trim and puff sleeves">
-              <button class="card_product_action" type="button">
-                <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                <span class="a11y_hidden">Add Ruffle Collar Puff Dress to wishlist</span>
-              </button>
-              <a class="card_product_action" href="#">
-                <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                <span class="a11y_hidden">View Ruffle Collar Puff Dress details</span>
-              </a>
-            </div>
-            <div class="card_product_content">
-              <div class="card_product_primary">
-                <div class="card_product_header">
-                  <h3 class="card_product_name">Ruffle Collar Puff Dress</h3>
-                  <p class="card_product_price">$275</p>
-                </div>
-                <div class="card_product_swatches">
-                  <span class="card_product_swatch" style="background-color:#558df6"></span>
-                  <span class="card_product_swatch" style="background-color:#dee670"></span>
-                </div>
-              </div>
-              <div class="card_product_supporting">
-                <p class="card_product_desc">Semi-loose dress with ruffle trim and puff sleeves</p>
-                <div class="card_product_tags">
-                  <span class="card_product_tag card_product_tag_status">New</span>
-                  <span class="card_product_tag">Dress</span>
-                </div>
-              </div>
-            </div>
-          </article>
-
-        </div>
-
-        <div class="new_arrivals_row">
-
-          <article class="card_product is_size_new">
-            <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_3.png" data-hover-src="assets/images/product_new_3_hover.png" alt="A model wearing the Git Baenaet Coat, an open-front linen coat with wide sleeves and long side slits">
-              <button class="card_product_action" type="button">
-                <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                <span class="a11y_hidden">Add Git Baenaet Coat to wishlist</span>
-              </button>
-              <a class="card_product_action" href="#">
-                <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                <span class="a11y_hidden">View Git Baenaet Coat details</span>
-              </a>
-            </div>
-            <div class="card_product_content">
-              <div class="card_product_primary">
-                <div class="card_product_header">
-                  <h3 class="card_product_name">Git Baenaet Coat</h3>
-                  <p class="card_product_price">$335</p>
-                </div>
-                <div class="card_product_swatches">
-                  <span class="card_product_swatch" style="background-color:#e9c2e2"></span>
-                  <span class="card_product_swatch" style="background-color:#efba80"></span>
-                  <span class="card_product_swatch" style="background-color:#c4b7b0"></span>
-                  <span class="card_product_swatch" style="background-color:#c6bb57"></span>
-                </div>
-              </div>
-              <div class="card_product_supporting">
-                <p class="card_product_desc">Open-front linen coat with wide sleeves and long side slits</p>
-                <div class="card_product_tags">
-                  <span class="card_product_tag card_product_tag_status">NEW</span>
-                  <span class="card_product_tag">Baenaet Coat</span>
-                </div>
-              </div>
-            </div>
-          </article>
-
-          <article class="card_product is_size_new">
-            <div class="card_product_media">
-              <img class="card_product_img" src="assets/images/product_new_4.png" data-hover-src="assets/images/product_new_4_hover.png" alt="A model wearing the Flower Hill Cheollik Dress, a cropped hanbok jacket in 80-count cotton">
-              <button class="card_product_action" type="button">
-                <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                <span class="a11y_hidden">Add Flower Hill Cheollik Dress to wishlist</span>
-              </button>
-              <a class="card_product_action" href="#">
-                <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                <span class="a11y_hidden">View Flower Hill Cheollik Dress details</span>
-              </a>
-            </div>
-            <div class="card_product_content">
-              <div class="card_product_primary">
-                <div class="card_product_header">
-                  <h3 class="card_product_name">Flower Hill Cheollik Dress</h3>
-                  <p class="card_product_price">$275</p>
-                </div>
-                <div class="card_product_swatches">
-                  <span class="card_product_swatch" style="background-color:#f6ecab"></span>
-                  <span class="card_product_swatch" style="background-color:#9095cd"></span>
-                  <span class="card_product_swatch" style="background-color:#7a987d"></span>
-                </div>
-              </div>
-              <div class="card_product_supporting">
-                <p class="card_product_desc">Cropped hanbok jacket, 80-count cotton</p>
-                <div class="card_product_tags">
-                  <span class="card_product_tag card_product_tag_status">NEW</span>
-                  <span class="card_product_tag">Cheollik Dress</span>
-                </div>
-              </div>
-            </div>
-          </article>
-
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- shop -->
-  <section class="shop_section" aria-labelledby="shop_list_title">
-    <div class="shop_filter_bar">
-      <div class="shop_search">
-        <img class="shop_search_icon" src="assets/icons/icon_search.svg" alt="" aria-hidden="true">
-        <label class="a11y_hidden" for="shop_search_input">Search products</label>
-        <input class="shop_search_input" id="shop_search_input" type="search" placeholder="Search...">
-      </div>
-
-      <button class="shop_select" type="button">
-        All
-        <img class="shop_select_icon" src="assets/icons/icon_filter_dropdown.svg" alt="" aria-hidden="true">
-      </button>
-
-      <button class="shop_filter_button" type="button">
-        Filter
-        <img class="shop_filter_button_icon" src="assets/icons/icon_filter.svg" alt="" aria-hidden="true">
-      </button>
+      </section>
     </div>
 
-    <div class="shop_list_wrap">
-      <div class="shop_list_section">
-        <h2 class="shop_list_title" id="shop_list_title">All</h2>
+    <!-- new arrivals -->
+    <section class="new_arrivals_section" aria-labelledby="new_arrivals_title">
+      <div class="new_arrivals_inner">
+        <h2 class="new_arrivals_title" id="new_arrivals_title">New</h2>
 
-        <div class="shop_grid">
-          <div class="shop_row">
+        <div class="new_arrivals_grid">
+          <div class="new_arrivals_row">
 
-            <article class="card_product is_size_shop">
-              <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_1.png" data-hover-src="assets/images/product_shop_1_hover.png
-                " alt="A model wearing the Dot Jeoksam Jeogori, an oversized puff-sleeve jeogori in a bubble dot print">
+            <article class="card_product is_size_new">
+              <div class="card_product_media" style="--card_img_pos: 50% 0%; --card_img_zoom: 1.2;">
+                <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_new_1.png"
+                  data-hover-src="assets/images/product_new_1_hover.png"
+                  alt="A model wearing the Flower Quilted Jeogori, a quilted jacket in a watercolor zinnia print with a wrap tie"></a>
                 <button class="card_product_action" type="button">
                   <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                  <span class="a11y_hidden">Add Dot Jeoksam Jeogori to wishlist</span>
+                  <span class="a11y_hidden">Add Flower Quilted Jeogori to wishlist</span>
                 </button>
                 <a class="card_product_action" href="#">
                   <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                  <span class="a11y_hidden">View Dot Jeoksam Jeogori details</span>
+                  <span class="a11y_hidden">View Flower Quilted Jeogori details</span>
                 </a>
               </div>
               <div class="card_product_content">
                 <div class="card_product_primary">
                   <div class="card_product_header">
-                    <h3 class="card_product_name">Dot Jeoksam Jeogori</h3>
-                    <p class="card_product_price">$275</p>
-                  </div>
-                  <div class="card_product_swatches">
-                    <span class="card_product_swatch" style="background-color:#0d1418"></span>
-                    <span class="card_product_swatch" style="background-color:#df805a"></span>
-                    <span class="card_product_swatch" style="background-color:#8ebf8f"></span>
-                  </div>
-                </div>
-                <div class="card_product_supporting">
-                  <p class="card_product_desc">Oversized puff-sleeve jeogori in a bubble dot print.</p>
-                  <div class="card_product_tags">
-                    <span class="card_product_tag card_product_tag_status is_filled">BEST</span>
-                    <span class="card_product_tag">Jeogori</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article class="card_product is_size_shop">
-              <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_2.png" data-hover-src="assets/images/product_shop_2_hover.jpg
-                " alt="A model wearing the Four Gracious Plants Jeogori Shirt in a plum, orchid, chrysanthemum and bamboo print">
-                <button class="card_product_action" type="button">
-                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                  <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
-                </button>
-                <a class="card_product_action" href="#">
-                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                  <span class="a11y_hidden">View Four Gracious Plants Jeogori Shirt details</span>
-                </a>
-              </div>
-              <div class="card_product_content">
-                <div class="card_product_primary">
-                  <div class="card_product_header">
-                    <h3 class="card_product_name">Four Gracious Plants Jeogori Shirt</h3>
-                    <p class="card_product_price">$275</p>
-                  </div>
-                  <div class="card_product_swatches">
-                    <span class="card_product_swatch" style="background-color:#93ac99"></span>
-                    <span class="card_product_swatch" style="background-color:#f7ee6a"></span>
-                    <span class="card_product_swatch" style="background-color:#dba4bb"></span>
-                    <span class="card_product_swatch" style="background-color:#e46464"></span>
-                  </div>
-                </div>
-                <div class="card_product_supporting">
-                  <p class="card_product_desc">Puff-sleeve shirt in the plum, orchid, chrysanthemum and bamboo print.</p>
-                  <div class="card_product_tags">
-                    <span class="card_product_tag card_product_tag_status is_filled">BEST</span>
-                    <span class="card_product_tag">Jeogori</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article class="card_product is_size_shop">
-              <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_3.png" data-hover-src="assets/images/product_shop_3_hover.png" alt="A model wearing the Seonhongcho Sheer Scarf, a sheer scarf with a bleeding scarlet floral print">
-                <button class="card_product_action" type="button">
-                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                  <span class="a11y_hidden">Add Seonhongcho Sheer Scarf to wishlist</span>
-                </button>
-                <a class="card_product_action" href="#">
-                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                  <span class="a11y_hidden">View Seonhongcho Sheer Scarf details</span>
-                </a>
-              </div>
-              <div class="card_product_content">
-                <div class="card_product_primary">
-                  <div class="card_product_header">
-                    <h3 class="card_product_name">Seonhongcho Sheer Scarf</h3>
-                    <p class="card_product_price">$30</p>
-                  </div>
-                  <div class="card_product_swatches">
-                    <span class="card_product_swatch" style="background-color:#8d2d27"></span>
-                    <span class="card_product_swatch" style="background-color:#aa8a6f"></span>
-                    <span class="card_product_swatch" style="background-color:#9cc1d8"></span>
-                    <span class="card_product_swatch" style="background-color:#a57aa4"></span>
-                  </div>
-                </div>
-                <div class="card_product_supporting">
-                  <p class="card_product_desc">Sheer scarf with a bleeding scarlet floral print</p>
-                  <div class="card_product_tags">
-                    <span class="card_product_tag card_product_tag_status is_filled">BEST</span>
-                    <span class="card_product_tag">Scarf</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-          </div>
-
-          <div class="shop_row">
-
-            <article class="card_product is_size_shop">
-              <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_4.png" data-hover-src="assets/images/product_shop_4_hover.png" alt="A model wearing the Palette Cheollik Dress in a watercolor floral print">
-                <button class="card_product_action" type="button">
-                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                  <span class="a11y_hidden">Add Palette Cheollik Dress to wishlist</span>
-                </button>
-                <a class="card_product_action" href="#">
-                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                  <span class="a11y_hidden">View Palette Cheollik Dress details</span>
-                </a>
-              </div>
-              <div class="card_product_content">
-                <div class="card_product_primary">
-                  <div class="card_product_header">
-                    <h3 class="card_product_name">Palette Cheollik Dress</h3>
+                    <h3 class="card_product_name"><a class="card_product_link" href="#">Flower Quilted Jeogori</a></h3>
                     <p class="card_product_price">$295</p>
                   </div>
                   <div class="card_product_swatches">
-                    <span class="card_product_swatch" style="background-color:#cbd9b7"></span>
-                    <span class="card_product_swatch" style="background-color:#a4c9c9"></span>
-                    <span class="card_product_swatch" style="background-color:#d3b5d1"></span>
+                    <span class="card_product_swatch" style="background-color:#8f3e3a"></span>
+                    <span class="card_product_swatch" style="background-color:#99b9a3"></span>
+                    <span class="card_product_swatch" style="background-color:#a1ace4"></span>
+                    <span class="card_product_swatch" style="background-color:#d3cda7"></span>
                   </div>
                 </div>
                 <div class="card_product_supporting">
-                  <p class="card_product_desc">Cheollik dress in a watercolor floral print</p>
+                  <p class="card_product_desc">Quilted jacket in a watercolor zinnia print with a wrap tie</p>
                   <div class="card_product_tags">
+                    <span class="card_product_tag card_product_tag_status">NEW</span>
+                    <span class="card_product_tag">Jeogori</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card_product is_size_new">
+              <div class="card_product_media" style="--card_img_pos: 50% 0%; --card_img_zoom: 1.5;">
+                <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_new_2.png"
+                  data-hover-src="assets/images/product_new_2_hover.png"
+                  alt="A model wearing the Ruffle Collar Puff Dress, a semi-loose dress with ruffle trim and puff sleeves"></a>
+                <button class="card_product_action" type="button">
+                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                  <span class="a11y_hidden">Add Ruffle Collar Puff Dress to wishlist</span>
+                </button>
+                <a class="card_product_action" href="#">
+                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                  <span class="a11y_hidden">View Ruffle Collar Puff Dress details</span>
+                </a>
+              </div>
+              <div class="card_product_content">
+                <div class="card_product_primary">
+                  <div class="card_product_header">
+                    <h3 class="card_product_name"><a class="card_product_link" href="#">Ruffle Collar Puff Dress</a></h3>
+                    <p class="card_product_price">$275</p>
+                  </div>
+                  <div class="card_product_swatches">
+                    <span class="card_product_swatch" style="background-color:#558df6"></span>
+                    <span class="card_product_swatch" style="background-color:#dee670"></span>
+                  </div>
+                </div>
+                <div class="card_product_supporting">
+                  <p class="card_product_desc">Semi-loose dress with ruffle trim and puff sleeves</p>
+                  <div class="card_product_tags">
+                    <span class="card_product_tag card_product_tag_status">New</span>
+                    <span class="card_product_tag">Dress</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+          </div>
+
+          <div class="new_arrivals_row">
+
+            <article class="card_product is_size_new">
+              <div class="card_product_media" style="--card_img_pos: 50% 0%; --card_img_zoom: 1.5;">
+                <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_new_3.png"
+                  data-hover-src="assets/images/product_new_3_hover.png"
+                  alt="A model wearing the Git Baenaet Coat, an open-front linen coat with wide sleeves and long side slits"></a>
+                <button class="card_product_action" type="button">
+                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                  <span class="a11y_hidden">Add Git Baenaet Coat to wishlist</span>
+                </button>
+                <a class="card_product_action" href="#">
+                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                  <span class="a11y_hidden">View Git Baenaet Coat details</span>
+                </a>
+              </div>
+              <div class="card_product_content">
+                <div class="card_product_primary">
+                  <div class="card_product_header">
+                    <h3 class="card_product_name"><a class="card_product_link" href="#">Git Baenaet Coat</a></h3>
+                    <p class="card_product_price">$335</p>
+                  </div>
+                  <div class="card_product_swatches">
+                    <span class="card_product_swatch" style="background-color:#e9c2e2"></span>
+                    <span class="card_product_swatch" style="background-color:#efba80"></span>
+                    <span class="card_product_swatch" style="background-color:#c4b7b0"></span>
+                    <span class="card_product_swatch" style="background-color:#c6bb57"></span>
+                  </div>
+                </div>
+                <div class="card_product_supporting">
+                  <p class="card_product_desc">Open-front linen coat with wide sleeves and long side slits</p>
+                  <div class="card_product_tags">
+                    <span class="card_product_tag card_product_tag_status">NEW</span>
+                    <span class="card_product_tag">Baenaet Coat</span>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article class="card_product is_size_new">
+              <div class="card_product_media" style="--card_img_pos: 50% 0%; --card_img_zoom: 1.5;">
+                <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_new_4.png"
+                  data-hover-src="assets/images/product_new_4_hover.png"
+                  alt="A model wearing the Flower Hill Cheollik Dress, a cropped hanbok jacket in 80-count cotton"></a>
+                <button class="card_product_action" type="button">
+                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                  <span class="a11y_hidden">Add Flower Hill Cheollik Dress to wishlist</span>
+                </button>
+                <a class="card_product_action" href="#">
+                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                  <span class="a11y_hidden">View Flower Hill Cheollik Dress details</span>
+                </a>
+              </div>
+              <div class="card_product_content">
+                <div class="card_product_primary">
+                  <div class="card_product_header">
+                    <h3 class="card_product_name"><a class="card_product_link" href="#">Flower Hill Cheollik Dress</a></h3>
+                    <p class="card_product_price">$275</p>
+                  </div>
+                  <div class="card_product_swatches">
+                    <span class="card_product_swatch" style="background-color:#f6ecab"></span>
+                    <span class="card_product_swatch" style="background-color:#9095cd"></span>
+                    <span class="card_product_swatch" style="background-color:#7a987d"></span>
+                  </div>
+                </div>
+                <div class="card_product_supporting">
+                  <p class="card_product_desc">Cropped hanbok jacket, 80-count cotton</p>
+                  <div class="card_product_tags">
+                    <span class="card_product_tag card_product_tag_status">NEW</span>
                     <span class="card_product_tag">Cheollik Dress</span>
                   </div>
                 </div>
               </div>
             </article>
 
-            <article class="card_product is_size_shop">
-              <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_5.png" data-hover-src="assets/images/product_shop_5_hover.png" alt="A model wearing a wool-check jacket with puff sleeves and a rounded collar">
-                <button class="card_product_action" type="button">
-                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                  <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
-                </button>
-                <a class="card_product_action" href="#">
-                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                  <span class="a11y_hidden">View Four Gracious Plants Jeogori Shirt details</span>
-                </a>
-              </div>
-              <div class="card_product_content">
-                <div class="card_product_primary">
-                  <div class="card_product_header">
-                    <h3 class="card_product_name">Four Gracious Plants Jeogori Shirt</h3>
-                    <p class="card_product_price">$275</p>
-                  </div>
-                  <div class="card_product_swatches">
-                    <span class="card_product_swatch" style="background-color:#ed8462"></span>
-                    <span class="card_product_swatch" style="background-color:#7388d5"></span>
-                  </div>
-                </div>
-                <div class="card_product_supporting">
-                  <p class="card_product_desc">Wool-check jacket with puff sleeves and a rounded collar</p>
-                  <div class="card_product_tags">
-                    <span class="card_product_tag">Jeogori</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-
-            <article class="card_product is_size_shop">
-              <div class="card_product_media">
-                <img class="card_product_img" src="assets/images/product_shop_6.png" data-hover-src="assets/images/product_shop_6_hover.png" alt="A model wearing the Geodeul Floral Chima, a layered wrap skirt in lightweight linen">
-                <button class="card_product_action" type="button">
-                  <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                  <span class="a11y_hidden">Add Geodeul Floral Chima to wishlist</span>
-                </button>
-                <a class="card_product_action" href="#">
-                  <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                  <span class="a11y_hidden">View Geodeul Floral Chima details</span>
-                </a>
-              </div>
-              <div class="card_product_content">
-                <div class="card_product_primary">
-                  <div class="card_product_header">
-                    <h3 class="card_product_name">Geodeul Floral Chima</h3>
-                    <p class="card_product_price">$220</p>
-                  </div>
-                  <div class="card_product_swatches">
-                    <span class="card_product_swatch" style="background-color:#dae157"></span>
-                    <span class="card_product_swatch" style="background-color:#ad88e1"></span>
-                  </div>
-                </div>
-                <div class="card_product_supporting">
-                  <p class="card_product_desc">Layered wrap skirt in lightweight linen</p>
-                  <div class="card_product_tags">
-                    <span class="card_product_tag">Chima</span>
-                  </div>
-                </div>
-              </div>
-            </article>
-
           </div>
         </div>
       </div>
+    </section>
 
-      <a class="shop_more_button" href="#">View More</a>
-    </div>
-  </section>
+    <!-- shop -->
+    <section class="shop_section" aria-labelledby="shop_list_title">
+      <div class="shop_filter_bar">
+        <div class="shop_search">
+          <img class="shop_search_icon" src="assets/icons/icon_search.svg" alt="" aria-hidden="true">
+          <label class="a11y_hidden" for="shop_search_input">Search products</label>
+          <input class="shop_search_input" id="shop_search_input" type="search" placeholder="Search...">
+        </div>
 
-</main>
+        <!-- 카테고리 선택. 목록은 버튼 바로 아래에 겹쳐 열리므로 기준이 될
+             .shop_select_wrap(position: relative)으로 둘을 묶습니다. -->
+        <div class="shop_select_wrap" id="shop_select_wrap">
+          <button class="shop_select" type="button" id="shop_select_button" aria-haspopup="listbox"
+            aria-expanded="false" aria-controls="shop_select_list">
+            <span class="shop_select_label">All</span>
+            <img class="shop_select_icon" src="assets/icons/icon_filter_dropdown.svg" alt="" aria-hidden="true">
+          </button>
 
-<footer class="footer" id="footer">
-  <div class="footer_inner">
-    <div class="footer_top">
-      <nav class="footer_nav" aria-label="Footer">
-        <ul class="footer_menu">
-          <li><a class="footer_menu_link" href="#">Collection</a></li>
-          <li><a class="footer_menu_link" href="index.html">Shop</a></li>
-          <li><a class="footer_menu_link" href="#">Bespoke</a></li>
-          <li><a class="footer_menu_link" href="#">Brand</a></li>
-          <li><a class="footer_menu_link" href="#">Contact</a></li>
-        </ul>
-      </nav>
+          <ul class="shop_select_list" id="shop_select_list" role="listbox" aria-labelledby="shop_select_button">
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="dress">DRESS</button>
+            </li>
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="top">TOP</button>
+            </li>
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="knit">KNIT</button>
+            </li>
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="bottom">BOTTOM</button>
+            </li>
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="outer">OUTER</button>
+            </li>
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="acc">ACC</button>
+            </li>
+            <li class="shop_select_item" role="option" aria-selected="false">
+              <button class="shop_select_option" type="button" data-category="living">LIVING</button>
+            </li>
+          </ul>
+        </div>
 
-      <div class="footer_newsletter_row">
-        <form class="footer_newsletter" id="footer_newsletter" novalidate>
-          <p class="footer_newsletter_label" id="footer_newsletter_label">STAY IN TOUCH WITH THE STUDIO</p>
-          <div class="footer_email_field">
-            <input class="footer_email_input" id="footer_email_input" type="email" name="email"
-                   placeholder="Email address" autocomplete="email"
-                   aria-describedby="footer_newsletter_label footer_email_message">
-            <button class="footer_email_submit" type="submit">
-              <img src="assets/icons/arrow_right.svg" alt="" aria-hidden="true" width="26" height="26">
-              <span class="a11y_hidden">Subscribe</span>
-            </button>
-          </div>
-          <p class="footer_email_message" id="footer_email_message" role="status"></p>
-        </form>
-
-        <ul class="footer_social">
-          <li class="footer_social_item">
-            <a class="footer_social_link" href="https://www.instagram.com/tchaikim/" target="_blank" rel="noopener noreferrer">
-              Instagram
-              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-              <span class="a11y_hidden">(opens in a new tab)</span>
-            </a>
-          </li>
-          <li class="footer_social_item">
-            <a class="footer_social_link" href="#" target="_blank" rel="noopener noreferrer">
-              Blog
-              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-              <span class="a11y_hidden">(opens in a new tab)</span>
-            </a>
-          </li>
-          <li class="footer_social_item">
-            <a class="footer_social_link" href="#" target="_blank" rel="noopener noreferrer">
-              Facebook
-              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-              <span class="a11y_hidden">(opens in a new tab)</span>
-            </a>
-          </li>
-        </ul>
+        <button class="shop_filter_button" type="button">
+          Filter
+          <img class="shop_filter_button_icon" src="assets/icons/icon_filter.svg" alt="" aria-hidden="true">
+        </button>
       </div>
+
+      <div class="shop_list_wrap">
+        <div class="shop_list_section">
+          <h2 class="shop_list_title" id="shop_list_title">All</h2>
+
+          <div class="shop_grid">
+            <div class="shop_row">
+
+              <article class="card_product is_size_shop">
+                <div class="card_product_media">
+                  <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_shop_1.png" data-hover-src="assets/images/product_shop_1_hover.png
+                " alt="A model wearing the Dot Jeoksam Jeogori, an oversized puff-sleeve jeogori in a bubble dot print"></a>
+                  <button class="card_product_action" type="button">
+                    <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                    <span class="a11y_hidden">Add Dot Jeoksam Jeogori to wishlist</span>
+                  </button>
+                  <a class="card_product_action" href="#">
+                    <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                    <span class="a11y_hidden">View Dot Jeoksam Jeogori details</span>
+                  </a>
+                </div>
+                <div class="card_product_content">
+                  <div class="card_product_primary">
+                    <div class="card_product_header">
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Dot Jeoksam Jeogori</a></h3>
+                      <p class="card_product_price">$275</p>
+                    </div>
+                    <div class="card_product_swatches">
+                      <span class="card_product_swatch" style="background-color:#0d1418"></span>
+                      <span class="card_product_swatch" style="background-color:#df805a"></span>
+                      <span class="card_product_swatch" style="background-color:#8ebf8f"></span>
+                    </div>
+                  </div>
+                  <div class="card_product_supporting">
+                    <p class="card_product_desc">Oversized puff-sleeve jeogori in a bubble dot print.</p>
+                    <div class="card_product_tags">
+                      <span class="card_product_tag card_product_tag_status is_filled">BEST</span>
+                      <span class="card_product_tag">Jeogori</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card_product is_size_shop">
+                <div class="card_product_media">
+                  <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_shop_2.png" data-hover-src="assets/images/product_shop_2_hover.jpg
+                " alt="A model wearing the Four Gracious Plants Jeogori Shirt in a plum, orchid, chrysanthemum and bamboo print"></a>
+                  <button class="card_product_action" type="button">
+                    <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                    <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
+                  </button>
+                  <a class="card_product_action" href="#">
+                    <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                    <span class="a11y_hidden">View Four Gracious Plants Jeogori Shirt details</span>
+                  </a>
+                </div>
+                <div class="card_product_content">
+                  <div class="card_product_primary">
+                    <div class="card_product_header">
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Four Gracious Plants Jeogori Shirt</a></h3>
+                      <p class="card_product_price">$275</p>
+                    </div>
+                    <div class="card_product_swatches">
+                      <span class="card_product_swatch" style="background-color:#93ac99"></span>
+                      <span class="card_product_swatch" style="background-color:#f7ee6a"></span>
+                      <span class="card_product_swatch" style="background-color:#dba4bb"></span>
+                      <span class="card_product_swatch" style="background-color:#e46464"></span>
+                    </div>
+                  </div>
+                  <div class="card_product_supporting">
+                    <p class="card_product_desc">Puff-sleeve shirt in the plum, orchid, chrysanthemum and bamboo print.
+                    </p>
+                    <div class="card_product_tags">
+                      <span class="card_product_tag card_product_tag_status is_filled">BEST</span>
+                      <span class="card_product_tag">Jeogori</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card_product is_size_shop">
+                <div class="card_product_media" style="--card_img_pos: 50% 70%; --card_img_zoom: 1.3;">
+                  <div class="card_product_media">
+                    <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_shop_3.png"
+                      data-hover-src="assets/images/product_shop_3_hover.png"
+                      alt="A model wearing the Seonhongcho Sheer Scarf, a sheer scarf with a bleeding scarlet floral print"></a>
+                    <button class="card_product_action" type="button">
+                      <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                      <span class="a11y_hidden">Add Seonhongcho Sheer Scarf to wishlist</span>
+                    </button>
+                    <a class="card_product_action" href="#">
+                      <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                      <span class="a11y_hidden">View Seonhongcho Sheer Scarf details</span>
+                    </a>
+                  </div>
+                </div>
+                <div class="card_product_content">
+                  <div class="card_product_primary">
+                    <div class="card_product_header">
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Seonhongcho Sheer Scarf</a></h3>
+                      <p class="card_product_price">$30</p>
+                    </div>
+                    <div class="card_product_swatches">
+                      <span class="card_product_swatch" style="background-color:#8d2d27"></span>
+                      <span class="card_product_swatch" style="background-color:#aa8a6f"></span>
+                      <span class="card_product_swatch" style="background-color:#9cc1d8"></span>
+                      <span class="card_product_swatch" style="background-color:#a57aa4"></span>
+                    </div>
+                  </div>
+                  <div class="card_product_supporting">
+                    <p class="card_product_desc">Sheer scarf with a bleeding scarlet floral print</p>
+                    <div class="card_product_tags">
+                      <span class="card_product_tag card_product_tag_status is_filled">BEST</span>
+                      <span class="card_product_tag">Scarf</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+            </div>
+
+            <div class="shop_row">
+
+              <article class="card_product is_size_shop">
+                <div class="card_product_media">
+                  <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_shop_4.png"
+                    data-hover-src="assets/images/product_shop_4_hover.png"
+                    alt="A model wearing the Palette Cheollik Dress in a watercolor floral print"></a>
+                  <button class="card_product_action" type="button">
+                    <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                    <span class="a11y_hidden">Add Palette Cheollik Dress to wishlist</span>
+                  </button>
+                  <a class="card_product_action" href="#">
+                    <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                    <span class="a11y_hidden">View Palette Cheollik Dress details</span>
+                  </a>
+                </div>
+                <div class="card_product_content">
+                  <div class="card_product_primary">
+                    <div class="card_product_header">
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Palette Cheollik Dress</a></h3>
+                      <p class="card_product_price">$295</p>
+                    </div>
+                    <div class="card_product_swatches">
+                      <span class="card_product_swatch" style="background-color:#cbd9b7"></span>
+                      <span class="card_product_swatch" style="background-color:#a4c9c9"></span>
+                      <span class="card_product_swatch" style="background-color:#d3b5d1"></span>
+                    </div>
+                  </div>
+                  <div class="card_product_supporting">
+                    <p class="card_product_desc">Cheollik dress in a watercolor floral print</p>
+                    <div class="card_product_tags">
+                      <span class="card_product_tag">Cheollik Dress</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card_product is_size_shop">
+                <div class="card_product_media">
+                  <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_shop_5.png"
+                    data-hover-src="assets/images/product_shop_5_hover.png"
+                    alt="A model wearing a wool-check jacket with puff sleeves and a rounded collar"></a>
+                  <button class="card_product_action" type="button">
+                    <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                    <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
+                  </button>
+                  <a class="card_product_action" href="#">
+                    <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                    <span class="a11y_hidden">View Four Gracious Plants Jeogori Shirt details</span>
+                  </a>
+                </div>
+                <div class="card_product_content">
+                  <div class="card_product_primary">
+                    <div class="card_product_header">
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Four Gracious Plants Jeogori Shirt</a></h3>
+                      <p class="card_product_price">$275</p>
+                    </div>
+                    <div class="card_product_swatches">
+                      <span class="card_product_swatch" style="background-color:#ed8462"></span>
+                      <span class="card_product_swatch" style="background-color:#7388d5"></span>
+                    </div>
+                  </div>
+                  <div class="card_product_supporting">
+                    <p class="card_product_desc">Wool-check jacket with puff sleeves and a rounded collar</p>
+                    <div class="card_product_tags">
+                      <span class="card_product_tag">Jeogori</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+              <article class="card_product is_size_shop">
+                <div class="card_product_media">
+                  <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img class="card_product_img" src="assets/images/product_shop_6.png"
+                    data-hover-src="assets/images/product_shop_6_hover.png"
+                    alt="A model wearing the Geodeul Floral Chima, a layered wrap skirt in lightweight linen"></a>
+                  <button class="card_product_action" type="button">
+                    <img class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
+                    <span class="a11y_hidden">Add Geodeul Floral Chima to wishlist</span>
+                  </button>
+                  <a class="card_product_action" href="#">
+                    <img class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
+                    <span class="a11y_hidden">View Geodeul Floral Chima details</span>
+                  </a>
+                </div>
+                <div class="card_product_content">
+                  <div class="card_product_primary">
+                    <div class="card_product_header">
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Geodeul Floral Chima</a></h3>
+                      <p class="card_product_price">$220</p>
+                    </div>
+                    <div class="card_product_swatches">
+                      <span class="card_product_swatch" style="background-color:#dae157"></span>
+                      <span class="card_product_swatch" style="background-color:#ad88e1"></span>
+                    </div>
+                  </div>
+                  <div class="card_product_supporting">
+                    <p class="card_product_desc">Layered wrap skirt in lightweight linen</p>
+                    <div class="card_product_tags">
+                      <span class="card_product_tag">Chima</span>
+                    </div>
+                  </div>
+                </div>
+              </article>
+
+            </div>
+          </div>
+        </div>
+
+        <a class="shop_more_button" href="#">View More</a>
+      </div>
+    </section>
+
+    <!-- motif detail — 왼쪽 모티프 설명 + 오른쪽 세로 영상, 그 아래에 같은
+         모티프에서 나온 상품 스트립. 왼쪽 글 블록은 영상 위 끝에서 아래 끝까지
+         스크롤을 따라 내려옵니다(js/shop.js의 ScrollTrigger scrub). -->
+    <section class="motif_detail_section" aria-labelledby="motif_detail_title">
+      <div class="motif_detail_container">
+
+        <div class="motif_hero">
+          <div class="motif_reference" id="motif_reference">
+            <div class="motif_reference_image">
+              <img class="motif_reference_img" src="assets/images/reference_image.png"
+                alt="A Namsadangpae performer in white robes and a wide-brimmed hat, one arm raised mid-performance">
+            </div>
+            <div class="motif_reference_copy">
+              <div class="motif_reference_heading">
+                <p class="motif_reference_eyebrow">Joseon Dynasty</p>
+                <h2 class="motif_reference_title" id="motif_detail_title">Freedom, worn</h2>
+              </div>
+              <div class="motif_reference_desc">
+                <p>The Namsadangpae travelled across Korea, carrying stories through performance. Their garments were
+                  designed for movement, graceful, practical and expressive.</p>
+                <p>Inspired by this heritage, TCHAIKIM transforms traditional forms into contemporary silhouettes that
+                  embody freedom in motion.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="motif_video">
+            <video class="motif_video_media" src="assets/images/video_media.mp4" autoplay muted loop playsinline
+              aria-hidden="true"></video>
+          </div>
+        </div>
+
+        <div class="motif_related">
+          <h3 class="motif_related_title">Pieces from this motif</h3>
+
+          <!-- 카드 크기는 is_selected(가장 큼) / 그 양옆(중간) / 나머지(가장 작음)
+               3단계입니다. hover나 키보드 focus가 들어오면 js/shop.js가
+               is_selected를 그 카드로 옮기고, 빠져나가도 되돌리지 않아 마지막으로
+               본 상품에 머무릅니다. 양옆은 CSS 인접 선택자가 잡습니다.
+
+               motif_product_overlay는 가장 커진 카드에 실제로 마우스를 올리고
+               있는 동안에만 나타납니다(카드가 다 커진 뒤 뜨도록 살짝 늦게).
+
+               TODO: 아직 상품 정보가 없어 3번째(보라)만 시안 값으로 채워두고
+               나머지 7개는 비워뒀습니다. 카드마다 이름 / 부제 / 가격 / 링크
+               네 가지가 필요합니다. 채우면 그 글이 링크 이름이 되어 스크린리더
+               문제도 같이 해결됩니다. -->
+          <div class="motif_product_strip" id="motif_product_strip">
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-1.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Sapok Pants</span>
+                  <span class="motif_product_sub">H Banded Sapok Pants in Madris</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$368</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-2.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Gojengi Pants</span>
+                  <span class="motif_product_sub">Gojengi Pants 02 in Green</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$128</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card is_selected" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-3.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Wide-Leg Pants</span>
+                  <span class="motif_product_sub">Wide Banded Pants in Purple</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$198</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-4.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Knit Sapok Pants</span>
+                  <span class="motif_product_sub">Knit Sapok Pants in Leopard</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$248</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-5.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Wide-Leg Pants</span>
+                  <span class="motif_product_sub">Wide Banded Pants in Yellow</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$198</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-6.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Sapok Pants</span>
+                  <span class="motif_product_sub">Structured Banded Sapok Pants in Azure</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$298</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-7.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Sapok Pants</span>
+                  <span class="motif_product_sub">Structured Banded Sapok Pants in Scarlet</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$298</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+            <a class="motif_product_card" href="#">
+              <span class="motif_product_media">
+                <img class="motif_product_img" src="assets/images/image-8.png" alt="">
+              </span>
+              <span class="motif_product_overlay">
+                <span class="motif_product_head">
+                  <span class="motif_product_name">Wide-Leg Pants</span>
+                  <span class="motif_product_sub">Wide Banded Pants in Green</span>
+                </span>
+                <span class="motif_product_foot">
+                  <span class="motif_product_meta">
+                    <span class="motif_product_line"></span>
+                    <span class="motif_product_price">$198</span>
+                  </span>
+                  <span class="motif_product_button">Show details</span>
+                </span>
+              </span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" id="footer">
+    <div class="footer_inner">
+      <div class="footer_top">
+        <nav class="footer_nav" aria-label="Footer">
+          <ul class="footer_menu">
+            <li><a class="footer_menu_link" href="#">Collection</a></li>
+            <li><a class="footer_menu_link" href="index.html">Shop</a></li>
+            <li><a class="footer_menu_link" href="#">Bespoke</a></li>
+            <li><a class="footer_menu_link" href="#">Brand</a></li>
+            <li><a class="footer_menu_link" href="#">Contact</a></li>
+          </ul>
+        </nav>
+
+        <div class="footer_newsletter_row">
+          <form class="footer_newsletter" id="footer_newsletter" novalidate>
+            <p class="footer_newsletter_label" id="footer_newsletter_label">STAY IN TOUCH WITH THE STUDIO</p>
+            <div class="footer_email_field">
+              <input class="footer_email_input" id="footer_email_input" type="email" name="email"
+                placeholder="Email address" autocomplete="email"
+                aria-describedby="footer_newsletter_label footer_email_message">
+              <button class="footer_email_submit" type="submit">
+                <img src="assets/icons/arrow_right.svg" alt="" aria-hidden="true" width="26" height="26">
+                <span class="a11y_hidden">Subscribe</span>
+              </button>
+            </div>
+            <p class="footer_email_message" id="footer_email_message" role="status"></p>
+          </form>
+
+          <ul class="footer_social">
+            <li class="footer_social_item">
+              <a class="footer_social_link" href="https://www.instagram.com/tchaikim/" target="_blank"
+                rel="noopener noreferrer">
+                Instagram
+                <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+                <span class="a11y_hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+            <li class="footer_social_item">
+              <a class="footer_social_link" href="#" target="_blank" rel="noopener noreferrer">
+                Blog
+                <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+                <span class="a11y_hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+            <li class="footer_social_item">
+              <a class="footer_social_link" href="#" target="_blank" rel="noopener noreferrer">
+                Facebook
+                <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+                <span class="a11y_hidden">(opens in a new tab)</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <img class="footer_wordmark" src="assets/images/footer_logo%202.png" alt="" aria-hidden="true">
+
+      <div class="footer_bottom">
+        <ul class="footer_policy">
+          <li class="footer_policy_item">
+            <a class="footer_policy_link" href="#">
+              <span class="footer_policy_text">Terms &amp;<br>Conditions</span>
+              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+            </a>
+          </li>
+          <li class="footer_policy_item">
+            <a class="footer_policy_link" href="#">
+              <span class="footer_policy_text">Privacy<br>Policy</span>
+              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+            </a>
+          </li>
+          <li class="footer_policy_item">
+            <a class="footer_policy_link" href="#">
+              <span class="footer_policy_text">Returns &amp;<br>Exchange</span>
+              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+            </a>
+          </li>
+          <li class="footer_policy_item">
+            <a class="footer_policy_link" href="#">
+              <span class="footer_policy_text">Shipping &amp;<br>Delivery</span>
+              <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
+            </a>
+          </li>
+        </ul>
+
+        <p class="footer_copyright">© 2025 Tchai Kimyoungjin. All rights reserved.</p>
+      </div>
+
     </div>
+  </footer>
 
-    <img class="footer_wordmark" src="assets/images/footer_logo%202.png" alt="" aria-hidden="true">
-
-    <div class="footer_bottom">
-      <ul class="footer_policy">
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Terms &amp;<br>Conditions</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Privacy<br>Policy</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Returns &amp;<br>Exchange</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Shipping &amp;<br>Delivery</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-      </ul>
-
-      <p class="footer_copyright">© 2025 Tchai Kimyoungjin. All rights reserved.</p>
-    </div>
-
-  </div>
-</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-<script src="js/common.js"></script>
-<script type="module" src="js/shop.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="js/common.js"></script>
+  <script type="module" src="js/shop.js"></script>
 </body>
+
 </html>
