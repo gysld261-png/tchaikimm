@@ -146,6 +146,118 @@
 3. shop 페이지 반응형(360/768/1280) 대응
 4. 실제 브라우저 스크린샷으로 Figma 시안과 픽셀 단위 비교, 실제 마우스 hover(원통형 갤러리 회전, 카드 hover, 검색창 확장) 수동 확인
 
+## Shop Detail 페이지 (`test/shop_detail_test/`) — 2026-08-06
+
+### purchase_panel
+
+- **sticky를 쓰지 않습니다.** 사용자 결정: 패널이 화면을 따라오지 않고 왼쪽 갤러리와 함께 위로 스크롤되어 지나갑니다.
+  `position`, `top`, `height`, `align-self` 없이 일반 흐름에 둡니다.
+- 시도했다가 되돌린 것 두 가지를 기록합니다. 같은 실수를 반복하지 않기 위한 것입니다.
+  1. `overflow-y: auto`를 주면 **CSS 규칙상 `overflow-x`도 `visible` → `auto`로 바뀝니다.** 패널 콘텐츠 폭(539px)이
+     안쪽 폭(433px)보다 넓어서 패널 아래에 가로 스크롤바가 생겼습니다. 이 패널에 `overflow`를 걸면 안 됩니다.
+  2. sticky를 쓸 경우, 박스 높이가 콘텐츠 높이(804px)라 부모 grid 영역 바닥에 먼저 닿아 히어로가
+     한참 남았는데도 고정이 풀립니다. 되살릴 일이 있으면 `height: calc(100vh - 88px)`가 필요합니다.
+- Lenis는 이 문제와 무관합니다. `wrapper: window` / `content: HTML` 기본 설정이라 `transform`이 아닌
+  네이티브 `scrollTop`을 움직입니다(`html`·`body` transform 모두 `none` 확인). sticky를 깨는 종류의 설정이 아닙니다.
+
+### 버튼 상태
+
+- `.purchase_button.is_primary` hover: 딥그린 → `--detail_green_dark`. 검정으로 바뀌지 않습니다.
+- `.purchase_button.is_secondary` hover: `--color_point` 그린 배경 + 흰 글씨.
+- `.size_button` hover: `--duration_base`(0.4s)로 서서히 눌리는 연출. `translateY(2px)` + inset 그림자.
+  선택 확정 상태(`.is_selected`)는 눌림 효과 없이 그린 채움만 유지하도록 hover 규칙과 분리했습니다.
+
+### 사이즈 가이드 (`size_guide_panel`)
+
+- **트리거는 SIZE GUIDE 버튼 하나뿐입니다.** size_button으로도 열자는 안을 검토했으나,
+  사이즈 선택이라는 본래 역할과 충돌하고 누를 때마다 아래 CTA가 밀려서 제외했습니다(사용자 결정).
+- 이 상품은 **One size**입니다. 화면의 XS~XL 버튼은 Figma 시안 그대로 두었지만
+  실제 치수는 단일 사이즈 하나뿐이라 서로 맞지 않습니다. **미해결 사항입니다.**
+- 치수(사용자 제공, 확정): 어깨너비 37 / 가슴 단면 45 / 허리 단면 39 / 소매기장 43 / 앞총장 49 / 뒤총장 138 (cm).
+  inch 값은 cm ÷ 2.54를 소수 첫째 자리에서 반올림해 HTML에 함께 적어두었습니다.
+- CM / INCH 전환은 JS가 값을 계산하지 않습니다. 두 값을 모두 `<span class="size_value" data-unit="...">`로
+  마크업해두고 `.size_guide_panel.is_unit_inch` class로 한쪽만 보여줍니다.
+- 높이 열림은 `grid-template-rows: 0fr → 1fr`, 행 등장은 `opacity` + `translateY`에 행마다 60ms씩 `transition-delay`.
+  GSAP을 쓰지 않습니다.
+- **공통 `prefers-reduced-motion` 규칙은 `transition-duration`만 0으로 만들고 `transition-delay`는 남깁니다.**
+  그대로 두면 모션 최소화 설정에서도 행이 0.36초에 걸쳐 하나씩 나타납니다. `shop_detail.css` 안에
+  `:nth-child(n)`으로 같은 특정도의 규칙을 두어 delay를 0으로 덮었습니다.
+
+### craft 섹션 — 이미지 높이 선택자 충돌 (2026-08-06 수정)
+
+- `.craft_media img { height: 100% }`(특정도 0,1,1)가 `.craft_main_image { height: 400px }`(0,1,0)를 이겨서
+  메인 이미지가 `.craft_media` 높이 전체인 **689px로 렌더링**됐습니다(시안 400px).
+- 그 결과 media 열 콘텐츠가 984px가 되어 `.craft_media`(689px)를 295px 넘쳤고,
+  `.craft_section`의 `overflow: hidden`이 아래 66px을 잘라냈습니다. 초록 배경이 콘텐츠를 감싸지 못한 원인입니다.
+- 같은 이유로 `@media` 안의 `.craft_main_image { height: auto; aspect-ratio: 470/400 }` 반응형 규칙도 전부 무시되고 있었습니다.
+- 수정: 공통 img 규칙에서 `.craft_media img`를 분리해 `height: 100%`를 빼고 `width`/`object-fit`만 남겼습니다.
+  craft 이미지 높이는 `.craft_main_image`(400px)와 `.craft_media_row > img`(240px)가 각자 갖습니다.
+- 남은 것: `.craft_media { height: 689px }`인데 실제 콘텐츠는 695px이라 6px 넘칩니다. 잘리지는 않습니다(클리핑 0).
+  689가 Figma 값이라 임의로 바꾸지 않았습니다.
+- `.narrative_main_image` 안의 img는 **문제 없습니다.** 1024 / 1280 / 1600 세 폭에서 figure와 img 크기가
+  정확히 같고 좌우·아래 여백 0입니다. `width: 100%`는 원인이 아닙니다.
+  (`object-fit: cover`라 figure가 원본 460px보다 좁아지면 좌우가 잘립니다. 빈 공간이 생기는 게 아니라 그 반대입니다.)
+
+### craft 섹션 높이 고정 (2026-08-06)
+
+- 아코디언(`.accordion_item`)을 열면 `.craft_copy`가 커지면서 초록 섹션 전체가 늘어났습니다.
+  측정: 닫힘 1058px / 1개 열림 1125px / 3개 모두 열림 1259px.
+- **처음 시도(폐기): `.craft_section { height: 1290px }` 고정.** 두 가지가 남았습니다.
+  1. `align-items: center` 때문에 내용이 열 때마다 **100px씩 위로 튀었습니다**("덜커덕"의 정체).
+     섹션 높이만 고정하고 안쪽 내용은 재중앙정렬됐기 때문입니다.
+  2. 1100px 이하에서는 `height: auto`라 여전히 늘어났습니다. 폭마다 필요한 높이가 달라 고정 px가 맞지 않습니다.
+- **현재 방식: `shop_detail.js`의 `reserveAccordionSpace()`가 `.detail_accordion`에 자리를 미리 확보합니다.**
+  모든 항목을 잠깐 열어 높이를 재고 그 값을 `min-height`로 넣습니다. 아코디언 박스 높이가 항상 고정이므로
+  섹션 높이도, 내용 위치도 변하지 않습니다. **CSS에 고정 px를 박지 않아 모든 폭에서 자동으로 맞습니다.**
+- 측정 중에는 `.detail_accordion.is_measuring`으로 트랜지션을 꺼서 실제 높이를 바로 읽습니다.
+- 웹폰트 적용 후(`document.fonts.ready`), 그리고 폭이 바뀔 때(`ResizeObserver` + `window resize` 병행) 다시 잽니다.
+  폭이 실제로 달라졌을 때만 다시 재도록 막아두어 무한 루프가 없습니다.
+- 대가: 전부 닫힌 상태에서 아코디언 아래에 빈 자리가 생깁니다(1280px 기준 약 200px).
+  줄이려면 "한 번에 하나만 열림"으로 바꾸면 되지만 상호작용이 바뀌므로 미적용.
+- JS가 꺼져 있으면 예전처럼 늘어납니다(점진적 향상).
+
+### 알려진 반응형 결함 (이번 작업 범위 밖)
+
+- **1101~1280px**: `.narrative_grid`가 `width: 1040px` 고정이고 `.craft_container` 좌우 여백이 64px이라
+  합계 1168px가 되어 창보다 넓습니다. 1101px에서 페이지 가로 스크롤 18px 발생. `≤1100` 미디어쿼리에서야 풀립니다.
+- **768px**: `.look_products`의 `overflow-x: auto`가 `max-width: 767px`에만 걸려 있어 가로 스크롤 75px 발생.
+
+### 문법·구조 검사 (2026-08-06부터 매 작업 후 실행)
+
+- 이 저장소에는 `node`, `npx`, `package.json`이 없어 lint 도구를 쓸 수 없습니다.
+- 대신 미리보기 브라우저(실제 Chrome 파서)에서 검사 스크립트를 실행합니다. 원본은 세션 스크래치패드의 `check.js`.
+- 검사 항목: JS `new Function()` 컴파일(문법), HTML 태그 짝·중복 id·alt 누락·이름 없는 입력요소,
+  CSS 중괄호 균형·파서가 버린 규칙·선언이 모두 버려진 규칙.
+- **W3C 검사기가 아닙니다.** 속성값 안의 `>`를 정규식이 오인할 수 있고, 의미론적 마크업 규칙은 보지 않습니다.
+  W3C validator는 코드를 외부로 전송하므로 사용자 허락 없이 쓰지 않습니다.
+
+### 검증 (2026-08-06, localhost:5602)
+
+- purchase_panel: `scrollTop` 0/300/600/900/1200에서 panelTop이 1:1로 함께 이동 — 고정 구간 없음
+- 패널·페이지 가로 스크롤 모두 0 (1440 / 1280 / 1024)
+- 버튼 hover 최종값: primary `rgb(22,51,47)`, secondary `rgb(31,67,63)` + 흰 글씨,
+  size_button `matrix(1,0,0,1,0,2)` + inset 그림자
+- 사이즈 가이드: 열림 시 내부 높이 431px, `aria-expanded` true/false 전환, 닫힘 시 높이 0 + `visibility: hidden`
+- 단위 전환: CM → 37/45/39/43/49/138, INCH → 14.6/17.7/15.4/16.9/19.3/54.3, 헤더 라벨도 함께 전환
+- 표 폭 264px(라벨 186 + 값 78), 영문 라벨 줄바꿈 없음
+- 콘솔 에러 없음
+
+### 확인하지 못한 부분
+
+- **이 세션의 미리보기 탭은 실제 마우스 클릭 이벤트가 페이지에 전달되지 않습니다.**
+  `pointerdown`/`click` 리스너를 붙이고 클릭해도 이벤트가 0건이었습니다(hover는 전달됨).
+  위 검증은 모두 `element.click()` 디스패치와 최종 상태 측정으로 했습니다. 핸들러 경로는 같지만
+  실제 마우스로 눌러보는 확인은 사용자가 해야 합니다.
+- `requestAnimationFrame`이 돌지 않아(`gsap.ticker.time` 0 고정) **애니메이션이 재생되는 모습 자체는 못 봤습니다.**
+  transition 속성·지연·최종 상태가 올바른 것만 확인했습니다. 스태거 속도감은 실제 브라우저에서 볼 필요가 있습니다.
+- 사이즈 가이드의 반응형(360 / 768 / 1280) 확인
+
+### Shop Detail 다음 작업
+
+1. One size와 XS~XL 사이즈 버튼의 불일치 정리 방향 결정
+2. 사이즈 가이드 반응형 확인
+3. `.look_products`의 `overflow-x: auto`가 `max-width: 767px`에만 걸려 있어 768px에서 가로 스크롤 75px 발생 — 기존 문제
+
 ## 다음 작업
 
 1. 메인페이지 전체 반응형(360 / 768 / 1280) 일괄 작업

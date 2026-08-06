@@ -74,6 +74,68 @@
     });
   });
 
+  // 아코디언을 열고 닫아도 craft 섹션 높이가 변하지 않도록,
+  // 모든 항목이 열린 상태의 높이를 미리 확보해 둡니다.
+  // 폭마다 줄바꿈이 달라져 높이가 바뀌므로 고정 px 대신 그때그때 측정합니다.
+  var accordion = document.querySelector(".detail_accordion");
+  var accordionItems = Array.prototype.slice.call(document.querySelectorAll(".accordion_item"));
+
+  function reserveAccordionSpace() {
+    if (!accordion || !accordionItems.length) {
+      return;
+    }
+
+    var openedBefore = accordionItems.map(function (item) {
+      return item.classList.contains("is_open");
+    });
+
+    accordion.classList.add("is_measuring");
+    accordion.style.minHeight = "";
+    accordionItems.forEach(function (item) {
+      item.classList.add("is_open");
+    });
+
+    var fullHeight = accordion.getBoundingClientRect().height;
+
+    accordionItems.forEach(function (item, index) {
+      item.classList.toggle("is_open", openedBefore[index]);
+    });
+    accordion.style.minHeight = Math.ceil(fullHeight) + "px";
+    accordion.classList.remove("is_measuring");
+  }
+
+  if (accordion) {
+    reserveAccordionSpace();
+
+    // 웹폰트가 늦게 적용되면 글자 높이가 달라지므로 다시 잽니다.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(reserveAccordionSpace);
+    }
+
+    // 폭이 바뀌면 줄바꿈이 달라져 필요한 높이도 달라집니다.
+    // ResizeObserver와 window resize를 함께 씁니다. 어느 한쪽만으로 놓치는 경우가 없도록.
+    var lastWidth = accordion.getBoundingClientRect().width;
+    var resizeTimer = null;
+
+    function handleLayoutChange() {
+      var width = accordion.getBoundingClientRect().width;
+      if (Math.round(width) === Math.round(lastWidth)) {
+        return;
+      }
+      lastWidth = width;
+      reserveAccordionSpace();
+    }
+
+    if (window.ResizeObserver) {
+      new window.ResizeObserver(handleLayoutChange).observe(accordion);
+    }
+
+    window.addEventListener("resize", function () {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(handleLayoutChange, 150);
+    });
+  }
+
   var lookPins = Array.prototype.slice.call(document.querySelectorAll(".look_pin"));
   var lookCards = Array.prototype.slice.call(document.querySelectorAll("[data-look-card]"));
 
