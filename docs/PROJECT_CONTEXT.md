@@ -1,6 +1,6 @@
 # Tchai Kim 현재 상태
 
-<<<<<<< HEAD
+
 ## Collection 페이지 (`test/collection_test/`) — 2026-08-06
 
 - 대상 화면: Figma `4조 한복판 - 차이킴` node `1710:3865`("col_chaikimyoungjin", 1920 × 9796.75).
@@ -199,8 +199,7 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
 - **주의**: 원본 191MB 파일이 저장소에 커밋돼 있습니다. 페이지는 더 이상 참조하지 않으므로
   Git LFS로 옮기거나 저장소에서 빼는 것을 검토할 만합니다.
 
-=======
->>>>>>> origin/main
+
 ## Shared system migration (2026-08-06)
 
 - Repository-wide rules and project documents moved from `test/main_test/` to the repository root and `docs/`.
