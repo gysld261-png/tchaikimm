@@ -44,6 +44,10 @@
   color: var(--color_text);
 }
 
+.page_bespoke .header_menu_link {
+  font-size: 20px;
+}
+
 .page_bespoke .header_menu_link:hover,
 .page_bespoke .header_menu_link:focus-visible {
   color: var(--color_point);
@@ -55,10 +59,14 @@
 }
 
 /* =========================================================
-   공통 섹션 리듬
+   공통 섹션 리듬 — 바깥 여백을 footer_inner(layout.css)와 동일하게:
+   최대폭 1600px + 좌우 gutter, 가운데 정렬.
    ========================================================= */
 
 .main section {
+  width: 100%;
+  max-width: calc(var(--layout_inner) + var(--layout_gutter) * 2);
+  margin: 0 auto;
   padding: 60px var(--layout_gutter);
 }
 
@@ -273,23 +281,24 @@
 }
 
 .quote_bg {
+  /* index.html에서 쓰는 designer_quote_section.png는 폭 전체를 채우는 이미지라
+     philosophy_bg/reservation_bg와 동일하게 섹션 전체를 덮는 배경으로 둔다. */
   position: absolute;
-  top: 50%;
-  left: 0;
+  inset: 0;
   z-index: 0;
-  width: min(38%, 340px);
-  aspect-ratio: 736 / 1308;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   opacity: 0.4;
-  transform: translateY(-50%) rotate(180deg);
   pointer-events: none;
 }
 
 .quote_body {
   position: relative;
   z-index: 1;
-  max-width: 640px;
+  max-width: 100%;
   margin: 0;
+  padding: 0 var(--layout_gutter);
 }
 
 .quote_text {
@@ -298,6 +307,13 @@
   font-style: italic;
   font-size: var(--fs_display_24);
   line-height: 1.25;
+}
+
+/* 시안: 한 줄로 나오는 문구. 줄바꿈이 필요 없는 폭(1280px+)에서만 강제로 한 줄 유지. */
+@media (min-width: 1280px) {
+  .quote_text {
+    white-space: nowrap;
+  }
 }
 
 .quote_cite {
@@ -411,16 +427,12 @@
    materials
    ========================================================= */
 
+/* 시안 구조: 제목이 위에 통째로 걸리고, 그 아래에 [텍스처 이미지 | 스와치+목록+캡션] 2열이 온다. */
+
 .materials {
   display: flex;
   flex-direction: column;
-  gap: 32px;
-}
-
-.materials_eyebrow {
-  color: var(--color_text_muted);
-  font-family: var(--font_ui);
-  font-size: var(--fs_ui_16);
+  gap: 40px;
 }
 
 .materials_title {
@@ -430,6 +442,12 @@
   font-weight: 500;
   line-height: var(--lh_display_32);
   letter-spacing: var(--ls_tight_sm);
+}
+
+.materials_body {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 }
 
 .materials_texture {
@@ -445,34 +463,46 @@
   object-fit: cover;
 }
 
+.materials_content {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
 .materials_swatches {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 20px;
 }
 
 .materials_swatch {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.materials_swatch_index {
+  color: var(--color_text_muted);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+}
+
+.materials_swatch_img {
+  display: block;
   aspect-ratio: 180 / 200;
   overflow: hidden;
 }
 
-.materials_swatch img {
+.materials_swatch_img img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.materials_swatch_index {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  z-index: 1;
-  padding: 2px 6px;
-  background-color: rgba(255, 253, 249, 0.85);
-  color: var(--color_text_muted);
-  font-family: var(--font_ui);
-  font-size: var(--fs_ui_14);
+.materials_detail {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
 }
 
 .materials_list {
@@ -503,33 +533,42 @@
   line-height: 1.63;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 640px) {
   .materials_swatches {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
 @media (min-width: 1024px) {
-  .materials {
-    display: grid;
-    grid-template-columns: minmax(0, 466px) 1fr;
-    grid-template-areas:
-      "texture eyebrow"
-      "texture title"
-      "texture swatches"
-      "texture list"
-      "texture caption";
-    column-gap: 80px;
-    row-gap: 24px;
-    align-items: start;
+  .materials_body {
+    flex-direction: row;
+    gap: 80px;
   }
 
-  .materials_texture { grid-area: texture; }
-  .materials_eyebrow { grid-area: eyebrow; }
-  .materials_title { grid-area: title; }
-  .materials_swatches { grid-area: swatches; grid-template-columns: repeat(6, 1fr); }
-  .materials_list { grid-area: list; flex-direction: row; flex-wrap: wrap; gap: 8px 24px; }
-  .materials_caption { grid-area: caption; }
+  .materials_texture {
+    flex: 0 0 466px;
+  }
+
+  .materials_content {
+    flex: 1 1 auto;
+  }
+
+  .materials_swatches {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .materials_detail {
+    flex-direction: row;
+    gap: 100px;
+  }
+
+  .materials_list {
+    flex: 0 0 auto;
+  }
+
+  .materials_caption {
+    padding-top: 2px;
+  }
 }
 
 /* =========================================================

@@ -31,6 +31,7 @@
   --fs_display_32: clamp(24px, 2.4vw, 32px);
   --fs_body_24: clamp(18px, 1.6vw, 24px);
   --fs_body_20: clamp(16px, 1.4vw, 20px);
+  --fs_ui_20: 20px;
   --fs_ui_16: 16px;
   --fs_ui_15: 15px;
   --fs_ui_14: 14px;
