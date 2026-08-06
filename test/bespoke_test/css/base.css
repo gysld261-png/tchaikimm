@@ -1,0 +1,200 @@
+@charset "utf-8";
+
+/* =========================================================
+   design tokens
+   출처: Figma 4조 한복판 - 차이킴 (main/text, main/point, 폰트 변수)
+   ========================================================= */
+
+:root {
+  /* color */
+  --color_bg: #fffdf9;
+  --color_text: #0a0a0a;
+  --color_text_sub: #2e2e2e;
+  --color_point: #1f433f;
+  --color_line: rgba(0, 0, 0, 0.5);
+
+  --color_text_on_dark: #ffffff;
+  --color_text_on_dark_sub: #dddddd;
+  --color_text_on_dark_menu: rgba(255, 255, 255, 0.85);
+  --color_line_on_dark: rgba(255, 255, 255, 0.6);
+
+  --color_error: #b3261e;
+
+  /* font family */
+  --font_display: "Trirong", "Times New Roman", serif;
+  --font_body: "Montserrat", "Pretendard Variable", sans-serif;
+  --font_ui: "Pretendard Variable", "Pretendard", system-ui, sans-serif;
+
+  /* font size — 시안 1920px 기준값을 상한으로 두고 축소 */
+  --fs_display_64: clamp(36px, 4.5vw, 64px);
+  --fs_display_48: clamp(28px, 3.5vw, 48px);
+  --fs_display_32: clamp(24px, 2.4vw, 32px);
+  --fs_body_24: clamp(18px, 1.6vw, 24px);
+  --fs_body_20: clamp(16px, 1.4vw, 20px);
+  --fs_ui_16: 16px;
+  --fs_ui_15: 15px;
+  --fs_ui_14: 14px;
+
+  /* line height — 시안 비율 유지 */
+  --lh_display_64: 1.5;
+  --lh_display_48: 1.292;
+  --lh_display_32: 1.406;
+  --lh_body_24: 1.583;
+  --lh_body_20: 1.6;
+
+  /* letter spacing — 시안 -2% / -1% */
+  --ls_tight: -0.02em;
+  --ls_tight_sm: -0.01em;
+
+  /* layout */
+  --layout_inner: 1600px;
+  --layout_gutter: 20px;
+  --header_height: 64px;
+
+  /* radius */
+  --radius_button: 5px;
+
+  /* motion */
+  --duration_fast: 0.2s;
+  --duration_base: 0.4s;
+  --easing_base: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (min-width: 768px) {
+  :root {
+    --layout_gutter: 40px;
+    --header_height: 72px;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --layout_gutter: 64px;
+    --header_height: 80px;
+  }
+}
+
+/* =========================================================
+   reset
+   ========================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body,
+h1, h2, h3, h4, h5, h6,
+p, figure, blockquote, dl, dd {
+  margin: 0;
+}
+
+ul, ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color_bg);
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+img,
+picture,
+svg,
+video {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+input,
+select,
+textarea {
+  margin: 0;
+  color: inherit;
+  font: inherit;
+}
+
+/* =========================================================
+   공통 유틸
+   ========================================================= */
+
+.a11y_hidden {
+  position: absolute;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.skip_link {
+  position: absolute;
+  top: -100px;
+  left: var(--layout_gutter);
+  z-index: 100;
+  padding: 12px 20px;
+  border-radius: var(--radius_button);
+  background-color: var(--color_point);
+  color: var(--color_text_on_dark);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_16);
+  transition: top var(--duration_fast) var(--easing_base);
+}
+
+.skip_link:focus-visible {
+  top: 12px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color_point);
+  outline-offset: 3px;
+}
+
+.main {
+  display: block;
+}
+
+/* =========================================================
+   모션 감소 설정
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
