@@ -292,7 +292,7 @@
               </li>
               <li>
                 <label class="reservation_time">
-                  <input class="a11y_hidden" type="radio" name="meeting_time" value="13:00" checked>
+                  <input class="a11y_hidden" type="radio" name="meeting_time" value="13:00">
                   <span class="reservation_time_face">1:00 PM</span>
                 </label>
               </li>
@@ -315,6 +315,7 @@
                 </label>
               </li>
             </ul>
+            <p class="bespoke_status" id="schedule_status" role="status"></p>
           </fieldset>
 
         </div>
@@ -334,18 +335,15 @@
         <div class="bespoke_form_grid">
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_name">Full name</label>
-            <input class="bespoke_field_input" id="field_name" name="full_name" type="text" placeholder="your name" autocomplete="name" required>
-            <span class="bespoke_field_error" id="field_name_error" aria-live="polite"></span>
+            <input class="bespoke_field_input" id="field_name" name="full_name" type="text" placeholder="your name" autocomplete="name">
           </p>
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_phone">Contact number</label>
             <input class="bespoke_field_input" id="field_phone" name="phone" type="tel" placeholder="+1 000 000 0000" autocomplete="tel">
-            <span class="bespoke_field_error" id="field_phone_error" aria-live="polite"></span>
           </p>
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_email">Email address</label>
-            <input class="bespoke_field_input" id="field_email" name="email" type="email" placeholder="your@email.com" autocomplete="email" required>
-            <span class="bespoke_field_error" id="field_email_error" aria-live="polite"></span>
+            <input class="bespoke_field_input" id="field_email" name="email" type="email" placeholder="your@email.com" autocomplete="email">
           </p>
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_occasion">Occasion</label>
@@ -356,7 +354,6 @@
               <option value="gift">Gift</option>
               <option value="other">Other</option>
             </select>
-            <span class="bespoke_field_error"></span>
           </p>
         </div>
 

@@ -292,6 +292,18 @@
   }
 }
 
+/* 마우스를 올리면 선택했을 때와 같은 색을 미리 보여줍니다.
+   (hover: hover)로 감싼 이유 — 손가락으로 만지는 화면에서는 한 번 누른 칸에
+   :hover가 그대로 남아 선택된 것처럼 보입니다. 마우스가 있는 환경에만 적용합니다. */
+@media (hover: hover) {
+  .reservation_time:hover .reservation_time_face {
+    border-color: var(--color_point);
+    background-color: var(--color_point);
+    color: var(--color_text_inverse);
+  }
+}
+
+/* 실제로 고른 칸. hover보다 특정도가 높아 마우스를 떼도 색이 유지됩니다. */
 .reservation_time:has(input:checked) .reservation_time_face {
   border-color: var(--color_point);
   background-color: var(--color_point);
@@ -301,6 +313,12 @@
 .reservation_time:has(input:focus-visible) .reservation_time_face {
   outline: 2px solid var(--color_point);
   outline-offset: 3px;
+}
+
+/* 시간을 안 골랐을 때 시간표 바로 아래에 뜹니다.
+   비어 있으면 base의 .bespoke_status:empty가 숨깁니다. */
+#schedule_status {
+  margin-top: 20px;
 }
 
 /* ------------------------------------------------------------

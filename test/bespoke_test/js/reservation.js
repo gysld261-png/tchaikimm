@@ -10,7 +10,10 @@
   "use strict";
 
   var DONE_URL = "reservation_done.html";
-  var BLOCKED_MESSAGE = "Both agreements above are required";
+  /* 전송을 막는 조건은 두 가지뿐입니다: 시간 미선택, 약관 미동의.
+     이름·연락처·이메일은 입력은 받되 검증하지 않습니다. */
+  var AGREE_MESSAGE = "Both agreements above are required";
+  var TIME_MESSAGE = "Please choose a meeting time.";
 
   /* ----------------------------------------------------------
      진행 단계 띠
@@ -110,7 +113,13 @@
   /* ----------------------------------------------------------
      전송 확인
 
-     보내기 전에 필수 항목과 약관 두 개를 확인합니다.
+     막는 조건은 두 가지입니다.
+       1) 회의 시간을 안 골랐을 때  → 시간표 아래에 안내
+       2) 약관 두 개를 다 체크 안 했을 때 → 전송 버튼 옆에 안내
+
+     안내 문구를 각자 자기 자리에 두는 이유: 시간 문제를 페이지 맨 아래
+     전송 버튼 옆에 띄우면, 화면이 시간표로 옮겨갔을 때 문구가 안 보입니다.
+
      실제 전송은 하지 않고 완료 페이지로 이동합니다.
      ---------------------------------------------------------- */
   function initSubmit() {
@@ -120,63 +129,51 @@
       return;
     }
 
+    var scheduleStatus = document.getElementById("schedule_status");
     var agreePrivacy = document.getElementById("agree_privacy");
     var agreeProduction = document.getElementById("agree_production");
+
+    function getCheckedTime() {
+      return form.querySelector('input[name="meeting_time"]:checked');
+    }
 
     function isAgreed() {
       return Boolean(agreePrivacy && agreePrivacy.checked && agreeProduction && agreeProduction.checked);
     }
 
-    function refreshStatus() {
-      status.textContent = isAgreed() ? "" : BLOCKED_MESSAGE;
+    function refreshAgreeStatus() {
+      status.textContent = isAgreed() ? "" : AGREE_MESSAGE;
     }
 
     [agreePrivacy, agreeProduction].forEach(function (box) {
       if (box) {
-        box.addEventListener("change", refreshStatus);
+        box.addEventListener("change", refreshAgreeStatus);
       }
     });
 
-    function showFieldError(input, message) {
-      var field = input.closest(".bespoke_field");
-      if (!field) {
-        return;
+    /* 시간을 고르는 순간 안내 문구를 지웁니다. */
+    form.addEventListener("change", function handleTimeChange(event) {
+      if (event.target.name === "meeting_time" && scheduleStatus) {
+        scheduleStatus.textContent = "";
       }
-      var slot = field.querySelector(".bespoke_field_error");
-      field.classList.toggle("has_error", Boolean(message));
-      if (slot) {
-        slot.textContent = message;
-      }
-    }
-
-    function validateRequiredText(input, message) {
-      if (!input) {
-        return true;
-      }
-      var value = input.value.trim();
-      var isValid = value.length > 0 && (input.type !== "email" || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value));
-      showFieldError(input, isValid ? "" : message);
-      return isValid;
-    }
+    });
 
     form.addEventListener("submit", function handleSubmit(event) {
       event.preventDefault();
 
-      var nameInput = document.getElementById("field_name");
-      var emailInput = document.getElementById("field_email");
-
-      var isNameValid = validateRequiredText(nameInput, "Please enter your name.");
-      var isEmailValid = validateRequiredText(emailInput, "Please enter a valid email address.");
-
-      refreshStatus();
-
-      if (!isNameValid || !isEmailValid) {
-        var firstBad = form.querySelector(".bespoke_field.has_error .bespoke_field_input");
-        if (firstBad) {
-          firstBad.focus();
+      if (!getCheckedTime()) {
+        if (scheduleStatus) {
+          scheduleStatus.textContent = TIME_MESSAGE;
+        }
+        /* 초점을 옮기면 그 자리로 화면이 따라가 안내 문구가 함께 보입니다. */
+        var firstTime = form.querySelector('input[name="meeting_time"]');
+        if (firstTime) {
+          firstTime.focus();
         }
         return;
       }
+
+      refreshAgreeStatus();
 
       if (!isAgreed()) {
         if (agreePrivacy && !agreePrivacy.checked) {
@@ -190,7 +187,7 @@
       window.location.href = DONE_URL;
     });
 
-    refreshStatus();
+    refreshAgreeStatus();
   }
 
   function init() {

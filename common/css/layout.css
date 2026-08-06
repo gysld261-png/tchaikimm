@@ -89,7 +89,16 @@
   top: 8px;
 }
 
-.header_toggle[aria-expanded="true"] .header_toggle_bar {
+/* 열리면 가운데 선을 지우고 위아래 두 선만 X로 교차시킵니다.
+
+   `.header` 를 앞에 붙여 특정도를 (0,4,0)으로 올렸습니다. 이게 없으면
+   아래쪽 `.header.is_black .header_toggle_bar`(0,3,0)와 특정도가 같은데
+   그 규칙이 파일 뒤에 있어서 이겨버립니다. 그러면 가운데 선이 다시
+   칠해져 X 한가운데에 가로줄이 남습니다.
+
+   가운데 선에 opacity나 transform을 쓰면 안 됩니다. X를 이루는 두 선이
+   이 요소의 ::before / ::after라서 같이 사라집니다. */
+.header .header_toggle[aria-expanded="true"] .header_toggle_bar {
   background-color: transparent;
 }
 
