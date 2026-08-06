@@ -15,6 +15,21 @@
   --fs_display_24: 24px;
 }
 
+/* Bespoke footer spacing differs from the shared Main/Shop footer. */
+.footer_inner {
+  gap: 80px;
+}
+
+.footer_wordmark {
+  margin: 0;
+}
+
+@media (min-width: 1280px) {
+  .footer_wordmark {
+    margin-left: -9px;
+  }
+}
+
 /* =========================================================
    header — 이 페이지는 hero가 이미지가 아니라 밝은 배경이라
    main_test/shop_test의 "어두운 히어로 위 투명 헤더"와 달리
@@ -24,38 +39,6 @@
 .page_bespoke .header {
   position: sticky;
   top: 0;
-  background-color: var(--color_bg);
-}
-
-.page_bespoke .header_toggle_bar,
-.page_bespoke .header_toggle_bar::before,
-.page_bespoke .header_toggle_bar::after {
-  background-color: var(--color_text);
-}
-
-.page_bespoke .header_inner {
-  background-color: var(--color_bg);
-}
-
-.page_bespoke .header_menu_link,
-.page_bespoke .header_currency_select,
-.page_bespoke .header_currency_select option,
-.page_bespoke .header_cart {
-  color: var(--color_text);
-}
-
-.page_bespoke .header_menu_link {
-  font-size: 20px;
-}
-
-.page_bespoke .header_menu_link:hover,
-.page_bespoke .header_menu_link:focus-visible {
-  color: var(--color_point);
-}
-
-.page_bespoke .header_menu_link.is_active {
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 
 /* =========================================================

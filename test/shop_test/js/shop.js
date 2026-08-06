@@ -1,47 +1,5 @@
 import * as THREE from "three";
 
-/* Lenis — 스크롤을 한 칸씩 끊어 뛰지 않고 부드럽게 이어지게 만듭니다. 페이지
-   전체에 걸리는 라이브러리라 motif_hero뿐 아니라 garment_story 등 스크롤에
-   묶인 모든 움직임이 같이 부드러워집니다.
-
-   ScrollTrigger와 같이 쓸 때는 두 가지를 반드시 연결해야 합니다. 안 하면
-   Lenis가 옮긴 스크롤 위치를 ScrollTrigger가 모르고 있어 애니메이션이 실제
-   화면보다 늦게 따라옵니다.
-     1) Lenis가 스크롤할 때마다 ScrollTrigger를 갱신
-     2) Lenis의 프레임 갱신을 GSAP 티커에 얹어 두 애니메이션 루프를 하나로 통일
-   그래서 Lenis 자체 루프(autoRaf)는 끄고 GSAP 티커에 태웁니다. */
-(function initSmoothScroll() {
-  "use strict";
-
-  if (typeof window.Lenis === "undefined" || typeof window.gsap === "undefined") {
-    return;
-  }
-
-  /* 움직임을 줄이도록 설정한 사용자에게는 브라우저 기본 스크롤을 그대로 둡니다. */
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    return;
-  }
-
-  var gsap = window.gsap;
-  var lenis = new window.Lenis({
-  autoRaf: false,
-  lerp: 0.06,          // 낮을수록 천천히 따라옴
-  wheelMultiplier: 0.75 // 휠 한 번의 이동 거리
-});
-
-  if (window.ScrollTrigger) {
-    lenis.on("scroll", window.ScrollTrigger.update);
-  }
-
-  gsap.ticker.add(function (time) {
-    /* GSAP 티커는 초, Lenis의 raf는 밀리초를 받습니다. */
-    lenis.raf(time * 1000);
-  });
-
-  /* 프레임이 밀렸을 때 GSAP이 시간을 보정하면 Lenis와 어긋나므로 끕니다. */
-  gsap.ticker.lagSmoothing(0);
-})();
-
 /* hero — follow.art 레퍼런스처럼 사진 카드들을 원통 둘레에 실제 3D로 배치하고
    Three.js로 렌더링합니다. 회전값은 GSAP로 트윈합니다(main 페이지가 이미
    GSAP를 쓰고 있어 같은 라이브러리로 통일). 페이지 진입 즉시 자동 회전이
@@ -558,61 +516,6 @@ initHeroGallery();
       onUpdate: applyProgress
     })
     .to({}, { duration: END_HOLD_RATIO });
-})();
-
-/* Product cards — 사진 위 아이콘들이 한꺼번에 나타나지 않고 하나씩 이어서
-   나타나도록, 카드 안에서 몇 번째 아이콘인지를 CSS에 넘겨줍니다. 실제 지연
-   계산은 css/shop.css의 --card_icon_delay / --card_icon_stagger가 합니다.
-   all(shop_section)과 new(new_arrivals) 카드가 같은 클래스를 쓰므로 이 한
-   군데서 양쪽이 같이 처리됩니다. */
-(function initProductActionOrder() {
-  "use strict";
-
-  var mediaBoxes = Array.prototype.slice.call(document.querySelectorAll(".card_product_media"));
-
-  mediaBoxes.forEach(function (media) {
-    var actions = Array.prototype.slice.call(media.querySelectorAll(".card_product_action"));
-
-    actions.forEach(function (action, index) {
-      action.style.setProperty("--card_action_index", String(index));
-    });
-  });
-})();
-
-/* Product cards — data-hover-src에 원단 이미지 경로가 들어간 카드만
-   이미지를 미리 불러온 뒤 hover/focus 시 부드럽게 교체합니다. */
-(function initProductImageHover() {
-  var productImages = Array.prototype.slice.call(
-    document.querySelectorAll(".card_product_img[data-hover-src]")
-  );
-
-  productImages.forEach(function (defaultImage) {
-    var hoverSrc = defaultImage.getAttribute("data-hover-src").trim();
-    var media = defaultImage.closest(".card_product_media");
-
-    if (!hoverSrc || !media) {
-      return;
-    }
-
-    var preload = new Image();
-
-    preload.onload = function () {
-      var hoverImage = document.createElement("img");
-      hoverImage.className = "card_product_img card_product_img_hover";
-      hoverImage.src = hoverSrc;
-      hoverImage.alt = "";
-      hoverImage.setAttribute("aria-hidden", "true");
-
-      defaultImage.classList.add("card_product_img_default");
-      /* 기본 이미지가 들어있는 상자(.card_product_media_link) 안에, 바로 옆에
-         끼워 넣습니다. media에 직접 붙이면 아이콘들 뒤에 쌓여서 원단 사진이
-         아이콘을 가립니다. */
-      defaultImage.parentNode.insertBefore(hoverImage, defaultImage.nextSibling);
-      media.classList.add("has_hover_image");
-    };
-
-    preload.src = hoverSrc;
-  });
 })();
 
 /* shop — 카테고리 선택 목록. 버튼을 누르면 일곱 개 항목이 위에서부터 하나씩
