@@ -265,7 +265,8 @@
 .showcase_photo_e img,
 .showcase_photo_f img,
 .showcase_photo_g img,
-.showcase_quote_word {
+.showcase_quote_word,
+.archive_photo img {
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
@@ -289,14 +290,16 @@
 }
 
 .archive_frame {
-  /* 시안 4516.07 → 7271.07 */
-  height: 2755px;
+  /* 시안은 2755px(4516.07 → 7271.07)입니다. 사진이 겹쳐 쌓이는 구조로 바뀌면서
+     카드 5장이 세로 1646px 안에 모이기 때문에 프레임도 함께 줄였습니다.
+     쌓이는 stagger가 한두 화면 안에서 보이려면 카드가 가까이 있어야 합니다. */
+  height: 1800px;
 }
 
 .archive_sticky {
   width: 566px;
-  height: 2505px;
-  padding: 347px 0 0 120px;
+  height: 100%;
+  padding: 200px 0 0 120px;
 }
 
 /* 레이어 이름이 sticky입니다. 사진이 지나가는 동안 연도 내비가 따라옵니다. */
@@ -334,11 +337,16 @@
   align-items: flex-start;
 }
 
-/* inline-block 링크의 line box strut이 시안 간격(19px)을 벌리지 않도록 flex로 둡니다. */
+/* inline-block 링크의 line box strut이 시안 간격(19px)을 벌리지 않도록 flex로 둡니다.
+   들여쓰기는 활성 연도가 바뀔 때 부드럽게 움직입니다. */
 .archive_year_item {
   display: flex;
+  transition: padding-left var(--duration_base) var(--easing_base);
 }
 
+/* 사진을 바꾸는 2019 / 2020 / 2021은 button, 아직 연결할 데이터가 없는
+   나머지 연도는 기존 그대로 정적 a입니다. 두 요소가 같은 모양을 갖도록
+   한 선택자에 모아 둡니다. reset.css가 button의 배경·테두리·padding을 이미 지웁니다. */
 .archive_year_link {
   display: inline-block;
   color: var(--color_point);
@@ -346,11 +354,18 @@
   font-size: 16px;
   font-weight: 300;
   line-height: 1;
-  transition: opacity var(--duration_fast) var(--easing_base);
+  text-align: left;
+  /* 왼쪽 기준으로 커져야 목록의 세로선이 흔들리지 않습니다. */
+  transform-origin: left center;
+  transition:
+    opacity var(--duration_fast) var(--easing_base),
+    transform var(--duration_base) var(--easing_base),
+    font-size var(--duration_base) var(--easing_base);
 }
 
 .archive_year_link:hover {
   opacity: 0.6;
+  transform: scale(1.12);
 }
 
 /* 선택된 연도는 시안대로 41px 들여쓰고 크게 표시합니다. */
@@ -364,52 +379,96 @@
   line-height: 1;
 }
 
+/* 사진 5장은 서로 겹쳐 쌓입니다. 슬롯마다 다른 것은 위치·폭·기울기·쌓임 순서뿐이고
+   높이는 지정하지 않습니다. 연도마다 원본 비율이 달라(세로 2:3, 가로 3:2 등)
+   높이를 고정하면 잘라내야 하기 때문입니다. 높이는 img가 원본 비율대로 정합니다. */
 .archive_photo {
   position: absolute;
+  z-index: var(--archive_photo_layer);
+  width: var(--archive_photo_width);
   margin: 0;
+  /* 겹친 사진끼리 경계가 보이도록 배경색 여백을 두릅니다. */
   padding: 10px;
+  background-color: var(--color_bg);
+  box-shadow: 0 14px 36px rgba(40, 40, 40, 0.14);
+  transform: rotate(var(--archive_photo_tilt));
+  /* z-index는 보간되지 않고 지연이 끝나는 순간 한 번에 바뀝니다.
+     복귀할 때만 지연을 주어야 카드가 작아지는 동안 맨 위에 남아 있습니다. */
+  transition:
+    transform var(--duration_base) var(--easing_base),
+    box-shadow var(--duration_base) var(--easing_base),
+    z-index 0s var(--duration_base);
+}
+
+/* 가로형 사진은 같은 폭이면 세로형보다 훨씬 작아 보입니다.
+   collection.js가 원본 크기를 보고 이 class를 붙여 슬롯 폭을 1.2배로 넓힙니다. */
+.archive_photo.is_wide {
+  width: calc(var(--archive_photo_width) * 1.2);
 }
 
 .archive_photo img {
   display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* 원본 비율 유지. HTML의 width / height 속성이 로딩 전 높이를 잡아 줍니다. */
+  height: auto;
 }
 
-.archive_photo_4 {
-  top: 197px;
-  left: 710px;
-  width: 462px;
-  height: 568px;
+/* 올려 둔 사진이 쌓인 더미에서 빠져나와 전체가 보이도록 커지고 맨 앞으로 옵니다. */
+.archive_photo:hover {
+  z-index: 20;
+  box-shadow: 0 26px 60px rgba(40, 40, 40, 0.26);
+  transform: rotate(var(--archive_photo_tilt)) scale(1.08);
+  transition:
+    transform var(--duration_base) var(--easing_base),
+    box-shadow var(--duration_base) var(--easing_base),
+    z-index 0s;
 }
 
-.archive_photo_3 {
-  top: 627px;
-  left: 1054px;
-  width: 750px;
-  height: 717px;
+/* 슬롯 좌표는 1920 프레임 기준입니다. 왼쪽 sticky 글 영역이 x 120~470을 쓰므로
+   사진은 x 560부터 시작합니다. 세로형 기준 다섯 장이 y 60~1646에 걸칩니다. */
+.archive_photo_1 {
+  --archive_photo_width: 470px;
+  --archive_photo_tilt: -3.2deg;
+  --archive_photo_layer: 1;
+
+  top: 150px;
+  left: 620px;
 }
 
 .archive_photo_2 {
-  top: 1121px;
-  left: 566px;
-  width: 595px;
-  height: 568px;
+  --archive_photo_width: 380px;
+  --archive_photo_tilt: 2.6deg;
+  --archive_photo_layer: 2;
+
+  top: 60px;
+  left: 1040px;
 }
 
-.archive_photo_1 {
-  top: 1494px;
-  left: 1208px;
-  width: 596px;
-  height: 663px;
+.archive_photo_3 {
+  --archive_photo_width: 560px;
+  --archive_photo_tilt: -1.4deg;
+  --archive_photo_layer: 3;
+
+  top: 560px;
+  left: 900px;
+}
+
+.archive_photo_4 {
+  --archive_photo_width: 400px;
+  --archive_photo_tilt: 3.8deg;
+  --archive_photo_layer: 4;
+
+  top: 860px;
+  left: 560px;
 }
 
 .archive_photo_5 {
-  top: 1943px;
-  left: 547px;
-  width: 854px;
-  height: 511px;
+  --archive_photo_width: 430px;
+  --archive_photo_tilt: -2.6deg;
+  --archive_photo_layer: 5;
+
+  top: 1000px;
+  left: 1310px;
 }
 
 /* =========================================================

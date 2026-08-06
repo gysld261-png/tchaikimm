@@ -105,51 +105,61 @@
             <div class="archive_txt">
               <h2 class="archive_title" id="archive_title">Tchai<br>Kim Young Jin</h2>
 
-              <nav class="archive_years" aria-label="Collection years">
+              <!-- 사진 세트가 있는 2019 / 2020 / 2021은 오른쪽 갤러리를 바꾸는 동작이라
+                 button입니다. 나머지 연도는 연결할 데이터가 없어 기존 정적 링크 그대로입니다. -->
+              <div class="archive_years" role="group" aria-label="Collection years">
                 <ul class="archive_year_list">
-                  <li class="archive_year_item"><a class="archive_year_link" href="#">2021</a></li>
-                  <li class="archive_year_item"><a class="archive_year_link" href="#">2020</a></li>
+                  <li class="archive_year_item">
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2021">2021</button>
+                  </li>
+                  <li class="archive_year_item">
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2020">2020</button>
+                  </li>
                   <li class="archive_year_item is_active">
-                    <a class="archive_year_link" href="#" aria-current="true">2019</a>
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2019"
+                      aria-current="true">2019</button>
                   </li>
                   <li class="archive_year_item"><a class="archive_year_link" href="#">2018</a></li>
                   <li class="archive_year_item"><a class="archive_year_link" href="#">2017</a></li>
                   <li class="archive_year_item"><a class="archive_year_link" href="#">2015</a></li>
                   <li class="archive_year_item"><a class="archive_year_link" href="#">2013</a></li>
                 </ul>
-              </nav>
+              </div>
             </div>
 
-            <a class="banner_crosslink_link archive_more" href="#">
+            <a class="banner_crosslink_link archive_more" href="/test/bespoke_test/index.html">
               <span class="banner_crosslink_text">Reverse Now</span>
               <img class="banner_crosslink_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
             </a>
           </div>
         </div>
 
-        <figure class="archive_photo archive_photo_4">
-          <img src="/asset/collection/Gemini_Generated_Image_5e1jf5e1jf5e1jf5.png"
-            alt="2019 collection — a black floral gown photographed against a red field">
-        </figure>
-
-        <figure class="archive_photo archive_photo_3">
-          <img src="/asset/collection/Gemini_Generated_Image_h68iwdh68iwdh68i.png"
-            alt="2019 collection — two models in court hanbok inside a sunlit hall">
+        <!-- 처음 보이는 세트는 2019입니다. `collection.js`의 ARCHIVE_PHOTOS["2019"]와
+           같은 순서·같은 파일이어야 합니다. width / height 속성은 로딩 전에
+           원본 비율만큼 자리를 잡아 두기 위한 것입니다(표시 크기는 CSS가 정합니다). -->
+        <figure class="archive_photo archive_photo_1">
+          <img src="/asset/collection/archive_2019_1.png" width="3263" height="4898" loading="lazy" decoding="async"
+            alt="2019 collection — a mustard jeogori over a sheer black skirt beside a lantern-lit mirror panel">
         </figure>
 
         <figure class="archive_photo archive_photo_2">
-          <img src="/asset/collection/Gemini_Generated_Image_n59fun59fun59fun.png"
-            alt="2019 collection — a pink hanbok gown on the stone steps of a palace">
+          <img src="/asset/collection/archive_2019_2.png" width="3263" height="4898" loading="lazy" decoding="async"
+            alt="2019 collection — a red jeogori with a grey patterned skirt and a purple silk wrap">
         </figure>
 
-        <figure class="archive_photo archive_photo_1">
-          <img src="/asset/collection/Gemini_Generated_Image_iy9yftiy9yftiy9y.png"
-            alt="2019 collection — a model in a chartreuse and ivory look holding branches">
+        <figure class="archive_photo archive_photo_3">
+          <img src="/asset/collection/archive_2019_3.png" width="3262" height="4898" loading="lazy" decoding="async"
+            alt="2019 collection — a seated look in a tartan jeogori and a bright pink skirt">
+        </figure>
+
+        <figure class="archive_photo archive_photo_4">
+          <img src="/asset/collection/archive_2019_4.png" width="3263" height="4898" loading="lazy" decoding="async"
+            alt="2019 collection — a camel jeogori over a cobalt skirt with a gold woven hem band">
         </figure>
 
         <figure class="archive_photo archive_photo_5">
-          <img src="/asset/collection/Gemini_Generated_Image_jis2prjis2prjis2.png"
-            alt="2019 collection — five models in blue hanbok looks on a seaside bridge">
+          <img src="/asset/collection/archive_2019_5.png" width="3262" height="4898" loading="lazy" decoding="async"
+            alt="2019 collection — a black jacket and pink floral skirt in front of a red plum blossom screen">
         </figure>
       </div>
     </section>

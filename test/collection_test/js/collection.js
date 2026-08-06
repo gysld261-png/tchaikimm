@@ -48,6 +48,136 @@
   var RISE_BASE = 110;
   var RISE_STEP = 26;
 
+  /* =========================================================
+     archive 조절값
+     ========================================================= */
+
+  /* 사진이 떠오르는 기본 거리와 카드별 증가폭.
+     showcase 하단 갤러리와 같은 "y + opacity를 index만큼 어긋나게" 방식입니다. */
+  var ARCHIVE_RISE_BASE = 90;
+  var ARCHIVE_RISE_STEP = 18;
+
+  /* 뒤에서 앞으로 쌓이는 느낌을 주려고 조금 작은 상태에서 시작합니다. */
+  var ARCHIVE_ENTER_SCALE = 0.92;
+
+  /* 한 장이 올라오는 시간과 장 사이 간격. STAGGER가 DURATION의 절반쯤이어야
+     "한 장씩 얹히는" 리듬이 살아납니다(문장 단어 연출과 같은 기준). */
+  var ARCHIVE_DURATION = 0.85;
+  var ARCHIVE_STAGGER = 0.16;
+
+  /* 연도를 바꿀 때 이전 세트가 사라지는 시간. 이 사이에 새 사진이 내려받기를 시작합니다. */
+  var ARCHIVE_SWAP_FADE = 0.25;
+
+  /* 쌓기 시작하는 지점. 섹션 상단이 화면 위에서 이만큼 내려온 순간입니다. */
+  var ARCHIVE_START = "top top+=25%";
+
+  var ARCHIVE_DEFAULT_YEAR = "2019";
+
+  /* 연도별 사진 세트. 배열 순서가 곧 슬롯(.archive_photo_1 ~ _5) 순서이자
+     쌓이는 순서입니다. width / height는 원본 픽셀 크기로,
+     가로형 판별(is_wide)과 로딩 전 자리 확보에 씁니다.
+     2013 / 2015 / 2017 / 2018은 연결할 사진이 없어 여기에 없습니다. */
+  var ARCHIVE_PHOTOS = {
+    "2019": [
+      {
+        src: "/asset/collection/archive_2019_1.png",
+        width: 3263,
+        height: 4898,
+        alt: "2019 collection — a mustard jeogori over a sheer black skirt beside a lantern-lit mirror panel"
+      },
+      {
+        src: "/asset/collection/archive_2019_2.png",
+        width: 3263,
+        height: 4898,
+        alt: "2019 collection — a red jeogori with a grey patterned skirt and a purple silk wrap"
+      },
+      {
+        src: "/asset/collection/archive_2019_3.png",
+        width: 3262,
+        height: 4898,
+        alt: "2019 collection — a seated look in a tartan jeogori and a bright pink skirt"
+      },
+      {
+        src: "/asset/collection/archive_2019_4.png",
+        width: 3263,
+        height: 4898,
+        alt: "2019 collection — a camel jeogori over a cobalt skirt with a gold woven hem band"
+      },
+      {
+        src: "/asset/collection/archive_2019_5.png",
+        width: 3262,
+        height: 4898,
+        alt: "2019 collection — a black jacket and pink floral skirt in front of a red plum blossom screen"
+      }
+    ],
+    "2020": [
+      {
+        src: "/asset/collection/archive_2020_1.png",
+        width: 3336,
+        height: 5008,
+        alt: "2020 collection — a red and ivory jeogori with a chartreuse skirt, holding bamboo branches"
+      },
+      {
+        src: "/asset/collection/archive_2020_2.png",
+        width: 3336,
+        height: 5008,
+        alt: "2020 collection — a model waving a rainbow silk banner beside a white swan sculpture"
+      },
+      {
+        src: "/asset/collection/archive_2020_3.png",
+        width: 3336,
+        height: 5008,
+        alt: "2020 collection — a sheer ivory coat over a pink skirt with a white feathered headpiece"
+      },
+      {
+        src: "/asset/collection/archive_2020_4.png",
+        width: 3704,
+        height: 5559,
+        alt: "2020 collection — a close view of a yellow silk jacket over an embroidered pale yellow skirt"
+      },
+      {
+        src: "/asset/collection/archive_2020_5.png",
+        width: 3336,
+        height: 5008,
+        alt: "2020 collection — a white embroidered jeogori with a coral skirt and a woven straw hat"
+      }
+    ],
+    /* 2021은 파일 번호 순서가 아닙니다. archive_2021_1이 유일한 가로형이라
+       가장 넓은 3번 슬롯에 두었습니다. 좁은 슬롯에 넣으면 혼자만 작아 보입니다. */
+    "2021": [
+      {
+        src: "/asset/collection/archive_2021_2.png",
+        width: 3266,
+        height: 4898,
+        alt: "2021 collection — a black floral gown in front of a triptych of red mountain landscapes"
+      },
+      {
+        src: "/asset/collection/archive_2021_3.png",
+        width: 3347,
+        height: 4730,
+        alt: "2021 collection — a pink jeogori and chartreuse skirt seated at a carved palace lattice door"
+      },
+      {
+        src: "/asset/collection/archive_2021_1.png",
+        width: 4898,
+        height: 3259,
+        alt: "2021 collection — two hanbok looks displayed in a hall beside the Korean flag"
+      },
+      {
+        src: "/asset/collection/archive_2021_4.png",
+        width: 3347,
+        height: 4730,
+        alt: "2021 collection — a white robed look with a wide brimmed hat walking toward a palace hall"
+      },
+      {
+        src: "/asset/collection/archive_2021_5.png",
+        width: 3347,
+        height: 4730,
+        alt: "2021 collection — a pink hanbok on the stone steps of a palace pavilion"
+      }
+    ]
+  };
+
   /* hero 영상은 시안에 재생 컨트롤이 없습니다.
      모션 감소 설정에서는 자동 재생 대신 첫 화면에서 멈춰 있게 합니다. */
   function initHeroVideo() {
@@ -330,6 +460,180 @@
     );
   }
 
+  /* =========================================================
+     archive — 연도 전환과 사진 쌓기
+     ========================================================= */
+
+  /* 한 슬롯에 사진 한 장을 끼웁니다. 폭은 CSS 슬롯이 정하고,
+     높이는 img가 원본 비율대로 결정합니다(width / height 속성). */
+  function applyPhoto(figure, photo) {
+    var image = figure.querySelector("img");
+
+    if (!image) {
+      return;
+    }
+
+    figure.classList.toggle("is_wide", photo.width > photo.height);
+    image.width = photo.width;
+    image.height = photo.height;
+    image.alt = photo.alt;
+    image.src = photo.src;
+  }
+
+  function applyYearPhotos(figures, year) {
+    var photos = ARCHIVE_PHOTOS[year];
+
+    figures.forEach(function (figure, index) {
+      if (photos[index]) {
+        applyPhoto(figure, photos[index]);
+      }
+    });
+  }
+
+  /* 활성 연도 표시. 들여쓰기와 글자 크기는 CSS transition이 처리합니다. */
+  function markActiveYear(buttons, year) {
+    buttons.forEach(function (button) {
+      var item = button.closest(".archive_year_item");
+      var isActive = button.getAttribute("data-year") === year;
+
+      if (item) {
+        item.classList.toggle("is_active", isActive);
+      }
+
+      if (isActive) {
+        button.setAttribute("aria-current", "true");
+      } else {
+        button.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  /* 쌓이기 전 상태. fromTo의 from 값과 완전히 같아야 합니다. */
+  function archiveEnterVars() {
+    return {
+      /* 카드마다 출발 거리가 달라야 한 덩어리로 밀려 올라오지 않고 따로 얹힙니다. */
+      y: function (index) {
+        return ARCHIVE_RISE_BASE + index * ARCHIVE_RISE_STEP;
+      },
+      scale: ARCHIVE_ENTER_SCALE,
+      opacity: 0
+    };
+  }
+
+  /* showcase 하단 갤러리와 같은 fromTo(y + opacity)를 쓰되, 카드마다 트리거를 달지 않고
+     타임라인 하나에 stagger로 묶습니다. 연도를 바꿀 때 처음부터 다시 재생해야 하는데
+     scrub 트리거는 값이 스크롤 위치에 묶여 있어 다시 재생할 수 없기 때문입니다. */
+  function buildArchiveTimeline(gsap, archive, images) {
+    /* stagger를 건 fromTo는 각 대상의 차례가 와야 from 값을 적용합니다.
+       그래서 미리 넣어 두지 않으면 두 번째 사진부터는 트리거 전까지 그대로 보이다가
+       자기 차례에 갑자기 사라졌다 다시 나타납니다. */
+    gsap.set(images, archiveEnterVars());
+
+    return gsap
+      .timeline({
+        scrollTrigger: {
+          trigger: archive,
+          start: ARCHIVE_START,
+          /* scrub이 아닙니다. 한 번 지나가면 재생하고, 그 뒤로는 스크롤이
+             값을 건드리지 않으므로 연도 전환 때 restart()로 다시 쓸 수 있습니다. */
+          toggleActions: "play none none none",
+          invalidateOnRefresh: true
+        }
+      })
+      .fromTo(
+        images,
+        archiveEnterVars(),
+        {
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          ease: "power3.out",
+          duration: ARCHIVE_DURATION,
+          stagger: ARCHIVE_STAGGER
+        }
+      );
+  }
+
+  function initArchive() {
+    var archive = document.querySelector(".archive");
+
+    if (!archive) {
+      return;
+    }
+
+    var figures = Array.prototype.slice.call(archive.querySelectorAll(".archive_photo"));
+    var buttons = Array.prototype.slice.call(archive.querySelectorAll(".archive_year_button"));
+
+    if (figures.length === 0 || buttons.length === 0) {
+      return;
+    }
+
+    var images = figures.map(function (figure) {
+      return figure.querySelector("img");
+    });
+    var currentYear = ARCHIVE_DEFAULT_YEAR;
+
+    /* 1280px 미만과 모션 감소 설정에서는 타임라인을 만들지 않습니다.
+       그때는 이 값이 계속 null이고, 사진은 CSS 레이아웃 그대로 보입니다. */
+    var timeline = null;
+
+    function handleYearClick(event) {
+      var button = event.currentTarget;
+      var year = button.getAttribute("data-year");
+
+      if (!year || year === currentYear || !ARCHIVE_PHOTOS[year]) {
+        return;
+      }
+
+      currentYear = year;
+      markActiveYear(buttons, year);
+
+      if (!timeline) {
+        applyYearPhotos(figures, year);
+        return;
+      }
+
+      /* 이전 세트를 먼저 지웁니다. 사라지는 동안 새 사진이 내려받기를 시작하고,
+         타임라인은 opacity 0에서 출발하므로 이어서 다시 쌓입니다. */
+      window.gsap.to(images, {
+        opacity: 0,
+        duration: ARCHIVE_SWAP_FADE,
+        ease: "power2.in",
+        overwrite: true,
+        onComplete: function () {
+          applyYearPhotos(figures, year);
+          timeline.restart();
+        }
+      });
+    }
+
+    buttons.forEach(function (button) {
+      button.addEventListener("click", handleYearClick);
+    });
+
+    if (typeof window.gsap === "undefined" || typeof window.ScrollTrigger === "undefined") {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    gsap.matchMedia().add(
+      "(min-width: 1280px) and (prefers-reduced-motion: no-preference)",
+      function () {
+        timeline = buildArchiveTimeline(gsap, archive, images);
+
+        return function () {
+          timeline = null;
+          /* 연도 전환 fade는 이 context 밖에서 만들어져 자동 복구 대상이 아닙니다.
+             전환 도중 조건이 어긋나도 사진이 숨은 채 남지 않도록 직접 되돌립니다. */
+          gsap.set(images, { clearProps: "all" });
+        };
+      }
+    );
+  }
+
   initHeroVideo();
   initShowcaseScroll();
+  initArchive();
 })();
