@@ -49,6 +49,15 @@ body {
   display: block;
 }
 
+/* Figma 1920px canvas baseline.
+   Full-bleed backgrounds stay on the section; place only section content here. */
+.common_container {
+  width: 100%;
+  max-width: var(--layout_canvas);
+  margin-inline: auto;
+  padding-inline: var(--layout_gutter);
+}
+
 .common_header_slot {
   width: 100%;
 }

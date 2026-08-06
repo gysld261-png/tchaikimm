@@ -108,6 +108,31 @@ Load Lenis, GSAP, and ScrollTrigger before `common.js`. The shared scroll values
 Page-specific motion remains in each page script. For example, the Shop 3D hero,
 Garment Story, category selector, and Motif interactions stay in `test/shop_test/js/shop.js`.
 
+## 1920px layout baseline
+
+Figma screens use a 1920px canvas. Keep full-width backgrounds, images, and videos on
+the section itself, then place the section's text, cards, and controls inside
+`.common_container`.
+
+```html
+<section class="page_section">
+  <div class="common_container">
+    <!-- Text, cards, and controls -->
+  </div>
+</section>
+```
+
+`.common_container` is fluid below 1920px, includes the shared responsive gutter, and
+stops growing at 1920px on wider displays. On a 2560px display the background remains
+full width while the content stays centered instead of being forcibly enlarged.
+
+Do not scale an entire page with `transform: scale()` and do not copy this container
+rule into a page stylesheet. Check new pages at browser zoom 100% at these widths:
+
+- 1440px: narrower desktop check
+- 1920px: Figma reference check
+- 2560px: wide-display check
+
 ## Local development
 
 Serve the repository root, not an individual page folder. Shared URLs cannot load when the server root is `test/shop_test` or another nested folder.

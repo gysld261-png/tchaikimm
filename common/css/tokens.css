@@ -37,6 +37,7 @@
   --ls_tight: -0.02em;
   --ls_tight_sm: -0.01em;
 
+  --layout_canvas: 1920px;
   --layout_inner: 1600px;
   --layout_gutter: 20px;
   --header_height: 64px;
