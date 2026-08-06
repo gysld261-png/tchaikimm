@@ -6,6 +6,8 @@
   var colorName = document.getElementById("color_name");
   var addToCart = document.getElementById("add_to_cart");
   var purchaseMessage = document.getElementById("purchase_message");
+  var purchaseDialog = document.getElementById("purchase_complete_dialog");
+  var purchaseDialogClose = purchaseDialog && purchaseDialog.querySelector("[data-dialog-close]");
 
   function selectButton(buttons, selected) {
     buttons.forEach(function (button) {
@@ -50,20 +52,32 @@
     });
   }
 
-  if (addToCart) {
+  function closePurchaseDialog() {
+    if (!purchaseDialog || !purchaseDialog.open) return;
+    purchaseDialog.close();
+  }
+
+  if (addToCart && purchaseDialog) {
     addToCart.addEventListener("click", function () {
-      var selectedSize = document.querySelector(".size_button.is_selected");
-
-      if (!selectedSize) {
-        purchaseMessage.textContent = "Please select a size.";
-        purchaseMessage.classList.remove("is_success");
-        sizeButtons[0].focus();
-        return;
-      }
-
-      purchaseMessage.textContent = "Added to your shopping bag.";
-      purchaseMessage.classList.add("is_success");
+      purchaseMessage.textContent = "";
+      purchaseDialog.showModal();
+      document.documentElement.classList.add("has_purchase_modal");
+      if (window.tchaikimmLenis) window.tchaikimmLenis.stop();
     });
+
+    purchaseDialog.addEventListener("click", function (event) {
+      if (event.target === purchaseDialog) closePurchaseDialog();
+    });
+
+    purchaseDialog.addEventListener("close", function () {
+      document.documentElement.classList.remove("has_purchase_modal");
+      if (window.tchaikimmLenis) window.tchaikimmLenis.start();
+      addToCart.focus();
+    });
+  }
+
+  if (purchaseDialogClose) {
+    purchaseDialogClose.addEventListener("click", closePurchaseDialog);
   }
 
   Array.prototype.slice.call(document.querySelectorAll(".accordion_item > button")).forEach(function (button) {

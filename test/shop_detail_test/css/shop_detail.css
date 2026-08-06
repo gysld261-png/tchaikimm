@@ -314,9 +314,29 @@
 .size_guide_panel.is_open .size_table tbody tr:nth-child(5) { transition-delay: 0.30s; }
 .size_guide_panel.is_open .size_table tbody tr:nth-child(6) { transition-delay: 0.36s; }
 
-/* 공통 reduced-motion 규칙은 duration만 0으로 만들어서 delay가 남습니다. 스태거를 여기서 끕니다. */
+/* 공통 common.css의 reduced-motion 규칙은 scroll-behavior만 끕니다.
+   이 페이지에서 추가한 움직임은 여기서 직접 꺼야 합니다.
+   !important 대신 같은 특정도로 뒤에 선언해 덮습니다. */
 @media (prefers-reduced-motion: reduce) {
-  .size_guide_panel.is_open .size_table tbody tr:nth-child(n) { transition-delay: 0s; }
+  .size_guide_panel,
+  .size_guide_inner,
+  .size_button {
+    transition: none;
+  }
+
+  .size_table tbody tr {
+    transition: none;
+  }
+
+  .size_guide_panel.is_open .size_table tbody tr:nth-child(n) {
+    transition-delay: 0s;
+  }
+
+  .size_button:hover,
+  .size_button:focus-visible {
+    transform: none;
+    box-shadow: none;
+  }
 }
 
 .purchase_message {
@@ -362,6 +382,86 @@
   border-color: var(--color_point);
   background: var(--color_point);
   color: #fff;
+}
+
+.purchase_complete_dialog {
+  width: min(calc(100% - 48px), 520px);
+  padding: 0;
+  border: 1px solid var(--detail_border);
+  background: var(--color_bg);
+  color: var(--color_text);
+  opacity: 0;
+  transform: translateY(18px) scale(.98);
+  transition: opacity var(--duration_base) var(--easing_base),
+              transform var(--duration_base) var(--easing_base),
+              overlay var(--duration_base) allow-discrete,
+              display var(--duration_base) allow-discrete;
+}
+
+.purchase_complete_dialog[open] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+@starting-style {
+  .purchase_complete_dialog[open] {
+    opacity: 0;
+    transform: translateY(18px) scale(.98);
+  }
+}
+
+.purchase_complete_dialog::backdrop {
+  background: rgba(10, 10, 10, .58);
+  backdrop-filter: blur(7px);
+}
+
+.purchase_complete_inner {
+  padding: clamp(40px, 5vw, 64px);
+  text-align: center;
+}
+
+.purchase_complete_eyebrow {
+  margin: 0;
+  color: var(--detail_green);
+  font-size: var(--fs_ui_14);
+  font-weight: 600;
+  letter-spacing: .2em;
+}
+
+.purchase_complete_inner h2 {
+  margin: 20px 0 0;
+  font-family: var(--font_display);
+  font-size: var(--fs_display_32);
+  font-weight: 400;
+  line-height: var(--lh_display_32);
+}
+
+.purchase_complete_inner > p:not(.purchase_complete_eyebrow) {
+  margin: 18px 0 0;
+  color: var(--detail_secondary);
+  font-size: var(--fs_ui_14);
+  line-height: 1.8;
+}
+
+.purchase_complete_button {
+  width: min(100%, 264px);
+  height: 54px;
+  margin-top: 32px;
+  background: var(--detail_green);
+  color: var(--color_text_on_dark);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .18em;
+  transition: background-color var(--duration_fast) var(--easing_base);
+}
+
+.purchase_complete_button:hover,
+.purchase_complete_button:focus-visible {
+  background: var(--detail_green_dark);
+}
+
+html.has_purchase_modal {
+  overflow: hidden;
 }
 
 .purchase_benefits {

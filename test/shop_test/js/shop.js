@@ -381,12 +381,8 @@ initHeroGallery();
   var STEP_ANGLE_DEG = 52;
   /* 설명과 이미지가 맞닿아 보이지 않도록 한 화면 높이보다 더 떨어뜨립니다. */
   var CONTENT_SPACING_MULTIPLIER = 2;
-  /* 숫자가 클수록 스크롤을 늦게 따라오며 관성이 강해집니다. */
-  var SCROLL_SCRUB_SECONDS = 1.4;
   /* 숫자가 작을수록 적은 스크롤로 네 콘텐츠를 빠르게 통과합니다. */
   var SCROLL_DISTANCE_PERCENT = 450;
-  /* 마지막 콘텐츠가 완전히 자리 잡은 뒤 pin이 풀리기 전 유지되는 비율입니다. */
-  var END_HOLD_RATIO = 0.18;
   /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
      한 항목에 머무르는 시간(=사용자가 쉬는 시간)이 늘어납니다.
      시안에 없는 값이라 추정치이며, 더 여유를 주고 싶으면 이 숫자를
@@ -503,7 +499,8 @@ initHeroGallery();
       end: "+=" + SCROLL_DISTANCE_PERCENT + "%",
       pin: section,
       pinSpacing: true,
-      scrub: SCROLL_SCRUB_SECONDS,
+      anticipatePin: 1,
+      scrub: true,
       invalidateOnRefresh: true
     }
   });
@@ -511,11 +508,10 @@ initHeroGallery();
   garmentTimeline
     .to(state, {
       progress: STEP_COUNT - 1,
-      duration: 1 - END_HOLD_RATIO,
+      duration: 1,
       ease: "none",
       onUpdate: applyProgress
-    })
-    .to({}, { duration: END_HOLD_RATIO });
+    });
 })();
 
 /* shop — 카테고리 선택 목록. 버튼을 누르면 일곱 개 항목이 위에서부터 하나씩

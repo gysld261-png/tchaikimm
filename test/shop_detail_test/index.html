@@ -19,8 +19,6 @@
   <link rel="stylesheet" href="css/shop_detail.css">
 </head>
 <body class="page_shop_detail" data-page="shop" data-header-variant="black">
-  <a class="skip_link" href="#main_content">Skip to content</a>
-
   <div class="common_header_slot" data-component="/common/components/header.html">
     <span class="a11y_hidden">Loading header</span>
   </div>
@@ -202,6 +200,15 @@
       </div>
     </section>
   </main>
+
+  <dialog class="purchase_complete_dialog" id="purchase_complete_dialog" aria-labelledby="purchase_complete_title">
+    <div class="purchase_complete_inner">
+      <p class="purchase_complete_eyebrow">ORDER COMPLETE</p>
+      <h2 id="purchase_complete_title">Your purchase is complete.</h2>
+      <p>Thank you for purchasing the Cheollik Dress No.7.<br>Your order confirmation will be sent by email.</p>
+      <button class="purchase_complete_button" type="button" data-dialog-close>CONTINUE</button>
+    </div>
+  </dialog>
 
   <div class="common_footer_slot" data-component="/common/components/footer.html">
     <span class="a11y_hidden">Loading footer</span>

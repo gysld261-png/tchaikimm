@@ -59,6 +59,13 @@
 @media (min-width: 1280px) {
   :root {
     --layout_gutter: 64px;
-    --header_height: 80px;
+    --header_height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration_fast: 0.01ms;
+    --duration_base: 0.01ms;
   }
 }

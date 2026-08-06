@@ -900,6 +900,12 @@
   to { transform: translateX(calc(-50% - 19px)); }
 }
 
+@media (prefers-reduced-motion: reduce) {
+  .marquee_track {
+    animation: none;
+  }
+}
+
 /* =========================================================
    shop
    ========================================================= */
