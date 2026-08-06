@@ -539,6 +539,9 @@
    ========================================================= */
 
 .card_product {
+  /* hover 시 이미지가 추가로 커지는 배율. 상품별 확대(--card_img_zoom)에
+     곱해지므로, 확대를 걸어둔 카드도 hover 반응은 똑같은 비율로 납니다. */
+  --card_img_hover_grow: 1.04;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -556,18 +559,58 @@
   padding: 24px;
 }
 
+/* object-fit: cover라 이미지는 프레임을 꽉 채우고 넘치는 쪽이 잘립니다.
+   "어디를 남기고 자를지"는 상품마다 다르므로 값을 카드에서 받아씁니다.
+   둘 다 안 주면 지금까지처럼 가운데(50% 50%)로 잘립니다.
+
+     --card_img_pos         hover 전 기본 이미지의 크롭 위치
+     --card_img_hover_pos   hover 이미지의 크롭 위치
+     --card_img_zoom        hover 전 기본 이미지의 확대 배율 (1 = 원래대로)
+     --card_img_hover_zoom  hover 이미지의 확대 배율
+
+   넷 다 서로 독립이라 필요한 것만 주면 나머지는 기본값 그대로입니다.
+   위치는 두 번째 값이 세로 기준이고, 작을수록 위쪽을 더 보여줍니다(0% = 맨 위).
+
+   변수는 상속되므로 두 단계로 쓸 수 있습니다. 아래쪽(가까운 쪽)이 이깁니다.
+
+   1) 섹션 전체 기본값 — new / shop을 다르게 두고 싶을 때.
+      원본 비율이 섹션마다 달라(new는 정사각, shop은 세로형) 잘리는 방향도
+      다르므로 보통 여기서 갈립니다.
+        .new_arrivals_inner { --card_img_pos: 50% 20%; }
+        .shop_section       { --card_img_pos: 50% 35%; }
+
+   2) 상품 하나만 — 그 카드의 .card_product_media에 인라인으로.
+        <div class="card_product_media" style="--card_img_pos: 50% 0%; --card_img_zoom: 1.9">
+
+   섹션 기본값을 안 주면 그 섹션은 전부 가운데(50% 50%)로 남고, 개별 지정한
+   카드만 달라집니다. 손댈 필요 없는 사진은 아무것도 안 쓰면 됩니다.
+
+   확대의 기준점(transform-origin)은 크롭 위치를 그대로 따라갑니다. 위쪽을
+   보여주도록 맞춰둔 카드는 확대해도 위쪽이 고정된 채 커져서, 두 값을 같이
+   써도 서로 어긋나지 않습니다.
+
+   img가 아니라 컨테이너에 넣는 이유: hover 이미지는 js/shop.js가 나중에
+   만들어 붙이는데 인라인 style을 복사하지 않습니다. 컨테이너에 두면 나중에
+   생기는 이미지까지 값을 상속받습니다. */
 .card_product_img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: var(--card_img_pos, 50% 50%);
+  transform: scale(var(--card_img_zoom, 1));
+  transform-origin: var(--card_img_pos, 50% 50%);
   transition: opacity 420ms var(--easing_base),
               transform var(--duration_base) var(--easing_base);
 }
 
+/* .card_product_img와 같은 특정도(클래스 1개)라, 뒤에 오는 이 규칙이 이깁니다. */
 .card_product_img_hover {
   opacity: 0;
+  object-position: var(--card_img_hover_pos, 50% 50%);
+  transform: scale(var(--card_img_hover_zoom, 1));
+  transform-origin: var(--card_img_hover_pos, 50% 50%);
 }
 
 .card_product:hover .card_product_media.has_hover_image .card_product_img_default,
@@ -580,8 +623,15 @@
   opacity: 1;
 }
 
+/* 상품별 확대에 hover 배율을 "곱합니다". scale(1.04)로 덮어쓰면
+   --card_img_zoom을 걸어둔 카드가 hover 시 오히려 작아집니다. */
 .card_product:hover .card_product_img {
-  transform: scale(1.04);
+  transform: scale(calc(var(--card_img_zoom, 1) * var(--card_img_hover_grow, 1.04)));
+}
+
+/* 위 규칙과 특정도가 같아, 뒤에 있는 이 규칙이 hover 이미지에 적용됩니다. */
+.card_product:hover .card_product_img_hover {
+  transform: scale(calc(var(--card_img_hover_zoom, 1) * var(--card_img_hover_grow, 1.04)));
 }
 
 .card_product_action {

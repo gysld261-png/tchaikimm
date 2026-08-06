@@ -382,7 +382,7 @@ initHeroGallery();
   /* 설명과 이미지가 맞닿아 보이지 않도록 한 화면 높이보다 더 떨어뜨립니다. */
   var CONTENT_SPACING_MULTIPLIER = 2;
   /* 숫자가 클수록 스크롤을 늦게 따라오며 관성이 강해집니다. */
-  var SCROLL_SCRUB_SECONDS = 0.8;
+  var SCROLL_SCRUB_SECONDS = 1.2;
   /* 숫자가 작을수록 적은 스크롤로 네 콘텐츠를 빠르게 통과합니다. */
   var SCROLL_DISTANCE_PERCENT = 340;
   /* 마지막 콘텐츠가 완전히 자리 잡은 뒤 pin이 풀리기 전 유지되는 비율입니다. */
