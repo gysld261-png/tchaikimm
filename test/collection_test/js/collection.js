@@ -52,30 +52,75 @@
      archive 조절값
      ========================================================= */
 
-  /* 사진이 떠오르는 기본 거리와 카드별 증가폭.
-     showcase 하단 갤러리와 같은 "y + opacity를 index만큼 어긋나게" 방식입니다. */
-  var ARCHIVE_RISE_BASE = 90;
-  var ARCHIVE_RISE_STEP = 18;
+  /* 화면 밖에서 날아 들어오는 기본 거리(px). 카드마다 아래 배치표의 travel 배수를 곱해
+     서로 다른 거리에서 출발합니다. 방향은 카드가 프레임 중앙의 어느 쪽에 있는지로 정합니다.
+     showcase 상단 두 장이 x ∓560에서 들어오는 것과 같은 크기입니다. */
+  var ARCHIVE_ENTER_DISTANCE = 520;
 
-  /* 뒤에서 앞으로 쌓이는 느낌을 주려고 조금 작은 상태에서 시작합니다. */
-  var ARCHIVE_ENTER_SCALE = 0.92;
+  /* 뒤에서 앞으로 쌓이는 느낌을 주려고 작고 비뚤어진 상태에서 시작합니다.
+     SPIN은 출발 방향의 좌우 성분에 곱해져 카드마다 기울기가 달라집니다. */
+  var ARCHIVE_ENTER_SCALE = 0.78;
+  var ARCHIVE_ENTER_SPIN = 14;
 
-  /* 한 장이 올라오는 시간과 장 사이 간격. STAGGER가 DURATION의 절반쯤이어야
-     "한 장씩 얹히는" 리듬이 살아납니다(문장 단어 연출과 같은 기준). */
-  var ARCHIVE_DURATION = 0.85;
-  var ARCHIVE_STAGGER = 0.16;
+  /* 한 장이 날아드는 시간과 장 사이 간격. STAGGER가 DURATION의 절반보다 작아야
+     앞 카드가 도착하기 전에 다음 카드가 출발해 "겹겹이 쌓이는" 흐름이 이어집니다. */
+  var ARCHIVE_DURATION = 0.95;
+  var ARCHIVE_STAGGER = 0.18;
 
   /* 연도를 바꿀 때 이전 세트가 사라지는 시간. 이 사이에 새 사진이 내려받기를 시작합니다. */
   var ARCHIVE_SWAP_FADE = 0.25;
 
-  /* 쌓기 시작하는 지점. 섹션 상단이 화면 위에서 이만큼 내려온 순간입니다. */
-  var ARCHIVE_START = "top top+=25%";
+  /* 날아들기 시작하는 지점. 섹션 상단이 화면 위에서 이만큼 내려온 순간입니다.
+     섹션 높이가 화면 한 장 정도라, 이 값이 크면 아래쪽 카드가 아직 화면 밖일 때 시작합니다. */
+  var ARCHIVE_START = "top top+=10%";
 
-  var ARCHIVE_DEFAULT_YEAR = "2019";
+  var ARCHIVE_DEFAULT_YEAR = "2021";
 
-  /* 연도별 사진 세트. 배열 순서가 곧 슬롯(.archive_photo_1 ~ _5) 순서이자
-     쌓이는 순서입니다. width / height는 원본 픽셀 크기로,
-     가로형 판별(is_wide)과 로딩 전 자리 확보에 씁니다.
+  /* 1920 프레임 안에서 카드가 놓이는 자리. 연도마다 완전히 다른 배치를 씁니다.
+     격자나 대각선 같은 규칙을 두지 않고 손으로 흩어 놓은 값입니다.
+
+     - left / top / width: px. 높이는 사진 원본 비율을 따르므로 적지 않습니다.
+     - tilt: deg. layer: z-index로, 1~5를 순서 없이 섞어 겹침이 예측되지 않게 합니다.
+     - travel: 출발 거리 배수. ARCHIVE_ENTER_DISTANCE에 곱합니다.
+
+     지킬 것 세 가지입니다.
+     1. 왼쪽 sticky 글 영역이 x 120~470을 쓰므로 left는 500 이상이어야 합니다.
+     2. 오른쪽 끝은 1780 이하, 아래 끝은 프레임 높이(920) 이하여야 합니다.
+        벗어나면 .archive의 overflow: clip에 잘립니다.
+     3. 다섯 장이 데스크톱 한 화면에 다 보여야 합니다. 프레임 높이가 브라우저 화면
+        높이(1920 × 1080에서 900~950px)에 맞춰 잡혀 있으므로 아래 끝을 830 근처로 둡니다.
+        폭을 키우면 높이도 원본 비율만큼 따라 커진다는 점에 주의하세요
+        (세로 사진은 높이 = 폭 × 1.5, 가로 사진은 폭 × 0.67).
+
+     2021 배치는 CSS의 .archive_photo_1 ~ _5 기본값과 같은 값입니다(JS 없이 열었을 때의 화면). */
+  var ARCHIVE_LAYOUTS = {
+    "2021": [
+      { left: 530, top: 90, width: 330, tilt: -4.5, layer: 2, travel: 1.15 },
+      { left: 800, top: 40, width: 240, tilt: 6.2, layer: 5, travel: 0.8 },
+      { left: 1000, top: 150, width: 480, tilt: -2.1, layer: 1, travel: 1.45 },
+      { left: 800, top: 400, width: 300, tilt: 3.4, layer: 4, travel: 0.95 },
+      { left: 1380, top: 400, width: 260, tilt: -7.8, layer: 3, travel: 1.3 }
+    ],
+    "2020": [
+      { left: 1300, top: 60, width: 250, tilt: 5.6, layer: 3, travel: 0.9 },
+      { left: 560, top: 130, width: 340, tilt: -3.1, layer: 1, travel: 1.4 },
+      { left: 1150, top: 330, width: 200, tilt: 8.4, layer: 5, travel: 1.05 },
+      { left: 830, top: 240, width: 390, tilt: -1.8, layer: 2, travel: 1.5 },
+      { left: 620, top: 420, width: 270, tilt: 4.2, layer: 4, travel: 0.85 }
+    ],
+    "2019": [
+      { left: 700, top: 50, width: 190, tilt: -6.8, layer: 4, travel: 1.35 },
+      { left: 1100, top: 100, width: 300, tilt: 2.4, layer: 2, travel: 1 },
+      { left: 540, top: 230, width: 370, tilt: -1.2, layer: 3, travel: 0.85 },
+      { left: 860, top: 430, width: 260, tilt: 7.1, layer: 5, travel: 1.5 },
+      { left: 1330, top: 330, width: 330, tilt: -4.6, layer: 1, travel: 1.1 }
+    ]
+  };
+
+  /* 연도별 사진 세트. 배열 순서가 곧 자리(.archive_photo_1 ~ _5) 순서이자
+     날아 들어오는 순서이며, 위 ARCHIVE_LAYOUTS의 배열 순서와 짝을 이룹니다.
+     width / height는 원본 픽셀 크기입니다. 로딩 전 자리 확보와
+     날아오는 방향을 계산할 때의 카드 중심 추정에 씁니다.
      2013 / 2015 / 2017 / 2018은 연결할 사진이 없어 여기에 없습니다. */
   var ARCHIVE_PHOTOS = {
     "2019": [
@@ -142,8 +187,9 @@
         alt: "2020 collection — a white embroidered jeogori with a coral skirt and a woven straw hat"
       }
     ],
-    /* 2021은 파일 번호 순서가 아닙니다. archive_2021_1이 유일한 가로형이라
-       가장 넓은 3번 슬롯에 두었습니다. 좁은 슬롯에 넣으면 혼자만 작아 보입니다. */
+    /* 2021은 파일 번호 순서가 아닙니다. archive_2021_1이 15장 중 유일한 가로형이라
+       폭이 넉넉한 3번 자리(540px)에 두었습니다. 좁은 자리에 넣으면 혼자만 작아 보입니다.
+       가로 사진은 같은 폭이어도 높이가 절반이라 너비를 크게 잡아야 균형이 맞습니다. */
     "2021": [
       {
         src: "/asset/collection/archive_2021_2.png",
@@ -464,7 +510,7 @@
      archive — 연도 전환과 사진 쌓기
      ========================================================= */
 
-  /* 한 슬롯에 사진 한 장을 끼웁니다. 폭은 CSS 슬롯이 정하고,
+  /* 한 자리에 사진 한 장을 끼웁니다. 표시 폭은 배치표가 정하고,
      높이는 img가 원본 비율대로 결정합니다(width / height 속성). */
   function applyPhoto(figure, photo) {
     var image = figure.querySelector("img");
@@ -473,19 +519,33 @@
       return;
     }
 
-    figure.classList.toggle("is_wide", photo.width > photo.height);
     image.width = photo.width;
     image.height = photo.height;
     image.alt = photo.alt;
     image.src = photo.src;
   }
 
+  /* 배치는 CSS 커스텀 속성으로만 넘깁니다. 실제로 어떤 속성에 쓰이는지는
+     collection.css의 .archive_photo 한 곳에 있습니다. */
+  function applyLayout(figure, layout) {
+    figure.style.setProperty("--archive_photo_left", layout.left + "px");
+    figure.style.setProperty("--archive_photo_top", layout.top + "px");
+    figure.style.setProperty("--archive_photo_width", layout.width + "px");
+    figure.style.setProperty("--archive_photo_tilt", layout.tilt + "deg");
+    figure.style.setProperty("--archive_photo_layer", layout.layer);
+  }
+
   function applyYearPhotos(figures, year) {
     var photos = ARCHIVE_PHOTOS[year];
+    var layouts = ARCHIVE_LAYOUTS[year];
 
     figures.forEach(function (figure, index) {
       if (photos[index]) {
         applyPhoto(figure, photos[index]);
+      }
+
+      if (layouts[index]) {
+        applyLayout(figure, layouts[index]);
       }
     });
   }
@@ -508,26 +568,67 @@
     });
   }
 
-  /* 쌓이기 전 상태. fromTo의 from 값과 완전히 같아야 합니다. */
-  function archiveEnterVars() {
+  /* 카드가 프레임 중앙의 어느 쪽에 있는지로 출발 방향을 정합니다.
+     좌표를 바꾸면 날아오는 방향도 알아서 따라옵니다.
+     (showcase 상단 두 장의 convergeDistance와 같은 생각입니다.)
+     길이를 1로 맞춘 뒤 거리를 따로 곱해야, 중앙에 가까운 카드도 충분히 멀리서 출발합니다. */
+  function enterDirection(layout, frameHeight, imageRatio) {
+    var centerX = layout.left + layout.width / 2;
+    var centerY = layout.top + (layout.width * imageRatio) / 2;
+    var dx = centerX - CANVAS_WIDTH / 2;
+    var dy = centerY - frameHeight / 2;
+    var length = Math.sqrt(dx * dx + dy * dy);
+
+    /* 정확히 중앙인 카드는 방향이 없습니다. 그때만 아래에서 올라오게 둡니다. */
+    if (length < 1) {
+      return { x: 0, y: 1 };
+    }
+
+    return { x: dx / length, y: dy / length };
+  }
+
+  /* 쌓이기 전 상태. 카드마다 방향도 거리도 다릅니다.
+     함수형 값이라 매번 그때의 currentLayout을 읽습니다 —
+     연도가 바뀌면 timeline.invalidate()가 이 함수들을 다시 부릅니다. */
+  function archiveEnterVars(getLayouts, getPhotos, getFrameHeight) {
+    function vectorAt(index) {
+      var photo = getPhotos()[index];
+      var layout = getLayouts()[index];
+      /* 카드 중심을 알려면 높이가 필요합니다. img의 naturalHeight는 lazy 로딩이라
+         첫 계산 시점에 0일 수 있으므로 데이터의 원본 크기로 비율을 냅니다. */
+      var unit = enterDirection(layout, getFrameHeight(), photo.height / photo.width);
+
+      return {
+        x: unit.x * ARCHIVE_ENTER_DISTANCE * layout.travel,
+        y: unit.y * ARCHIVE_ENTER_DISTANCE * layout.travel,
+        spin: unit.x * ARCHIVE_ENTER_SPIN
+      };
+    }
+
     return {
-      /* 카드마다 출발 거리가 달라야 한 덩어리로 밀려 올라오지 않고 따로 얹힙니다. */
+      x: function (index) {
+        return vectorAt(index).x;
+      },
       y: function (index) {
-        return ARCHIVE_RISE_BASE + index * ARCHIVE_RISE_STEP;
+        return vectorAt(index).y;
+      },
+      rotation: function (index) {
+        return vectorAt(index).spin;
       },
       scale: ARCHIVE_ENTER_SCALE,
       opacity: 0
     };
   }
 
-  /* showcase 하단 갤러리와 같은 fromTo(y + opacity)를 쓰되, 카드마다 트리거를 달지 않고
-     타임라인 하나에 stagger로 묶습니다. 연도를 바꿀 때 처음부터 다시 재생해야 하는데
-     scrub 트리거는 값이 스크롤 위치에 묶여 있어 다시 재생할 수 없기 때문입니다. */
-  function buildArchiveTimeline(gsap, archive, images) {
+  /* showcase 하단 갤러리와 같이 figure는 가만히 두고 안쪽 img만 움직입니다.
+     다른 점은 카드마다 트리거를 달지 않고 타임라인 하나에 stagger로 묶는다는 것입니다.
+     연도를 바꿀 때 처음부터 다시 재생해야 하는데, scrub 트리거는 값이 스크롤 위치에
+     묶여 있어 다시 재생할 수 없기 때문입니다. */
+  function buildArchiveTimeline(gsap, archive, images, enterVars) {
     /* stagger를 건 fromTo는 각 대상의 차례가 와야 from 값을 적용합니다.
-       그래서 미리 넣어 두지 않으면 두 번째 사진부터는 트리거 전까지 그대로 보이다가
-       자기 차례에 갑자기 사라졌다 다시 나타납니다. */
-    gsap.set(images, archiveEnterVars());
+       그래서 미리 넣어 두지 않으면 두 번째 사진부터는 트리거 전까지 제자리에 보이다가
+       자기 차례에 갑자기 화면 밖으로 튀었다 다시 들어옵니다. */
+    gsap.set(images, enterVars);
 
     return gsap
       .timeline({
@@ -542,9 +643,11 @@
       })
       .fromTo(
         images,
-        archiveEnterVars(),
+        enterVars,
         {
+          x: 0,
           y: 0,
+          rotation: 0,
           scale: 1,
           opacity: 1,
           ease: "power3.out",
@@ -568,6 +671,7 @@
       return;
     }
 
+    var frame = archive.querySelector(".archive_frame");
     var images = figures.map(function (figure) {
       return figure.querySelector("img");
     });
@@ -576,6 +680,21 @@
     /* 1280px 미만과 모션 감소 설정에서는 타임라인을 만들지 않습니다.
        그때는 이 값이 계속 null이고, 사진은 CSS 레이아웃 그대로 보입니다. */
     var timeline = null;
+
+    /* 연도 전환 때 이전 세트를 지우는 트윈. 연달아 누를 때 앞의 것을 끄려고 들고 있습니다. */
+    var fadeTween = null;
+
+    var enterVars = archiveEnterVars(
+      function () {
+        return ARCHIVE_LAYOUTS[currentYear];
+      },
+      function () {
+        return ARCHIVE_PHOTOS[currentYear];
+      },
+      function () {
+        return frame ? frame.offsetHeight : 0;
+      }
+    );
 
     function handleYearClick(event) {
       var button = event.currentTarget;
@@ -594,15 +713,28 @@
       }
 
       /* 이전 세트를 먼저 지웁니다. 사라지는 동안 새 사진이 내려받기를 시작하고,
-         타임라인은 opacity 0에서 출발하므로 이어서 다시 쌓입니다. */
-      window.gsap.to(images, {
+         타임라인은 opacity 0에서 출발하므로 이어서 다시 날아 들어옵니다.
+
+         여기에 overwrite를 쓰면 안 됩니다. GSAP의 overwrite는 같은 대상의 다른 트윈을
+         죽이는데, 그 "다른 트윈"에 타임라인 안의 등장 트윈까지 포함됩니다.
+         한 번 죽으면 restart()를 해도 타임라인만 진행할 뿐 사진은 opacity 0에 멈춥니다
+         (실제로 이 증상이 났습니다 — progress는 1인데 화면은 빈 채였습니다).
+         연달아 누를 때의 중복은 앞의 트윈을 직접 kill해서 막습니다. */
+      if (fadeTween) {
+        fadeTween.kill();
+      }
+
+      timeline.pause();
+      fadeTween = window.gsap.to(images, {
         opacity: 0,
         duration: ARCHIVE_SWAP_FADE,
         ease: "power2.in",
-        overwrite: true,
         onComplete: function () {
+          fadeTween = null;
           applyYearPhotos(figures, year);
-          timeline.restart();
+          /* invalidate()가 없으면 from 값이 첫 연도 배치 그대로 굳어 있습니다.
+             기록해 둔 시작값을 버려야 위 함수형 값이 새 배치로 다시 계산됩니다. */
+          timeline.invalidate().restart();
         }
       });
     }
@@ -621,7 +753,7 @@
     gsap.matchMedia().add(
       "(min-width: 1280px) and (prefers-reduced-motion: no-preference)",
       function () {
-        timeline = buildArchiveTimeline(gsap, archive, images);
+        timeline = buildArchiveTimeline(gsap, archive, images, enterVars);
 
         return function () {
           timeline = null;

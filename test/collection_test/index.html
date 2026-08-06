@@ -109,15 +109,15 @@
                  button입니다. 나머지 연도는 연결할 데이터가 없어 기존 정적 링크 그대로입니다. -->
               <div class="archive_years" role="group" aria-label="Collection years">
                 <ul class="archive_year_list">
-                  <li class="archive_year_item">
-                    <button class="archive_year_link archive_year_button" type="button" data-year="2021">2021</button>
+                  <li class="archive_year_item is_active">
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2021"
+                      aria-current="true">2021</button>
                   </li>
                   <li class="archive_year_item">
                     <button class="archive_year_link archive_year_button" type="button" data-year="2020">2020</button>
                   </li>
-                  <li class="archive_year_item is_active">
-                    <button class="archive_year_link archive_year_button" type="button" data-year="2019"
-                      aria-current="true">2019</button>
+                  <li class="archive_year_item">
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2019">2019</button>
                   </li>
                   <li class="archive_year_item"><a class="archive_year_link" href="#">2018</a></li>
                   <li class="archive_year_item"><a class="archive_year_link" href="#">2017</a></li>
@@ -134,32 +134,33 @@
           </div>
         </div>
 
-        <!-- 처음 보이는 세트는 2019입니다. `collection.js`의 ARCHIVE_PHOTOS["2019"]와
-           같은 순서·같은 파일이어야 합니다. width / height 속성은 로딩 전에
+        <!-- 처음 보이는 세트는 2021입니다. `collection.js`의 ARCHIVE_PHOTOS["2021"]과
+           같은 순서·같은 파일이어야 합니다(파일 번호 순서가 아닙니다 — 유일한 가로형인
+           archive_2021_1을 가장 넓은 3번 자리에 두었습니다). width / height 속성은 로딩 전에
            원본 비율만큼 자리를 잡아 두기 위한 것입니다(표시 크기는 CSS가 정합니다). -->
         <figure class="archive_photo archive_photo_1">
-          <img src="/asset/collection/archive_2019_1.png" width="3263" height="4898" loading="lazy" decoding="async"
-            alt="2019 collection — a mustard jeogori over a sheer black skirt beside a lantern-lit mirror panel">
+          <img src="/asset/collection/archive_2021_2.png" width="3266" height="4898" loading="lazy" decoding="async"
+            alt="2021 collection — a black floral gown in front of a triptych of red mountain landscapes">
         </figure>
 
         <figure class="archive_photo archive_photo_2">
-          <img src="/asset/collection/archive_2019_2.png" width="3263" height="4898" loading="lazy" decoding="async"
-            alt="2019 collection — a red jeogori with a grey patterned skirt and a purple silk wrap">
+          <img src="/asset/collection/archive_2021_3.png" width="3347" height="4730" loading="lazy" decoding="async"
+            alt="2021 collection — a pink jeogori and chartreuse skirt seated at a carved palace lattice door">
         </figure>
 
         <figure class="archive_photo archive_photo_3">
-          <img src="/asset/collection/archive_2019_3.png" width="3262" height="4898" loading="lazy" decoding="async"
-            alt="2019 collection — a seated look in a tartan jeogori and a bright pink skirt">
+          <img src="/asset/collection/archive_2021_1.png" width="4898" height="3259" loading="lazy" decoding="async"
+            alt="2021 collection — two hanbok looks displayed in a hall beside the Korean flag">
         </figure>
 
         <figure class="archive_photo archive_photo_4">
-          <img src="/asset/collection/archive_2019_4.png" width="3263" height="4898" loading="lazy" decoding="async"
-            alt="2019 collection — a camel jeogori over a cobalt skirt with a gold woven hem band">
+          <img src="/asset/collection/archive_2021_4.png" width="3347" height="4730" loading="lazy" decoding="async"
+            alt="2021 collection — a white robed look with a wide brimmed hat walking toward a palace hall">
         </figure>
 
         <figure class="archive_photo archive_photo_5">
-          <img src="/asset/collection/archive_2019_5.png" width="3262" height="4898" loading="lazy" decoding="async"
-            alt="2019 collection — a black jacket and pink floral skirt in front of a red plum blossom screen">
+          <img src="/asset/collection/archive_2021_5.png" width="3347" height="4730" loading="lazy" decoding="async"
+            alt="2021 collection — a pink hanbok on the stone steps of a palace pavilion">
         </figure>
       </div>
     </section>

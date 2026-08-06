@@ -203,10 +203,17 @@
   height: 468px;
 }
 
-/* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다. */
+/* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다.
+
+   세로 위치만 시안 값을 그대로 쓰지 않습니다. 시안의 712px는 화면 높이 1080을 전제한
+   값인데, 실제 브라우저는 주소창·탭·작업표시줄을 빼면 900~950px입니다.
+   showcase는 pin 구간에서 화면 높이만큼만 보이므로 712 + 311 = 1023이 잘려
+   "Ordinary Fashion" 줄이 화면 밖으로 나갑니다.
+   그래서 화면이 충분히 높으면 시안 값(712px)을 쓰고, 낮으면 세 줄 전체가 들어오도록
+   위로 올립니다. 360px = 블록 높이 311 + 아래 여백 49입니다. */
 .showcase_quote {
   position: absolute;
-  top: 712px;
+  top: min(712px, calc(100vh - 360px));
   left: 760px;
   width: 288.5px;
   height: 311px;
@@ -284,22 +291,25 @@
   position: relative;
   width: 100%;
   /* overflow: hidden을 쓰면 안쪽 sticky 컬럼이 죽습니다. clip은 스크롤 컨테이너를
-     만들지 않아 sticky를 유지한 채 1920 프레임의 좌우 넘침만 잘라 냅니다. */
-  overflow-x: clip;
+     만들지 않아 sticky를 유지한 채 넘치는 부분만 잘라 냅니다.
+     사진이 화면 밖에서 날아 들어오므로 좌우뿐 아니라 위아래도 잘라야 합니다.
+     x만 자르면 출발 위치의 카드가 위쪽 showcase / 아래쪽 asworn 섹션 위에 보입니다. */
+  overflow: clip;
   background-color: var(--color_bg);
 }
 
 .archive_frame {
-  /* 시안은 2755px(4516.07 → 7271.07)입니다. 사진이 겹쳐 쌓이는 구조로 바뀌면서
-     카드 5장이 세로 1646px 안에 모이기 때문에 프레임도 함께 줄였습니다.
-     쌓이는 stagger가 한두 화면 안에서 보이려면 카드가 가까이 있어야 합니다. */
-  height: 1800px;
+  /* 시안은 2755px(4516.07 → 7271.07)입니다. 사진 5장이 한 화면 안에 모두 보여야 해서
+     실제 브라우저 화면 높이(1920 × 1080 데스크톱에서 900~950px)에 맞춰 줄였습니다.
+     카드는 y 40~826에 들어가고 나머지는 위아래 여백입니다.
+     이 값을 키우면 아래쪽 카드가 화면 밖으로 밀려납니다. */
+  height: 920px;
 }
 
 .archive_sticky {
   width: 566px;
   height: 100%;
-  padding: 200px 0 0 120px;
+  padding: 130px 0 0 120px;
 }
 
 /* 레이어 이름이 sticky입니다. 사진이 지나가는 동안 연도 내비가 따라옵니다. */
@@ -379,18 +389,21 @@
   line-height: 1;
 }
 
-/* 사진 5장은 서로 겹쳐 쌓입니다. 슬롯마다 다른 것은 위치·폭·기울기·쌓임 순서뿐이고
-   높이는 지정하지 않습니다. 연도마다 원본 비율이 달라(세로 2:3, 가로 3:2 등)
-   높이를 고정하면 잘라내야 하기 때문입니다. 높이는 img가 원본 비율대로 정합니다. */
+/* 사진 5장은 서로 겹쳐 쌓입니다. 액자 없이 이미지 자체만 떠 있는 형태라
+   padding / background-color / 테두리 / 기본 그림자를 두지 않습니다.
+   높이도 지정하지 않습니다. 연도마다 원본 비율이 달라(세로 2:3, 가로 3:2 등)
+   높이를 고정하면 잘라내야 하기 때문입니다. 높이는 img가 원본 비율대로 정합니다.
+
+   위치·폭·기울기·쌓임 순서는 커스텀 속성 5개로 받습니다.
+   기본값은 아래 .archive_photo_1 ~ _5(= 2021 배치)에 있고,
+   연도를 바꾸면 collection.js가 같은 이름의 속성을 인라인으로 덮어씁니다. */
 .archive_photo {
   position: absolute;
   z-index: var(--archive_photo_layer);
+  top: var(--archive_photo_top);
+  left: var(--archive_photo_left);
   width: var(--archive_photo_width);
   margin: 0;
-  /* 겹친 사진끼리 경계가 보이도록 배경색 여백을 두릅니다. */
-  padding: 10px;
-  background-color: var(--color_bg);
-  box-shadow: 0 14px 36px rgba(40, 40, 40, 0.14);
   transform: rotate(var(--archive_photo_tilt));
   /* z-index는 보간되지 않고 지연이 끝나는 순간 한 번에 바뀝니다.
      복귀할 때만 지연을 주어야 카드가 작아지는 동안 맨 위에 남아 있습니다. */
@@ -400,12 +413,6 @@
     z-index 0s var(--duration_base);
 }
 
-/* 가로형 사진은 같은 폭이면 세로형보다 훨씬 작아 보입니다.
-   collection.js가 원본 크기를 보고 이 class를 붙여 슬롯 폭을 1.2배로 넓힙니다. */
-.archive_photo.is_wide {
-  width: calc(var(--archive_photo_width) * 1.2);
-}
-
 .archive_photo img {
   display: block;
   width: 100%;
@@ -413,7 +420,9 @@
   height: auto;
 }
 
-/* 올려 둔 사진이 쌓인 더미에서 빠져나와 전체가 보이도록 커지고 맨 앞으로 옵니다. */
+/* 올려 둔 사진이 쌓인 더미에서 빠져나와 전체가 보이도록 커지고 맨 앞으로 옵니다.
+   그림자는 올렸을 때만 생깁니다. 평소에도 두면 사진마다 사각 윤곽이 생겨
+   지우기로 한 액자와 같은 인상이 됩니다. */
 .archive_photo:hover {
   z-index: 20;
   box-shadow: 0 26px 60px rgba(40, 40, 40, 0.26);
@@ -424,51 +433,47 @@
     z-index 0s;
 }
 
-/* 슬롯 좌표는 1920 프레임 기준입니다. 왼쪽 sticky 글 영역이 x 120~470을 쓰므로
-   사진은 x 560부터 시작합니다. 세로형 기준 다섯 장이 y 60~1646에 걸칩니다. */
+/* JS가 꺼져 있을 때 보이는 기본 배치이자 2021 배치입니다.
+   `collection.js`의 ARCHIVE_LAYOUTS["2021"]과 같은 값이어야 합니다.
+   좌표는 1920 프레임 기준이고, 왼쪽 sticky 글 영역이 x 120~470을 씁니다. */
 .archive_photo_1 {
-  --archive_photo_width: 470px;
-  --archive_photo_tilt: -3.2deg;
-  --archive_photo_layer: 1;
-
-  top: 150px;
-  left: 620px;
+  --archive_photo_left: 530px;
+  --archive_photo_top: 90px;
+  --archive_photo_width: 330px;
+  --archive_photo_tilt: -4.5deg;
+  --archive_photo_layer: 2;
 }
 
 .archive_photo_2 {
-  --archive_photo_width: 380px;
-  --archive_photo_tilt: 2.6deg;
-  --archive_photo_layer: 2;
-
-  top: 60px;
-  left: 1040px;
+  --archive_photo_left: 800px;
+  --archive_photo_top: 40px;
+  --archive_photo_width: 240px;
+  --archive_photo_tilt: 6.2deg;
+  --archive_photo_layer: 5;
 }
 
 .archive_photo_3 {
-  --archive_photo_width: 560px;
-  --archive_photo_tilt: -1.4deg;
-  --archive_photo_layer: 3;
-
-  top: 560px;
-  left: 900px;
+  --archive_photo_left: 1000px;
+  --archive_photo_top: 150px;
+  --archive_photo_width: 480px;
+  --archive_photo_tilt: -2.1deg;
+  --archive_photo_layer: 1;
 }
 
 .archive_photo_4 {
-  --archive_photo_width: 400px;
-  --archive_photo_tilt: 3.8deg;
+  --archive_photo_left: 800px;
+  --archive_photo_top: 400px;
+  --archive_photo_width: 300px;
+  --archive_photo_tilt: 3.4deg;
   --archive_photo_layer: 4;
-
-  top: 860px;
-  left: 560px;
 }
 
 .archive_photo_5 {
-  --archive_photo_width: 430px;
-  --archive_photo_tilt: -2.6deg;
-  --archive_photo_layer: 5;
-
-  top: 1000px;
-  left: 1310px;
+  --archive_photo_left: 1380px;
+  --archive_photo_top: 400px;
+  --archive_photo_width: 260px;
+  --archive_photo_tilt: -7.8deg;
+  --archive_photo_layer: 3;
 }
 
 /* =========================================================
