@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Collection — Tchai Kim</title>
+  <meta name="description"
+    content="Tchai Kim Young Jin collection archive — runway film, seasonal looks by year, and the pieces worn by artists and editorials.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600&family=Trirong:ital,wght@0,400;0,600&display=swap">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.css">
+
+  <link rel="stylesheet" href="../../common/css/tokens.css">
+  <link rel="stylesheet" href="../../common/css/reset.css">
+  <link rel="stylesheet" href="../../common/css/common.css">
+  <link rel="stylesheet" href="../../common/css/layout.css">
+  <link rel="stylesheet" href="css/collection.css">
+</head>
+
+<body data-page="collection" data-header-variant="black">
+
+  <a class="skip_link" href="#main_content">Skip to content</a>
+
+  <div class="common_header_slot" data-component="/common/components/header.html">
+    <span class="a11y_hidden">Loading header</span>
+  </div>
+
+  <main class="main" id="main_content">
+
+    <!-- hero — Figma "Fashion_show_video" (1710:3866) -->
+    <section class="collection_hero" aria-labelledby="collection_hero_title">
+      <!-- 원본 `콜렉션 패션쇼 영상.mp4`(4K 60fps, 191MB)를 웹용 1080p30 H.264로 압축한 파일입니다.
+         원본은 asset/collection에 그대로 두었습니다. -->
+      <video class="collection_hero_video" id="collection_hero_video" autoplay muted loop playsinline
+        preload="metadata" poster="/asset/collection/collection_film_poster.jpg"
+        aria-label="Tchai Kim Young Jin runway film">
+        <source src="/asset/collection/collection_film.mp4" type="video/mp4">
+      </video>
+      <h1 class="collection_hero_title" id="collection_hero_title">TChai Kim Young Jin</h1>
+    </section>
+
+    <!-- showcase — Figma "arc"(1710:3870) + "Rounded Background"(1710:3872) 위에
+       떠 있는 사진들과 문장. 좌표는 1920 캔버스 기준 절대배치입니다. -->
+    <section class="showcase" aria-labelledby="showcase_quote">
+      <div class="showcase_bg" aria-hidden="true">
+        <img class="showcase_arc" src="assets/icons/arc.svg" alt="">
+        <div class="showcase_gradient"></div>
+      </div>
+
+      <div class="collection_frame showcase_frame">
+        <figure class="showcase_photo showcase_photo_tilt showcase_photo_a">
+          <img src="/asset/collection/img1.png" alt="A model in a layered pink hanbok dress seated beside a white swan">
+        </figure>
+
+        <figure class="showcase_photo showcase_photo_tilt showcase_photo_b">
+          <img src="/asset/collection/84641877ea43f52b697d23a0cf553c86%201.png"
+            alt="A sheer yellow hanbok gown with a sculpted ribbon shoulder">
+        </figure>
+
+        <h2 class="showcase_quote" id="showcase_quote">
+          <span class="showcase_quote_line showcase_quote_line1">You Won't</span>
+          <span class="showcase_quote_line showcase_quote_line2">Find This in</span>
+          <span class="showcase_quote_line showcase_quote_line3">Ordinary Fashion</span>
+        </h2>
+
+        <figure class="showcase_photo showcase_photo_c">
+          <img src="/asset/collection/img3.png"
+            alt="A model in a pastel hanbok standing against a hand-painted peony backdrop">
+        </figure>
+
+        <figure class="showcase_photo showcase_photo_d">
+          <img src="/asset/collection/%EB%8B%A4%EC%9A%B4%EB%A1%9C%EB%93%9C%20(2).jpg"
+            alt="Pastel silk lanterns gathered together">
+        </figure>
+
+        <figure class="showcase_photo showcase_photo_e">
+          <img src="/asset/collection/99d533b96346fc812ec2f0cda9e18fc6.jpg"
+            alt="A model in a cream jacket and dotted full skirt">
+        </figure>
+
+        <figure class="showcase_photo showcase_photo_f">
+          <img src="/asset/collection/Gemini_Generated_Image_irh7bgirh7bgirh7.png"
+            alt="A model in an embroidered grey dress holding a vase of dried flowers">
+        </figure>
+
+        <figure class="showcase_photo showcase_photo_g">
+          <img src="/asset/collection/Image.png" alt="An ink-washed landscape painted on hanbok silk">
+        </figure>
+      </div>
+    </section>
+
+    <!-- archive — Figma "card"(1710:3873). 왼쪽 연도 내비는 레이어 이름 그대로
+       스크롤 중 따라오는 sticky 컬럼입니다. -->
+    <section class="archive" aria-labelledby="archive_title">
+      <div class="collection_frame archive_frame">
+        <div class="archive_sticky">
+          <div class="archive_txt_area">
+            <div class="archive_txt">
+              <h2 class="archive_title" id="archive_title">Tchai<br>Kim Young Jin</h2>
+
+              <nav class="archive_years" aria-label="Collection years">
+                <ul class="archive_year_list">
+                  <li class="archive_year_item"><a class="archive_year_link" href="#">2021</a></li>
+                  <li class="archive_year_item"><a class="archive_year_link" href="#">2020</a></li>
+                  <li class="archive_year_item is_active">
+                    <a class="archive_year_link" href="#" aria-current="true">2019</a>
+                  </li>
+                  <li class="archive_year_item"><a class="archive_year_link" href="#">2018</a></li>
+                  <li class="archive_year_item"><a class="archive_year_link" href="#">2017</a></li>
+                  <li class="archive_year_item"><a class="archive_year_link" href="#">2015</a></li>
+                  <li class="archive_year_item"><a class="archive_year_link" href="#">2013</a></li>
+                </ul>
+              </nav>
+            </div>
+
+            <a class="banner_crosslink_link archive_more" href="#">
+              <span class="banner_crosslink_text">Reverse Now</span>
+              <img class="banner_crosslink_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
+            </a>
+          </div>
+        </div>
+
+        <figure class="archive_photo archive_photo_4">
+          <img src="/asset/collection/Gemini_Generated_Image_5e1jf5e1jf5e1jf5.png"
+            alt="2019 collection — a black floral gown photographed against a red field">
+        </figure>
+
+        <figure class="archive_photo archive_photo_3">
+          <img src="/asset/collection/Gemini_Generated_Image_h68iwdh68iwdh68i.png"
+            alt="2019 collection — two models in court hanbok inside a sunlit hall">
+        </figure>
+
+        <figure class="archive_photo archive_photo_2">
+          <img src="/asset/collection/Gemini_Generated_Image_n59fun59fun59fun.png"
+            alt="2019 collection — a pink hanbok gown on the stone steps of a palace">
+        </figure>
+
+        <figure class="archive_photo archive_photo_1">
+          <img src="/asset/collection/Gemini_Generated_Image_iy9yftiy9yftiy9y.png"
+            alt="2019 collection — a model in a chartreuse and ivory look holding branches">
+        </figure>
+
+        <figure class="archive_photo archive_photo_5">
+          <img src="/asset/collection/Gemini_Generated_Image_jis2prjis2prjis2.png"
+            alt="2019 collection — five models in blue hanbok looks on a seaside bridge">
+        </figure>
+      </div>
+    </section>
+
+    <!-- as worn — Figma "colaboration"(1710:3903).
+       시안의 세 카드 폭 합계가 캔버스보다 넓어 가로 스크롤 트랙으로 구현했습니다. -->
+    <section class="asworn" aria-labelledby="asworn_title">
+      <div class="asworn_head">
+        <h2 class="asworn_title" id="asworn_title">As worn</h2>
+        <ul class="asworn_tags">
+          <li><a class="asworn_tag" href="#">#BTS</a></li>
+          <li><a class="asworn_tag" href="#">#NewJeans</a></li>
+          <li><a class="asworn_tag" href="#">#TildaSwinton</a></li>
+          <li><a class="asworn_tag" href="#">#Love, Lies</a></li>
+          <li><a class="asworn_tag" href="#">#Fashion Show</a></li>
+        </ul>
+      </div>
+
+      <div class="asworn_track" tabindex="0" role="group" aria-labelledby="asworn_title">
+        <ul class="asworn_list">
+          <li class="asworn_item asworn_item_1">
+            <figure class="asworn_figure">
+              <img src="/asset/collection/image.jpg" alt="BTS wearing Tchai Kim hanbok for the Dalmajung project">
+            </figure>
+            <div class="asworn_body">
+              <h3 class="asworn_name">BTS - DALMAJUNG</h3>
+              <div class="asworn_desc">
+                <p class="asworn_text">Inspired by the serene beauty of the autumn moon, this piece reinterprets
+                  traditional Korean garments with modern refinement, worn by BTS to illuminate their global
+                  presence.</p>
+                <a class="banner_crosslink_link" href="#">
+                  <span class="banner_crosslink_text">More collection</span>
+                  <img class="banner_crosslink_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
+                </a>
+              </div>
+            </div>
+          </li>
+
+          <li class="asworn_item asworn_item_2">
+            <figure class="asworn_figure">
+              <img src="/asset/collection/image3.jpg"
+                alt="NewJeans wearing Tchai Kim hanbok for a Vogue Korea editorial">
+            </figure>
+            <div class="asworn_body">
+              <h3 class="asworn_name">NEWJEANS - VOGUE korea</h3>
+              <div class="asworn_desc">
+                <p class="asworn_text">Capturing the fresh charm of NewJeans, this collection reinterprets traditional
+                  Hanbok with fluid layers and subtle textures for a timeless, youthful elegance.</p>
+                <a class="banner_crosslink_link" href="#">
+                  <span class="banner_crosslink_text">More collection</span>
+                  <img class="banner_crosslink_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
+                </a>
+              </div>
+            </div>
+          </li>
+
+          <li class="asworn_item asworn_item_3">
+            <figure class="asworn_figure">
+              <img src="/asset/collection/%ED%95%9C%EB%B3%B5%20hanbok%2C%20Korean%20traditional%20clothes%20%23VOGUEkorea%20%23TildaSwinton.jpg"
+                alt="Tilda Swinton wearing a Tchai Kim look for a Vogue Korea editorial">
+            </figure>
+            <div class="asworn_body">
+              <h3 class="asworn_name">TILDA SWINTON - VOGUE korea</h3>
+              <div class="asworn_desc">
+                <p class="asworn_text">An iconic editorial bridging avant-garde art and traditional craft. Tilda
+                  Swinton embodies the sculptural beauty of Tchai Kim Young Jin with timeless, otherworldly grace.</p>
+                <a class="banner_crosslink_link" href="#">
+                  <span class="banner_crosslink_text">More collection</span>
+                  <img class="banner_crosslink_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
+                </a>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="common_footer_slot" data-component="/common/components/footer.html">
+    <span class="a11y_hidden">Loading footer</span>
+  </div>
+
+  <button class="top_button" type="button" aria-label="Back to top">Top</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="../../common/js/common.js"></script>
+  <script src="js/collection.js"></script>
+</body>
+
+</html>
