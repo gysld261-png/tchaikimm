@@ -155,4 +155,109 @@
       });
     };
   });
+
+  /* ---------------------------------------------------------
+     hero — 호버한 패널이 전체 폭으로 채워지고 사진이 영상 재생으로 전환됩니다.
+     768px 이상 + hover 가능한 입력장치 + 모션 감소 아닐 때만 동작합니다.
+     (터치 기기에는 호버 개념이 없어 gsap.matchMedia가 (hover: hover)로 제외합니다.)
+     --------------------------------------------------------- */
+  (function setupHeroHoverFill() {
+    var hero = document.querySelector(".hero");
+    var panels = hero ? Array.prototype.slice.call(hero.querySelectorAll(".hero_panel")) : [];
+
+    if (!hero || panels.length !== 2) {
+      return;
+    }
+
+    var WIDTH_DURATION = 0.7;
+    var FADE_DURATION = 0.5;
+
+    panels.forEach(function (panel) {
+      var video = panel.querySelector(".hero_panel_video");
+      if (video) {
+        video.muted = true;
+      }
+    });
+
+    gsap.matchMedia().add("(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)", function () {
+      var activePanel = null;
+
+      function setPanelState(panel, isActive, hasActivePanel) {
+        var img = panel.querySelector(".hero_panel_img");
+        var video = panel.querySelector(".hero_panel_video");
+        var body = panel.querySelector(".hero_panel_body");
+        var targetWidth = hasActivePanel ? (isActive ? "100%" : "0%") : "50%";
+
+        gsap.to(panel, { width: targetWidth, duration: WIDTH_DURATION, ease: "power3.out" });
+        gsap.to(body, { opacity: hasActivePanel && !isActive ? 0 : 1, duration: FADE_DURATION, ease: "power2.out" });
+        gsap.to(img, { opacity: isActive ? 0 : 0.9, duration: FADE_DURATION, ease: "power2.out" });
+
+        if (!video) {
+          return;
+        }
+
+        gsap.to(video, { opacity: isActive ? 1 : 0, duration: FADE_DURATION, ease: "power2.out" });
+
+        if (isActive) {
+          var playPromise = video.play();
+          if (playPromise && typeof playPromise.catch === "function") {
+            playPromise.catch(function () {});
+          }
+        } else {
+          video.pause();
+          try {
+            video.currentTime = 0;
+          } catch (error) {
+            /* 메타데이터 로딩 전이면 조용히 무시합니다 */
+          }
+        }
+      }
+
+      function applyActivePanel(nextActive) {
+        if (nextActive === activePanel) {
+          return;
+        }
+        activePanel = nextActive;
+        panels.forEach(function (panel) {
+          setPanelState(panel, panel === activePanel, activePanel !== null);
+        });
+      }
+
+      function handleHeroPointerMove(event) {
+        var rect = hero.getBoundingClientRect();
+        var x = event.clientX - rect.left;
+        var half = x < rect.width / 2 ? panels[0] : panels[1];
+        applyActivePanel(half);
+      }
+
+      function handleHeroPointerLeave() {
+        applyActivePanel(null);
+      }
+
+      hero.addEventListener("mousemove", handleHeroPointerMove);
+      hero.addEventListener("mouseleave", handleHeroPointerLeave);
+
+      return function cleanup() {
+        hero.removeEventListener("mousemove", handleHeroPointerMove);
+        hero.removeEventListener("mouseleave", handleHeroPointerLeave);
+        activePanel = null;
+
+        panels.forEach(function (panel) {
+          var video = panel.querySelector(".hero_panel_video");
+          gsap.set(panel, { clearProps: "width" });
+          gsap.set(panel.querySelector(".hero_panel_body"), { clearProps: "opacity" });
+          gsap.set(panel.querySelector(".hero_panel_img"), { clearProps: "opacity" });
+          if (video) {
+            gsap.set(video, { clearProps: "opacity" });
+            video.pause();
+            try {
+              video.currentTime = 0;
+            } catch (error) {
+              /* 메타데이터 로딩 전이면 조용히 무시합니다 */
+            }
+          }
+        });
+      };
+    });
+  })();
 })();
