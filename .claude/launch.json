@@ -18,6 +18,24 @@
       "port": 5611,
       "url": "http://localhost:5611",
       "autoPort": false
+    },
+    {
+      "name": "main_dev",
+      "runtimeExecutable": "powershell",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "C:\\Users\\EZEN\\AppData\\Local\\Temp\\claude\\C--Users-EZEN-Desktop-tchaikimm\\ae3d5147-4239-4bc4-9cf6-50366d6517e3\\scratchpad\\serve.ps1",
+        "-Port",
+        "5611",
+        "-Root",
+        "C:\\Users\\EZEN\\Desktop\\tchaikimm"
+      ],
+      "port": 5611,
+      "url": "http://localhost:5611",
+      "autoPort": false
     }
   ]
 }
