@@ -1,0 +1,36 @@
+<header class="header" id="header">
+  <a class="header_logo" href="/test/main_test/index.html">
+    <img class="header_logo_img" data-header-logo src="/asset/logos/header_logo-02.svg" alt="Tchai Kim">
+  </a>
+
+  <button class="header_toggle" type="button" id="header_toggle" aria-expanded="false" aria-controls="header_inner">
+    <span class="header_toggle_bar" aria-hidden="true"></span>
+    <span class="a11y_hidden header_toggle_label">Open menu</span>
+  </button>
+
+  <div class="header_inner" id="header_inner">
+    <nav class="header_nav" aria-label="Main">
+      <ul class="header_menu">
+        <li class="header_menu_item"><a class="header_menu_link" data-nav-page="collection" href="#">COLLECTION</a></li>
+        <li class="header_menu_item"><a class="header_menu_link" data-nav-page="shop" href="/test/shop_test/index.html">SHOP</a></li>
+        <li class="header_menu_item"><a class="header_menu_link" data-nav-page="bespoke" href="/test/bespoke_test/index.html">BESPOKE</a></li>
+        <li class="header_menu_item"><a class="header_menu_link" data-nav-page="brand" href="#">BRAND</a></li>
+      </ul>
+    </nav>
+
+    <div class="header_right">
+      <div class="header_currency">
+        <label class="a11y_hidden" for="header_currency_select">Currency</label>
+        <select class="header_currency_select" id="header_currency_select">
+          <option value="usd" selected>USD</option>
+        </select>
+        <img class="header_currency_icon" src="/common/assets/icons/caret_down_white.svg" alt="" aria-hidden="true" width="13" height="8">
+      </div>
+
+      <a class="header_cart" href="#">
+        <img class="header_cart_icon" src="/common/assets/icons/shopping_bag_white.svg" alt="" aria-hidden="true" width="21" height="18">
+        <span class="a11y_hidden">Shopping bag</span>
+      </a>
+    </div>
+  </div>
+</header>

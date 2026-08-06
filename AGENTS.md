@@ -24,6 +24,13 @@
 - [프로젝트에서 이미 사용하는 라이브러리]
 - React, Vue, TypeScript, Tailwind는 추가하지 않습니다.
 
+## Repository documents
+
+- Product requirements: `docs/PRD.md`
+- Current implementation context: `docs/PROJECT_CONTEXT.md`
+- Design analysis: `docs/design-analysis.md`
+- Shared system guide: `docs/COMMON_SYSTEM.md`
+
 ## HTML
 
 - 의미에 맞는 header, nav, main, section, article, footer를 사용합니다.

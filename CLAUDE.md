@@ -1,5 +1,9 @@
 @AGENTS.md
 
+@docs/PRD.md
+@docs/PROJECT_CONTEXT.md
+@docs/COMMON_SYSTEM.md
+
 ## Claude Code 전용 규칙
 
 - 여러 파일을 수정하는 작업은 구현 전에 계획을 작성합니다.

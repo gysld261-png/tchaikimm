@@ -109,8 +109,45 @@
   align-items: center;
   color: var(--color_text_on_dark_menu);
   font-family: var(--font_ui);
-  font-size: var(--fs_ui_16);
+  font-size: 20px;
   transition: color var(--duration_fast) var(--easing_base);
+}
+
+.header_menu_link.is_active {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* Header variants: white is used over imagery, black on light backgrounds. */
+.header.is_black {
+  background-color: var(--color_bg);
+}
+
+.header.is_black .header_toggle_bar,
+.header.is_black .header_toggle_bar::before,
+.header.is_black .header_toggle_bar::after {
+  background-color: var(--color_text);
+}
+
+.header.is_black .header_inner {
+  background-color: var(--color_bg);
+}
+
+.header.is_black .header_menu_link,
+.header.is_black .header_currency_select,
+.header.is_black .header_currency_select option,
+.header.is_black .header_cart {
+  color: var(--color_text);
+}
+
+.header.is_black .header_currency_icon,
+.header.is_black .header_cart_icon {
+  filter: brightness(0);
+}
+
+.header.is_black .header_menu_link:hover,
+.header.is_black .header_menu_link:focus-visible {
+  color: var(--color_point);
 }
 
 .header_menu_link:hover,

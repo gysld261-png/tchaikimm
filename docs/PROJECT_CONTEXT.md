@@ -1,5 +1,17 @@
 # Tchai Kim 현재 상태
 
+## Shared system migration (2026-08-06)
+
+- Repository-wide rules and project documents moved from `test/main_test/` to the repository root and `docs/`.
+- Shared tokens, reset, base components, header/footer layout, and common behavior now live in `common/`.
+- Main, Shop, and Bespoke load the same shared CSS and JavaScript files.
+- Bespoke-only header/footer differences remain in `test/bespoke_test/css/bespoke.css` as page overrides.
+- Local development must serve the repository root so `/common/` resources are reachable.
+- Browser verification completed for Main, Shop, and Bespoke with no console warnings or errors.
+- Footer markup is shared from `common/components/footer.html` and injected by `common/js/common.js`.
+- Header markup is shared from `common/components/header.html` with white and black variants selected per page.
+- Shared header navigation uses a 20px menu size; `common.js` switches the logo/theme and current-page state.
+
 마지막 업데이트: 2026-08-04
 
 ## 구현 완료
