@@ -1,11 +1,48 @@
 (function () {
   "use strict";
 
+  /* =========================================================
+     showcase 스크롤 인터랙션 조절값
+     ========================================================= */
+
   /* 시안 캔버스 폭. 상단 카드가 "가운데로 모이는" 목표 지점을 잡을 때 씁니다. */
   var CANVAS_WIDTH = 1920;
 
-  /* 상단 카드가 화면 중앙까지 가는 비율. 1이면 두 장이 겹칩니다. */
-  var CONVERGE_RATIO = 0.45;
+  /* pin 구간 길이. 화면 높이의 몇 배만큼 붙잡아 둘지입니다.
+     늘리면 인트로 전체가 더 천천히, 더 여유 있게 진행됩니다. */
+  var PIN_LENGTH = "+=140%";
+
+  /* 상단 카드가 화면 바깥 어디에서 출발할지(px). 카드 폭보다 커야 완전히 가려집니다. */
+  var ENTER_OFFSET = 560;
+
+  /* 마지막에 화면 중앙까지 가는 비율. 1이면 두 장의 중심이 정확히 겹칩니다. */
+  var CONVERGE_RATIO = 0.78;
+
+  /* 물러날 때 커지는 배율과 3D 회전각. */
+  var EXIT_SCALE = 1.9;
+  var EXIT_TURN = 24;
+
+  /* 들어올 때 3D 회전각과 원근 거리. 값이 작을수록 원근이 강해집니다. */
+  var ENTER_TURN = 42;
+  var PERSPECTIVE = 900;
+
+  /* 시안 기울기. 들어올 때는 이 값의 ENTER_TILT_RATIO배에서 시작하고,
+     물러날 때는 EXIT_TILT_RATIO배까지 수평에 가깝게 펴집니다. */
+  var TILT_A = -15.55;
+  var TILT_B = 13.07;
+  var ENTER_TILT_RATIO = 2.2;
+  var EXIT_TILT_RATIO = 0.13;
+
+  /* 단어 연출. STAGGER가 클수록 "한 단어씩" 끊어져 올라오는 느낌이 또렷해집니다. */
+  var WORD_SLIDE = 64;
+  var WORD_DURATION = 0.45;
+  var WORD_STAGGER = 0.22;
+
+  /* 타임라인 위에서 각 박자가 시작하는 지점. */
+  var CARD_B_DELAY = 0.08;
+  var WORDS_START = 0.55;
+  var EXIT_START = 1.55;
+  var EXIT_DURATION = 1.4;
 
   /* 하단 갤러리 카드가 떠오르는 기본 거리(px). 카드마다 STEP만큼 더해 패럴랙스를 만듭니다. */
   var RISE_BASE = 110;
@@ -76,17 +113,32 @@
     return (CANVAS_WIDTH / 2 - cardCenter) * CONVERGE_RATIO;
   }
 
+  /* filter는 함수 종류와 순서가 처음부터 끝까지 같아야 보간됩니다.
+     그래서 blur와 brightness를 항상 이 순서로 함께 씁니다. */
+  function filterOf(blur, brightness) {
+    return "blur(" + blur + "px) brightness(" + brightness + ")";
+  }
+
+  /* 상단 두 장은 세 박자로 움직입니다.
+     1박자 — 화면 양 끝 바깥에서 시안 자리로 날아 들어와 안착
+     2박자 — 가운데 문장이 한 단어씩 차례로 상승
+     3박자 — 두 장이 중앙으로 모이며 커지고, 흐려지고 밝아지며 물러남
+     2·3박자를 겹쳐 두어 사진이 물러나는 동안 문장이 자리를 넘겨받습니다. */
   function buildIntroTimeline(gsap, showcase, cards, words) {
-    /* blur는 시작값이 있어야 보간됩니다. CSS에 두면 항상 합성 레이어가 생기므로
-       인터랙션이 실제로 켜질 때만 JS로 깔아 둡니다. */
-    gsap.set(cards, { filter: "blur(0px)" });
+    var cardA = cards[0];
+    var cardB = cards[1];
+    var imageA = cardA.querySelector("img");
+    var imageB = cardB.querySelector("img");
+
+    /* 원근은 각 img 자신에게 겁니다. 부모에 CSS perspective를 두면
+       showcase_frame의 다른 사진들까지 3D 맥락에 들어갑니다. */
+    gsap.set([imageA, imageB], { transformPerspective: PERSPECTIVE });
 
     var timeline = gsap.timeline({
       scrollTrigger: {
         trigger: showcase,
         start: "top top",
-        /* 화면 한 장 분량만큼 고정해 두고 그 사이에 인트로가 끝납니다. */
-        end: "+=100%",
+        end: PIN_LENGTH,
         pin: true,
         pinSpacing: true,
         scrub: 1,
@@ -96,45 +148,110 @@
     });
 
     timeline
-      /* 상단 두 장: 가운데로 모이며 커지고, 흐려지면서 물러납니다. */
-      .to(
-        cards,
+      /* --- 1박자: 등장 --- */
+      .fromTo(
+        cardA,
         {
-          x: function (index, target) {
-            return convergeDistance(target);
-          },
-          y: 90,
-          scale: 1.35,
-          opacity: 0.12,
-          filter: "blur(14px)",
-          ease: "none",
+          x: -ENTER_OFFSET,
+          y: 70,
+          scale: 0.72,
+          opacity: 0,
+          filter: filterOf(12, 1.3)
+        },
+        {
+          x: 0,
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          filter: filterOf(0, 1),
+          ease: "power3.out",
           duration: 1
         },
         0
       )
-      /* 기울기는 0쪽으로 완화됩니다. 회전은 프레임이 아니라 안쪽 img에 걸려 있습니다. */
-      .to(
-        ".showcase_photo_a img",
-        { rotation: -4, ease: "none", duration: 1 },
+      .fromTo(
+        imageA,
+        { rotationY: ENTER_TURN, rotation: TILT_A * ENTER_TILT_RATIO },
+        { rotationY: 0, rotation: TILT_A, ease: "power3.out", duration: 1 },
         0
       )
-      .to(
-        ".showcase_photo_b img",
-        { rotation: 3.5, ease: "none", duration: 1 },
-        0
+      /* B는 살짝 늦게 들어와 두 장이 엇갈리는 리듬을 만듭니다. */
+      .fromTo(
+        cardB,
+        {
+          x: ENTER_OFFSET,
+          y: 70,
+          scale: 0.72,
+          opacity: 0,
+          filter: filterOf(12, 1.3)
+        },
+        {
+          x: 0,
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          filter: filterOf(0, 1),
+          ease: "power3.out",
+          duration: 1
+        },
+        CARD_B_DELAY
       )
-      /* 가운데 문장: 단어가 순서대로 아래에서 떠오릅니다. */
+      .fromTo(
+        imageB,
+        { rotationY: -ENTER_TURN, rotation: TILT_B * ENTER_TILT_RATIO },
+        { rotationY: 0, rotation: TILT_B, ease: "power3.out", duration: 1 },
+        CARD_B_DELAY
+      )
+
+      /* --- 2박자: 단어가 하나씩 --- */
       .fromTo(
         words,
-        { y: 42, opacity: 0 },
+        { y: WORD_SLIDE, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          ease: "power2.out",
-          duration: 0.5,
-          stagger: 0.08
+          ease: "power3.out",
+          duration: WORD_DURATION,
+          stagger: WORD_STAGGER
         },
-        0.2
+        WORDS_START
+      )
+
+      /* --- 3박자: 중앙으로 모이며 물러남 --- */
+      .to(
+        [cardA, cardB],
+        {
+          x: function (index, target) {
+            return convergeDistance(target);
+          },
+          y: 130,
+          scale: EXIT_SCALE,
+          opacity: 0.08,
+          filter: filterOf(26, 1.35),
+          ease: "power2.in",
+          duration: EXIT_DURATION
+        },
+        EXIT_START
+      )
+      .to(
+        imageA,
+        {
+          rotationY: -EXIT_TURN,
+          rotation: TILT_A * EXIT_TILT_RATIO,
+          ease: "power2.in",
+          duration: EXIT_DURATION
+        },
+        EXIT_START
+      )
+      .to(
+        imageB,
+        {
+          rotationY: EXIT_TURN,
+          rotation: TILT_B * EXIT_TILT_RATIO,
+          ease: "power2.in",
+          duration: EXIT_DURATION
+        },
+        EXIT_START
       );
 
     return timeline;
@@ -145,7 +262,7 @@
      트리거는 figure(움직이지 않음), 움직이는 건 안쪽 img라서 시작 지점이 흔들리지 않습니다.
 
      pinnedContainer가 반드시 필요합니다. 이 카드들은 위에서 pin되는 .showcase 안에 있어서,
-     지정하지 않으면 pin이 끼워 넣는 여백(100vh)만큼 시작 지점이 앞으로 당겨집니다.
+     지정하지 않으면 pin이 끼워 넣는 여백만큼 시작 지점이 앞으로 당겨집니다.
      그러면 화면에 보이지도 않는 pin 구간에서 이미 애니메이션이 끝나 버립니다. */
   function buildGalleryTimelines(gsap, showcase) {
     var selectors = [
