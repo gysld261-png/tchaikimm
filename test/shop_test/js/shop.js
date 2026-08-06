@@ -1,5 +1,20 @@
 import * as THREE from "three";
 
+/* 발표용 상품 상세 연결.
+   현재 상세 템플릿이 하나이므로 ALL / NEW의 열 개 카드에서 이미지, 상품명,
+   가방 아이콘을 누르면 모두 같은 상세페이지로 이동합니다. 상품별 상세가
+   추가되면 각 카드의 상품 식별값에 따라 경로만 나누면 됩니다. */
+(function connectProductDetailLinks() {
+  var detailUrl = "../shop_detail_test/index.html";
+  var productLinks = document.querySelectorAll(
+    ".card_product_media_link, .card_product_link, .card_product_action[href]"
+  );
+
+  productLinks.forEach(function (link) {
+    link.setAttribute("href", detailUrl);
+  });
+})();
+
 /* hero — follow.art 레퍼런스처럼 사진 카드들을 원통 둘레에 실제 3D로 배치하고
    Three.js로 렌더링합니다. 회전값은 GSAP로 트윈합니다(main 페이지가 이미
    GSAP를 쓰고 있어 같은 라이브러리로 통일). 페이지 진입 즉시 자동 회전이

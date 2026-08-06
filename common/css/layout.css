@@ -502,6 +502,10 @@
 }
 
 @media (min-width: 1280px) {
+  .footer_inner {
+    gap: 80px;
+  }
+
   .footer_top {
     gap: 68px;
   }
