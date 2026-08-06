@@ -109,13 +109,15 @@
    ========================================================= */
 
 .intro {
+  border-bottom: 1px solid var(--color_line);
+  padding: 60px 0;
+}
+
+.intro_container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-  width: 100%;
-  padding: 60px var(--layout_gutter);
-  border-bottom: 1px solid var(--color_line);
   text-align: center;
 }
 
@@ -169,11 +171,14 @@
    ========================================================= */
 
 .model {
+  padding: 60px 0;
+}
+
+.model_container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 40px;
-  padding: 60px var(--layout_gutter);
 }
 
 .model_figure {
@@ -211,15 +216,38 @@
 
 @media (min-width: 1280px) {
   .model {
+    padding: 103px 0;
+  }
+
+  .model_container {
     gap: 68px;
-    padding: 103px var(--layout_gutter);
   }
 }
 
 /* =========================================================
    brand_word — brand_01~04, 화면을 채우는 초대형 워드마크
    (Figma node 1712:4331~4337)
+   기본은 4개가 세로로 쌓인 레이아웃(JS 미동작·모션 감소 시 그대로 사용).
+   js/main.js가 .is_pinned를 붙이면 한 화면에 고정된 채 글자만 바뀝니다.
    ========================================================= */
+
+.brand_word_pin.is_pinned {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  overflow: hidden;
+}
+
+.brand_word_pin.is_pinned .brand_word {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  opacity: 0;
+}
+
+.brand_word_pin.is_pinned .brand_word.is_active {
+  opacity: 1;
+}
 
 .brand_word {
   display: flex;
@@ -354,6 +382,36 @@
   pointer-events: none;
 }
 
+/* 스크롤로 들어올 때: 사진이 서서히 나타나고, 이름 두 줄이 벌어지며 갈라집니다.
+   기본(js/main.js 미동작)은 최종 상태 그대로 보입니다. */
+.brand_collage.is_enhanced .brand_collage_cards {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+.brand_collage.is_enhanced .brand_collage_name span {
+  display: inline-block;
+  transition: transform 0.2s linear;
+}
+
+.brand_collage.is_enhanced .brand_collage_name span:first-child {
+  transform: translateY(14px);
+}
+
+.brand_collage.is_enhanced .brand_collage_name span:last-child {
+  transform: translateY(-14px);
+}
+
+@media (min-width: 1280px) {
+  .brand_collage.is_enhanced .brand_collage_name span:first-child {
+    transform: translateX(30px);
+  }
+
+  .brand_collage.is_enhanced .brand_collage_name span:last-child {
+    transform: translateX(-30px);
+  }
+}
+
 .brand_collage_lg .brand_collage_card {
   max-width: 337px;
 }
@@ -376,18 +434,21 @@
 }
 
 /* =========================================================
-   kyj_story — 카드 1장 / 3장으로 보여주는 무드 컷
+   kyj_story — 1장 → 3장 → 확대 → 페이드아웃 (js/main.js, GSAP pin)
    (Figma node 1712:4383, 1712:4386 외 반복 2회)
-   시안 주석: 스크롤에 따라 1장 → 3장 → 확대 → 페이드아웃되며
-   아래 영상으로 이어지는 연출이나, 이번 구현에서는 정적 배치로 남깁니다.
+   기본(JS 미동작·모션 감소)은 3장을 나란히 놓은 정적 배치를 보여줍니다.
    ========================================================= */
 
-.kyj_story {
+.kyj_sequence {
+  overflow: hidden;
+  padding: 60px var(--layout_gutter);
+}
+
+.kyj_sequence_stage {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 24px;
-  padding: 60px var(--layout_gutter);
 }
 
 .kyj_story_card {
@@ -405,32 +466,76 @@
   object-fit: cover;
 }
 
+/* 기본 배치: 솔로 컷은 숨기고 3장만 나란히 보여줍니다 */
+.kyj_story_solo {
+  display: none;
+}
+
 @media (min-width: 1280px) {
-  .kyj_story {
+  .kyj_sequence {
     min-height: 1080px;
   }
 }
 
+/* --- js/main.js가 .is_enhanced를 붙이면 GSAP가 pin+scrub로 진행을 맡습니다 --- */
+
+.kyj_sequence.is_enhanced .kyj_sequence_stage {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(380px, 46vw);
+}
+
+.kyj_sequence.is_enhanced .kyj_story_solo {
+  display: block;
+  transform: translate(-50%, -50%);
+  opacity: 1;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_1 {
+  transform: translate(-150%, -50%) scale(0.85);
+  opacity: 0;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_2 {
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 0;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_3 {
+  transform: translate(50%, -50%) scale(0.85);
+  opacity: 0;
+}
+
 /* =========================================================
-   detail — detail_collar (Figma node 1712:4259)
-   sleeve/body/skirt는 확대 크롭 에셋이 아직 없어 이번 구현에서는 collar만 둡니다.
+   detail — collar/sleeve/body/skirt를 사진 한 장 + 4개 호버 영역으로 통합
+   (Figma node 1712:4259, 4277, 4295, 4313의 확대컷·설명을 한 섹션에 모음)
+   기본은 사진과 헤더만 보이고, 부위별 영역(.detail_hotspot)에 마우스를 올리거나
+   키보드 포커스를 주면 그 부위의 확대컷(.detail_zoom)과 설명(.detail_text)이 나타납니다.
    ========================================================= */
 
 .detail {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 60px;
-  padding: 80px var(--layout_gutter) 60px;
+  padding: 80px 0 60px;
   background-image: linear-gradient(to bottom, #fcfcfb, #fffdf9);
 }
 
+/* 시안: header는 items-start(왼쪽 정렬), 페이지 폭 그대로(px-120), 가운데 정렬이 아닙니다 */
 .detail_head {
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: 17px;
-  max-width: 900px;
-  text-align: center;
+  text-align: left;
 }
 
 .detail_title {
@@ -450,23 +555,18 @@
   line-height: var(--lh_body_20);
 }
 
-/* 시안(Figma node 1712:4266)의 좌표를 그대로 옮깁니다.
-   글과 확대컷은 이미지 옆이 아니라 이미지 상단 위로 겹쳐 걸립니다.
-   퍼센트는 전부 .detail_figure(이미지) 기준입니다 — 좌우는 이미지 폭(1460),
-   상하는 이미지 높이(635) 대비 값입니다. */
+/* 시안(Figma node 1712:4266 외 3개)의 좌표를 그대로 옮깁니다.
+   글과 확대컷은 이미지 옆이 아니라 이미지 위로 겹쳐 걸립니다.
+   퍼센트는 전부 .detail_stage(이미지) 기준입니다 — 좌우는 이미지 폭(1460),
+   상하는 이미지 높이(635) 대비 값입니다.
+   margin-top/bottom은 위아래로 겹쳐 걸리는 글·확대컷이 다른 섹션과
+   부딪히지 않도록 비워 두는 여백입니다(고정값 — % padding은 폭 기준으로 계산되어
+   여기서는 쓸 수 없습니다). */
 .detail_stage {
   position: relative;
-  width: 100%;
-  max-width: 1920px;
-  /* 겹쳐 걸리는 글/확대컷이 위 섹션과 부딪히지 않도록 비워 두는 여백 */
-  padding-top: 9.5%;
-}
-
-.detail_figure {
-  position: relative;
-  /* 1460 / 1920, 좌측 211 / 1920 */
   width: 76.04%;
-  margin: 0 0 0 10.99%;
+  max-width: 1460px;
+  margin: clamp(140px, 20vw, 400px) 0 clamp(160px, 24vw, 470px) 10.99%;
 }
 
 .detail_img {
@@ -475,16 +575,75 @@
   height: auto;
 }
 
-.detail_text {
-  /* (333-211)/1460, (79-218)/635, 534/1460 */
+/* 부위별 호버/포커스 영역 — Figma에 없는, 이번 통합을 위해 새로 정한 영역입니다 */
+.detail_hotspot {
   position: absolute;
-  top: -21.89%;
-  left: 8.36%;
+  cursor: zoom-in;
+}
+
+.detail_hotspot[data-part="collar"] {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 22%;
+}
+
+.detail_hotspot[data-part="sleeve"] {
+  top: 8%;
+  left: 55%;
+  width: 45%;
+  height: 40%;
+}
+
+.detail_hotspot[data-part="body"] {
+  top: 20%;
+  left: 0;
+  width: 55%;
+  height: 35%;
+}
+
+.detail_hotspot[data-part="skirt"] {
+  top: 45%;
+  left: 25%;
+  width: 75%;
+  height: 55%;
+}
+
+.detail_text {
+  position: absolute;
   display: flex;
   flex-direction: column;
   gap: 7px;
   width: 36.58%;
   min-width: 200px;
+}
+
+.detail_text,
+.detail_zoom {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+
+.detail_hotspot[data-part="collar"]:hover ~ .detail_text[data-part="collar"],
+.detail_hotspot[data-part="collar"]:hover ~ .detail_zoom[data-part="collar"],
+.detail_hotspot[data-part="collar"]:focus-visible ~ .detail_text[data-part="collar"],
+.detail_hotspot[data-part="collar"]:focus-visible ~ .detail_zoom[data-part="collar"],
+.detail_hotspot[data-part="sleeve"]:hover ~ .detail_text[data-part="sleeve"],
+.detail_hotspot[data-part="sleeve"]:hover ~ .detail_zoom[data-part="sleeve"],
+.detail_hotspot[data-part="sleeve"]:focus-visible ~ .detail_text[data-part="sleeve"],
+.detail_hotspot[data-part="sleeve"]:focus-visible ~ .detail_zoom[data-part="sleeve"],
+.detail_hotspot[data-part="body"]:hover ~ .detail_text[data-part="body"],
+.detail_hotspot[data-part="body"]:hover ~ .detail_zoom[data-part="body"],
+.detail_hotspot[data-part="body"]:focus-visible ~ .detail_text[data-part="body"],
+.detail_hotspot[data-part="body"]:focus-visible ~ .detail_zoom[data-part="body"],
+.detail_hotspot[data-part="skirt"]:hover ~ .detail_text[data-part="skirt"],
+.detail_hotspot[data-part="skirt"]:hover ~ .detail_zoom[data-part="skirt"],
+.detail_hotspot[data-part="skirt"]:focus-visible ~ .detail_text[data-part="skirt"],
+.detail_hotspot[data-part="skirt"]:focus-visible ~ .detail_zoom[data-part="skirt"] {
+  opacity: 1;
+  transform: scale(1);
 }
 
 .detail_part_title {
@@ -513,12 +672,9 @@
   line-height: 1.63;
 }
 
-/* 시안 주석: 호버 시 돋보기 확대. 이번 구현은 고정 원형 확대컷으로 단순화합니다. */
+/* 시안 주석: 호버 시 돋보기 확대 */
 .detail_zoom {
-  /* (800-211)/1460, (69-218)/635, 300/1460 */
   position: absolute;
-  top: -23.46%;
-  left: 40.34%;
   width: 20.55%;
   min-width: 120px;
   aspect-ratio: 1 / 1;
@@ -532,6 +688,57 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 부위별 글/확대컷 좌표 — .detail_stage(이미지) 기준 원래 Figma 퍼센트 그대로 */
+.detail_text[data-part="collar"] {
+  /* (333-211)/1460, (79-218)/635 */
+  top: -21.89%;
+  left: 8.36%;
+}
+
+.detail_zoom[data-part="collar"] {
+  /* (800-211)/1460, (69-218)/635 */
+  top: -23.46%;
+  left: 40.34%;
+}
+
+.detail_text[data-part="sleeve"] {
+  /* (1144-211)/1460, (54-218)/635 */
+  top: -25.83%;
+  left: 63.90%;
+}
+
+.detail_zoom[data-part="sleeve"] {
+  /* (1196-211)/1460, (244-218)/635, 409/1460 */
+  top: 4.09%;
+  left: 67.47%;
+  width: 28.01%;
+}
+
+.detail_text[data-part="body"] {
+  /* (221-211)/1460, (588-218)/635 */
+  top: 58.27%;
+  left: 0.68%;
+}
+
+.detail_zoom[data-part="body"] {
+  /* (557-211)/1460, (369-218)/635 */
+  top: 23.78%;
+  left: 23.70%;
+}
+
+.detail_text[data-part="skirt"] {
+  /* (625-211)/1460, (895-218)/635 */
+  top: 106.61%;
+  left: 28.36%;
+}
+
+.detail_zoom[data-part="skirt"] {
+  /* (1032-211)/1460, (575-218)/635, 384/1460 */
+  top: 56.22%;
+  left: 56.23%;
+  width: 26.30%;
 }
 
 @media (min-width: 1024px) {
@@ -551,18 +758,23 @@
 
 .promo {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
+  gap: 40px;
 }
 
 .promo_text {
   display: flex;
-  flex: 0 0 auto;
+  flex: 1 1 320px;
   flex-direction: column;
   align-items: flex-start;
+  min-width: 0;
 }
 
 .promo_figure {
-  flex: 0 0 auto;
+  flex: 1 1 320px;
+  min-width: 0;
+  max-width: 727px;
 }
 
 .promo_title {
@@ -611,7 +823,7 @@
 }
 
 .promo_img {
-  width: 727px;
+  width: 100%;
   height: auto;
 }
 
@@ -632,17 +844,12 @@
 }
 
 .promo_bespoke {
-  /* 시안 사진 top 82, 글 left 160, 사진 right 120 */
-  padding: 82px 120px 146px 160px;
+  padding: 82px 0 146px;
 }
 
 .promo_bespoke .promo_text {
-  width: 746px;
+  max-width: 746px;
   margin-top: 85px;
-}
-
-.promo_bespoke .promo_figure {
-  margin-left: 167px;
 }
 
 /* =========================================================
@@ -702,14 +909,12 @@
 }
 
 .promo_shop {
-  /* 시안 사진 left 210 / top 145 */
-  padding: 145px 0 0 210px;
+  padding: 145px 0 0;
 }
 
 .promo_shop .promo_text {
-  width: 606px;
+  max-width: 606px;
   margin-top: 98px;
-  margin-left: 167px;
 }
 
 /* product 열 — 시안(Figma node 1712:4438)은 5장을 정적으로 나열합니다 */
@@ -743,12 +948,16 @@
    ========================================================= */
 
 .collection {
+  overflow: hidden;
+  padding: 120px 0;
+  text-align: center;
+}
+
+.collection_container {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 60px;
-  padding: 120px var(--layout_gutter);
-  text-align: center;
 }
 
 .collection_title {
@@ -766,6 +975,7 @@
   justify-content: center;
   gap: clamp(10px, 3vw, 40px);
   width: 100%;
+  min-width: 0;
 }
 
 .collection_item {
@@ -828,29 +1038,29 @@
 
 
 /* =========================================================
-   클로징 — 시안 1920 × 620 좌표를 그대로 배치했습니다.
+   클로징 (Figma 1920 × 620 절대좌표 → common_container 기반 흐름 배치로 전환)
+   시안은 글과 아이콘이 겹쳐 있지만, .common_container 도입에 맞춰
+   아래로 쌓는 배치로 단순화했습니다.
    ========================================================= */
 
 .closing {
   overflow: hidden;
+  padding: 150px 0;
 }
 
 .closing_inner {
-  position: relative;
-  left: 50%;
-  width: 1920px;
-  height: 620px;
-  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
 }
 
 .closing_head {
-  position: absolute;
-  top: 240px;
-  left: 513px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 20px;
-  width: 894px;
+  max-width: 894px;
   text-align: center;
 }
 
@@ -872,12 +1082,11 @@
 }
 
 .closing_icons {
-  position: absolute;
-  top: 274px;
-  right: 180px;
   display: flex;
   align-items: flex-end;
+  justify-content: flex-end;
   gap: 10px;
+  width: 100%;
 }
 
 .closing_icon_people {
