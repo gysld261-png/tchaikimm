@@ -1,8 +1,15 @@
 # Collection 페이지 작업 기록
 
-`test/collection_test/` 페이지의 작업 내역입니다.
+`test/col_chaikimyoungjin_test/` 페이지의 작업 내역입니다.
 페이지 전체 구조와 showcase 인터랙션은 `docs/PROJECT_CONTEXT.md`의 Collection 항목에 있습니다.
 이 문서는 그 이후 작업을 기록합니다.
+
+> **2026-08-06 폴더 이름이 바뀌었습니다.** 아래 본문의 옛 경로를 이렇게 읽으세요.
+> `test/collection_test/` → `test/col_chaikimyoungjin_test/`,
+> `css/collection.css` → `css/col_chaikimyoungjin.css`,
+> `js/collection.js` → `js/col_chaikimyoungjin.js`,
+> `/asset/collection/` → 페이지 폴더 안의 `asset/`.
+> 자매 페이지는 `docs/pages/col_chaikim.md`에 있습니다.
 
 ---
 

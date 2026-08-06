@@ -1,7 +1,14 @@
 # Tchai Kim 현재 상태
 
 
-## Collection 페이지 (`test/collection_test/`) — 2026-08-06
+## Collection 페이지 (`test/col_chaikimyoungjin_test/`) — 2026-08-06
+
+> **2026-08-06 폴더·파일 이름이 바뀌었습니다.** 아래 본문의 옛 경로를 이렇게 읽으세요.
+> `test/collection_test/` → `test/col_chaikimyoungjin_test/`,
+> `css/collection.css` → `css/col_chaikimyoungjin.css`,
+> `js/collection.js` → `js/col_chaikimyoungjin.js`,
+> `/asset/collection/` → 페이지 폴더 안의 `asset/`(같은 파일, 위치만 이동).
+> 같은 레이아웃을 쓰는 자매 페이지 `test/col_chaikim_test/`가 생겼습니다 — `docs/pages/col_chaikim.md`.
 
 - 대상 화면: Figma `4조 한복판 - 차이킴` node `1710:3865`("col_chaikimyoungjin", 1920 × 9796.75).
 - 범위: **데스크톱(1920) 우선**. 반응형(360 / 768 / 1280)은 다음 단계입니다.

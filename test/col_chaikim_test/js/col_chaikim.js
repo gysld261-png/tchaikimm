@@ -1,3 +1,6 @@
+/* Collection (Tchai Kim) — Figma node 1710:3971 "col_chaikim".
+   자매 페이지 test/col_chaikimyoungjin_test와 인터랙션이 같습니다.
+   다른 것은 아래 데이터(연도별 사진·배치)와 기본 연도뿐입니다. */
 (function () {
   "use strict";
 
@@ -74,7 +77,8 @@
      섹션 높이가 화면 한 장 정도라, 이 값이 크면 아래쪽 카드가 아직 화면 밖일 때 시작합니다. */
   var ARCHIVE_START = "top top+=10%";
 
-  var ARCHIVE_DEFAULT_YEAR = "2021";
+  /* 시안의 활성 연도입니다. */
+  var ARCHIVE_DEFAULT_YEAR = "2019";
 
   /* =========================================================
      as worn 조절값
@@ -105,28 +109,33 @@
         폭을 키우면 높이도 원본 비율만큼 따라 커진다는 점에 주의하세요
         (세로 사진은 높이 = 폭 × 1.5, 가로 사진은 폭 × 0.67).
 
-     2021 배치는 CSS의 .archive_photo_1 ~ _5 기본값과 같은 값입니다(JS 없이 열었을 때의 화면). */
+     연도마다 장수가 다를 수 있습니다(2019·2020은 5장, 2021은 4장).
+     남는 자리는 `is_empty`로 감춥니다.
+
+     2019 배치는 CSS의 .archive_photo_1 ~ _5 기본값과 같은 값입니다(JS 없이 열었을 때의 화면).
+     시안이 세로 2310px에 걸쳐 놓은 다섯 장의 순서와 좌우 위치를 유지한 채
+     프레임 높이(920px)에 맞게 세로만 압축한 값입니다. */
   var ARCHIVE_LAYOUTS = {
-    "2021": [
-      { left: 530, top: 90, width: 330, tilt: -4.5, layer: 2, travel: 1.15 },
-      { left: 800, top: 40, width: 240, tilt: 6.2, layer: 5, travel: 0.8 },
-      { left: 1000, top: 150, width: 480, tilt: -2.1, layer: 1, travel: 1.45 },
-      { left: 800, top: 400, width: 300, tilt: 3.4, layer: 4, travel: 0.95 },
-      { left: 1380, top: 400, width: 260, tilt: -7.8, layer: 3, travel: 1.3 }
+    "2019": [
+      { left: 600, top: 40, width: 300, tilt: -3.2, layer: 3, travel: 1.1 },
+      { left: 1180, top: 120, width: 400, tilt: 2.6, layer: 1, travel: 1.35 },
+      { left: 520, top: 300, width: 330, tilt: -5.4, layer: 4, travel: 0.9 },
+      { left: 1500, top: 470, width: 230, tilt: 6.8, layer: 5, travel: 1.2 },
+      { left: 800, top: 420, width: 320, tilt: -1.8, layer: 2, travel: 1.45 }
     ],
     "2020": [
-      { left: 1300, top: 60, width: 250, tilt: 5.6, layer: 3, travel: 0.9 },
-      { left: 560, top: 130, width: 340, tilt: -3.1, layer: 1, travel: 1.4 },
-      { left: 1150, top: 330, width: 200, tilt: 8.4, layer: 5, travel: 1.05 },
-      { left: 830, top: 240, width: 390, tilt: -1.8, layer: 2, travel: 1.5 },
-      { left: 620, top: 420, width: 270, tilt: 4.2, layer: 4, travel: 0.85 }
+      { left: 560, top: 120, width: 300, tilt: 4.1, layer: 2, travel: 1.2 },
+      { left: 900, top: 60, width: 260, tilt: -2.8, layer: 4, travel: 0.85 },
+      /* 세 번째만 가로 사진입니다(높이 = 폭 × 0.67). 같은 폭이면 혼자 작아 보여 넓게 잡았습니다. */
+      { left: 1180, top: 200, width: 480, tilt: 1.9, layer: 1, travel: 1.4 },
+      { left: 620, top: 420, width: 270, tilt: -6.2, layer: 5, travel: 1.05 },
+      { left: 1280, top: 380, width: 290, tilt: 3.5, layer: 3, travel: 0.95 }
     ],
-    "2019": [
-      { left: 700, top: 50, width: 190, tilt: -6.8, layer: 4, travel: 1.35 },
-      { left: 1100, top: 100, width: 300, tilt: 2.4, layer: 2, travel: 1 },
-      { left: 540, top: 230, width: 370, tilt: -1.2, layer: 3, travel: 0.85 },
-      { left: 860, top: 430, width: 260, tilt: 7.1, layer: 5, travel: 1.5 },
-      { left: 1330, top: 330, width: 330, tilt: -4.6, layer: 1, travel: 1.1 }
+    "2021": [
+      { left: 540, top: 70, width: 320, tilt: -4.8, layer: 3, travel: 1.3 },
+      { left: 920, top: 150, width: 280, tilt: 3.2, layer: 5, travel: 0.9 },
+      { left: 1250, top: 60, width: 340, tilt: -2.2, layer: 1, travel: 1.15 },
+      { left: 800, top: 380, width: 300, tilt: 5.6, layer: 4, travel: 1.45 }
     ]
   };
 
@@ -134,126 +143,112 @@
      날아 들어오는 순서이며, 위 ARCHIVE_LAYOUTS의 배열 순서와 짝을 이룹니다.
      width / height는 원본 픽셀 크기입니다. 로딩 전 자리 확보와
      날아오는 방향을 계산할 때의 카드 중심 추정에 씁니다.
-     2013 / 2015 / 2017 / 2018은 연결할 사진이 없어 여기에 없습니다. */
+     2013 / 2015 / 2017 / 2018은 연결할 사진이 없어 여기에 없습니다.
+
+     2019는 시안에 실제로 놓여 있는 다섯 장입니다(Figma에서 내려받았습니다).
+     2020 / 2021은 시안에 없습니다. 저장소에 있던 `archive_kim2020_*` /
+     `archive_kim2021_*` 내보내기를 그대로 씁니다. 이 중 세 장은 hero / showcase에도
+     쓰이는 같은 파일이라 파일을 복사하지 않고 그 이름 그대로 참조합니다. */
   var ARCHIVE_PHOTOS = {
     "2019": [
       {
-        src: "/asset/collection/archive_2019_1.png",
-        width: 3263,
-        height: 4898,
-        alt: "2019 collection — a mustard jeogori over a sheer black skirt beside a lantern-lit mirror panel"
+        src: "asset/archive_2019_1.png",
+        width: 958,
+        height: 1190,
+        alt: "2019 collection — a white robe with a black conical hat, sleeves spread wide"
       },
       {
-        src: "/asset/collection/archive_2019_2.png",
-        width: 3263,
-        height: 4898,
-        alt: "2019 collection — a red jeogori with a grey patterned skirt and a purple silk wrap"
+        src: "asset/archive_2019_2.png",
+        width: 1302,
+        height: 1744,
+        alt: "2019 collection — an orange quilted jeogori over a blue skirt, flowers pinned in the hair"
       },
       {
-        src: "/asset/collection/archive_2019_3.png",
-        width: 3262,
-        height: 4898,
-        alt: "2019 collection — a seated look in a tartan jeogori and a bright pink skirt"
+        src: "asset/archive_2019_3.png",
+        width: 1250,
+        height: 1594,
+        alt: "2019 collection — a floral sheer dress seated on a stone path in tall grass"
       },
       {
-        src: "/asset/collection/archive_2019_4.png",
-        width: 3263,
-        height: 4898,
-        alt: "2019 collection — a camel jeogori over a cobalt skirt with a gold woven hem band"
+        src: "asset/archive_2019_4.png",
+        width: 780,
+        height: 1044,
+        alt: "2019 collection — a dark brown wool coat over an ivory shirt and trousers"
       },
       {
-        src: "/asset/collection/archive_2019_5.png",
-        width: 3262,
-        height: 4898,
-        alt: "2019 collection — a black jacket and pink floral skirt in front of a red plum blossom screen"
+        src: "asset/archive_2019_5.png",
+        width: 1250,
+        height: 1476,
+        alt: "2019 collection — a floral organza dress in front of a pink lattice screen"
       }
     ],
     "2020": [
       {
-        src: "/asset/collection/archive_2020_1.png",
-        width: 3336,
-        height: 5008,
-        alt: "2020 collection — a red and ivory jeogori with a chartreuse skirt, holding bamboo branches"
+        src: "asset/archive_2020_1.png",
+        width: 2542,
+        height: 3816,
+        alt: "2020 collection — a hand-painted white jeogori beside a lime green silk skirt"
       },
       {
-        src: "/asset/collection/archive_2020_2.png",
-        width: 3336,
-        height: 5008,
-        alt: "2020 collection — a model waving a rainbow silk banner beside a white swan sculpture"
+        src: "asset/archive_2020_2.png",
+        width: 2290,
+        height: 3438,
+        alt: "2020 collection — an embroidered ivory jacket with a mint tulle hat over a coral skirt"
       },
       {
-        src: "/asset/collection/archive_2020_3.png",
-        width: 3336,
-        height: 5008,
-        alt: "2020 collection — a sheer ivory coat over a pink skirt with a white feathered headpiece"
+        /* 세 번째 자리만 가로 사진입니다. hero와 같은 파일입니다. */
+        src: "asset/hero.png",
+        width: 2543,
+        height: 1695,
+        alt: "2020 collection — a close view of a hand-embroidered white jeogori with tied ribbons"
       },
       {
-        src: "/asset/collection/archive_2020_4.png",
-        width: 3704,
-        height: 5559,
-        alt: "2020 collection — a close view of a yellow silk jacket over an embroidered pale yellow skirt"
+        src: "asset/archive_2020_4.png",
+        width: 2289,
+        height: 3438,
+        alt: "2020 collection — a pale pink hanbok with gold banded hem in soft daylight"
       },
       {
-        src: "/asset/collection/archive_2020_5.png",
-        width: 3336,
-        height: 5008,
-        alt: "2020 collection — a white embroidered jeogori with a coral skirt and a woven straw hat"
+        /* showcase 오른쪽 위 기울어진 사진과 같은 파일입니다. */
+        src: "asset/showcase_b.png",
+        width: 2290,
+        height: 3438,
+        alt: "2020 collection — a pink jacquard hanbok with a chartreuse skirt and a wide green hat"
       }
     ],
-    /* 2021은 파일 번호 순서가 아닙니다. archive_2021_1이 15장 중 유일한 가로형이라
-       폭이 넉넉한 3번 자리(540px)에 두었습니다. 좁은 자리에 넣으면 혼자만 작아 보입니다.
-       가로 사진은 같은 폭이어도 높이가 절반이라 너비를 크게 잡아야 균형이 맞습니다. */
+    /* 2021은 네 장뿐입니다. 다섯 번째 자리는 `is_empty`로 감춥니다. */
     "2021": [
       {
-        src: "/asset/collection/archive_2021_2.png",
-        width: 3266,
-        height: 4898,
-        alt: "2021 collection — a black floral gown in front of a triptych of red mountain landscapes"
+        src: "asset/archive_2021_1.png",
+        width: 2293,
+        height: 3438,
+        alt: "2021 collection — a grey coat and black hat standing in a circle of light"
       },
       {
-        src: "/asset/collection/archive_2021_3.png",
-        width: 3347,
-        height: 4730,
-        alt: "2021 collection — a pink jeogori and chartreuse skirt seated at a carved palace lattice door"
+        src: "asset/archive_2021_2.png",
+        width: 2293,
+        height: 3438,
+        alt: "2021 collection — a lavender dress with an ivory jacket on the shore"
       },
       {
-        src: "/asset/collection/archive_2021_1.png",
-        width: 4898,
-        height: 3259,
-        alt: "2021 collection — two hanbok looks displayed in a hall beside the Korean flag"
+        src: "asset/archive_2021_3.png",
+        width: 2292,
+        height: 3438,
+        alt: "2021 collection — a red jacket over a quilted orange skirt in front of a weathered panel"
       },
       {
-        src: "/asset/collection/archive_2021_4.png",
-        width: 3347,
-        height: 4730,
-        alt: "2021 collection — a white robed look with a wide brimmed hat walking toward a palace hall"
-      },
-      {
-        src: "/asset/collection/archive_2021_5.png",
-        width: 3347,
-        height: 4730,
-        alt: "2021 collection — a pink hanbok on the stone steps of a palace pavilion"
+        /* showcase 왼쪽 위 기울어진 사진과 같은 파일입니다. */
+        src: "asset/showcase_a.png",
+        width: 2293,
+        height: 3438,
+        alt: "2021 collection — a green floral jeogori seated among summer greenery"
       }
     ]
   };
 
   /* hero 영상은 시안에 재생 컨트롤이 없습니다.
      모션 감소 설정에서는 자동 재생 대신 첫 화면에서 멈춰 있게 합니다. */
-  function initHeroVideo() {
-    var video = document.getElementById("collection_hero_video");
-
-    if (!video) {
-      return;
-    }
-
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      video.removeAttribute("autoplay");
-      video.autoplay = false;
-      video.pause();
-    }
-  }
-
-  /* "You Won't / Find This in / Ordinary Fashion" 세 줄을 단어 단위 span으로 나눕니다.
+  /* "Reimagining / Tradition for / Daily Life" 세 줄을 단어 단위 span으로 나눕니다.
      stagger는 요소 단위로만 걸리기 때문입니다.
 
      단어 span을 .showcase_quote_line에 바로 넣으면 안 됩니다.
@@ -539,7 +534,7 @@
   }
 
   /* 배치는 CSS 커스텀 속성으로만 넘깁니다. 실제로 어떤 속성에 쓰이는지는
-     collection.css의 .archive_photo 한 곳에 있습니다. */
+     col_chaikim.css의 .archive_photo 한 곳에 있습니다. */
   function applyLayout(figure, layout) {
     figure.style.setProperty("--archive_photo_left", layout.left + "px");
     figure.style.setProperty("--archive_photo_top", layout.top + "px");
@@ -548,14 +543,22 @@
     figure.style.setProperty("--archive_photo_layer", layout.layer);
   }
 
+  /* 연도마다 사진 수가 다릅니다(2019·2020은 5장, 2021은 4장).
+     남는 자리는 감춥니다. 그러지 않으면 이전 연도의 사진이 그 자리에 그대로 남습니다. */
   function applyYearPhotos(figures, year) {
     var photos = ARCHIVE_PHOTOS[year];
     var layouts = ARCHIVE_LAYOUTS[year];
 
     figures.forEach(function (figure, index) {
-      if (photos[index]) {
-        applyPhoto(figure, photos[index]);
+      var isEmpty = !photos[index];
+
+      figure.classList.toggle("is_empty", isEmpty);
+
+      if (isEmpty) {
+        return;
       }
+
+      applyPhoto(figure, photos[index]);
 
       if (layouts[index]) {
         applyLayout(figure, layouts[index]);
@@ -607,6 +610,13 @@
     function vectorAt(index) {
       var photo = getPhotos()[index];
       var layout = getLayouts()[index];
+
+      /* 그 해에 사진이 없는 자리입니다(2021은 네 장). figure가 감춰져 있어
+         화면에는 영향이 없지만, 트윈 대상에는 남아 있으므로 값을 0으로 돌려줍니다. */
+      if (!photo || !layout) {
+        return { x: 0, y: 0, spin: 0 };
+      }
+
       /* 카드 중심을 알려면 높이가 필요합니다. img의 naturalHeight는 lazy 로딩이라
          첫 계산 시점에 0일 수 있으므로 데이터의 원본 크기로 비율을 냅니다. */
       var unit = enterDirection(layout, getFrameHeight(), photo.height / photo.width);
@@ -993,7 +1003,6 @@
     });
   }
 
-  initHeroVideo();
   initShowcaseScroll();
   initArchive();
   initAsworn();

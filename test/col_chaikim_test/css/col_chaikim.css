@@ -1,0 +1,742 @@
+@charset "utf-8";
+
+/* =========================================================
+   Collection (Tchai Kim) — Figma node 1710:3971 "col_chaikim"
+   시안 캔버스 1920 × 9796.75. 이번 구현은 데스크톱(1920) 기준이며
+   반응형(360 / 768 / 1280)은 다음 단계입니다.
+
+   자매 페이지 test/col_chaikimyoungjin_test와 구조·class 이름이 같습니다.
+   두 시안이 같은 레이아웃을 공유하고 글과 사진만 다르기 때문입니다.
+   레이아웃 규칙을 고칠 일이 생기면 두 파일을 함께 봐야 합니다.
+   ========================================================= */
+
+:root {
+  /* 시안 전용 값. 공통 토큰에 없는 색만 여기서 정의합니다. */
+  --collection_dark: #282828;
+  --collection_quote: #dfdfdf;
+  --collection_tag_line: #e2ddd5;
+  --collection_hero_title: #262626;
+  --collection_section_title: #1e1e1e;
+}
+
+/* 시안 좌표(1920 기준)를 그대로 쓰는 절대배치 요소를 담는 고정 폭 프레임.
+   섹션 배경은 화면 폭에 맞춰 늘어나고 이 프레임만 1920px로 고정됩니다.
+   (shop_test의 .hero_section_frame과 같은 방식) */
+.collection_frame {
+  position: relative;
+  width: var(--layout_canvas);
+  /* margin-inline: auto는 프레임이 화면보다 넓어지면 왼쪽으로 붙습니다.
+     1920px보다 좁은 화면에서도 좌우가 똑같이 잘리도록 음수 여백으로 가운데 둡니다. */
+  margin-left: calc(50% - var(--layout_canvas) / 2);
+}
+
+/* =========================================================
+   hero — Fashion_show_video (1710:3972)
+   레이어 이름은 video지만 시안의 채우기는 정지 이미지입니다. img로 구현합니다.
+   ========================================================= */
+
+.collection_hero {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* 시안 1920 × 1182 */
+  height: 1182px;
+  background-color: var(--color_bg);
+}
+
+.collection_hero_image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.collection_hero_title {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  color: var(--collection_hero_title);
+  font-family: var(--font_display);
+  font-size: 64px;
+  font-weight: 600;
+  line-height: 1.13;
+  letter-spacing: -1.28px;
+  text-align: center;
+  white-space: nowrap;
+  transform: translate(-50%, -50%);
+}
+
+/* =========================================================
+   showcase — arc(1710:3976) + Rounded Background(1710:3978) 위의
+   떠 있는 사진과 문장
+   ========================================================= */
+
+.showcase {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  /* 시안 1182 → 4516.07 */
+  height: 3335px;
+  background-color: var(--color_bg);
+}
+
+.showcase_bg {
+  position: absolute;
+  inset: 0;
+}
+
+/* arc.svg는 1960 뷰박스 안에서 0~1920 구간만 그려집니다.
+   곡선이 화면 폭에 정확히 맞도록 1960/1920 만큼 넓혀 둡니다. */
+.showcase_arc {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 102.0834%;
+  max-width: none;
+  height: 738px;
+}
+
+.showcase_gradient {
+  position: absolute;
+  top: 738px;
+  left: 0;
+  width: 100%;
+  height: 2597px;
+  background-image: linear-gradient(
+    0deg,
+    #fffdf9 0%,
+    #b5b3b1 19.051%,
+    #7d7c7b 42.215%,
+    #5b5b5a 56.53%,
+    #414140 74.49%,
+    var(--collection_dark) 100%
+  );
+}
+
+.showcase_frame {
+  height: 3335px;
+}
+
+/* 시안의 사진 프레임은 모두 10px 안쪽 여백을 가집니다. */
+.showcase_photo {
+  position: absolute;
+  margin: 0;
+  padding: 10px;
+}
+
+.showcase_photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 기울어진 두 장은 프레임 가운데에서 회전합니다.
+   회전 전 사진 크기는 시안과 같은 269.223 × 386.768입니다.
+   가운데 정렬을 translate가 아닌 음수 margin으로 하는 이유:
+   스크롤 인터랙션에서 GSAP이 rotation만 건드리면 되도록 transform을 비워 둡니다. */
+.showcase_photo_tilt {
+  padding: 0;
+}
+
+.showcase_photo_tilt img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 269.223px;
+  height: 386.768px;
+  margin-top: -193.384px;
+  margin-left: -134.6115px;
+}
+
+.showcase_photo_a {
+  top: 247px;
+  left: 95px;
+  width: 378px;
+  height: 465px;
+}
+
+.showcase_photo_a img {
+  transform: rotate(-15.55deg);
+}
+
+.showcase_photo_b {
+  top: 315px;
+  left: 1451px;
+  width: 366px;
+  height: 458px;
+}
+
+.showcase_photo_b img {
+  transform: rotate(13.07deg);
+}
+
+.showcase_photo_c {
+  top: 1250px;
+  left: 605px;
+  width: 710px;
+  height: 959px;
+}
+
+.showcase_photo_d {
+  top: 1513px;
+  left: 1398px;
+  width: 307px;
+  height: 315px;
+}
+
+.showcase_photo_e {
+  top: 1685px;
+  left: 138px;
+  width: 347px;
+  height: 468px;
+}
+
+.showcase_photo_f {
+  top: 2143px;
+  left: 1391px;
+  width: 309px;
+  height: 441px;
+}
+
+.showcase_photo_g {
+  top: 2340px;
+  left: 371px;
+  width: 348px;
+  height: 468px;
+}
+
+/* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다.
+
+   세로 위치만 시안 값을 그대로 쓰지 않습니다. 시안의 712px는 화면 높이 1080을 전제한
+   값인데, 실제 브라우저는 주소창·탭·작업표시줄을 빼면 900~950px입니다.
+   showcase는 pin 구간에서 화면 높이만큼만 보이므로 712 + 311 = 1023이 잘려
+   "Ordinary Fashion" 줄이 화면 밖으로 나갑니다.
+   그래서 화면이 충분히 높으면 시안 값(712px)을 쓰고, 낮으면 세 줄 전체가 들어오도록
+   위로 올립니다. 360px = 블록 높이 311 + 아래 여백 49입니다. */
+.showcase_quote {
+  position: absolute;
+  top: min(712px, calc(100vh - 360px));
+  left: 760px;
+  width: 288.5px;
+  height: 311px;
+  margin: 0;
+}
+
+.showcase_quote_line {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 288.5px;
+  height: 82px;
+  color: var(--collection_quote);
+  font-family: var(--font_display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+  white-space: nowrap;
+}
+
+/* stagger를 걸려면 단어마다 개별 요소가 필요합니다. `col_chaikim.js`가 이 두 span을 만듭니다.
+   래퍼가 한 겹 필요한 이유: .showcase_quote_line이 flex 컨테이너라 단어 span을 직접 넣으면
+   사이의 공백 텍스트 노드가 무시돼 단어가 붙습니다. 래퍼 안은 일반 inline 흐름입니다.
+   단어는 inline 요소에 transform이 먹지 않아 inline-block으로 둡니다. */
+.showcase_quote_text {
+  white-space: nowrap;
+}
+
+.showcase_quote_word {
+  display: inline-block;
+}
+
+.showcase_quote_line1 {
+  top: 0;
+  left: 0;
+}
+
+.showcase_quote_line2 {
+  top: 117px;
+  left: 266px;
+}
+
+.showcase_quote_line3 {
+  top: 229px;
+  left: 0;
+}
+
+/* 스크롤 인터랙션 대상 — scrub 중 매 프레임 다시 그리므로 합성 레이어를 미리 잡아 둡니다.
+   transform-style: preserve-3d는 3D 자식이 없어 쓰지 않았고, 대신 backface-visibility로
+   회전·확대 중 가장자리 떨림을 막습니다. */
+.showcase_photo_tilt,
+.showcase_photo_c img,
+.showcase_photo_d img,
+.showcase_photo_e img,
+.showcase_photo_f img,
+.showcase_photo_g img,
+.showcase_quote_word,
+.archive_photo img {
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
+
+/* 상단 두 장만 blur까지 움직입니다. */
+.showcase_photo_tilt {
+  will-change: transform, opacity, filter;
+}
+
+/* =========================================================
+   archive — card(1710:3979)
+   ========================================================= */
+
+.archive {
+  position: relative;
+  width: 100%;
+  /* overflow: hidden을 쓰면 안쪽 sticky 컬럼이 죽습니다. clip은 스크롤 컨테이너를
+     만들지 않아 sticky를 유지한 채 넘치는 부분만 잘라 냅니다.
+     사진이 화면 밖에서 날아 들어오므로 좌우뿐 아니라 위아래도 잘라야 합니다.
+     x만 자르면 출발 위치의 카드가 위쪽 showcase / 아래쪽 asworn 섹션 위에 보입니다. */
+  overflow: clip;
+  background-color: var(--color_bg);
+}
+
+.archive_frame {
+  /* 시안은 2755px(4516.07 → 7271.07)입니다. 사진 5장이 한 화면 안에 모두 보여야 해서
+     실제 브라우저 화면 높이(1920 × 1080 데스크톱에서 900~950px)에 맞춰 줄였습니다.
+     카드는 y 40~826에 들어가고 나머지는 위아래 여백입니다.
+     이 값을 키우면 아래쪽 카드가 화면 밖으로 밀려납니다. */
+  height: 920px;
+}
+
+.archive_sticky {
+  width: 566px;
+  height: 100%;
+  padding: 130px 0 0 120px;
+}
+
+/* 레이어 이름이 sticky입니다. 사진이 지나가는 동안 연도 내비가 따라옵니다. */
+.archive_txt_area {
+  position: sticky;
+  top: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 50px;
+  align-items: flex-start;
+  width: 350px;
+}
+
+.archive_txt {
+  display: flex;
+  flex-direction: column;
+  gap: 61px;
+  align-items: flex-start;
+}
+
+.archive_title {
+  margin: 0;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+}
+
+.archive_year_list {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  align-items: flex-start;
+}
+
+/* inline-block 링크의 line box strut이 시안 간격(19px)을 벌리지 않도록 flex로 둡니다.
+   들여쓰기는 활성 연도가 바뀔 때 부드럽게 움직입니다. */
+.archive_year_item {
+  display: flex;
+  transition: padding-left var(--duration_base) var(--easing_base);
+}
+
+/* 사진을 바꾸는 2019 / 2020 / 2021은 button, 아직 연결할 데이터가 없는
+   나머지 연도는 기존 그대로 정적 a입니다. 두 요소가 같은 모양을 갖도록
+   한 선택자에 모아 둡니다. reset.css가 button의 배경·테두리·padding을 이미 지웁니다. */
+.archive_year_link {
+  display: inline-block;
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+  text-align: left;
+  /* 왼쪽 기준으로 커져야 목록의 세로선이 흔들리지 않습니다. */
+  transform-origin: left center;
+  transition:
+    opacity var(--duration_fast) var(--easing_base),
+    transform var(--duration_base) var(--easing_base),
+    font-size var(--duration_base) var(--easing_base);
+}
+
+.archive_year_link:hover {
+  opacity: 0.6;
+  transform: scale(1.12);
+}
+
+/* 선택된 연도는 시안대로 41px 들여쓰고 크게 표시합니다. */
+.archive_year_item.is_active {
+  padding-left: 41px;
+}
+
+.archive_year_item.is_active .archive_year_link {
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+/* 사진 5장은 서로 겹쳐 쌓입니다. 액자 없이 이미지 자체만 떠 있는 형태라
+   padding / background-color / 테두리 / 기본 그림자를 두지 않습니다.
+   높이도 지정하지 않습니다. 연도마다 원본 비율이 달라(세로 2:3, 가로 3:2 등)
+   높이를 고정하면 잘라내야 하기 때문입니다. 높이는 img가 원본 비율대로 정합니다.
+
+   위치·폭·기울기·쌓임 순서는 커스텀 속성 5개로 받습니다.
+   기본값은 아래 .archive_photo_1 ~ _5(= 2019 배치)에 있고,
+   연도를 바꾸면 col_chaikim.js가 같은 이름의 속성을 인라인으로 덮어씁니다. */
+.archive_photo {
+  position: absolute;
+  z-index: var(--archive_photo_layer);
+  top: var(--archive_photo_top);
+  left: var(--archive_photo_left);
+  width: var(--archive_photo_width);
+  margin: 0;
+  transform: rotate(var(--archive_photo_tilt));
+  /* z-index는 보간되지 않고 지연이 끝나는 순간 한 번에 바뀝니다.
+     복귀할 때만 지연을 주어야 카드가 작아지는 동안 맨 위에 남아 있습니다. */
+  transition:
+    transform var(--duration_base) var(--easing_base),
+    box-shadow var(--duration_base) var(--easing_base),
+    z-index 0s var(--duration_base);
+}
+
+.archive_photo img {
+  display: block;
+  width: 100%;
+  /* 원본 비율 유지. HTML의 width / height 속성이 로딩 전 높이를 잡아 줍니다. */
+  height: auto;
+}
+
+/* 올려 둔 사진이 쌓인 더미에서 빠져나와 전체가 보이도록 커지고 맨 앞으로 옵니다.
+   그림자는 올렸을 때만 생깁니다. 평소에도 두면 사진마다 사각 윤곽이 생겨
+   지우기로 한 액자와 같은 인상이 됩니다. */
+.archive_photo:hover {
+  z-index: 20;
+  box-shadow: 0 26px 60px rgba(40, 40, 40, 0.26);
+  transform: rotate(var(--archive_photo_tilt)) scale(1.08);
+  transition:
+    transform var(--duration_base) var(--easing_base),
+    box-shadow var(--duration_base) var(--easing_base),
+    z-index 0s;
+}
+
+/* JS가 꺼져 있을 때 보이는 기본 배치이자 2019 배치입니다(시안의 활성 연도).
+   `col_chaikim.js`의 ARCHIVE_LAYOUTS["2019"]와 같은 값이어야 합니다.
+   좌표는 1920 프레임 기준이고, 왼쪽 sticky 글 영역이 x 120~470을 씁니다.
+   시안의 다섯 장이 놓인 순서(위 가운데 → 오른쪽 큰 것 → 왼쪽 → 오른쪽 아래 → 아래 가운데)를
+   유지하되, 세로로 2310px에 걸쳐 있는 배치를 프레임 높이(920px)에 맞게 압축했습니다. */
+.archive_photo_1 {
+  --archive_photo_left: 600px;
+  --archive_photo_top: 40px;
+  --archive_photo_width: 300px;
+  --archive_photo_tilt: -3.2deg;
+  --archive_photo_layer: 3;
+}
+
+.archive_photo_2 {
+  --archive_photo_left: 1180px;
+  --archive_photo_top: 120px;
+  --archive_photo_width: 400px;
+  --archive_photo_tilt: 2.6deg;
+  --archive_photo_layer: 1;
+}
+
+.archive_photo_3 {
+  --archive_photo_left: 520px;
+  --archive_photo_top: 300px;
+  --archive_photo_width: 330px;
+  --archive_photo_tilt: -5.4deg;
+  --archive_photo_layer: 4;
+}
+
+.archive_photo_4 {
+  --archive_photo_left: 1500px;
+  --archive_photo_top: 470px;
+  --archive_photo_width: 230px;
+  --archive_photo_tilt: 6.8deg;
+  --archive_photo_layer: 5;
+}
+
+.archive_photo_5 {
+  --archive_photo_left: 800px;
+  --archive_photo_top: 420px;
+  --archive_photo_width: 320px;
+  --archive_photo_tilt: -1.8deg;
+  --archive_photo_layer: 2;
+}
+
+/* 연도마다 사진 수가 다릅니다(2019·2020은 5장, 2021은 4장).
+   남는 자리는 col_chaikim.js가 이 class로 감춥니다. */
+.archive_photo.is_empty {
+  display: none;
+}
+
+/* =========================================================
+   banner_crosslink_link — 시안 공용 링크 컴포넌트
+   ========================================================= */
+
+.banner_crosslink_link {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  transition: opacity var(--duration_fast) var(--easing_base);
+}
+
+.banner_crosslink_link:hover {
+  opacity: 0.6;
+}
+
+.banner_crosslink_text {
+  font-family: var(--font_body);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+}
+
+.banner_crosslink_icon {
+  width: 11.25px;
+  height: 9.375px;
+}
+
+/* archive의 링크는 시안에서 20px 아이콘 슬롯 + 16px 본문입니다. */
+.archive_more {
+  height: 27px;
+}
+
+.archive_more .banner_crosslink_text {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.63;
+  letter-spacing: normal;
+}
+
+.archive_more .banner_crosslink_icon {
+  width: 15px;
+  height: 12.5px;
+}
+
+/* =========================================================
+   as worn — colaboration(1710:4009)
+   ========================================================= */
+
+.asworn {
+  width: 100%;
+  padding: 250px 0;
+  background-color: var(--color_bg);
+}
+
+.asworn_head {
+  display: flex;
+  flex-direction: column;
+  gap: 49px;
+  align-items: center;
+  width: 894px;
+  margin: 0 auto 118px;
+}
+
+.asworn_title {
+  margin: 0;
+  color: var(--collection_section_title);
+  font-family: var(--font_display);
+  font-size: 48px;
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+  text-align: center;
+}
+
+.asworn_tags {
+  display: flex;
+  gap: 27px;
+  align-items: center;
+}
+
+.asworn_tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border: 1px solid var(--collection_tag_line);
+  border-radius: 35px;
+  background-color: #ffffff;
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 1.28px;
+  white-space: nowrap;
+  transition: border-color var(--duration_fast) var(--easing_base),
+              color var(--duration_fast) var(--easing_base);
+}
+
+.asworn_tag:hover:not(:disabled),
+.asworn_tag:focus-visible {
+  border-color: var(--color_point);
+  color: var(--color_point);
+}
+
+/* 누른 태그의 카드가 가운데에 있는 동안 그 태그를 표시합니다. */
+.asworn_tag.is_active {
+  border-color: var(--color_point);
+  background-color: var(--color_point);
+  color: #ffffff;
+}
+
+/* 연결할 카드가 아직 없는 태그. 색만으로 구분하지 않도록 disabled 속성도 함께 씁니다. */
+.asworn_tag:disabled {
+  border-style: dashed;
+  opacity: 0.45;
+  cursor: default;
+}
+
+/* 시안의 네 카드 폭 합계(3327px)가 캔버스(1920px)보다 넓습니다.
+   스크롤바 없이 읽히도록 카드가 스스로 왼쪽으로 흐르는 띠로 둡니다(js/col_chaikim.js).
+   overflow: hidden이 아니라 overflow-x: clip입니다. hidden은 스크롤 컨테이너를 만들어
+   가로 스크롤바가 다시 생기고, hover 확대분이 위아래로도 잘립니다. */
+.asworn_track {
+  width: 100%;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+
+.asworn_list {
+  position: relative;
+  display: flex;
+  gap: 34px;
+  align-items: center;
+  width: max-content;
+}
+
+.asworn_item {
+  display: flex;
+  align-items: flex-end;
+  transform-origin: center center;
+  transition: transform var(--duration_base) var(--easing_base);
+}
+
+/* 흐름은 JS가 멈추고, 확대는 CSS가 합니다. */
+.asworn_item:hover {
+  transform: scale(1.04);
+}
+
+.asworn_item_1 {
+  gap: 24px;
+}
+
+.asworn_item_2 {
+  gap: 48px;
+}
+
+.asworn_item_3,
+.asworn_item_4 {
+  gap: 0;
+}
+
+.asworn_figure {
+  flex-shrink: 0;
+  width: 441px;
+  height: 681px;
+  margin: 0;
+}
+
+.asworn_item_2 .asworn_figure {
+  width: 442px;
+}
+
+/* 세 번째·네 번째 카드는 시안에서 사진 둘레에 20px 여백이 있습니다. */
+.asworn_item_3 .asworn_figure,
+.asworn_item_4 .asworn_figure {
+  width: 481px;
+  height: 721px;
+  padding: 20px;
+}
+
+.asworn_figure img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.asworn_body {
+  flex-shrink: 0;
+  width: 317px;
+}
+
+.asworn_item_3 .asworn_body,
+.asworn_item_4 .asworn_body {
+  width: 337px;
+  padding: 10px;
+}
+
+.asworn_name {
+  margin: 0;
+  padding: 10px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.asworn_item_3 .asworn_name,
+.asworn_item_4 .asworn_name {
+  padding: 10px 0;
+}
+
+.asworn_desc {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+  align-items: flex-start;
+  padding: 10px;
+}
+
+.asworn_item_2 .asworn_desc {
+  gap: 21px;
+}
+
+.asworn_item_3 .asworn_desc,
+.asworn_item_4 .asworn_desc {
+  gap: 15px;
+  padding: 0;
+}
+
+.asworn_text {
+  width: 289px;
+  margin: 0;
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.asworn_item_3 .asworn_text,
+.asworn_item_4 .asworn_text {
+  width: 341px;
+  padding: 10px 0;
+}
