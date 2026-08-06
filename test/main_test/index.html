@@ -22,42 +22,9 @@
 
 <a class="skip_link" href="#main_content">Skip to content</a>
 
-<header class="header" id="header">
-  <a class="header_logo" href="index.html">
-    <img class="header_logo_img" src="assets/images/header_logo_02.png" alt="Tchai Kim">
-  </a>
-
-  <button class="header_toggle" type="button" id="header_toggle" aria-expanded="false" aria-controls="header_inner">
-    <span class="header_toggle_bar" aria-hidden="true"></span>
-    <span class="a11y_hidden header_toggle_label">Open menu</span>
-  </button>
-
-  <div class="header_inner" id="header_inner">
-    <nav class="header_nav" aria-label="Main">
-      <ul class="header_menu">
-        <li class="header_menu_item"><a class="header_menu_link" href="#">COLLECTION</a></li>
-        <li class="header_menu_item"><a class="header_menu_link" href="#">SHOP</a></li>
-        <li class="header_menu_item"><a class="header_menu_link" href="#">BESPOKE</a></li>
-        <li class="header_menu_item"><a class="header_menu_link" href="#">BRAND</a></li>
-      </ul>
-    </nav>
-
-    <div class="header_right">
-      <div class="header_currency">
-        <label class="a11y_hidden" for="header_currency_select">Currency</label>
-        <select class="header_currency_select" id="header_currency_select">
-          <option value="usd" selected>USD</option>
-        </select>
-        <img class="header_currency_icon" src="assets/icons/caret_down.svg" alt="" aria-hidden="true" width="13" height="8">
-      </div>
-
-      <a class="header_cart" href="#">
-        <img class="header_cart_icon" src="assets/icons/shopping_bag.svg" alt="" aria-hidden="true" width="21" height="18">
-        <span class="a11y_hidden">Shopping bag</span>
-      </a>
-    </div>
-  </div>
-</header>
+<div class="common_header_slot" data-component="/common/components/header.html">
+  <span class="a11y_hidden">Loading header</span>
+</div>
 
 <main class="main" id="main_content">
 
@@ -84,19 +51,23 @@
 
   <!-- model -->
   <section class="model" aria-label="Heritage Redefined, Effortlessly Worn">
-    <figure class="model_figure">
-      <img class="model_img" src="assets/main/cheolikmodel.png" alt="A model wearing a modern cheollik coat, arms at rest">
-    </figure>
-    <div class="model_text">
-      <h2 class="model_title">Heritage Redefined,<br>Effortlessly Worn.</h2>
-      <p class="model_desc">From flat architectural forms to a living modern expression.</p>
+    <div class="common_container model_container">
+      <figure class="model_figure">
+        <img class="model_img" src="assets/main/cheolikmodel.png" alt="A model wearing a modern cheollik coat, arms at rest">
+      </figure>
+      <div class="model_text">
+        <h2 class="model_title">Heritage Redefined,<br>Effortlessly Worn.</h2>
+        <p class="model_desc">From flat architectural forms to a living modern expression.</p>
+      </div>
     </div>
   </section>
 
   <!-- intro (brand_story text) -->
   <section class="intro">
-    <h2 class="intro_title">One house, two ways of wearing hanbok</h2>
-    <p class="intro_desc">Tchai Kim is ready-to-wear, Tchai Kim Youngjin is bespoke — two expressions of the same aesthetic</p>
+    <div class="common_container intro_container">
+      <h2 class="intro_title">One house, two ways of wearing hanbok</h2>
+      <p class="intro_desc">Tchai Kim is ready-to-wear, Tchai Kim Youngjin is bespoke — two expressions of the same aesthetic</p>
+    </div>
   </section>
 
   <!-- banner (brand_story img) -->
@@ -105,46 +76,70 @@
          alt="A man in a hanbok coat walking past a large ink landscape painting in a gallery">
   </section>
 
-  <!-- detail_collar -->
+  <!-- detail — collar/sleeve/body/skirt를 사진 한 장 위 4개 호버 영역으로 통합 -->
   <section class="detail" aria-labelledby="detail_title">
-    <header class="detail_head">
+    <header class="detail_head common_container">
       <h2 class="detail_title" id="detail_title">Traditional motifs,<br>reimagined</h2>
       <p class="detail_subtitle">A Joseon-era silhouette, reinterpreted into modern fashion through Tchai Kim's own hand.</p>
     </header>
 
     <div class="detail_stage">
-      <figure class="detail_figure">
-        <img class="detail_img" src="assets/main/detail/img.png" alt="A Joseon-era cheollik robe laid flat with its sleeves spread wide">
-      </figure>
-      <div class="detail_text">
+      <img class="detail_img" src="assets/main/detail/img.png" alt="A Joseon-era cheollik robe laid flat with its sleeves spread wide">
+
+      <div class="detail_hotspot" data-part="collar" tabindex="0" aria-label="Collar detail"></div>
+      <div class="detail_hotspot" data-part="sleeve" tabindex="0" aria-label="Sleeve detail"></div>
+      <div class="detail_hotspot" data-part="body" tabindex="0" aria-label="Body detail"></div>
+      <div class="detail_hotspot" data-part="skirt" tabindex="0" aria-label="Skirt detail"></div>
+
+      <div class="detail_text" data-part="collar">
         <h3 class="detail_part_title">Collar</h3>
         <p class="detail_part_lead">Balanced Proportions</p>
         <p class="detail_part_desc">Refined to frame the silhouette with quiet elegance.</p>
       </div>
-      <span class="detail_zoom"><img src="assets/main/detail/collar/zoom.png" alt="A close-up of the collar"></span>
+      <span class="detail_zoom" data-part="collar"><img src="assets/main/detail/collar/zoom.png" alt="A close-up of the collar"></span>
+
+      <div class="detail_text" data-part="sleeve">
+        <h3 class="detail_part_title">Sleeve</h3>
+        <p class="detail_part_lead">Soft Curves</p>
+        <p class="detail_part_desc">Inspired by the traditional baerae, redesigned for natural movement.</p>
+      </div>
+      <span class="detail_zoom" data-part="sleeve"><img src="assets/main/detail/sleeve/zoom.png" alt="A close-up of the sleeve"></span>
+
+      <div class="detail_text" data-part="body">
+        <h3 class="detail_part_title">Body</h3>
+        <p class="detail_part_lead">Contemporary Structure</p>
+        <p class="detail_part_desc">A modern silhouette rooted in traditional form.</p>
+      </div>
+      <span class="detail_zoom" data-part="body"><img src="assets/main/detail/body/zoom.png" alt="A close-up of the body"></span>
+
+      <div class="detail_text" data-part="skirt">
+        <h3 class="detail_part_title">Skirt</h3>
+        <p class="detail_part_lead">Flowing Volume</p>
+        <p class="detail_part_desc">Lightweight volume designed to move effortlessly.</p>
+      </div>
+      <span class="detail_zoom" data-part="skirt"><img src="assets/main/detail/skirt/zoom.png" alt="A close-up of the skirt"></span>
     </div>
   </section>
 
-  <!-- brand_01 -->
-  <section class="brand_word">
-    <p class="brand_word_text">TCHAI</p>
-  </section>
+  <!-- brand_01~04 — 스크롤에 따라 글자가 바뀌는 시퀀스 (js/main.js에서 GSAP로 고정+크로스페이드) -->
+  <div class="brand_word_pin" id="brand_word_pin">
+    <section class="brand_word is_active" data-step="0">
+      <p class="brand_word_text">TCHAI</p>
+    </section>
 
-  <!-- brand_02 -->
-  <section class="brand_word">
-    <p class="brand_word_text">TCHAI Kim</p>
-  </section>
+    <section class="brand_word" data-step="1">
+      <p class="brand_word_text">TCHAI Kim</p>
+    </section>
 
-  <!-- brand_03 -->
-  <section class="brand_word">
-    <p class="brand_word_text">TCHAI Kim Young Jin</p>
-  </section>
+    <section class="brand_word" data-step="2">
+      <p class="brand_word_text">TCHAI Kim Young Jin</p>
+    </section>
 
-  <!-- brand_04 -->
-  <section class="brand_word brand_word_split">
-    <p class="brand_word_text">TCHAI Kim</p>
-    <p class="brand_word_text">Young Jin</p>
-  </section>
+    <section class="brand_word brand_word_split" data-step="3">
+      <p class="brand_word_text">TCHAI Kim</p>
+      <p class="brand_word_text">Young Jin</p>
+    </section>
+  </div>
 
   <!-- brand_05 -->
   <section class="brand_collage">
@@ -186,18 +181,14 @@
     </p>
   </section>
 
-  <!-- kyj_brand_story (single image) -->
-  <section class="kyj_story">
-    <figure class="kyj_story_card">
-      <img src="assets/main/kyj_brand_story/img1-2.png" alt="A close detail of a Tchai Kim Youngjin bespoke hanbok">
-    </figure>
-  </section>
-
-  <!-- kyj_brand_story (three images) -->
-  <section class="kyj_story kyj_story_triple">
-    <figure class="kyj_story_card"><img src="assets/main/kyj_brand_story/img1-1.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-    <figure class="kyj_story_card"><img src="assets/main/kyj_brand_story/img1-2.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-    <figure class="kyj_story_card"><img src="assets/main/kyj_brand_story/img1-3.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+  <!-- kyj_brand_story — 1장 → 3장 → 확대 → 페이드아웃(js/main.js) -->
+  <section class="kyj_sequence" aria-label="A Tchai Kim Youngjin story in three details">
+    <div class="kyj_sequence_stage">
+      <figure class="kyj_story_card kyj_story_solo"><img src="assets/main/kyj_brand_story/img1-2.png" alt="A close detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+      <figure class="kyj_story_card kyj_story_1"><img src="assets/main/kyj_brand_story/img1-1.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+      <figure class="kyj_story_card kyj_story_2"><img src="assets/main/kyj_brand_story/img1-2.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+      <figure class="kyj_story_card kyj_story_3"><img src="assets/main/kyj_brand_story/img1-3.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+    </div>
   </section>
 
   <!-- bespoke -->
@@ -205,19 +196,21 @@
     <div class="promo_media">
       <video class="promo_media_video" src="assets/main/bespoke/bespokevod.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
     </div>
-    <div class="promo promo_bespoke">
-      <div class="promo_text">
-        <h2 class="promo_title" id="promo_bespoke_title">Tchai Kim Youngjin</h2>
-        <div class="promo_lead_group">
-          <p class="promo_lead">Fine silk, finished by hand</p>
-          <p class="promo_desc">See the fabric up close and book a one-to-one fitting consultation.</p>
+    <div class="common_container">
+      <div class="promo promo_bespoke">
+        <div class="promo_text">
+          <h2 class="promo_title" id="promo_bespoke_title">Tchai Kim Youngjin</h2>
+          <div class="promo_lead_group">
+            <p class="promo_lead">Fine silk, finished by hand</p>
+            <p class="promo_desc">See the fabric up close and book a one-to-one fitting consultation.</p>
+          </div>
+          <a class="promo_link" href="#">Visit Bespoke →</a>
         </div>
-        <a class="promo_link" href="#">Visit Bespoke →</a>
+        <figure class="promo_figure">
+          <img class="promo_img" src="assets/main/bespoke/younjinimg.png"
+               alt="Hand-painted silk hanbok pieces laid out in the atelier">
+        </figure>
       </div>
-      <figure class="promo_figure">
-        <img class="promo_img" src="assets/main/bespoke/younjinimg.png"
-             alt="Hand-painted silk hanbok pieces laid out in the atelier">
-      </figure>
     </div>
   </section>
 
@@ -251,18 +244,14 @@
     </div>
   </section>
 
-  <!-- kyj_brand_story (single image, repeat) -->
-  <section class="kyj_story">
-    <figure class="kyj_story_card">
-      <img src="assets/main/kyj_brand_story/img2-2.png" alt="A close detail of a Tchai Kim Youngjin bespoke hanbok">
-    </figure>
-  </section>
-
-  <!-- kyj_brand_story (three images, repeat) -->
-  <section class="kyj_story kyj_story_triple">
-    <figure class="kyj_story_card"><img src="assets/main/kyj_brand_story/img2-1.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-    <figure class="kyj_story_card"><img src="assets/main/kyj_brand_story/img2-2.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-    <figure class="kyj_story_card"><img src="assets/main/kyj_brand_story/img2-3.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+  <!-- kyj_brand_story (repeat) — 1장 → 3장 → 확대 → 페이드아웃(js/main.js) -->
+  <section class="kyj_sequence" aria-label="A Tchai Kim Youngjin story in three details">
+    <div class="kyj_sequence_stage">
+      <figure class="kyj_story_card kyj_story_solo"><img src="assets/main/kyj_brand_story/img2-2.png" alt="A close detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+      <figure class="kyj_story_card kyj_story_1"><img src="assets/main/kyj_brand_story/img2-1.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+      <figure class="kyj_story_card kyj_story_2"><img src="assets/main/kyj_brand_story/img2-2.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+      <figure class="kyj_story_card kyj_story_3"><img src="assets/main/kyj_brand_story/img2-3.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
+    </div>
   </section>
 
   <!-- shop -->
@@ -270,54 +259,58 @@
     <div class="promo_media">
       <video class="promo_media_video" src="assets/main/shop/shopbanner.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
     </div>
-    <div class="promo promo_shop">
-      <figure class="promo_figure">
-        <img class="promo_img" src="assets/main/shop/img.png"
-             alt="A model in a Tchai Kim vest and skirt seated by a window">
-      </figure>
-      <div class="promo_text">
-        <h2 class="promo_title" id="promo_shop_title">Tchai Kim</h2>
-        <div class="promo_lead_group">
-          <p class="promo_lead">Hanbok, for everyday</p>
-          <p class="promo_desc">A lookbook of cheollik dresses and vests made for daily wear.</p>
+    <div class="common_container">
+      <div class="promo promo_shop">
+        <figure class="promo_figure">
+          <img class="promo_img" src="assets/main/shop/img.png"
+               alt="A model in a Tchai Kim vest and skirt seated by a window">
+        </figure>
+        <div class="promo_text">
+          <h2 class="promo_title" id="promo_shop_title">Tchai Kim</h2>
+          <div class="promo_lead_group">
+            <p class="promo_lead">Hanbok, for everyday</p>
+            <p class="promo_desc">A lookbook of cheollik dresses and vests made for daily wear.</p>
+          </div>
+          <a class="promo_link" href="#">Visit Shop →</a>
         </div>
-        <a class="promo_link" href="#">Visit Shop →</a>
       </div>
-    </div>
 
-    <ul class="shop_products">
-      <li class="shop_product is_dim"><img src="assets/main/shop/shop_look_1.png" alt="A Tchai Kim look, faded"></li>
-      <li class="shop_product"><img src="assets/main/shop/shop_look2.png" alt="A blue silk ruffled vest dress"></li>
-      <li class="shop_product"><img src="assets/main/shop/shop_look3.png" alt="A taupe long coat"></li>
-      <li class="shop_product"><img src="assets/main/shop/shop_look4.png" alt="A pair of olive green wide trousers"></li>
-      <li class="shop_product"><img src="assets/main/shop/shop_look5.png" alt="A white eyelet cotton dress"></li>
-    </ul>
+      <ul class="shop_products">
+        <li class="shop_product is_dim"><img src="assets/main/shop/shop_look_1.png" alt="A Tchai Kim look, faded"></li>
+        <li class="shop_product"><img src="assets/main/shop/shop_look2.png" alt="A blue silk ruffled vest dress"></li>
+        <li class="shop_product"><img src="assets/main/shop/shop_look3.png" alt="A taupe long coat"></li>
+        <li class="shop_product"><img src="assets/main/shop/shop_look4.png" alt="A pair of olive green wide trousers"></li>
+        <li class="shop_product"><img src="assets/main/shop/shop_look5.png" alt="A white eyelet cotton dress"></li>
+      </ul>
+    </div>
   </section>
 
   <!-- collection -->
   <section class="collection" aria-labelledby="collection_title">
-    <h2 class="collection_title" id="collection_title">Two lines.<br>One extraordinary aesthetic.</h2>
+    <div class="common_container collection_container">
+      <h2 class="collection_title" id="collection_title">Two lines.<br>One extraordinary aesthetic.</h2>
 
-    <ul class="collection_row">
-      <li class="collection_item is_size_lg"><img src="assets/main/collction/collction1.png" alt="A model in a red winter hanbok coat, back view"></li>
-      <li class="collection_item is_size_md is_flip"><img src="assets/main/collction/collction2.png" alt="Five models in white hanbok-inspired gowns"></li>
-      <li class="collection_item is_size_bts"><img src="assets/main/collction/collction3.png" alt="Seven members of a band in blue and grey hanbok"></li>
-      <li class="collection_item is_size_md"><img src="assets/main/collction/collction4.png" alt="A model in a floral print hanbok gown with a tiara"></li>
-      <li class="collection_item is_size_lg is_flip"><img src="assets/main/collction/collction5.png" alt="A model draped in a pink patterned shawl"></li>
-    </ul>
+      <ul class="collection_row">
+        <li class="collection_item is_size_lg"><img src="assets/main/collction/collction1.png" alt="A model in a red winter hanbok coat, back view"></li>
+        <li class="collection_item is_size_md is_flip"><img src="assets/main/collction/collction2.png" alt="Five models in white hanbok-inspired gowns"></li>
+        <li class="collection_item is_size_bts"><img src="assets/main/collction/collction3.png" alt="Seven members of a band in blue and grey hanbok"></li>
+        <li class="collection_item is_size_md"><img src="assets/main/collction/collction4.png" alt="A model in a floral print hanbok gown with a tiara"></li>
+        <li class="collection_item is_size_lg is_flip"><img src="assets/main/collction/collction5.png" alt="A model draped in a pink patterned shawl"></li>
+      </ul>
 
-    <div class="collection_bottom">
-      <p class="collection_desc">From everyday wearable pieces to high-fashion couture.<br>Journey through the full spectrum of our signature creations</p>
-      <div class="collection_links">
-        <a class="collection_link" href="#">View Tchai Kim Youngjin Collection →</a>
-        <a class="collection_link" href="#">View Tchai Kim Collection →</a>
+      <div class="collection_bottom">
+        <p class="collection_desc">From everyday wearable pieces to high-fashion couture.<br>Journey through the full spectrum of our signature creations</p>
+        <div class="collection_links">
+          <a class="collection_link" href="#">View Tchai Kim Youngjin Collection →</a>
+          <a class="collection_link" href="#">View Tchai Kim Collection →</a>
+        </div>
       </div>
     </div>
   </section>
 
   <!-- 클로징 -->
   <section class="closing" aria-labelledby="closing_title">
-    <div class="closing_inner">
+    <div class="common_container closing_inner">
       <div class="closing_head">
         <h2 class="closing_title" id="closing_title">Find your difference.</h2>
         <p class="closing_desc">Every difference makes the finest cloth</p>
@@ -335,45 +328,10 @@
   <span class="a11y_hidden">Loading footer</span>
 </div>
 
-    <img class="footer_wordmark" src="assets/images/footer_logo%202.png" alt="" aria-hidden="true">
-
-    <div class="footer_bottom">
-      <ul class="footer_policy">
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Terms &amp;<br>Conditions</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Privacy<br>Policy</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Returns &amp;<br>Exchange</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-        <li class="footer_policy_item">
-          <a class="footer_policy_link" href="#">
-            <span class="footer_policy_text">Shipping &amp;<br>Delivery</span>
-            <img src="assets/icons/arrow_up_right.svg" alt="" aria-hidden="true" width="18" height="18">
-          </a>
-        </li>
-      </ul>
-
-      <p class="footer_copyright">© 2025 Tchai Kimyoungjin. All rights reserved.</p>
-    </div>
-
-  </div>
-</footer>
-
+<script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-<script src="js/common.js"></script>
+<script src="../../common/js/common.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
