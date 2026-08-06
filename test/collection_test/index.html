@@ -81,17 +81,17 @@
         </figure>
 
         <figure class="showcase_photo showcase_photo_e">
-          <img src="/asset/collection/99d533b96346fc812ec2f0cda9e18fc6.jpg"
+          <img src="/asset/collection/archive_2019_3.png"
             alt="A model in a cream jacket and dotted full skirt">
         </figure>
 
         <figure class="showcase_photo showcase_photo_f">
-          <img src="/asset/collection/Gemini_Generated_Image_irh7bgirh7bgirh7.png"
+          <img src="/asset/collection/archive_2020_2.png"
             alt="A model in an embroidered grey dress holding a vase of dried flowers">
         </figure>
 
         <figure class="showcase_photo showcase_photo_g">
-          <img src="/asset/collection/Image.png" alt="An ink-washed landscape painted on hanbok silk">
+          <img src="/asset/collection/koreaimg.jpg" alt="An ink-washed landscape painted on hanbok silk">
         </figure>
       </div>
     </section>
@@ -170,16 +170,18 @@
     <section class="asworn" id="as-worn" aria-labelledby="asworn_title">
       <div class="asworn_head">
         <h2 class="asworn_title" id="asworn_title">As worn</h2>
+        <!-- 태그는 카드로 이동하는 동작이라 button입니다.
+             연결할 카드가 있는 앞의 셋만 누를 수 있고, 나머지 둘은 disabled입니다. -->
         <ul class="asworn_tags">
-          <li><a class="asworn_tag" href="#">#BTS</a></li>
-          <li><a class="asworn_tag" href="#">#NewJeans</a></li>
-          <li><a class="asworn_tag" href="#">#TildaSwinton</a></li>
-          <li><a class="asworn_tag" href="#">#Love, Lies</a></li>
-          <li><a class="asworn_tag" href="#">#Fashion Show</a></li>
+          <li><button class="asworn_tag" type="button" data-asworn-target="0">#BTS</button></li>
+          <li><button class="asworn_tag" type="button" data-asworn-target="1">#NewJeans</button></li>
+          <li><button class="asworn_tag" type="button" data-asworn-target="2">#TildaSwinton</button></li>
+          <li><button class="asworn_tag" type="button" disabled>#Love, Lies</button></li>
+          <li><button class="asworn_tag" type="button" disabled>#Fashion Show</button></li>
         </ul>
       </div>
 
-      <div class="asworn_track" tabindex="0" role="group" aria-labelledby="asworn_title">
+      <div class="asworn_track">
         <ul class="asworn_list">
           <li class="asworn_item asworn_item_1">
             <figure class="asworn_figure">

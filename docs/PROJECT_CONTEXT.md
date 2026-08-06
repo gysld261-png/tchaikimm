@@ -33,8 +33,8 @@
 ### Collection에서 시안과 다르게 판단한 것
 
 - **As worn 가로 스크롤**: 시안의 카드 3개 폭 합계가 2475px로 캔버스(1920px)보다 넓어
-  세 번째 카드 설명이 잘립니다. 시안 좌표를 그대로 두되 `.asworn_track`에 `overflow-x: auto`를 걸어
-  읽을 수 있게 했습니다. 처음 보이는 화면은 시안과 같습니다.
+  세 번째 카드 설명이 잘립니다. 처음에는 `.asworn_track`에 `overflow-x: auto`를 걸었지만,
+  2026-08-06 아래 "As worn 흐르는 띠"로 바뀌었습니다(스크롤바 없음).
 - **archive 왼쪽 컬럼 sticky**: Figma 레이어 이름이 `sticky`이고 높이가 내용(497px)보다 훨씬 큰
   2505px입니다. 의도로 보고 `position: sticky; top: 160px`으로 구현했습니다.
 - **연도 내비 / 태그 동작**: 2019 외 연도와 태그 5개는 연결할 데이터가 없어 `href="#"` 정적 링크입니다.
@@ -174,6 +174,56 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
 
 단어를 더 또렷하게 하나씩 끊고 싶으면 `WORD_STAGGER`를 올리고,
 `EXIT_START`도 같이 올려 문장이 다 뜬 뒤에 사진이 물러나게 하면 됩니다.
+
+### Collection As worn 흐르는 띠 (2026-08-06)
+
+가로 스크롤바를 없애고 카드 3장이 스스로 왼쪽으로 흐르는 띠로 바꿨습니다.
+`js/collection.js`의 `initAsworn()` 한 함수에 들어 있습니다.
+
+- **스크롤바 제거**: `.asworn_track`이 `overflow-x: auto` → **`overflow-x: clip` + `overflow-y: visible`**입니다.
+  `hidden`을 쓰면 안 됩니다. 스크롤 컨테이너가 다시 만들어져 스크롤바가 살아나고,
+  hover 확대분(1.04배 = 위아래 약 14px)이 잘립니다. `clip`은 `visible`과 짝지을 수 있는 유일한 값입니다.
+  HTML에서 `.asworn_track`의 `tabindex="0"` / `role="group"`을 뺐습니다 — 더 이상 스크롤 영역이 아닙니다.
+- **무한 흐름**: 카드 3장 한 벌을 복제해 붙이고, 이동량을 **한 벌 폭(period)으로 나눈 나머지**만큼
+  `translate3d`로 밉니다. period는 계산이 아니라 **첫 복제본의 `offsetLeft`를 읽어** 정합니다
+  (그래서 `.asworn_list`에 `position: relative`가 필요합니다). 1920 기준 2509px입니다.
+  화면 폭 + period를 채울 때까지 복제하므로 넓은 화면에서도 빈자리가 생기지 않습니다(창 크기 변경 시 다시 채움).
+  복제본에는 `aria-hidden="true"`, 안쪽 링크에는 `tabindex="-1"`을 붙여 같은 링크가 여러 번 잡히지 않게 했습니다.
+- **hover**: 띠 위에 마우스가 있으면 흐름이 멈추고(JS), 그 카드만 `scale(1.04)`로 커집니다(CSS).
+  키보드로 카드 안 링크에 들어와도(`focusin`) 멈춥니다. 멈춘 지점에서 그대로 이어집니다.
+- **태그로 카드 부르기**: 태그 5개를 `<a href="#">` → `<button>`으로 바꿨습니다(이동이 아니라 동작입니다).
+  카드가 있는 앞의 셋만 `data-asworn-target="0~2"`를 갖고, `#Love, Lies` / `#Fashion Show`는 `disabled`입니다
+  (색만이 아니라 점선 테두리 + `disabled` 속성으로도 구분됩니다).
+  누르면 그 카드가 트랙 가운데로 1.1초에 이동하고(`power3.out`), **2.4초 멈췄다가 다시 흐릅니다.**
+  띠가 순환하므로 같은 카드가 앞뒤 양쪽에 있습니다. 이동 거리를 period로 감아 ±period/2 안으로 줄여
+  가까운 쪽으로 돕니다(되감기는 느낌이 없습니다).
+- **한 프레임 이동량을 0.1초로 자릅니다.** 다른 탭에 갔다 오면 프레임 간격이 몇 초씩 벌어져
+  띠가 한 번에 몇백 px 튑니다(실제로 이 세션에서 7.7초 = 323px 점프를 봤습니다).
+- **모션 감소 설정**에서는 흐르지 않고, 태그를 누르면 그 카드로 바로 이동합니다.
+  GSAP이 없으면 `requestAnimationFrame`으로 흐르고 태그 이동은 즉시 처리합니다.
+
+조절값은 `js/collection.js` 상단에 있습니다: `ASWORN_SPEED`(42px/초),
+`ASWORN_FOCUS_DURATION`(1.1초), `ASWORN_HOLD`(2.4초).
+
+#### 검증 결과 (1920 × 1000, localhost:5611)
+
+- 카드 6장(원본 3 + 복제 3), period 2509px, 리스트 폭 5023px ≥ 화면 1905 + period.
+- `track.scrollLeft`가 0에서 움직이지 않음(스크롤 컨테이너 아님), 페이지 가로 스크롤 0.
+- 속도: 1초에 정확히 42px 이동. hover 중 0px, `mouseleave` 후 다시 43px/초,
+  `focusin` 중 0px, `focusout` 후 재개.
+- 태그 3개 각각 클릭 후 그 카드 중심과 트랙 중심 오차 **0px**(#BTS / #TildaSwinton / #NewJeans).
+  호버 중 클릭, 트윈 도중 다른 태그 클릭도 오차 0px. 2.4초 뒤 흐름 재개 확인.
+- 태그 상태: 앞 3개 `cursor: pointer` / 실선, 뒤 2개 `disabled` + 점선 + `opacity 0.45`.
+- 복제본 전부 `aria-hidden="true"`, 복제본 안 링크 전부 `tabIndex -1`.
+- JS `new Function()` 컴파일 통과, CSS 중괄호 균형 0, 버려진 규칙 없음, As worn 규칙 28개 파싱.
+- 에셋 요청 전부 200(As worn 사진 3장 포함), 콘솔 오류 없음.
+- **확인하지 못한 부분**: 이번 세션도 Browser 미리보기 패널이 표시되지 않아 `document.hidden`이 true라
+  `requestAnimationFrame`이 한 번도 돌지 않았습니다. 위 측정은 `gsap.ticker.tick()`을 직접 불러
+  프레임을 진행시킨 값입니다. **실제로 흐르는 모습과 진짜 마우스 hover 확대는 사용자가
+  `http://localhost:5611/test/collection_test/index.html`에서 확인해야 합니다.**
+  속도(42px/초)와 멈춤 시간(2.4초)이 느리거나 빠르면 위 상수만 바꾸면 됩니다.
+- `.claude/launch.json`의 `tchaikimm` 포트를 5610 → **5611**로 바꿨습니다.
+  이전 항목이 가리키던 스크립트 경로가 지난 세션 스크래치패드라 이번 세션 경로로 갱신했습니다.
 
 ### Collection hero 영상 압축 (2026-08-06)
 

@@ -578,21 +578,38 @@
               color var(--duration_fast) var(--easing_base);
 }
 
-.asworn_tag:hover,
+.asworn_tag:hover:not(:disabled),
 .asworn_tag:focus-visible {
   border-color: var(--color_point);
   color: var(--color_point);
 }
 
+/* 누른 태그의 카드가 가운데에 있는 동안 그 태그를 표시합니다. */
+.asworn_tag.is_active {
+  border-color: var(--color_point);
+  background-color: var(--color_point);
+  color: #ffffff;
+}
+
+/* 연결할 카드가 아직 없는 태그. 색만으로 구분하지 않도록 disabled 속성도 함께 씁니다. */
+.asworn_tag:disabled {
+  border-style: dashed;
+  opacity: 0.45;
+  cursor: default;
+}
+
 /* 시안의 세 카드 폭 합계(2475px)가 캔버스(1920px)보다 넓습니다.
-   시안 그대로 두면 세 번째 설명이 잘려 읽을 수 없어 가로 스크롤 트랙으로 둡니다. */
+   스크롤바 없이 읽히도록 카드가 스스로 왼쪽으로 흐르는 띠로 둡니다(js/collection.js).
+   overflow: hidden이 아니라 overflow-x: clip입니다. hidden은 스크롤 컨테이너를 만들어
+   가로 스크롤바가 다시 생기고, hover 확대분이 위아래로도 잘립니다. */
 .asworn_track {
   width: 100%;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 .asworn_list {
+  position: relative;
   display: flex;
   gap: 34px;
   align-items: center;
@@ -602,6 +619,13 @@
 .asworn_item {
   display: flex;
   align-items: flex-end;
+  transform-origin: center center;
+  transition: transform var(--duration_base) var(--easing_base);
+}
+
+/* 흐름은 JS가 멈추고, 확대는 CSS가 합니다. */
+.asworn_item:hover {
+  transform: scale(1.04);
 }
 
 .asworn_item_1 {

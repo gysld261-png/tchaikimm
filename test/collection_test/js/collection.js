@@ -76,6 +76,19 @@
 
   var ARCHIVE_DEFAULT_YEAR = "2021";
 
+  /* =========================================================
+     as worn 조절값
+     ========================================================= */
+
+  /* 띠가 왼쪽으로 흐르는 속도(px/초). 올리면 빨라집니다. */
+  var ASWORN_SPEED = 42;
+
+  /* 태그를 눌렀을 때 그 카드가 가운데로 오기까지의 시간(초). */
+  var ASWORN_FOCUS_DURATION = 1.1;
+
+  /* 가운데에 도착한 뒤 멈춰 있는 시간(초). 이 시간이 지나면 다시 흐릅니다. */
+  var ASWORN_HOLD = 2.4;
+
   /* 1920 프레임 안에서 카드가 놓이는 자리. 연도마다 완전히 다른 배치를 씁니다.
      격자나 대각선 같은 규칙을 두지 않고 손으로 흩어 놓은 값입니다.
 
@@ -765,7 +778,223 @@
     );
   }
 
+  /* =========================================================
+     as worn — 스스로 흐르는 띠 + 태그로 카드 가운데 두기
+     ========================================================= */
+
+  /* 시안의 카드 세 장 폭 합계가 화면보다 넓습니다. 스크롤바 대신 카드가 스스로 흐르게 하고,
+     사용자가 원하는 카드는 태그로 불러오게 합니다.
+
+     한 벌(카드 3장 + 뒤따르는 간격 하나)의 폭을 period로 두고, 이동량을 period로 나눈
+     나머지만큼 밀어 놓으면 같은 화면이 무한히 반복됩니다. 그래서 화면을 채우고도
+     한 벌이 더 남을 만큼 복제해 둡니다. */
+  function initAsworn() {
+    var track = document.querySelector(".asworn_track");
+    var list = track && track.querySelector(".asworn_list");
+
+    if (!list) {
+      return;
+    }
+
+    var originals = Array.prototype.slice.call(list.children);
+    var tags = Array.prototype.slice.call(
+      document.querySelectorAll(".asworn_tag[data-asworn-target]")
+    );
+
+    if (originals.length === 0) {
+      return;
+    }
+
+    var gsap = typeof window.gsap === "undefined" ? null : window.gsap;
+    var isAutoEnabled = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    var offset = 0;
+    var period = 0;
+    var isHovered = false;
+    var isFocusing = false;
+    var focusTween = null;
+    var holdTimer = 0;
+
+    /* 복제본은 화면을 채우기 위한 것이므로 보조기술과 탭 순서에서 뺍니다.
+       빼지 않으면 같은 "More collection" 링크가 여러 번 잡힙니다. */
+    function appendSet() {
+      originals.forEach(function (item) {
+        var clone = item.cloneNode(true);
+
+        clone.setAttribute("aria-hidden", "true");
+        Array.prototype.forEach.call(
+          clone.querySelectorAll("a, button"),
+          function (node) {
+            node.setAttribute("tabindex", "-1");
+          }
+        );
+
+        list.appendChild(clone);
+      });
+    }
+
+    /* 화면 폭이 넓어지면 빈자리가 생기므로 그때마다 다시 부릅니다. */
+    function fillTrack() {
+      var guard = 0;
+
+      while (list.scrollWidth < track.clientWidth + period + 1 && guard < 6) {
+        appendSet();
+        guard += 1;
+      }
+    }
+
+    function render() {
+      var wrapped = ((offset % period) + period) % period;
+      list.style.transform = "translate3d(" + -wrapped + "px, 0, 0)";
+    }
+
+    function markActiveTag(activeTag) {
+      tags.forEach(function (tag) {
+        var isActive = tag === activeTag;
+
+        tag.classList.toggle("is_active", isActive);
+
+        if (isActive) {
+          tag.setAttribute("aria-current", "true");
+        } else {
+          tag.removeAttribute("aria-current");
+        }
+      });
+    }
+
+    function releaseFocus() {
+      isFocusing = false;
+      markActiveTag(null);
+    }
+
+    /* 띠가 순환하므로 같은 카드가 앞뒤 양쪽에 있습니다. 이동 거리를 period로 감아
+       ±period/2 안으로 줄이면 가까운 쪽으로 돌아 되감기는 느낌이 없습니다. */
+    function distanceTo(item) {
+      var goal = item.offsetLeft + item.offsetWidth / 2 - track.clientWidth / 2;
+      var delta = (((goal - offset) % period) + period) % period;
+
+      return delta > period / 2 ? delta - period : delta;
+    }
+
+    function handleTagClick(event) {
+      var tag = event.currentTarget;
+      var index = Number(tag.getAttribute("data-asworn-target"));
+      var item = originals[index];
+
+      if (!item) {
+        return;
+      }
+
+      window.clearTimeout(holdTimer);
+
+      if (focusTween) {
+        focusTween.kill();
+        focusTween = null;
+      }
+
+      isFocusing = true;
+      markActiveTag(tag);
+
+      var delta = distanceTo(item);
+
+      /* GSAP이 없거나 모션 감소 설정이면 그 자리로 바로 옮깁니다. */
+      if (!gsap || !isAutoEnabled) {
+        offset += delta;
+        render();
+        return;
+      }
+
+      var state = { value: offset };
+
+      focusTween = gsap.to(state, {
+        value: offset + delta,
+        duration: ASWORN_FOCUS_DURATION,
+        ease: "power3.out",
+        onUpdate: function () {
+          offset = state.value;
+          render();
+        },
+        onComplete: function () {
+          focusTween = null;
+          holdTimer = window.setTimeout(releaseFocus, ASWORN_HOLD * 1000);
+        }
+      });
+    }
+
+    /* 다른 탭에 갔다 오면 프레임 간격이 몇 초씩 벌어집니다.
+       그대로 곱하면 띠가 한 번에 몇백 px 튀므로 한 프레임 이동량을 잘라 둡니다. */
+    function advance(deltaSeconds) {
+      if (isHovered || isFocusing) {
+        return;
+      }
+
+      offset += ASWORN_SPEED * Math.min(deltaSeconds, 0.1);
+      render();
+    }
+
+    function handleEnter() {
+      isHovered = true;
+    }
+
+    function handleLeave() {
+      isHovered = false;
+    }
+
+    /* 한 벌의 폭은 첫 복제본의 왼쪽 좌표와 같습니다(.asworn_list가 position: relative).
+       계산 대신 실제 배치를 읽어 두면 카드 폭이나 간격이 바뀌어도 따라옵니다. */
+    appendSet();
+    period = originals.length < list.children.length
+      ? list.children[originals.length].offsetLeft
+      : list.scrollWidth;
+
+    if (period <= 0) {
+      return;
+    }
+
+    fillTrack();
+    render();
+
+    tags.forEach(function (tag) {
+      tag.addEventListener("click", handleTagClick);
+    });
+
+    track.addEventListener("mouseenter", handleEnter);
+    track.addEventListener("mouseleave", handleLeave);
+    /* 키보드로 카드 안 링크에 들어왔을 때도 멈춰 있어야 누를 수 있습니다. */
+    track.addEventListener("focusin", handleEnter);
+    track.addEventListener("focusout", handleLeave);
+
+    window.addEventListener("resize", function () {
+      fillTrack();
+      render();
+    });
+
+    if (!isAutoEnabled) {
+      return;
+    }
+
+    /* 흐름은 시간 기준입니다. 프레임이 밀려도 속도가 달라지지 않습니다. */
+    if (gsap) {
+      gsap.ticker.add(function (time, deltaMs) {
+        advance(deltaMs / 1000);
+      });
+      return;
+    }
+
+    var previous = 0;
+
+    window.requestAnimationFrame(function step(now) {
+      if (previous) {
+        advance((now - previous) / 1000);
+      }
+
+      previous = now;
+      window.requestAnimationFrame(step);
+    });
+  }
+
   initHeroVideo();
   initShowcaseScroll();
   initArchive();
+  initAsworn();
 })();

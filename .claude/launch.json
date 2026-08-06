@@ -9,14 +9,14 @@
         "-ExecutionPolicy",
         "Bypass",
         "-File",
-        "C:\\Users\\EZEN\\AppData\\Local\\Temp\\claude\\C--Users-EZEN-Desktop-----kbrand-tchaikimm\\fbc27160-ab4e-4a05-9021-c140b620df39\\scratchpad\\serve.ps1",
+        "C:\\Users\\EZEN\\AppData\\Local\\Temp\\claude\\C--Users-EZEN-Desktop-----kbrand-tchaikimm\\0fada622-122d-40e9-a7b7-bd4b992b0e07\\scratchpad\\serve.ps1",
         "-Port",
-        "5610",
+        "5611",
         "-Root",
         "C:\\Users\\EZEN\\Desktop\\윤은선\\kbrand\\tchaikimm"
       ],
-      "port": 5610,
-      "url": "http://localhost:5610",
+      "port": 5611,
+      "url": "http://localhost:5611",
       "autoPort": false
     }
   ]
