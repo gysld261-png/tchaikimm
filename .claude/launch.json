@@ -3,35 +3,23 @@
   "configurations": [
     {
       "name": "tchaikimm",
-      "runtimeExecutable": "powershell",
+      "runtimeExecutable": "python3",
       "runtimeArgs": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "C:\\Users\\EZEN\\AppData\\Local\\Temp\\claude\\C--Users-EZEN-Desktop-----kbrand-tchaikimm\\0fada622-122d-40e9-a7b7-bd4b992b0e07\\scratchpad\\serve.ps1",
-        "-Port",
-        "5611",
-        "-Root",
-        "C:\\Users\\EZEN\\Desktop\\윤은선\\kbrand\\tchaikimm"
+        "-m",
+        "http.server",
+        "5611"
       ],
       "port": 5611,
       "url": "http://localhost:5611",
       "autoPort": false
     },
     {
-      "name": "main_dev",
-      "runtimeExecutable": "powershell",
+      "name": "tchaikimm_win",
+      "runtimeExecutable": "py",
       "runtimeArgs": [
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        "C:\\Users\\EZEN\\AppData\\Local\\Temp\\claude\\C--Users-EZEN-Desktop-tchaikimm\\ae3d5147-4239-4bc4-9cf6-50366d6517e3\\scratchpad\\serve.ps1",
-        "-Port",
-        "5611",
-        "-Root",
-        "C:\\Users\\EZEN\\Desktop\\tchaikimm"
+        "-m",
+        "http.server",
+        "5611"
       ],
       "port": 5611,
       "url": "http://localhost:5611",

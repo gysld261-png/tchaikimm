@@ -233,7 +233,7 @@
   line-height: var(--lh_body_20);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .atelier {
     flex-direction: row;
     align-items: center;
@@ -384,7 +384,7 @@
   opacity: 1;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .process {
     flex-direction: row;
     align-items: flex-start;
@@ -516,13 +516,13 @@
   line-height: 1.63;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .materials_swatches {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .materials_body {
     flex-direction: row;
     gap: 80px;
@@ -685,7 +685,7 @@
   border: 1px solid var(--color_border_default);
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .begin_card {
     aspect-ratio: 500 / 600;
     padding: 40px;
@@ -746,7 +746,7 @@
   letter-spacing: 0.15em;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .begin_card_desc {
     margin-top: auto;
   }
@@ -761,7 +761,7 @@
   text-decoration: underline;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .begin_cards {
     flex-direction: row;
   }

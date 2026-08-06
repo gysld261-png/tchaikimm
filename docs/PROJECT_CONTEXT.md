@@ -1,6 +1,118 @@
 # Tchai Kim 현재 상태
 
 
+## Bespoke 페이지 묶음 (`test/bespoke_test/`) — 2026-08-07
+
+Bespoke는 **한 폴더 안에 세 페이지**가 들어 있습니다. 다른 화면(shop / shop_detail)처럼
+페이지마다 폴더를 나누지 않았습니다. 세 페이지가 에셋과 기본 틀을 함께 쓰기 때문입니다.
+
+| 파일 | 화면 | Figma 노드 |
+|---|---|---|
+| `index.html` | Bespoke 메인 | `1745:12160` (1920 × 10438) |
+| `reservation.html` | 예약 폼 | `1745:11901` (1920 × 7773) |
+| `reservation_done.html` | 예약 완료 | `1745:12131` (1920 × 3637) |
+
+### 기본 틀 `css/bespoke_base.css`
+
+세 페이지가 함께 쓰는 레이어입니다. **두 페이지 이상이 쓰는 것만** 여기에 둡니다.
+불러오는 순서는 `common/css/*` 4개 → `bespoke_base.css` → 페이지 CSS입니다.
+
+들어 있는 것: 타이포 스케일(`--bespoke_fs_hero` / `_section` / `_card`), 섹션 리듬과 머리말
+(`.bespoke_section_head` = eyebrow + title + desc), 선택 카드(`.bespoke_choice`),
+버튼(`.bespoke_button`), 크로스링크(`.bespoke_crosslink`), 폼 컨트롤(`.bespoke_field`),
+체크박스(`.bespoke_check`), 정보 그리드(`.bespoke_info_grid`), 진행 단계 띠(`.bespoke_steps`).
+
+- **선택 카드는 `<label>` + 숨은 `<input type="radio">`입니다.** 버튼 + `aria-pressed`로 직접
+  만들지 않았습니다. 라디오를 쓰면 화살표 키 이동, 그룹 읽기, 폼 전송이 브라우저 기본으로 됩니다.
+  선택 상태는 `:has(.bespoke_choice_input:checked)`가 칠합니다. `.is_selected` class도 같이
+  받아들이도록 두었으니 JS로 다뤄야 할 때 쓰면 됩니다.
+- **상태를 HTML class로 박아두면 안 됩니다.** 회의 방식 버튼 두 개는 마크업에서 둘 다
+  `is_secondary`이고, 켜진 쪽만 CSS가 딥그린으로 바꿉니다. 처음에 한쪽을 `is_primary`로
+  적어뒀다가 JS 없이는 선택이 안 바뀌는 걸 발견해 고쳤습니다.
+- **선택을 색으로만 알리지 않습니다.** `.bespoke_choice_mark`가 선택된 카드에만 글자를 펴서
+  읽기 도구와 흑백 화면에서도 구분됩니다.
+- 폭 기준은 `.common_container`(최대 1600px)입니다. Figma 1920 캔버스의 콘텐츠 폭이 정확히
+  1600이라 그대로 맞습니다. 시안의 절대좌표(141 / 159 / 138 등)는 컨테이너 기준(160)으로
+  통일했습니다 — 페이지마다 좌측 시작점이 달라지는 것보다 낫다고 판단했습니다.
+
+### 브레이크포인트
+
+**세 페이지 모두 768px / 1280px 두 개만 씁니다.** 원래 메인은 640 / 1024 / 1280이 섞여
+있었는데 640 → 768, 1024 → 1280으로 통일했습니다(13개 블록).
+
+- 대가: **1024~1279px 구간에서 메인의 atelier / process / materials / begin이 가로 2열 대신
+  세로로 쌓입니다.** 이전에는 1024부터 가로였습니다. 세 페이지 기준을 맞추는 쪽을 택했습니다.
+  이 구간에서 가로 배치를 되살리려면 해당 블록만 1024로 되돌리면 됩니다.
+- 1152px에서 확인했고 가로 스크롤은 없습니다.
+
+### 시안과 다르게 판단한 것
+
+- **Figma 카피 오타 2개를 고쳤습니다.** `tarting from six signature fabrics` → `Starting…`(첫 글자 누락),
+  `So your designer can perpare` → `prepare`. 시안 그대로 두는 것보다 낫다고 봤습니다.
+  되돌리려면 `reservation.html`의 fabric 설명과 03 구간 설명입니다.
+- **"Both agreements above are required"를 버튼이 아니라 안내 문구로 만들었습니다.**
+  시안에서는 405 × 70 버튼 모양 상자인데, 내용이 "두 동의가 필요하다"는 안내라 버튼으로 두면
+  누를 수 있어 보입니다. `.bespoke_status`로 두고 두 체크박스가 모두 켜지면 사라집니다.
+- **달력 날짜는 `<button>`, 시간·실루엣·원단·회의방식은 라디오입니다.** 날짜는 월 이동에 따라
+  내용이 바뀌는 조작이라 버튼이 맞다고 봤습니다.
+- 달력은 **2026년 8월 정적 마크업**입니다(8/1이 토요일, 시안과 동일). 이전·다음 달 버튼은
+  자리만 있고 아직 동작하지 않습니다.
+
+### 새로 추가한 공통 토큰 (`common/css/tokens.css`)
+
+Figma 변수 세트를 프로젝트 이름 규칙으로 옮겼습니다. 기존 토큰은 건드리지 않았습니다.
+
+`--color_surface`(#ffffff) `--color_surface_subtle`(#f5efe4) `--color_surface_muted`(#f2f2f1)
+`--color_border`(#e2ddd5) `--color_border_disabled`(#c9c9c9) `--color_text_secondary`(#4a4a42)
+`--color_text_muted`(#888880) `--color_text_subtle`(#aaaaaa) `--color_text_inverse`(#fffdf9)
+
+> **주의**: `--color_text_secondary`(#4a4a42)는 기존 `--color_text_sub`(#2e2e2e)와 **다른 값**입니다.
+> Figma가 두 단계를 따로 두고 있어 덮어쓰지 않고 나란히 뒀습니다.
+
+### 에셋
+
+새로 만들거나 내려받은 이미지는 없습니다. 저장소에 이미 있던 것을 그대로 씁니다.
+`assets/reservation/` 9장이 Figma 크기와 정확히 일치합니다(실루엣 400×400, 원단 400×300),
+`assets/map.png`도 1400×706으로 시안과 같습니다.
+새로 받은 것은 `assets/icons/chevron_left.svg` 하나뿐이며, 다음 달 화살표는 같은 파일을
+`transform: scaleX(-1)`로 뒤집어 씁니다.
+
+### 검증 결과 (2026-08-07, localhost:5611)
+
+- lint / test / build: 이 저장소에 `node`·`npx`·`package.json`이 없어 도구를 쓸 수 없습니다.
+  대신 브라우저 파서로 검사했습니다.
+- 요청 전부 200, 콘솔 오류 없음, 이미지 전부 로드.
+- **360 / 768 / 1152 / 1280 네 폭에서 세 페이지 모두 가로 스크롤 0.**
+- 초기 렌더가 시안과 일치: 8월 7일 = 딥그린 + 밝은 글씨, 실루엣 Jeogori 선택,
+  시간 1:00 PM 선택, 회의 방식 Visit the Atelier 선택, 단계 띠 `position: sticky`.
+- 선택 카드 색: 선택 `rgb(31,67,63)`(#1f433f) / 비선택 `rgb(245,239,228)`(#f5efe4).
+- 완료 페이지 지도 비율 1.983 = 시안 1400/706과 동일. 외부 링크 2개 모두 `rel="noopener"`.
+- 중복 id 0, alt 누락 0, 이름 없는 입력 0, legend 없는 fieldset 0,
+  CSS 버려진 규칙 0, 빈 규칙 0.
+- Tab 순서: 어긋나 보이는 11건은 전부 정상입니다 — 공통 헤더의 하위메뉴 순서,
+  2열 레이아웃(달력을 다 돈 뒤 오른쪽 시간표로 이동), 공통 푸터 순서.
+
+### 확인하지 못한 부분
+
+- **이 세션의 미리보기 탭도 `document.hidden === true`입니다.** 그래서 **클래스나 `:checked`가
+  바뀐 뒤의 다시 칠하기를 눈으로 보지 못했습니다.** 숨은 탭에서는 Chrome이 선택자 재매칭을
+  건너뜁니다(인라인 스타일만 반영됨). 대신 DOM 상태(`element.matches(선택자)` = true)와
+  CSSOM 규칙 내용을 직접 읽어 확인했고, 새로고침 후 초기 렌더 값은 전부 시안과 맞습니다.
+  **실제로 카드를 눌렀을 때 색이 바뀌는 모습은 사용자가 직접 봐야 합니다.**
+- 실제 마우스 hover, 스크린리더 낭독.
+- 진행 단계 띠가 스크롤을 따라 현재 구간을 바꾸는 동작(IntersectionObserver). 로직은
+  들어가 있으나 위와 같은 이유로 재생을 보지 못했습니다.
+
+### Bespoke 다음 작업
+
+1. **메인 히어로 영상이 깨져 있습니다** — `index.html`이 `assets/main/bespoke_main.mov`를
+   가리키는데 **파일이 없습니다**(`MEDIA_ELEMENT_ERROR: Format error`). 기존 문제입니다.
+   파일을 넣거나, Collection처럼 web용 mp4 + 포스터 이미지로 바꿔야 합니다.
+2. 달력 이전·다음 달 버튼 동작
+3. `.begin_card`의 "View Guide" / "View Process" 버튼과 "Contact" 링크 연결 (`href="#"` 상태)
+4. 예약 폼의 선택 내용을 완료 페이지에서 다시 보여줄지 결정 (현재는 넘기지 않음)
+
+
 ## Collection 페이지 (`test/col_chaikimyoungjin_test/`) — 2026-08-06
 
 > **2026-08-06 폴더·파일 이름이 바뀌었습니다.** 아래 본문의 옛 경로를 이렇게 읽으세요.

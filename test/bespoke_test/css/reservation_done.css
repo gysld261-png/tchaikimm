@@ -1,0 +1,92 @@
+@charset "utf-8";
+
+/* ============================================================
+   예약 완료 페이지 전용 (reservation_done.html)
+   Figma node 1745:12131 "bespoke_finish" (1920 × 3637)
+
+   공통 부분은 css/bespoke_base.css에 있습니다.
+   ============================================================ */
+
+.done_section {
+  padding-top: 64px;
+  padding-bottom: var(--bespoke_section_gap);
+}
+
+@media (min-width: 1280px) {
+  .done_section {
+    padding-top: 130px;
+  }
+}
+
+.done_head {
+  margin-bottom: 56px;
+}
+
+@media (min-width: 1280px) {
+  .done_head {
+    margin-bottom: 100px;
+  }
+}
+
+/* 지도
+
+   Figma는 1400 × 706입니다. 폭이 좁아지면 비율만 지키고 줄어듭니다.
+   object-fit: cover를 쓰면 좁은 화면에서 좌우가 잘려 위치를 못 알아보므로
+   비율을 유지한 채 전체를 보여줍니다. */
+.done_map {
+  margin: 0;
+}
+
+.done_map img {
+  display: block;
+  width: 100%;
+  max-width: 1400px;
+  height: auto;
+  margin-inline: auto;
+  aspect-ratio: 1400 / 706;
+  object-fit: cover;
+}
+
+.done_rule {
+  margin-block: 56px;
+}
+
+@media (min-width: 1280px) {
+  .done_rule {
+    margin-block: 64px;
+  }
+}
+
+.done_contact_link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.done_contact_link:hover,
+.done_contact_link:focus-visible {
+  color: var(--color_point);
+}
+
+.done_links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-top: 56px;
+}
+
+@media (min-width: 768px) {
+  .done_links {
+    gap: 40px;
+  }
+}
+
+/* "Back to Bespoke"는 시안에서 밑줄이 없는 글자 링크입니다. */
+.bespoke_crosslink.is_plain {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.done_back {
+  margin: 0;
+}

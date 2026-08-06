@@ -14,6 +14,20 @@
   --color_line_on_dark: rgba(255, 255, 255, 0.6);
   --color_error: #b3261e;
 
+  /* Figma 변수 세트 (surface / border / text 단계).
+     Bespoke 예약 화면에서 처음 쓰였고, 다른 페이지도 그대로 씁니다.
+     주의: --color_text_secondary(#4a4a42)는 기존 --color_text_sub(#2e2e2e)와 다른 값입니다.
+     Figma가 두 값을 따로 두고 있어 덮어쓰지 않고 나란히 둡니다. */
+  --color_surface: #ffffff;
+  --color_surface_subtle: #f5efe4;
+  --color_surface_muted: #f2f2f1;
+  --color_border: #e2ddd5;
+  --color_border_disabled: #c9c9c9;
+  --color_text_secondary: #4a4a42;
+  --color_text_muted: #888880;
+  --color_text_subtle: #aaaaaa;
+  --color_text_inverse: #fffdf9;
+
   --font_display: "Trirong", "Times New Roman", serif;
   --font_body: "Montserrat", "Pretendard Variable", sans-serif;
   --font_ui: "Pretendard Variable", "Pretendard", system-ui, sans-serif;

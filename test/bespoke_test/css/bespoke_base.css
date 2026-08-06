@@ -1,0 +1,615 @@
+@charset "utf-8";
+
+/* ============================================================
+   Bespoke 페이지 기본 틀
+
+   Bespoke 계열 3개 페이지가 함께 쓰는 레이어입니다.
+     index.html            — Bespoke 메인
+     reservation.html      — 예약 폼
+     reservation_done.html — 예약 완료
+
+   불러오는 순서
+     common/css/tokens.css → reset.css → common.css → layout.css
+     → css/bespoke_base.css   (이 파일)
+     → css/<page>.css         (페이지 전용)
+
+   규칙
+   - 이 파일에는 두 페이지 이상이 쓰는 것만 넣습니다.
+     한 페이지에서만 쓰면 페이지 CSS로 보냅니다.
+   - 폭 값은 .common_container(최대 1600px)를 기준으로 합니다.
+     Figma 캔버스 1920의 콘텐츠 폭이 정확히 1600이라 그대로 맞습니다.
+   - 모바일부터 작성하고 768px / 1280px에서 넓힙니다.
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   1. 타이포 스케일
+
+   Figma 텍스트 스타일을 그대로 옮긴 값입니다.
+   letter-spacing은 Figma의 px 값을 em으로 환산했습니다
+   (예: 64px에 -2px → -0.03125em). 글자 크기가 줄어드는
+   모바일에서도 자간 비율이 유지됩니다.
+   ------------------------------------------------------------ */
+.page_bespoke {
+  /* Display / Hero LG — Trirong SemiBold 64 / 1.13 / -2px */
+  --bespoke_fs_hero: clamp(32px, 3.4vw + 20px, 64px);
+  /* Display / Section MD — Trirong SemiBold 48 / 1.29 / -1px */
+  --bespoke_fs_section: clamp(26px, 2.2vw + 18px, 48px);
+  /* Display / Card — Trirong Regular 24 / 1.25 */
+  --bespoke_fs_card: clamp(20px, 0.6vw + 17px, 24px);
+
+  /* 섹션 위아래 여백 */
+  --bespoke_section_gap: 80px;
+  /* 섹션 머리말과 본문 사이 */
+  --bespoke_head_gap: 40px;
+}
+
+@media (min-width: 768px) {
+  .page_bespoke {
+    --bespoke_section_gap: 120px;
+    --bespoke_head_gap: 60px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .page_bespoke {
+    --bespoke_section_gap: 160px;
+    --bespoke_head_gap: 80px;
+  }
+}
+
+/* ------------------------------------------------------------
+   2. 섹션과 머리말
+
+   두 새 페이지의 모든 구간이 같은 형태입니다.
+     eyebrow(작은 라벨) → title(Trirong) → desc(본문)
+   ------------------------------------------------------------ */
+.bespoke_section {
+  padding-block: var(--bespoke_section_gap);
+}
+
+.bespoke_section_head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: var(--bespoke_head_gap);
+}
+
+@media (min-width: 768px) {
+  .bespoke_section_head {
+    gap: 30px;
+  }
+}
+
+/* Body / MD — Montserrat Regular 16 / 1.63 */
+.bespoke_eyebrow {
+  color: var(--color_text_muted);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 400;
+  line-height: 1.63;
+}
+
+/* Display / Section MD */
+.bespoke_section_title {
+  font-family: var(--font_display);
+  font-size: var(--bespoke_fs_section);
+  font-weight: 600;
+  line-height: 1.29;
+  letter-spacing: -0.02083em;
+}
+
+/* Display / Hero LG */
+.bespoke_hero_heading {
+  font-family: var(--font_display);
+  font-size: var(--bespoke_fs_hero);
+  font-weight: 600;
+  line-height: 1.13;
+  letter-spacing: -0.03125em;
+}
+
+.bespoke_section_desc {
+  max-width: 60ch;
+  color: var(--color_text_secondary);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 400;
+  line-height: 1.63;
+}
+
+/* Commerce / Label — Montserrat Medium 16 / 1.38 / +8px 자간 */
+.bespoke_label {
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 0.08em;
+}
+
+.bespoke_rule {
+  height: 1px;
+  border: 0;
+  margin: 0;
+  background-color: var(--color_border);
+}
+
+/* ------------------------------------------------------------
+   3. 선택 카드 (.bespoke_choice)
+
+   실루엣 3장과 원단 6장이 같은 컴포넌트입니다.
+   고르면 배경이 크림(#f5efe4) → 딥그린(#1f433f)으로 바뀌고
+   글자가 밝은 색으로 반전됩니다. (Figma 주석: "선택하면 배경색이 바뀌게")
+
+   색만으로 구분하지 않도록 aria-pressed와 테두리도 함께 바꿉니다.
+   ------------------------------------------------------------ */
+.bespoke_choice_grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .bespoke_choice_grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 30px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .bespoke_choice_grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
+}
+
+/* 실루엣은 3장뿐이라 태블릿에서도 3열로 두면 너무 좁습니다.
+   2열 + 마지막 칸 가운데 정렬로 둡니다. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .bespoke_choice_grid.is_three_up > :last-child {
+    grid-column: 1 / -1;
+    max-width: calc(50% - 15px);
+    justify-self: center;
+  }
+}
+
+/* 카드는 <label>이고 안에 라디오가 들어 있습니다.
+   버튼 + aria-pressed로 직접 만드는 대신 라디오를 쓰면
+   화살표 키 이동, 그룹 읽기, 폼 전송이 브라우저 기본으로 동작합니다.
+   라디오는 a11y_hidden으로 가리되 초점은 받을 수 있게 남겨둡니다. */
+.bespoke_choice {
+  display: block;
+  width: 100%;
+  padding: 0 0 24px;
+  border: 1px solid var(--color_border);
+  background-color: var(--color_surface_subtle);
+  color: var(--color_text);
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--duration_base) var(--easing_base),
+              border-color var(--duration_base) var(--easing_base),
+              color var(--duration_base) var(--easing_base);
+}
+
+/* 라디오가 초점을 받으면 카드 전체에 초점 표시가 보이게 합니다.
+   가려진 입력에 초점 테두리가 그려지면 화면에서 보이지 않습니다. */
+.bespoke_choice:has(.bespoke_choice_input:focus-visible) {
+  outline: 2px solid var(--color_point);
+  outline-offset: 3px;
+}
+
+.bespoke_choice_media {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+}
+
+.bespoke_choice_media img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.bespoke_choice_body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-inline: 24px;
+  margin-top: 20px;
+}
+
+@media (min-width: 1280px) {
+  .bespoke_choice_body {
+    padding-inline: 42px;
+  }
+}
+
+.bespoke_choice_name {
+  font-family: var(--font_display);
+  font-size: var(--bespoke_fs_card);
+  font-weight: 400;
+  line-height: 1.25;
+}
+
+.bespoke_choice_desc {
+  color: var(--color_text_secondary);
+  font-size: var(--fs_ui_14);
+  line-height: 1.57;
+  transition: color var(--duration_base) var(--easing_base);
+}
+
+/* 선택 상태 — 라디오가 켜졌을 때. .is_selected는 JS로 다룰 때를 위해 함께 둡니다. */
+.bespoke_choice:has(.bespoke_choice_input:checked),
+.bespoke_choice.is_selected {
+  border-color: var(--color_point);
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.bespoke_choice:has(.bespoke_choice_input:checked) .bespoke_choice_desc,
+.bespoke_choice.is_selected .bespoke_choice_desc {
+  color: var(--color_text_on_dark_sub);
+}
+
+/* 선택을 색으로만 알리지 않도록 표시를 함께 둡니다. */
+.bespoke_choice_mark {
+  display: inline-block;
+  width: 0;
+  overflow: hidden;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.bespoke_choice:has(.bespoke_choice_input:checked) .bespoke_choice_mark,
+.bespoke_choice.is_selected .bespoke_choice_mark {
+  width: auto;
+}
+
+.bespoke_choice:hover {
+  border-color: var(--color_point);
+}
+
+/* ------------------------------------------------------------
+   4. 버튼 (.bespoke_button)
+
+   Figma의 BUTTON/Primary 컴포넌트입니다. 데스크톱 260 × 70.
+   is_primary  — 딥그린 채움
+   is_secondary — 흰 배경 + 연한 테두리
+   ------------------------------------------------------------ */
+.bespoke_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  min-height: 56px;
+  padding: 10px 24px;
+  border: 1px solid transparent;
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color var(--duration_base) var(--easing_base),
+              border-color var(--duration_base) var(--easing_base),
+              color var(--duration_base) var(--easing_base);
+}
+
+@media (min-width: 768px) {
+  .bespoke_button {
+    min-width: 260px;
+    min-height: 70px;
+  }
+}
+
+.bespoke_button.is_primary {
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.bespoke_button.is_primary:hover,
+.bespoke_button.is_primary:focus-visible {
+  background-color: var(--color_text);
+}
+
+.bespoke_button.is_secondary {
+  border-color: var(--color_border);
+  background-color: var(--color_surface);
+  color: var(--color_text);
+}
+
+.bespoke_button.is_secondary:hover,
+.bespoke_button.is_secondary:focus-visible {
+  border-color: var(--color_point);
+  background-color: var(--color_surface_subtle);
+}
+
+.bespoke_button:disabled {
+  border-color: var(--color_border_disabled);
+  background-color: var(--color_surface_muted);
+  color: var(--color_text_subtle);
+  cursor: not-allowed;
+}
+
+.bespoke_button_row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .bespoke_button_row {
+    gap: 30px;
+  }
+}
+
+/* ------------------------------------------------------------
+   5. 크로스링크 (.bespoke_crosslink)
+
+   Commerce / Action — Montserrat SemiBold 11 / 1.55 / +22px 자간.
+   밑줄이 딥그린인 작은 링크입니다. 완료 페이지의 지도 링크와
+   "Back to Bespoke"가 같은 형태입니다.
+   ------------------------------------------------------------ */
+.bespoke_crosslink {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 0.22em;
+  text-decoration: none;
+  transition: opacity var(--duration_fast) var(--easing_base);
+}
+
+.bespoke_crosslink:hover,
+.bespoke_crosslink:focus-visible {
+  opacity: 0.7;
+}
+
+.bespoke_crosslink img {
+  display: block;
+  width: 15px;
+  height: 15px;
+}
+
+/* ------------------------------------------------------------
+   6. 폼 컨트롤
+
+   Figma는 밑줄만 있는 입력칸입니다(테두리 아래쪽 1px, #888880).
+   ------------------------------------------------------------ */
+.bespoke_field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bespoke_field_label {
+  color: var(--color_text);
+  font-size: var(--fs_ui_14);
+  font-weight: 500;
+  line-height: 1.57;
+}
+
+.bespoke_field_input,
+.bespoke_field_select,
+.bespoke_field_textarea {
+  width: 100%;
+  padding: 0 0 6px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--color_text_muted);
+  background-color: transparent;
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1.63;
+  transition: border-color var(--duration_fast) var(--easing_base);
+}
+
+.bespoke_field_textarea {
+  min-height: 64px;
+  padding-bottom: 4px;
+  resize: vertical;
+}
+
+.bespoke_field_input::placeholder,
+.bespoke_field_textarea::placeholder {
+  color: var(--color_text_subtle);
+}
+
+.bespoke_field_input:focus,
+.bespoke_field_select:focus,
+.bespoke_field_textarea:focus {
+  border-bottom-color: var(--color_point);
+}
+
+/* 화살표를 직접 그리지 않고 Figma에서 내보낸 caret 아이콘을 씁니다. */
+.bespoke_field_select {
+  appearance: none;
+  padding-right: 28px;
+  background-image: url("../assets/icons/caret_down.svg");
+  background-repeat: no-repeat;
+  background-position: right 4px center;
+  background-size: 18px 18px;
+  cursor: pointer;
+}
+
+.bespoke_field.has_error .bespoke_field_input,
+.bespoke_field.has_error .bespoke_field_select,
+.bespoke_field.has_error .bespoke_field_textarea {
+  border-bottom-color: var(--color_error);
+}
+
+.bespoke_field_error {
+  color: var(--color_error);
+  font-size: var(--fs_ui_14);
+  line-height: 1.57;
+}
+
+/* 오류 문구는 자리를 늘 차지해 글자가 뜰 때 아래가 밀리지 않게 합니다. */
+.bespoke_field_error:empty::before {
+  content: "";
+  display: inline-block;
+}
+
+/* 폼 2열 그리드 */
+.bespoke_form_grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+
+@media (min-width: 768px) {
+  .bespoke_form_grid {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 70px;
+    row-gap: 40px;
+  }
+}
+
+/* ------------------------------------------------------------
+   7. 체크박스 (.bespoke_check)
+
+   18px 사각형. 기본 체크박스를 숨기지 않고 크기만 맞춥니다.
+   숨기면 키보드 초점과 읽기 도구 지원을 직접 다시 만들어야 합니다.
+   ------------------------------------------------------------ */
+.bespoke_check {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.bespoke_check_input {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin: 4px 0 0;
+  accent-color: var(--color_point);
+  cursor: pointer;
+}
+
+.bespoke_check_label {
+  color: var(--color_text_secondary);
+  font-size: var(--fs_ui_14);
+  line-height: 1.57;
+  cursor: pointer;
+}
+
+.bespoke_check_list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------
+   8. 정보 그리드 (.bespoke_info_grid)
+
+   완료 페이지의 주소 / 영업시간 / 연락처 / 다음 안내 4칸입니다.
+   메인의 안내 카드와도 같은 리듬을 씁니다.
+   ------------------------------------------------------------ */
+.bespoke_info_grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .bespoke_info_grid {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: 50px;
+    row-gap: 52px;
+  }
+}
+
+.bespoke_info_item {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bespoke_info_body {
+  color: var(--color_text_secondary);
+  font-size: var(--fs_ui_16);
+  line-height: 1.63;
+}
+
+/* ------------------------------------------------------------
+   9. 진행 단계 내비 (.bespoke_steps)
+
+   예약 폼 상단에 붙는 4칸 띠입니다.
+   현재 구간에 들어오면 그 칸이 진하게 바뀝니다.
+   ------------------------------------------------------------ */
+.bespoke_steps {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--color_border);
+  border-left: 1px solid var(--color_border);
+}
+
+@media (min-width: 768px) {
+  .bespoke_steps {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.bespoke_steps_item {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  padding: 10px 16px;
+  border-right: 1px solid var(--color_border);
+  border-bottom: 1px solid var(--color_border);
+  color: var(--color_text_subtle);
+  font-size: var(--fs_ui_14);
+  line-height: 1.57;
+  transition: color var(--duration_base) var(--easing_base),
+              background-color var(--duration_base) var(--easing_base);
+}
+
+@media (min-width: 768px) {
+  .bespoke_steps_item {
+    font-size: var(--fs_ui_16);
+  }
+}
+
+.bespoke_steps_item.is_active {
+  background-color: var(--color_surface_subtle);
+  color: var(--color_text);
+  font-weight: 500;
+}
+
+/* ------------------------------------------------------------
+   10. 도움 문구
+   ------------------------------------------------------------ */
+.bespoke_note {
+  color: var(--color_text_muted);
+  font-size: var(--fs_ui_14);
+  line-height: 1.57;
+}
+
+.bespoke_status {
+  color: var(--color_error);
+  font-size: var(--fs_ui_14);
+  line-height: 1.57;
+}
+
+.bespoke_status:empty {
+  display: none;
+}

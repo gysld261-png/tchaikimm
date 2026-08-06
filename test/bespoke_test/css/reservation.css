@@ -1,0 +1,351 @@
+@charset "utf-8";
+
+/* ============================================================
+   예약 폼 페이지 전용 (reservation.html)
+   Figma node 1745:11901 "bespoke_reservation" (1920 × 7773)
+
+   공통 부분은 css/bespoke_base.css에 있습니다.
+   여기에는 이 페이지에만 있는 것만 둡니다.
+   ============================================================ */
+
+/* fieldset은 브라우저 기본 테두리와 여백이 있어 지웁니다.
+   min-width: 0이 없으면 fieldset 안의 grid가 줄어들지 않습니다. */
+.reservation_fieldset {
+  min-width: 0;
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* ------------------------------------------------------------
+   히어로와 진행 단계 띠
+
+   Figma 주석: "이 섹션 스티키 해놓고 하단에 1단계부터 4단계 구간
+   스크롤할 때 해당 섹션에 머무르면 그 구간 텍스트 컬러 변환됨"
+   → 띠만 화면 위에 붙이고, 현재 구간 칸을 진하게 바꿉니다.
+   ------------------------------------------------------------ */
+.reservation_hero {
+  padding-top: 64px;
+}
+
+@media (min-width: 1280px) {
+  .reservation_hero {
+    padding-top: 130px;
+  }
+}
+
+.reservation_steps {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  margin-top: 56px;
+  background-color: var(--color_bg);
+}
+
+@media (min-width: 1280px) {
+  .reservation_steps {
+    margin-top: 120px;
+  }
+}
+
+.reservation_steps_link {
+  display: block;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* 띠가 화면 위에 붙어 있어 링크로 뛰면 제목을 가립니다.
+   띠 높이(2줄일 수 있어 넉넉히)만큼 미리 띄웁니다. */
+#step_design,
+#step_schedule,
+#step_details,
+#step_confirm {
+  scroll-margin-top: 130px;
+}
+
+@media (min-width: 768px) {
+  #step_design,
+  #step_schedule,
+  #step_details,
+  #step_confirm {
+    scroll-margin-top: 80px;
+  }
+}
+
+/* ------------------------------------------------------------
+   회의 방식 선택 (아틀리에 방문 / 전화)
+
+   두 칸 모두 markup에서는 is_secondary이고,
+   라디오가 켜진 쪽만 CSS가 딥그린으로 바꿉니다.
+   상태를 HTML class로 박아두면 JS 없이는 안 바뀝니다.
+   ------------------------------------------------------------ */
+.reservation_mode {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 56px;
+}
+
+@media (min-width: 768px) {
+  .reservation_mode {
+    gap: 30px;
+    margin-bottom: 80px;
+  }
+}
+
+.reservation_mode_option {
+  cursor: pointer;
+}
+
+.reservation_mode_option .bespoke_button {
+  width: 100%;
+}
+
+.reservation_mode_option:has(input:checked) .bespoke_button {
+  border-color: var(--color_point);
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.reservation_mode_option:has(input:focus-visible) .bespoke_button {
+  outline: 2px solid var(--color_point);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------
+   달력 + 시간표
+
+   Figma 데스크톱: 달력 540px, 시간표 660px, 사이 228px.
+   좁은 화면에서는 세로로 쌓습니다.
+   ------------------------------------------------------------ */
+.reservation_schedule {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 56px;
+}
+
+@media (min-width: 1280px) {
+  .reservation_schedule {
+    grid-template-columns: minmax(0, 540px) minmax(0, 660px);
+    justify-content: start;
+    column-gap: clamp(40px, 8vw, 228px);
+  }
+}
+
+.reservation_calendar,
+.reservation_timetable {
+  padding-top: 40px;
+  border-top: 1px solid var(--color_border);
+}
+
+.reservation_calendar_head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.reservation_calendar_month {
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.reservation_calendar_nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  background-color: transparent;
+  cursor: pointer;
+}
+
+.reservation_calendar_nav img {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
+
+/* 다음 달 화살표는 같은 아이콘을 좌우로 뒤집어 씁니다. */
+.reservation_calendar_nav.is_next img {
+  transform: scaleX(-1);
+}
+
+.reservation_calendar_nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.reservation_calendar_table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.reservation_calendar_table th {
+  padding-bottom: 20px;
+  color: var(--color_text_muted);
+  font-size: var(--fs_ui_14);
+  font-weight: 400;
+  text-align: center;
+}
+
+.reservation_calendar_table th abbr {
+  text-decoration: none;
+}
+
+.reservation_calendar_table td {
+  padding: 6px 0;
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .reservation_calendar_table td {
+    padding: 11px 0;
+  }
+}
+
+.reservation_day {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color var(--duration_fast) var(--easing_base),
+              color var(--duration_fast) var(--easing_base);
+}
+
+.reservation_day:hover {
+  background-color: var(--color_surface_subtle);
+}
+
+.reservation_day.is_selected {
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.reservation_day:disabled {
+  color: var(--color_text_subtle);
+  cursor: not-allowed;
+}
+
+.reservation_day:disabled:hover {
+  background-color: transparent;
+}
+
+/* 시간표 — Figma 3열 × 2행, 칸 200 × 70 */
+.reservation_time_list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+@media (min-width: 768px) {
+  .reservation_time_list {
+    grid-template-columns: repeat(3, minmax(0, 200px));
+    gap: 30px;
+  }
+}
+
+.reservation_time {
+  display: block;
+  cursor: pointer;
+}
+
+.reservation_time_face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 10px;
+  border: 1px solid var(--color_border);
+  background-color: var(--color_surface);
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1.5;
+  text-align: center;
+  transition: background-color var(--duration_base) var(--easing_base),
+              border-color var(--duration_base) var(--easing_base),
+              color var(--duration_base) var(--easing_base);
+}
+
+@media (min-width: 768px) {
+  .reservation_time_face {
+    min-height: 70px;
+  }
+}
+
+.reservation_time:has(input:checked) .reservation_time_face {
+  border-color: var(--color_point);
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.reservation_time:has(input:focus-visible) .reservation_time_face {
+  outline: 2px solid var(--color_point);
+  outline-offset: 3px;
+}
+
+/* ------------------------------------------------------------
+   개인 정보
+   ------------------------------------------------------------ */
+.reservation_notes {
+  margin-top: 56px;
+}
+
+@media (min-width: 768px) {
+  .reservation_notes {
+    margin-top: 70px;
+  }
+}
+
+/* ------------------------------------------------------------
+   약관과 전송
+   ------------------------------------------------------------ */
+.reservation_confirm_rule {
+  margin-block: 40px;
+}
+
+@media (min-width: 768px) {
+  .reservation_confirm_rule {
+    margin-block: 56px;
+  }
+}
+
+.reservation_submit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .reservation_submit {
+    flex-direction: row;
+    align-items: center;
+    gap: 30px;
+  }
+}
+
+/* 전송이 막혀 있을 때만 안내 문구가 보입니다.
+   base의 .bespoke_status가 :empty일 때 숨깁니다. */
+.reservation_submit .bespoke_status {
+  max-width: 405px;
+}
