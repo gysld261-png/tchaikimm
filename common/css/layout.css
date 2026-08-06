@@ -104,6 +104,54 @@
   gap: 18px;
 }
 
+.header_menu_item_has_submenu {
+  position: relative;
+}
+
+.header_submenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: max-content;
+  padding-top: 14px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-6px);
+  transition: opacity var(--duration_fast) var(--easing_base),
+              visibility 0s linear var(--duration_fast),
+              transform var(--duration_fast) var(--easing_base);
+}
+
+.header_menu_item_has_submenu:hover .header_submenu,
+.header_menu_item_has_submenu:focus-within .header_submenu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.header_submenu_link {
+  display: inline-block;
+  color: var(--color_text_on_dark_menu);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color var(--duration_fast) var(--easing_base),
+              opacity var(--duration_fast) var(--easing_base);
+}
+
+.header_submenu_link:hover,
+.header_submenu_link:focus-visible {
+  color: var(--color_text_on_dark);
+  opacity: .65;
+}
+
 .header_menu_link {
   display: inline-flex;
   align-items: center;
@@ -111,11 +159,6 @@
   font-family: var(--font_ui);
   font-size: 20px;
   transition: color var(--duration_fast) var(--easing_base);
-}
-
-.header_menu_link.is_active {
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 
 /* Header variants: white is used over imagery, black on light backgrounds. */
@@ -134,6 +177,7 @@
 }
 
 .header.is_black .header_menu_link,
+.header.is_black .header_submenu_link,
 .header.is_black .header_currency_select,
 .header.is_black .header_currency_select option,
 .header.is_black .header_cart {
@@ -146,7 +190,9 @@
 }
 
 .header.is_black .header_menu_link:hover,
-.header.is_black .header_menu_link:focus-visible {
+.header.is_black .header_menu_link:focus-visible,
+.header.is_black .header_submenu_link:hover,
+.header.is_black .header_submenu_link:focus-visible {
   color: var(--color_point);
 }
 

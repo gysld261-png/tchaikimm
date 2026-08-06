@@ -76,7 +76,6 @@
 .section_label,
 .section_kicker,
 .option_label,
-.recommended_card > a > p,
 .look_product > div > span {
   font-weight: 500;
   font-size: 16px;
@@ -383,7 +382,6 @@
 }
 
 .narrative_section .common_container,
-.recommended_section .common_container,
 .look_heading.common_container {
   padding-inline: clamp(64px, 6.25vw, 120px);
 }
@@ -642,7 +640,6 @@
 .accordion_item.is_open .accordion_panel > p { padding-bottom: 22px; }
 
 .look_section {
-  /* 세 개의 look_pin 크기는 이 값 하나로 조절합니다. */
   --look-pin-size: 36px;
   --look-card-gap: 14px;
   padding: 120px 0;
@@ -674,13 +671,13 @@
 
 .look_pin {
   position: absolute;
+  z-index: 4;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 4;
   width: var(--look-pin-size);
   height: var(--look-pin-size);
-  border: 2px solid #0a0a0a;
+  border: 0;
   border-radius: 50%;
   background: #fffdf9;
   font-size: 18px;
@@ -742,14 +739,15 @@
 
 .look_product[data-look-card="skirt"] {
   top: calc(50% + var(--look-pin-size) / 2);
-  left: calc(46.7% + var(--look-pin-size) + var(--look-card-gap));
+  right: calc(53.3% + var(--look-card-gap));
+  transform-origin: right center;
 }
 
 .look_product[data-look-card="outer"] {
   top: calc(53.7% + var(--look-pin-size) / 2);
-  right: calc(31.7% + var(--look-pin-size) + var(--look-card-gap));
+  left: calc(68.3% + var(--look-pin-size) + var(--look-card-gap));
   transform: translate(-14px, -50%) scale(.97);
-  transform-origin: right center;
+  transform-origin: left center;
 }
 
 .look_product.is_active {
@@ -787,44 +785,6 @@
 .look_product p { width: 160px; margin: 6px 0 0; color: var(--detail_secondary); font-size: 14px; line-height: 1.57; }
 .look_product > a { color: #343330; text-align: right; line-height: 2; }
 
-.recommended_section {
-  padding: 120px 0;
-  background: #f5efe4;
-}
-
-.recommended_heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-}
-
-.recommended_heading h2 {
-  margin: 20px 0 0;
-  font-family: var(--font_display);
-  font-size: 24px;
-  font-weight: 400;
-  line-height: 1.25;
-}
-
-.recommended_heading > a {
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-}
-
-.recommended_grid {
-  display: grid;
-  grid-template-columns: repeat(3, 300px);
-  gap: 64px;
-  width: 1028px;
-  margin: 64px auto 0;
-}
-
-.recommended_card img { width: 300px; height: 580px; object-fit: cover; }
-.recommended_card p { margin: 22px 22px 0; }
-.recommended_card h3 { margin: 10px 22px 0; font-family: var(--font_display); font-size: 24px; font-weight: 400; line-height: 1.25; }
-.recommended_card span { display: block; margin: 8px 22px 0; color: #343330; }
-
 @media (max-width: 1439px) {
   .page_shop_detail .header_toggle { display: block; }
   .page_shop_detail .header_inner {
@@ -849,7 +809,6 @@
   .purchase_panel { width: 400px; padding-right: 72px; }
   .purchase_benefits { width: 320px; grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .narrative_section .common_container,
-  .recommended_section .common_container,
   .look_heading.common_container { padding-inline: 64px; }
   .craft_container { padding-inline: 64px; }
 }
@@ -874,8 +833,6 @@
   .craft_media_row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .craft_media_row > img,
   .weave_card { height: auto; aspect-ratio: 228 / 240; }
-  .recommended_grid { width: auto; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px; }
-  .recommended_card img { width: 100%; height: auto; aspect-ratio: 300 / 580; }
 }
 
 @media (max-width: 767px) {
@@ -893,11 +850,9 @@
   .purchase_benefits { gap: 12px; font-size: 10px; }
   .narrative_section,
   .craft_section,
-  .look_section,
-  .recommended_section { padding: 80px 0; }
+  .look_section { padding: 80px 0; }
   .narrative_section .common_container,
   .craft_container.common_container,
-  .recommended_section .common_container,
   .look_heading.common_container { padding-inline: 24px; }
   .section_kicker { font-size: 11px; }
   .narrative_grid { grid-template-columns: 1fr; width: 100%; gap: 64px; }
@@ -932,8 +887,6 @@
     transform-origin: center bottom;
   }
   .look_product.is_active { transform: translateY(0) scale(1); }
-  .recommended_heading { align-items: start; gap: 24px; }
-  .recommended_grid { grid-template-columns: repeat(3, 72vw); overflow-x: auto; margin-top: 48px; padding-bottom: 12px; }
 }
 
 @media (max-width: 480px) {
@@ -944,6 +897,4 @@
   .look_heading { display: block; }
   .look_heading > p { width: 100%; margin-top: 28px; }
   .look_caption span:last-child { display: none; }
-  .recommended_heading { display: block; }
-  .recommended_heading > a { display: inline-block; margin-top: 28px; }
 }
