@@ -1,0 +1,500 @@
+@charset "utf-8";
+
+/* =========================================================
+   brand 페이지
+   출처: Figma 4조 한복판 - 차이킴, node 1707:6120 (brand_송명희)
+   기준 캔버스 1920px. 반응형(360 / 768 / 1280)은 다음 단계입니다.
+   ========================================================= */
+
+:root {
+  /* 시안에만 나오는 색 — 공통 토큰에 없어 페이지 지역 변수로 둡니다. */
+  --brand_black: #120f0f;
+  --brand_olive: #585a4d;
+  --brand_gray: #f7f7f7;
+  --brand_text_soft: #262626;
+}
+
+.main {
+  display: block;
+  width: 100%;
+}
+
+/* 시안 좌표(1920 기준)를 그대로 쓰는 블록을 화면 가운데에 두기 위한 값.
+   margin-inline: auto는 화면이 1920보다 좁을 때 왼쪽으로 붙어 좌우가
+   비대칭으로 잘립니다. calc(50% - 960px)이라야 양쪽이 똑같이 잘립니다. */
+
+/* =========================================================
+   mood — 자동 인트로 (스크롤과 무관)
+
+   아래 값들은 전부 "인트로가 끝난 모습"입니다. 시안 3장면의 마지막 상태와
+   같습니다. js/brand.js가 시작 상태로 되돌린 뒤 재생하므로, JS가 없거나
+   모션 감소 설정이면 이 완성된 화면이 그대로 보입니다.
+   ========================================================= */
+
+.mood {
+  position: relative;
+  width: 100%;
+  background-color: var(--brand_black);
+  overflow-x: clip;
+}
+
+.mood_stage {
+  position: relative;
+  width: 1920px;
+  height: 700px;
+  margin-left: calc(50% - 960px);
+}
+
+/* 문이 열릴 때 보이는 창. 가운데를 기준으로 커집니다.
+   translate로 가운데 정렬해 두면 width/height만 바꿔도 중심이 안 움직입니다. */
+.mood_reveal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 700px;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+}
+
+/* 실내 전경. 창이 작아져도 화면 한가운데 원본 크기로 고정돼야
+   "가려졌던 부분이 드러나는" 느낌이 납니다.
+   width: 100%로 두면 창을 따라 늘어나 그냥 확대가 됩니다. */
+.mood_room {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1920px;
+  height: 700px;
+  max-width: none;
+  transform: translate(-50%, -50%);
+  object-fit: cover;
+  pointer-events: none;
+}
+
+/* 글이 왼쪽에 자리잡을 때 그 뒤로 깔리는 벽 근접 컷(원본 768 × 700). */
+.mood_wall {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 768px;
+  height: 700px;
+  max-width: none;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.mood_copy {
+  position: absolute;
+  top: 59px;
+  left: 0;
+  z-index: 1;
+  width: 768px;
+  height: 641px;
+  color: var(--color_text);
+}
+
+.mood_copy_title {
+  position: absolute;
+  top: 63px;
+  left: 70px;
+  font-family: var(--font_display);
+  font-weight: 600;
+  font-size: 64px;
+  line-height: 1.13;
+  letter-spacing: -1.28px;
+  white-space: nowrap;
+}
+
+.mood_copy_body {
+  position: absolute;
+  top: 198px;
+  left: 384px;
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.58;
+  white-space: nowrap;
+}
+
+/* 시안에서 문단 사이가 한 줄 비어 있습니다. */
+.mood_copy_body p + p {
+  margin-top: 1.58em;
+}
+
+/* 브랜드 무드 3단어. 글 상자와 한 띠로 붙어 오른쪽에서 흘러 들어옵니다.
+
+   올리브 채우기(--brand_olive)와 사진 3장을 뺐습니다. 글자만 남아 실내 사진
+   위에 바로 놓입니다. 여기는 폭이 없는 투명한 클리핑 상자일 뿐입니다. */
+.mood_words {
+  position: absolute;
+  top: 0;
+  left: 768px;
+  z-index: 1;
+  width: 1152px;
+  height: 700px;
+  overflow: hidden;
+}
+
+.mood_word {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+/* 사진이 있던 때 글자가 놓였던 자리입니다.
+   블록 top = 시안 블록 top + 사진 높이 (unique·elegant 180, modern 240).
+   사진만 지우고 글자는 화면에서 움직이지 않게 하려는 것입니다. */
+.mood_word_unique {
+  top: 268px;
+  left: 171px;
+  width: 260px;
+}
+
+.mood_word_modern {
+  top: 590px;
+  left: 466px;
+  width: 220px;
+}
+
+.mood_word_elegant {
+  top: 409px;
+  left: 788px;
+  width: 260px;
+}
+
+/* 어두운 실내 사진(대비 3.2~4.9:1) 위라 검은 글씨는 읽기 어렵습니다.
+   흰색으로 4.3~6.5:1을 확보합니다. 시안(#000)과 다른 판단입니다. */
+.mood_word_title {
+  font-family: var(--font_display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.25;
+  color: var(--color_text_inverse);
+}
+
+.mood_word_desc {
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.63;
+  color: var(--color_text_inverse);
+}
+
+/* =========================================================
+   kimyoungjin — 브랜드의 출발점
+   ========================================================= */
+
+.kimyoungjin {
+  position: relative;
+  width: 100%;
+  background-image: linear-gradient(to bottom, var(--brand_olive), var(--brand_gray));
+  overflow-x: clip;
+}
+
+.kimyoungjin_frame {
+  position: relative;
+  width: 1920px;
+  height: 2499px;
+  margin-left: calc(50% - 960px);
+  padding-top: 400px;
+}
+
+.youngjin_group {
+  display: flex;
+  align-items: flex-end;
+  gap: 200px;
+  height: 600px;
+}
+
+.youngjin_group_first {
+  width: 1103px;
+}
+
+.youngjin_group_second {
+  position: absolute;
+  top: 1199px;
+  right: 0;
+  width: 1071px;
+}
+
+.youngjin_side {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  width: 403px;
+}
+
+.youngjin_photo {
+  position: relative;
+  overflow: hidden;
+}
+
+.youngjin_photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.youngjin_photo_red {
+  width: 500px;
+  height: 600px;
+}
+
+.youngjin_photo_blue {
+  width: 468px;
+  height: 600px;
+}
+
+.youngjin_photo_yellow,
+.youngjin_photo_black {
+  width: 403px;
+  height: 269px;
+}
+
+.youngjin_title {
+  font-family: var(--font_display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.25;
+  color: var(--color_text);
+}
+
+.youngjin_desc {
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--color_text);
+}
+
+.youngjin_handmade {
+  position: absolute;
+  top: 2199px;
+  left: 731px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 457px;
+}
+
+.youngjin_title_center,
+.youngjin_desc_center {
+  text-align: center;
+}
+
+/* =========================================================
+   tchaikim — 가로 5장면
+   ========================================================= */
+
+.tchaikim {
+  position: relative;
+  width: 100%;
+  background-image: linear-gradient(to bottom, var(--brand_gray), var(--color_bg));
+  overflow-x: clip;
+}
+
+.tchaikim_panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1920px;
+  margin-left: calc(50% - 960px);
+  padding-block: 300px;
+}
+
+.tchaikim_con {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 1800px;
+}
+
+.tchaikim_txt {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+}
+
+.tchaikim_panel_title {
+  font-family: var(--font_display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.25;
+  color: var(--color_text);
+}
+
+.tchaikim_panel_desc {
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--color_text);
+}
+
+.tchaikim_media {
+  width: 1040px;
+  height: 520px;
+  overflow: hidden;
+}
+
+.tchaikim_video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* =========================================================
+   atelier — 사진 7장
+   ========================================================= */
+
+.atelier {
+  position: relative;
+  width: 100%;
+  padding-block: 400px;
+  overflow-x: clip;
+}
+
+/* 시안 폭 합계 2380px로 캔버스(1920)보다 넓습니다.
+   시안 그대로 가운데 정렬하고 좌우를 잘라냅니다. */
+.atelier_row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 20px;
+  width: 2380px;
+  margin-left: calc(50% - 1190px);
+}
+
+.atelier_photo {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.atelier_photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.atelier_photo_1,
+.atelier_photo_7 {
+  width: 380px;
+  height: 507px;
+}
+
+.atelier_photo_2,
+.atelier_photo_6 {
+  width: 220px;
+  height: 293px;
+}
+
+.atelier_photo_3,
+.atelier_photo_5 {
+  width: 300px;
+  height: 400px;
+}
+
+.atelier_photo_4 {
+  width: 460px;
+  height: 613px;
+}
+
+.atelier_desc {
+  margin-top: 100px;
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.58;
+  color: var(--brand_text_soft);
+  text-align: center;
+}
+
+/* =========================================================
+   heritage — 제목 한 장면 + 사진 세 장면
+   ========================================================= */
+
+.heritage {
+  position: relative;
+  width: 100%;
+  overflow-x: clip;
+}
+
+.heritage_stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 1080px;
+  padding: 100px 240px;
+}
+
+.heritage_headline {
+  font-family: var(--font_display);
+  font-weight: 600;
+  font-size: 138px;
+  line-height: 1.13;
+  letter-spacing: -2.76px;
+  color: var(--color_point);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.heritage_figure {
+  width: 400px;
+  height: 714px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.heritage_figure img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.heritage_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 200px;
+  height: 60px;
+  background-color: var(--color_point);
+  font-family: var(--font_body);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+  color: var(--color_text_inverse);
+  text-transform: uppercase;
+  transition: background-color var(--duration_base, 0.4s) ease;
+}
+
+.heritage_button:hover,
+.heritage_button:focus-visible {
+  background-color: var(--color_text);
+}
+
+/* =========================================================
+   tchaikim 가로 스크롤 향상 — js/brand.js가 is_horizontal을 붙였을 때만
+   적용됩니다. JS가 없거나 좁은 화면에서는 위의 세로 레이아웃이
+   그대로 보입니다.
+   ========================================================= */
+
+.tchaikim.is_horizontal .tchaikim_track {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  width: max-content;
+  margin-left: calc(50% - 960px);
+}
+
+.tchaikim.is_horizontal .tchaikim_panel {
+  flex-shrink: 0;
+  margin-left: 0;
+}

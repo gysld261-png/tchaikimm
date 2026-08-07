@@ -366,8 +366,179 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 
 ---
 
+## 새 시안 전체 교체 (Figma node 1712:4222, 2026-08-07)
+
+기존 `index.html`(hero·intro·banner·brand 5패널·korea·instagram·bespoke·marquee·shop·
+코디·셀럽착용·클로징 12섹션)을 새 Figma 프레임(`1712:4222`, "main", 1920 × 29308,
+20개 이상 섹션)에 맞춰 전체 교체했습니다. 사용자가 "전체 교체(새 시안이 최신 버전)"로
+명확히 지시했습니다.
+
+### 대응 관계
+
+| 기존 | 새 시안 |
+|---|---|
+| hero | 동일(카피 그대로) |
+| (없음) | model — 신규, "Heritage Redefined, Effortlessly Worn." |
+| intro + banner | brand_story — 카피 동일 |
+| korea(4행 압축형) | detail_collar/sleeve/body/skirt(개별 풀 섹션, 이후 다시 통합 — 아래 항목 참고) |
+| brand(5패널 가로스크롤) | brand_01~06 — 초대형 워드마크(01~04) + 이미지 콜라주(05/06) |
+| (없음) | kyj_brand_story — 신규, 반복 2쌍 |
+| promo_bespoke / marquee / shop | 동일 계열, 무드 영상 배경 추가 |
+| celeb | collection — 신규, "Two lines. One extraordinary aesthetic." |
+| closing / footer | 동일 |
+| codi, instagram | 새 시안에 없어 제거 |
+
+### 인터랙션 (`js/main.js`, GSAP + ScrollTrigger, `gsap.matchMedia()`로 768px 이상·
+모션 감소 아닐 때만 동작 — 그 외에는 각 섹션 기본 정적 레이아웃)
+
+- **brand_01~04** — `brand_word_pin`으로 감싸 한 화면에 고정한 채 스크롤에 따라
+  4단계 텍스트가 크로스페이드됩니다.
+- **brand_05/06** — 스크롤해 들어오면 사진 4장이 서서히 나타나고(opacity+scale),
+  이름 두 줄("TCHAI Kim" / "TCHAI Kim Young Jin")이 진행률에 따라 벌어지며 갈라집니다.
+- **kyj_brand_story** — 단일 사진이 페이드아웃되며 3장이 벌어져 나타나고, 마지막에
+  3장이 함께 확대되며 페이드아웃됩니다(시안 주석 "1장→3장→확대→페이드아웃→영상 전환"
+  그대로 구현, 아래가 실제로 bespoke 무드 영상/shop 섹션이라 자연스럽게 이어짐).
+
+### 에셋 관련
+
+- 팀에서 `assets/images/main/*` → `assets/main/*`로 자산 구조를 재편하는 중이었고
+  헤더/푸터 로고가 그 과정에서 깨져 있었습니다 — 이번 세션 초반에는 프로젝트 루트
+  `asset/logos/`에서 복사해 임시로 복구했습니다(이후 공통 시스템 마이그레이션으로 대체 — 아래 항목).
+- **의도적으로 비워둔 것**: "Create_a_cinematic_luxury_fash" 구간(kyj_brand_story 두 번째
+  쌍과 shop 사이)은 로컬 에셋이 없어 제외했습니다. 실제 에셋 없이 임의로 만들지 않았습니다.
+
+### 검증 결과
+
+- 이미지 전량 200 OK, 콘솔 실제 에러 없음(뜬 404는 헤더 로고 경로 수정 전 캐시된 잔여
+  로그였고 재확인 시 전부 200 OK), 1920px에서 가로 스크롤 없음.
+- GSAP 인터랙션은 이 세션의 미리보기 탭이 백그라운드 상태(`document.hasFocus()`/
+  `visibilityState`가 계속 비활성)라 `requestAnimationFrame` 기반 애니메이션이 실제로
+  재생되는 것은 못 봤습니다(이 문서 위쪽 hero 항목 및 `docs/PROJECT_CONTEXT.md`의
+  shop 페이지 항목과 같은, 이미 여러 번 문서화된 환경 제약입니다). 대신 ScrollTrigger
+  인스턴스가 정상 생성되는 것(5개: 고정 시퀀스 1 + 콜라주 2 + kyj 2), 스크롤 전 초기
+  상태값이 의도대로인 것(brand_collage 카드 opacity 0, kyj solo opacity 1 · 나머지 0)을 확인했습니다.
+
+### 확인하지 못한 부분
+
+- 실제 스크롤 시 애니메이션이 눈으로 봤을 때 자연스러운지 — `http://localhost:5606/test/main_test/`
+  (또는 저장소 루트를 서빙하는 서버)에서 직접 확인 필요.
+- detail_sleeve/body/skirt의 원래 헤더 카피(당시엔 collar와 같을 것으로 추정만 하고
+  아래 통합 작업에서 실제 Figma 조회로 확인함).
+
+---
+
+## detail 섹션 — collar/sleeve/body/skirt를 사진 한 장 + 호버 확대로 통합 (2026-08-07)
+
+> "Figma에서 보면 detail 섹션들처럼 Collar, sleeve, body, skirt에 마우스를 올리면
+> 확대된 모습과 설명이 나오도록 만들어야해"
+>
+> (이어서) "지금 detail_collar에 그 부분에 호버하면 확대가 되고 옆에 텍스트 설명이 잘
+> 뜨는데 다른 detail_(각 부위)섹션들의 확대 부분과 텍스트만 가지고 와서 하나의 섹션에서
+> 다 해결하도록 해"
+
+### 진행 순서
+
+1. 처음에는 위 "새 시안 전체 교체" 항목대로 collar/sleeve/body/skirt를 각각 별도의
+   풀 섹션(헤더 "Traditional motifs, reimagined" 반복 포함)으로 만들고, collar만
+   실제 확대 크롭 에셋(`assets/main/detail/collar/zoom.png`)이 있어 collar만 구현하고
+   나머지 3개는 보류했습니다.
+2. 사용자가 호버 인터랙션을 요청해 Figma에서 detail_sleeve/body/skirt의 `get_design_context`를
+   다시 조회 — 세 부위 모두 collar와 **같은 원본 사진**(`imgRectangle`, 동일 URL)을 쓰고
+   확대 크롭(`zoom` Ellipse)만 다르다는 것을 확인하고, 해당 3개 확대 크롭 이미지를
+   Figma 로컬 서버(`localhost:3845`)에서 내려받아 `assets/main/detail/{sleeve,body,skirt}/zoom.png`로 저장했습니다.
+   → collar/sleeve/body/skirt 4개 섹션으로 우선 완성.
+3. 사용자가 "하나의 섹션에서 다 해결"을 요청해, 반복되던 헤더 3벌과 사진 3벌을 걷어내고
+   **사진 한 장 위에 4개의 보이지 않는 호버 영역**을 얹는 구조로 재구성했습니다.
+
+### 최종 구조 (`test/main_test/index.html`, `css/main.css`)
+
+`.detail_stage` 안에 이미지 1장 + `.detail_hotspot`(부위별 호버/포커스 트리거, `data-part`
+속성으로 구분) 4개 + 부위별 `.detail_text`/`.detail_zoom` 쌍 4벌. 확대컷·설명의 위치는
+각 부위 Figma 좌표(`get_design_context`에서 조회한 실제 값)를 그대로 씁니다. 호버 영역
+자체(경계)는 Figma에 없는, 이번 통합을 위해 새로 정한 것입니다 — collar(상단 가로띠),
+sleeve(우측 상단), body(좌측 중단), skirt(하단 넓은 영역).
+
+호버 감지는 형제 결합자(`~`)로 구현했습니다 — `.detail_hotspot[data-part="collar"]:hover
+~ .detail_text[data-part="collar"]` 식으로 부위별 호버 영역과 부위별 확대컷/설명을
+`data-part` 값으로 짝지었습니다. 부위마다 4쌍(hover/focus-visible × text/zoom)씩 총 16개
+선택자가 필요했습니다.
+
+### 잡은 버그 두 가지
+
+1. **형제 vs 자식 구조 실수**: 처음 구현에서 `.detail_text`/`.detail_zoom`을
+   `.detail_figure`의 형제로 둬서, 퍼센트 좌표가 이미지가 아니라 훨씬 큰 `.detail_stage`
+   기준으로 계산돼 텍스트가 크게 어긋났습니다. 이미지 안(자식)으로 옮겨 고쳤습니다.
+2. **퍼센트 padding은 폭 기준**: 4부위를 한 섹션에 합치며 위/아래로 겹쳐 걸리는 내용이
+   위아래 섹션과 부딪히지 않게 `.detail_stage`에 `padding: 27% 0 32%`를 줬는데,
+   CSS는 요소의 위/아래 padding도 **자기 자신의 너비** 기준으로 퍼센트를 계산해서
+   의도한 여백과 전혀 다르게 나왔습니다. `padding` 대신 `margin`(고정값 기반
+   `clamp(140px, 20vw, 400px) 0 clamp(160px, 24vw, 470px)`)으로 바꾸고, 부위별
+   좌표는 원래 Figma 값 그대로 되돌렸습니다.
+
+### 검증 결과
+
+- `.matches(':hover')`로 4개 영역 각각 확인 — collar 호버 시 collar만, sleeve 호버 시
+  sleeve만 정확히 `true`(다른 부위와 안 섞임), CSS 선택자 자체도 `element.matches(선택자)`로
+  높은 우선순위 규칙(`opacity: 1`)이 매치되는 것 확인.
+- 이미지 깨짐 0개, 새 가로 스크롤 없음.
+- **미확인**: 이 프리뷰 탭이 `visibilityState: "hidden"`(백그라운드)이라 `getComputedStyle`이
+  스타일 재계산을 미루는 것으로 보여, 선택자는 매치되는데 실제 `opacity` 최종값을
+  숫자로는 확인하지 못했습니다(`pointer-events: none`처럼 애니메이션과 무관한 속성도
+  똑같이 갱신되지 않는 것으로 재확인 — 트랜지션 타이밍 문제가 아니라 탭 자체의
+  스타일 재계산 유예로 판단). 실제 브라우저에서 직접 호버해 확인 필요.
+- **미완료**: `detail_img`를 가운데 정렬로 바꿔 달라는 요청을 받았으나, 이 문서를 쓰는
+  시점까지 아직 적용 전입니다(`.detail_stage`의 `margin-left: 10.99%`가 그대로 남아
+  왼쪽 정렬 상태) — 다음 작업으로 남깁니다.
+
+---
+
+## 공통 시스템(`common/`) 마이그레이션 (2026-08-07)
+
+팀이 `common/css/{tokens,reset,common,layout}.css`, `common/components/{header,footer}.html`,
+`common/js/common.js`로 페이지 공통 요소를 분리하는 작업을 진행 중이었습니다. 사용자가
+`AGENTS.md`/`CLAUDE.md`/`docs/COMMON_SYSTEM.md`/`docs/PROJECT_CONTEXT.md`/
+`templates/default.html`를 먼저 읽고 규칙을 따르라고 지시했고, `test/main_test/`만 이
+마이그레이션이 안 된 상태였습니다(shop_test/bespoke_test는 이미 완료돼 있었음).
+
+### 변경 내용 (`test/main_test/index.html`, `css/main.css`만 — 공통 파일은 읽기만 함)
+
+- 하드코딩된 `<header>`/`<footer>` 마크업 → `common_header_slot`/`common_footer_slot`
+  (`data-component`로 `common/js/common.js`가 `fetch`해 주입). 진행 도중 footer가
+  절반만 슬롯으로 바뀌고 나머지 절반이 고아 마크업으로 남아있던 것도 같이 정리했습니다.
+- Lenis JS 스크립트 태그 추가(CSS만 링크돼 있고 JS 라이브러리 태그가 빠져 있었음).
+- `.common_container`(팀이 그 사이 `common/css/common.css`에 이미 추가해 둔
+  `max-width: var(--layout_canvas, 1920px); margin-inline: auto; padding-inline: var(--layout_gutter)`)로
+  텍스트·카드·버튼을 감싸고, 배경 이미지·영상은 section 전체 폭 유지 — model/intro/
+  detail 헤더/collection/bespoke·shop 프로모/closing에 적용.
+- `.promo_bespoke`/`.promo_shop`의 고정폭(`width: 746px` 등 px 하드코딩)을 반응형
+  flex(`flex: 1 1 320px`, `max-width`)로 교체 — 1440px 이하에서 가로 스크롤 나던
+  실제 원인이었습니다.
+- `.closing`의 옛 "1920px 고정 프레임 + `translateX(-50%)`" 방식을 `.common_container`
+  기반 흐름 배치로 전환(시안은 글/아이콘이 겹쳐있지만 흐름 배치로 단순화).
+
+### 검증 결과 (1440 / 1920 / 2560px, 각각 새로고침 상태에서)
+
+- 셋 다 가로 스크롤 없음, 리소스 로드 에러 없음, 이미지 깨짐 0개, 헤더·푸터 정확히 1개씩.
+- `.common_container`가 2560px에서도 1920px로 캡 되고 가운데 정렬, 배경 영상/이미지는
+  뷰포트 꽉 채우는 것 확인.
+- **환경 특이사항**: 브라우저 뷰포트를 리사이즈 툴로 바꾼 직후 확인하면 GSAP가 pin한
+  섹션의 폭이 이전 크기로 남아 가로 스크롤처럼 보였는데, 새로고침하면 사라졌습니다
+  (리사이즈 자동화 툴이 GSAP `ScrollTrigger`의 리프레시 타이밍과 어긋나는 것으로 보이고,
+  실제 사용자가 그 폭으로 페이지를 열거나 로드하는 경우엔 문제없음). 브라우저 창을
+  드래그해 실시간으로 좁히는 경우까지는 이 환경에서 확인 못 했습니다.
+
+### 보류한 것
+
+- `.top_button` — `common/css/common.css`에 스타일은 이미 있지만 `shop_test`/`bespoke_test`에도
+  아직 마크업이 없어서, 다른 페이지와 다르게 main만 먼저 넣는 게 맞는지 확인 차 보류했습니다.
+
+---
+
 ## 다음 작업
 
-1. 위 "확인하지 못한 부분"을 실제 브라우저에서 직접 확인
-2. hero 외 나머지 섹션의 반응형(360 / 768 / 1280) 대응은 `docs/PROJECT_CONTEXT.md`의
+1. `detail_img` 가운데 정렬(요청 받았으나 미적용 — 위 항목 참고)
+2. 위 각 항목의 "확인하지 못한 부분"을 실제 브라우저에서 직접 확인
+   (GSAP 인터랙션 재생 느낌, detail 호버 확대 실제 동작, hero 관련 항목들)
+3. `.top_button` 추가 여부 결정
+4. 나머지 섹션의 반응형(360 / 768 / 1280) 대응은 `docs/PROJECT_CONTEXT.md`의
    "다음 작업" 목록을 따릅니다.

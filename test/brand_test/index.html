@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Brand — Tchai Kim</title>
+  <meta name="description" content="The story behind Tchai Kim — from Tchai Kimyoungjin's traditional atelier to hanbok reshaped for everyday life.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600&family=Trirong:ital,wght@0,200;0,400;0,600&display=swap">
+  <link rel="stylesheet"
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.css">
+
+  <link rel="stylesheet" href="../../common/css/tokens.css">
+  <link rel="stylesheet" href="../../common/css/reset.css">
+  <link rel="stylesheet" href="../../common/css/common.css">
+  <link rel="stylesheet" href="../../common/css/layout.css">
+  <link rel="stylesheet" href="css/brand.css">
+</head>
+
+<body data-page="brand" data-header-variant="white">
+
+<div class="common_header_slot" data-component="/common/components/header.html">
+  <span class="a11y_hidden">Loading header</span>
+</div>
+
+  <main class="main" id="main_content">
+
+    <!-- mood — 페이지에 들어오면 저절로 재생되는 인트로.
+         검은 화면의 초록 띠가 열리며 실내가 드러나고, 사진은 그대로 멈춘 채
+         글과 무드 단어가 한 띠로 붙어 오른쪽에서 흘러 들어옵니다. 스크롤과 무관합니다.
+
+         HTML/CSS 기본 상태는 "다 끝난 모습"입니다. JS가 시작 상태로 되돌린 뒤
+         재생하므로, JS가 없거나 모션 감소 설정이면 완성된 화면이 그대로 보입니다. -->
+    <section class="mood" data-header-theme="white" aria-labelledby="mood_title">
+      <h2 class="a11y_hidden" id="mood_title">A quiet balance of restraint and originality</h2>
+
+      <div class="mood_stage">
+        <div class="mood_reveal">
+          <!-- 실내 전경. 문이 열리는 동안에도 화면 한가운데 고정입니다. -->
+          <img class="mood_room" src="assets/images/mood_inner.jpg" alt="" aria-hidden="true">
+          <!-- 글이 왼쪽에 자리잡을 때 그 뒤로 깔리는 벽 근접 컷. -->
+          <img class="mood_wall" src="assets/images/mood_left.jpg" alt="" aria-hidden="true">
+
+          <div class="mood_copy">
+            <p class="mood_copy_title">Refined<br>into<br>elegance</p>
+            <div class="mood_copy_body">
+              <p>A quiet balance<br>of restraint and originality.</p>
+              <p>Tradition,<br>held onto.<br>Modernity,<br>let in.</p>
+              <p>That&rsquo;s the direction<br>Tchai kim moves toward.</p>
+            </div>
+          </div>
+
+          <!-- 설문에서 가장 많이 나온 세 단어. 배경 채우기와 사진 없이 글자만 둡니다.
+               실내 사진 위에 바로 놓이므로 글자는 흰색입니다.
+               좌표는 사진이 있던 때 글자가 놓였던 자리 그대로입니다. -->
+          <div class="mood_words">
+            <article class="mood_word mood_word_unique">
+              <h3 class="mood_word_title">Unique</h3>
+              <p class="mood_word_desc">Unmistakably hanbok,<br>unmistakably Tchai kim.</p>
+            </article>
+
+            <article class="mood_word mood_word_modern">
+              <h3 class="mood_word_title">Modern</h3>
+              <p class="mood_word_desc">Tradition, worn for today.</p>
+            </article>
+
+            <article class="mood_word mood_word_elegant">
+              <h3 class="mood_word_title">Elegant</h3>
+              <p class="mood_word_desc">Elegance, without excess.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- kimyoungjin — 브랜드의 출발점. 시안 좌표(1920 기준)를 그대로 쓰는
+         구간이라 고정 폭 프레임으로 감싸고 가운데 정렬합니다. -->
+    <section class="kimyoungjin" data-header-theme="black" aria-labelledby="kimyoungjin_title">
+      <h2 class="a11y_hidden" id="kimyoungjin_title">Tchai Kimyoungjin, where it begins</h2>
+
+      <div class="kimyoungjin_frame">
+        <div class="youngjin_group youngjin_group_first">
+          <div class="youngjin_photo youngjin_photo_red">
+            <img src="assets/images/youngjin_red.jpg" alt="A hanbok in deep red, made the traditional way">
+          </div>
+          <div class="youngjin_side">
+            <div class="youngjin_photo youngjin_photo_yellow">
+              <img src="assets/images/youngjin_yellow.png" alt="A hanbok in warm yellow from the Tchai Kimyoungjin atelier">
+            </div>
+            <div class="youngjin_txt">
+              <h3 class="youngjin_title">Origin</h3>
+              <p class="youngjin_desc">Before Tchai Kim,<br>there was Tchai Kimyoungjin.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="youngjin_group youngjin_group_second">
+          <div class="youngjin_side">
+            <div class="youngjin_photo youngjin_photo_black">
+              <img src="assets/images/youngjin_black.jpg" alt="A hanbok in black, cut to its original form">
+            </div>
+            <div class="youngjin_txt">
+              <h3 class="youngjin_title">Traditional</h3>
+              <p class="youngjin_desc">This is where it begins &mdash;<br>hanbok made the traditional way,<br>true to its original form.</p>
+            </div>
+          </div>
+          <div class="youngjin_photo youngjin_photo_blue">
+            <img src="assets/images/youngjin_blue.jpg" alt="A hanbok in blue, hand-finished in the atelier">
+          </div>
+        </div>
+
+        <div class="youngjin_handmade">
+          <h3 class="youngjin_title youngjin_title_center">Handmade</h3>
+          <p class="youngjin_desc youngjin_desc_center">Every piece starts with a conversation,<br>and takes shape by hand, one stitch at a time.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- tchaikim — 다섯 장면이 가로로 이어집니다. mood와 같은 방식으로
+         JS가 붙으면 가로 스크롤, 없으면 세로로 쌓입니다. -->
+    <section class="tchaikim" aria-labelledby="tchaikim_title">
+      <h2 class="a11y_hidden" id="tchaikim_title">How Tchai Kim thinks about hanbok</h2>
+
+      <div class="tchaikim_track">
+
+        <article class="tchaikim_panel">
+          <div class="tchaikim_con">
+            <div class="tchaikim_txt">
+              <h3 class="tchaikim_panel_title">Everyday</h3>
+              <p class="tchaikim_panel_desc">Hanbok wasn&rsquo;t always something set aside<br>for holidays and ceremonies.<br>Long before it became formalwear,<br>it was simply what people reached for every morning &mdash;<br>to work in, to walk in, to move through an ordinary day.<br>It belonged to daily life, not to display.</p>
+            </div>
+            <div class="tchaikim_media">
+              <video class="tchaikim_video" src="assets/images/everyday.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+            </div>
+          </div>
+        </article>
+
+        <article class="tchaikim_panel">
+          <div class="tchaikim_con">
+            <div class="tchaikim_txt">
+              <h3 class="tchaikim_panel_title">Forward</h3>
+              <p class="tchaikim_panel_desc">Somewhere along the way, hanbok drifted from<br>that everyday role into something reserved<br>for special occasions only.<br>Tchai Kim brings it back to where it started,<br>reshaping the silhouette so it can be worn<br>the way it was always meant to be &mdash;<br>with ease, and with room to move.</p>
+            </div>
+            <div class="tchaikim_media">
+              <video class="tchaikim_video" src="assets/images/forward.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+            </div>
+          </div>
+        </article>
+
+        <article class="tchaikim_panel">
+          <div class="tchaikim_con">
+            <div class="tchaikim_txt">
+              <h3 class="tchaikim_panel_title">Seasons</h3>
+              <p class="tchaikim_panel_desc">Long before it shaped fashion,<br>color in Korea followed the seasons.<br>The soft green of new spring leaves,<br>the deep red of summer&rsquo;s fullest bloom,<br>the warm gold of autumn&rsquo;s last harvest &mdash;<br>each color carried a season within it,<br>long before it ever touched a piece of cloth.</p>
+            </div>
+            <div class="tchaikim_media">
+              <video class="tchaikim_video" src="assets/images/seasons.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+            </div>
+          </div>
+        </article>
+
+        <article class="tchaikim_panel">
+          <div class="tchaikim_con">
+            <div class="tchaikim_txt">
+              <h3 class="tchaikim_panel_title">Obangsaek</h3>
+              <p class="tchaikim_panel_desc">Blue, red, yellow, white, and black &mdash;<br>Korea&rsquo;s five directional colors have carried<br>meaning for centuries, each tied to a direction,<br>an element, a way of seeing the world.<br>Tchai Kim carries that same palette forward,<br>letting it move quietly through every piece we make.</p>
+            </div>
+            <div class="tchaikim_media">
+              <video class="tchaikim_video" src="assets/images/obangsaek.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+            </div>
+          </div>
+        </article>
+
+        <article class="tchaikim_panel">
+          <div class="tchaikim_con">
+            <div class="tchaikim_txt">
+              <h3 class="tchaikim_panel_title">Woven</h3>
+              <p class="tchaikim_panel_desc">Some things can&rsquo;t be added after the fact.<br>The color in our fabric isn&rsquo;t printed on the surface &mdash;<br>it&rsquo;s woven into the thread itself,<br>present from the very first stitch.<br>What you see is what the fabric has always been,<br>from the inside out.</p>
+            </div>
+            <div class="tchaikim_media">
+              <video class="tchaikim_video" src="assets/images/woven.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- atelier — 사진 7장이 가운데 정렬된 띠. 시안 폭 합계가 2380px이라
+         1920 화면에서는 좌우가 잘립니다(시안과 동일). -->
+    <section class="atelier" aria-labelledby="atelier_title">
+      <h2 class="a11y_hidden" id="atelier_title">The atelier</h2>
+
+      <div class="atelier_row">
+        <div class="atelier_photo atelier_photo_1"><img src="assets/images/atelier_1.jpg" alt="Bolts of fabric resting in the atelier"></div>
+        <div class="atelier_photo atelier_photo_2"><img src="assets/images/atelier_2.jpg" alt="A hand at work on a seam"></div>
+        <div class="atelier_photo atelier_photo_3"><img src="assets/images/atelier_3.jpg" alt="A corner of the studio in daylight"></div>
+        <div class="atelier_photo atelier_photo_4"><img src="assets/images/atelier_4.jpg" alt="A garment taking shape on the form"></div>
+        <div class="atelier_photo atelier_photo_5"><img src="assets/images/atelier_5.jpg" alt="Thread and tools laid out on the table"></div>
+        <div class="atelier_photo atelier_photo_6"><img src="assets/images/atelier_6.png" alt="A detail of the atelier interior"></div>
+        <div class="atelier_photo atelier_photo_7"><img src="assets/images/atelier_7.jpg" alt="A finished hanbok hanging in the studio"></div>
+      </div>
+
+      <p class="atelier_desc">Where craftsmanship lives.<br>Every piece begins here, in a quiet atelier in Seoul.</p>
+    </section>
+
+    <!-- heritage — 제목 한 장면 + 사진 세 장면. 마지막에 Bespoke로 가는 버튼. -->
+    <section class="heritage" aria-labelledby="heritage_title">
+      <div class="heritage_stage heritage_stage_title">
+        <h2 class="heritage_headline" id="heritage_title">Find Your Difference</h2>
+      </div>
+
+      <div class="heritage_stage">
+        <figure class="heritage_figure">
+          <img src="assets/images/heritage_past.png" alt="Hanbok as it was worn in the past">
+        </figure>
+      </div>
+
+      <div class="heritage_stage">
+        <figure class="heritage_figure">
+          <img src="assets/images/heritage_ing.png" alt="Hanbok in transition, between tradition and today">
+        </figure>
+      </div>
+
+      <div class="heritage_stage heritage_stage_last">
+        <figure class="heritage_figure">
+          <img src="assets/images/heritage_now.png" alt="Hanbok as Tchai Kim makes it today">
+        </figure>
+        <a class="heritage_button" href="../bespoke_test/index.html">Visit Bespoke</a>
+      </div>
+    </section>
+
+  </main>
+
+<div class="common_footer_slot" data-component="/common/components/footer.html">
+  <span class="a11y_hidden">Loading footer</span>
+</div>
+
+<button class="top_button" type="button" aria-label="Back to top">Top</button>
+
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="../../common/js/common.js"></script>
+  <script src="js/brand.js"></script>
+</body>
+
+</html>

@@ -21,7 +21,11 @@
     var resets = [];
 
     /* ---------------------------------------------------------
-       brand_01~04 — 한 화면에 고정한 채 글자만 차례로 바뀝니다
+       brand_01~05 — 한 화면에 고정한 채 글자가 차례로 바뀌다가
+       마지막 단계(brand_collage)에서 사진이 서서히 나타나고
+       이름 두 줄이 벌어지며 갈라집니다. 05 뒤에 이어지는 정적 brand_06은
+       이 시퀀스가 끝난 뒤 이미 다 드러난 상태로 보여주는 것이라
+       별도 인터랙션 없이 시안 그대로 둡니다.
        --------------------------------------------------------- */
     (function setupBrandWordPin() {
       var pin = document.getElementById("brand_word_pin");
@@ -29,20 +33,45 @@
         return;
       }
 
-      var steps = Array.prototype.slice.call(pin.querySelectorAll(".brand_word"));
+      var steps = Array.prototype.slice.call(pin.children);
       if (steps.length < 2) {
         return;
       }
+
+      /* 마지막 단계(brand_collage)는 brand_04("TCHAI Kim" / "Young Jin")가 그대로 이어지는
+         화면입니다. "TCHAI Kim"은 텍스트가 안 바뀌니 위치만 더 벌어지고(슬라이드),
+         "Young Jin" 앞에는 숨어 있던 "TCHAI Kim " 접두어가 같은 슬라이드 구간에서
+         나타나 "TCHAI Kim Young Jin"이 됩니다 — 페이드로 텍스트를 바꿔치기하지 않습니다. */
+      var collageStep = pin.querySelector(".brand_collage");
+      var cards = collageStep ? collageStep.querySelector(".brand_collage_cards") : null;
+      var nameLeft = collageStep ? collageStep.querySelector(".brand_collage_name_left") : null;
+      var nameRight = collageStep ? collageStep.querySelector(".brand_collage_name_right") : null;
+      var prefix = collageStep ? collageStep.querySelector(".brand_collage_name_prefix") : null;
+      var hasCollageReveal = collageStep && cards && nameLeft && nameRight && prefix;
+      var isDesktop = window.innerWidth >= 1280;
 
       pin.classList.add("is_pinned");
       gsap.set(steps, { opacity: 0 });
       gsap.set(steps[0], { opacity: 1 });
 
+      if (hasCollageReveal) {
+        collageStep.classList.add("is_enhanced");
+        gsap.set(cards, { opacity: 0, scale: 0.94 });
+        gsap.set(prefix, { opacity: 0 });
+        gsap.set(nameLeft, isDesktop ? { x: 120 } : { y: 40 });
+        gsap.set(nameRight, isDesktop ? { x: -120 } : { y: -40 });
+      }
+
+      /* brand_collage가 끝난 뒤 아래 정적 brand_06으로 자연스럽게 이어지도록,
+         핀이 풀리기 직전에 한 구간(scrollLength)을 더 두고 콜라주 전체를
+         서서히 작아지며 옅어지게 합니다 — "다음 섹션과 연결"되는 느낌을 줍니다. */
+      var scrollLength = hasCollageReveal ? steps.length + 1 : steps.length;
+
       var tl = gsap.timeline({
         scrollTrigger: {
           trigger: pin,
           start: "top top",
-          end: "+=" + window.innerHeight * (steps.length - 1),
+          end: "+=" + window.innerHeight * scrollLength,
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true
@@ -57,49 +86,32 @@
           .to(step, { opacity: 1, duration: 0.6 }, i - 1);
       });
 
+      /* brand_collage 패널이 다 나타난 뒤(마지막 크로스페이드가 끝나는 지점)부터
+         이어서 진행하는 전용 구간 — 여기서 사진이 서서히 나타나고, 이름 두 줄이
+         (이미 갈라져 있는 상태에서) 더 벌어지며, "TCHAI Kim " 접두어가 채워집니다. */
+      if (hasCollageReveal) {
+        var revealStart = steps.length - 1;
+        tl.to(cards, { opacity: 1, scale: 1, duration: 1 }, revealStart)
+          .to(nameLeft, isDesktop ? { x: 0, duration: 1 } : { y: 0, duration: 1 }, revealStart)
+          .to(nameRight, isDesktop ? { x: 0, duration: 1 } : { y: 0, duration: 1 }, revealStart)
+          .to(prefix, { opacity: 1, duration: 0.8 }, revealStart + 0.1);
+
+        /* 다 나타난 뒤(steps.length) 이어서 한 구간 더 — 전체가 서서히 작아지며
+           옅어지고, 바로 아래 정적 brand_06(같은 사진, 더 큰 사이즈)으로 넘어갑니다. */
+        tl.to(collageStep, { scale: 0.82, opacity: 0, duration: 1, ease: "power1.in" }, steps.length);
+      }
+
       triggers.push(tl.scrollTrigger);
       resets.push(function () {
         pin.classList.remove("is_pinned");
         gsap.set(steps, { clearProps: "opacity" });
-      });
-    })();
-
-    /* ---------------------------------------------------------
-       brand_05 / brand_06 — 스크롤해 들어오면 사진이 서서히 나타나고
-       이름 두 줄이 벌어지며 갈라집니다
-       --------------------------------------------------------- */
-    Array.prototype.slice.call(document.querySelectorAll(".brand_collage")).forEach(function (section) {
-      var cards = section.querySelector(".brand_collage_cards");
-      var nameSpans = Array.prototype.slice.call(section.querySelectorAll(".brand_collage_name span"));
-
-      if (!cards || nameSpans.length < 2) {
-        return;
-      }
-
-      section.classList.add("is_enhanced");
-
-      var isDesktop = window.innerWidth >= 1280;
-      gsap.set(nameSpans[0], isDesktop ? { x: 30 } : { y: 14 });
-      gsap.set(nameSpans[1], isDesktop ? { x: -30 } : { y: -14 });
-
-      var st = ScrollTrigger.create({
-        trigger: section,
-        start: "top 75%",
-        end: "top 25%",
-        scrub: 1,
-        onUpdate: function (self) {
-          gsap.set(cards, { opacity: self.progress, scale: 0.94 + 0.06 * self.progress });
-          gsap.set(nameSpans[0], isDesktop ? { x: 30 * (1 - self.progress) } : { y: 14 * (1 - self.progress) });
-          gsap.set(nameSpans[1], isDesktop ? { x: -30 * (1 - self.progress) } : { y: -14 * (1 - self.progress) });
+        if (hasCollageReveal) {
+          collageStep.classList.remove("is_enhanced");
+          gsap.set(collageStep, { clearProps: "scale,opacity" });
+          gsap.set([cards, nameLeft, nameRight, prefix], { clearProps: "all" });
         }
       });
-
-      triggers.push(st);
-      resets.push(function () {
-        section.classList.remove("is_enhanced");
-        gsap.set([cards].concat(nameSpans), { clearProps: "all" });
-      });
-    });
+    })();
 
     /* ---------------------------------------------------------
        kyj_brand_story — 1장 → 3장으로 갈라짐 → 모이며 확대 → 페이드아웃
