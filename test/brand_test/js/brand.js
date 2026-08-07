@@ -562,12 +562,47 @@
              HTML의 autoplay/loop는 JS 없을 때를 위한 기본값이었을 뿐입니다. */
           video.pause();
           video.removeAttribute("loop");
-          video.currentTime = 0;
 
           if (overlay) {
             gsap.set(overlay, { opacity: 0 });
           }
 
+          /* 사용자가 스크롤해서 들어오기 전에 디코더를 미리 깨워둡니다.
+             영상을 실제로 다루는 "첫 요청"이 하필 스크롤로 진입하는 순간과
+             겹치면, 디코더 준비·GPU 레이어 승격 비용이 그 타이밍에 몰려서
+             "덜컥"하는 끊김으로 느껴집니다. 끝·중간·처음 세 지점을 미리
+             seek해 두면 그 비용을 페이지 로드 시점으로 옮기고, 스크럽 중
+             다른 구간으로 넘어갈 때도 이미 한 번 디코딩된 적이 있어 더
+             가볍게 처리됩니다. */
+          primeVideo(function () {
+            setupScrollTrigger(duration);
+          });
+        }
+
+        function primeVideo(done) {
+          var checkpoints = [video.duration * 0.99, video.duration * 0.5, 0];
+          var index = 0;
+
+          function next() {
+            if (index >= checkpoints.length) {
+              video.removeEventListener("seeked", onSeeked);
+              done();
+              return;
+            }
+
+            video.currentTime = checkpoints[index];
+          }
+
+          function onSeeked() {
+            index += 1;
+            next();
+          }
+
+          video.addEventListener("seeked", onSeeked);
+          next();
+        }
+
+        function setupScrollTrigger(duration) {
           /* 영상 길이 안에서 "텍스트가 뜨기 시작하는 지점"의 비율.
              예: 4.04초 영상에 SCROLL_TEXT_START_SECONDS=3이면 0.743. */
           var textStartRatio = Math.min(0.99, SCROLL_TEXT_START_SECONDS / duration);
