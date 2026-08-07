@@ -1,0 +1,1126 @@
+@charset "utf-8";
+
+/* =========================================================
+   hero — bespoke / shop 2분할
+   ========================================================= */
+
+.hero {
+  display: flex;
+  flex-direction: column;
+}
+
+.hero_panel {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 520px;
+  height: 80vh;
+}
+
+/* 사진이 잘리는 기준 위치를 직접 조정하려면 이 두 값만 바꾸면 됩니다.
+   "가로 세로" 순서로 적습니다 — 가로는 left(0%) ~ right(100%)/center(가운데),
+   세로는 top(0%) ~ bottom(100%)/center(가운데)이고 %값으로도 조정할 수 있습니다.
+   (예: "center 30%"로 하면 지금보다 사진이 조금 더 아래쪽을 기준으로 잘립니다) */
+.hero_panel_bespoke {
+  --hero_img_position: center top;
+}
+
+.hero_panel_shop {
+  --hero_img_position: center top;
+}
+
+.hero_panel_img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--hero_img_position, top);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.hero_panel_video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.hero_panel_body {
+  position: absolute;
+  right: var(--layout_gutter);
+  bottom: 48px;
+  left: var(--layout_gutter);
+}
+
+.hero_panel_title {
+  color: var(--color_text_on_dark);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.hero_panel_desc {
+  max-width: 395px;
+  margin-top: 3px;
+  color: var(--color_text_on_dark_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+.hero_panel_button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 36px;
+  padding: 10px 20px;
+  border: 1px solid var(--color_line_on_dark);
+  border-radius: var(--radius_button);
+  color: var(--color_text_on_dark);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 500;
+  line-height: 1.5;
+  transition: background-color var(--duration_fast) var(--easing_base),
+              border-color var(--duration_fast) var(--easing_base);
+}
+
+.hero_panel_button:hover,
+.hero_panel_button:focus-visible {
+  border-color: var(--color_text_on_dark);
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+@media (min-width: 768px) {
+  .hero {
+    flex-direction: row;
+  }
+
+  .hero_panel {
+    width: 50%;
+    height: 100vh;
+    min-height: 600px;
+  }
+
+  .hero_panel_body {
+    bottom: 70px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero_panel {
+    height: 986px;
+  }
+
+  .hero_panel_body {
+    right: auto;
+    left: 80px;
+  }
+}
+
+/* =========================================================
+   intro — 브랜드 한 줄 소개
+   ========================================================= */
+
+.intro {
+  border-bottom: 1px solid var(--color_line);
+  padding: 60px 0;
+}
+
+.intro_container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.intro_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.intro_desc {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+@media (min-width: 1280px) {
+  .intro {
+    padding-top: 100px;
+    padding-bottom: 100px;
+  }
+}
+
+/* =========================================================
+   banner
+   ========================================================= */
+
+.banner {
+  padding: 40px 0;
+  background-image: linear-gradient(to bottom, #fffdf9, #fcfcfb);
+}
+
+.banner_img {
+  width: 100%;
+  height: auto;
+}
+
+@media (min-width: 1280px) {
+  .banner {
+    /* 시안 1920px: 상단 69px, 이미지 720px, 하단 150px */
+    padding: 69px 0 150px;
+  }
+}
+
+/* =========================================================
+   model — 스크롤에 따라 영상이 재생되는 고정 장면
+   ========================================================= */
+
+.model {
+  position: relative;
+  min-height: 100dvh;
+  padding: 0;
+  overflow: clip;
+}
+
+.model_container {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(32px, 6dvh, 68px);
+}
+
+.model_figure {
+  width: min(544px, 48dvh, 88vw);
+  aspect-ratio: 544 / 720;
+  flex: none;
+}
+
+.model_video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.model_text {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.model_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: clamp(28px, 4.5vw, 52px);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: var(--ls_tight);
+}
+
+.model_desc {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1.63;
+}
+
+@media (max-width: 767px) {
+  .model_container {
+    gap: 24px;
+  }
+
+  .model_figure {
+    width: min(440px, 46dvh, 88vw);
+  }
+}
+
+/* =========================================================
+   brand_word — brand_01~04, 화면을 채우는 초대형 워드마크
+   (Figma node 1712:4331~4337)
+   기본은 4개가 세로로 쌓인 레이아웃(JS 미동작·모션 감소 시 그대로 사용).
+   js/main.js가 .is_pinned를 붙이면 한 화면에 고정된 채 글자만 바뀝니다.
+   ========================================================= */
+
+.brand_word_pin.is_pinned {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+  overflow: hidden;
+}
+
+.brand_word_pin.is_pinned .brand_word,
+.brand_word_pin.is_pinned .brand_collage {
+  position: absolute;
+  inset: 0;
+  min-height: 0;
+  opacity: 0;
+}
+
+.brand_word_pin.is_pinned .brand_word.is_active,
+.brand_word_pin.is_pinned .brand_collage.is_active {
+  opacity: 1;
+}
+
+.brand_word {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 60vh;
+  padding: 60px var(--layout_gutter);
+}
+
+.brand_word_text {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: clamp(40px, 12vw, 174px);
+  font-weight: 600;
+  line-height: 1.13;
+  letter-spacing: -0.02em;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.brand_word_split {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: clamp(20px, 6vw, 240px);
+}
+
+.brand_word_split .brand_word_text {
+  font-size: clamp(32px, 9vw, 174px);
+}
+
+@media (min-width: 1280px) {
+  .brand_word {
+    min-height: 1080px;
+  }
+}
+
+/* =========================================================
+   brand_collage — brand_05/06, 겹친 이미지 카드 + 워드마크
+   (Figma node 1712:4341, 1712:4362)
+   ========================================================= */
+
+.brand_collage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  min-height: 80vh;
+  padding: 60px var(--layout_gutter);
+}
+
+.brand_collage_cards {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  width: 100%;
+  max-width: 1603px;
+}
+
+.brand_collage_row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 3vw, 52px);
+  width: 100%;
+}
+
+.brand_collage_card {
+  flex: 0 0 auto;
+  width: 20%;
+  max-width: 285px;
+}
+
+.brand_collage_card.is_size_sm {
+  width: 16%;
+  max-width: 232px;
+}
+
+.brand_collage_card.is_dim {
+  opacity: 0.2;
+}
+
+.brand_collage_card img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.brand_collage_btn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.brand_collage_link {
+  color: #636363;
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  line-height: 1.58;
+}
+
+.brand_collage_link_right {
+  text-align: right;
+}
+
+.brand_collage_name {
+  position: absolute;
+  z-index: 1;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+  max-width: 1920px;
+  transform: translate(-50%, -50%);
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: clamp(28px, 6vw, 74px);
+  font-weight: 600;
+  line-height: 1.13;
+  letter-spacing: -0.02em;
+  text-align: center;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* brand_collage 진입 시점(brand_04 상태)에는 이름 두 줄이 이미 갈라진 큰 글자로 시작하고,
+   스크롤이 진행되며(brand_05) 작아지고(scale) 더 벌어지고(x), "Young Jin" 앞의 숨은
+   "TCHAI Kim " 접두어가 나타납니다 — 시작/끝 옵셋은 실제 레이아웃을 측정해 js/main.js가
+   계산하므로 여기서는 값을 하드코딩하지 않습니다. */
+.brand_collage.is_enhanced .brand_collage_cards {
+  opacity: 0;
+  transform: scale(0.94);
+}
+
+.brand_collage.is_enhanced .brand_collage_name span {
+  /* transform은 js/main.js의 GSAP 타임라인이 매 스크롤 프레임마다 직접 씁니다.
+     여기서 CSS transition을 같이 걸면 GSAP 값과 서로 쫓아가며 밀리는 문제가 생겨 뺐습니다. */
+  display: inline-block;
+}
+
+.brand_collage_lg .brand_collage_card {
+  max-width: 337px;
+}
+
+.brand_collage_lg .brand_collage_card.is_size_sm {
+  max-width: 292px;
+}
+
+@media (min-width: 1280px) {
+  .brand_collage {
+    min-height: 1080px;
+  }
+
+  .brand_collage_name {
+    flex-direction: row;
+    justify-content: center;
+    gap: clamp(60px, 21.98vw, 422px);
+    white-space: nowrap;
+  }
+}
+
+/* =========================================================
+   kyj_story — 1장 → 3장 → 확대 → 페이드아웃 (js/main.js, GSAP pin)
+   (Figma node 1712:4383, 1712:4386 외 반복 2회)
+   기본(JS 미동작·모션 감소)은 3장을 나란히 놓은 정적 배치를 보여줍니다.
+   ========================================================= */
+
+.kyj_sequence {
+  overflow: hidden;
+  padding: 60px var(--layout_gutter);
+}
+
+.kyj_sequence_stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.kyj_story_card {
+  flex: 0 0 auto;
+  width: min(317px, 42vw);
+  aspect-ratio: 317 / 573;
+  overflow: hidden;
+  margin: 0;
+}
+
+.kyj_story_card img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 기본 배치: 솔로 컷은 숨기고 3장만 나란히 보여줍니다 */
+.kyj_story_solo {
+  display: none;
+}
+
+@media (min-width: 1280px) {
+  .kyj_sequence {
+    min-height: 1080px;
+  }
+}
+
+/* --- js/main.js가 .is_enhanced를 붙이면 GSAP가 pin+scrub로 진행을 맡습니다 --- */
+
+.kyj_sequence.is_enhanced .kyj_sequence_stage {
+  position: relative;
+  height: 100vh;
+  min-height: 600px;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(380px, 46vw);
+}
+
+.kyj_sequence.is_enhanced .kyj_story_solo {
+  display: block;
+  transform: translate(-50%, -50%);
+  opacity: 1;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_1 {
+  transform: translate(-150%, -50%) scale(0.85);
+  opacity: 0;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_2 {
+  transform: translate(-50%, -50%) scale(0.85);
+  opacity: 0;
+}
+
+.kyj_sequence.is_enhanced .kyj_story_3 {
+  transform: translate(50%, -50%) scale(0.85);
+  opacity: 0;
+}
+
+/* =========================================================
+   detail — collar/sleeve/body/skirt를 사진 한 장 + 4개 호버 영역으로 통합
+   (Figma node 1712:4259, 4277, 4295, 4313의 확대컷·설명을 한 섹션에 모음)
+   기본은 사진과 헤더만 보이고, 부위별 영역(.detail_hotspot)에 마우스를 올리거나
+   키보드 포커스를 주면 그 부위의 확대컷(.detail_zoom)과 설명(.detail_text)이 나타납니다.
+   ========================================================= */
+
+.detail {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 60px;
+  padding: 80px 0 60px;
+  background-image: linear-gradient(to bottom, #fcfcfb, #fffdf9);
+}
+
+/* 시안: header는 items-start(왼쪽 정렬), 페이지 폭 그대로(px-120), 가운데 정렬이 아닙니다 */
+.detail_head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 17px;
+  text-align: left;
+}
+
+.detail_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_64);
+  font-weight: 600;
+  line-height: var(--lh_display_64);
+  letter-spacing: var(--ls_tight);
+}
+
+.detail_subtitle {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+/* 시안(Figma node 1712:4266 외 3개, collar/sleeve/body/skirt 4개 variant 전부 이미지
+   좌표가 동일)의 좌표를 그대로 옮깁니다. 글과 확대컷은 이미지 옆이 아니라 이미지
+   위로 겹쳐 걸립니다. 퍼센트는 전부 .detail_stage(이미지) 기준입니다 — 좌우는
+   이미지 폭(1460), 상하는 이미지 높이(635) 대비 값입니다.
+   이미지는 화면 중앙이 아니라 피그마 그대로 왼쪽에서 10.99%(211px/1920px) 지점에
+   있습니다(가운데 정렬 아님 — 오른쪽에 확대컷이 겹쳐 걸릴 여유를 더 두는 배치).
+   위아래 여백은 위아래로 겹쳐 걸리는 글·확대컷이 다른 섹션과 부딪히지 않도록 비워
+   두는 값입니다(고정값 — % margin은 폭 기준으로 계산되어 세로 여백에는 쓸 수
+   없습니다). */
+.detail_stage {
+  position: relative;
+  width: 76.04%;
+  max-width: 1460px;
+  margin-block: clamp(160px, 24vw, 470px);
+  margin-left: 10.99%;
+}
+
+.detail_img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+/* 부위별 호버/포커스 영역 — Figma에 없는, 이번 통합을 위해 새로 정한 영역입니다 */
+.detail_hotspot {
+  position: absolute;
+  cursor: zoom-in;
+}
+
+.detail_hotspot[data-part="collar"] {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 22%;
+}
+
+.detail_hotspot[data-part="sleeve"] {
+  top: 8%;
+  left: 55%;
+  width: 45%;
+  height: 40%;
+}
+
+.detail_hotspot[data-part="body"] {
+  top: 20%;
+  left: 0;
+  width: 55%;
+  height: 35%;
+}
+
+.detail_hotspot[data-part="skirt"] {
+  top: 45%;
+  left: 25%;
+  width: 75%;
+  height: 55%;
+}
+
+.detail_text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 36.58%;
+  min-width: 200px;
+}
+
+.detail_text,
+.detail_zoom {
+  opacity: 0;
+  transform: scale(0.96);
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  pointer-events: none;
+}
+
+.detail_hotspot[data-part="collar"]:hover ~ .detail_text[data-part="collar"],
+.detail_hotspot[data-part="collar"]:hover ~ .detail_zoom[data-part="collar"],
+.detail_hotspot[data-part="collar"]:focus-visible ~ .detail_text[data-part="collar"],
+.detail_hotspot[data-part="collar"]:focus-visible ~ .detail_zoom[data-part="collar"],
+.detail_hotspot[data-part="sleeve"]:hover ~ .detail_text[data-part="sleeve"],
+.detail_hotspot[data-part="sleeve"]:hover ~ .detail_zoom[data-part="sleeve"],
+.detail_hotspot[data-part="sleeve"]:focus-visible ~ .detail_text[data-part="sleeve"],
+.detail_hotspot[data-part="sleeve"]:focus-visible ~ .detail_zoom[data-part="sleeve"],
+.detail_hotspot[data-part="body"]:hover ~ .detail_text[data-part="body"],
+.detail_hotspot[data-part="body"]:hover ~ .detail_zoom[data-part="body"],
+.detail_hotspot[data-part="body"]:focus-visible ~ .detail_text[data-part="body"],
+.detail_hotspot[data-part="body"]:focus-visible ~ .detail_zoom[data-part="body"],
+.detail_hotspot[data-part="skirt"]:hover ~ .detail_text[data-part="skirt"],
+.detail_hotspot[data-part="skirt"]:hover ~ .detail_zoom[data-part="skirt"],
+.detail_hotspot[data-part="skirt"]:focus-visible ~ .detail_text[data-part="skirt"],
+.detail_hotspot[data-part="skirt"]:focus-visible ~ .detail_zoom[data-part="skirt"] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.detail_part_title {
+  margin-bottom: 11px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: clamp(28px, 3.3vw, 48px);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.detail_part_lead {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: clamp(16px, 1.7vw, 24px);
+  font-weight: 400;
+  line-height: 1.58;
+}
+
+.detail_part_desc {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 400;
+  line-height: 1.63;
+}
+
+/* 시안 주석: 호버 시 돋보기 확대 */
+.detail_zoom {
+  position: absolute;
+  width: 20.55%;
+  min-width: 120px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 50%;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.detail_zoom img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 부위별 글/확대컷 좌표 — .detail_stage(이미지) 기준 원래 Figma 퍼센트 그대로 */
+.detail_text[data-part="collar"] {
+  /* (333-211)/1460, (79-218)/635 */
+  top: -21.89%;
+  left: 8.36%;
+}
+
+.detail_zoom[data-part="collar"] {
+  /* (800-211)/1460, (69-218)/635 */
+  top: -23.46%;
+  left: 40.34%;
+}
+
+.detail_text[data-part="sleeve"] {
+  /* (1144-211)/1460, (54-218)/635 */
+  top: -25.83%;
+  left: 63.90%;
+}
+
+.detail_zoom[data-part="sleeve"] {
+  /* (1196-211)/1460, (244-218)/635, 409/1460 */
+  top: 4.09%;
+  left: 67.47%;
+  width: 28.01%;
+}
+
+.detail_text[data-part="body"] {
+  /* (221-211)/1460, (588-218)/635 */
+  top: 58.27%;
+  left: 0.68%;
+}
+
+.detail_zoom[data-part="body"] {
+  /* (557-211)/1460, (369-218)/635 */
+  top: 23.78%;
+  left: 23.70%;
+}
+
+.detail_text[data-part="skirt"] {
+  /* (625-211)/1460, (895-218)/635 */
+  top: 106.61%;
+  left: 28.36%;
+}
+
+.detail_zoom[data-part="skirt"] {
+  /* (1032-211)/1460, (575-218)/635, 384/1460 */
+  top: 56.22%;
+  left: 56.23%;
+  width: 26.30%;
+}
+
+@media (min-width: 1024px) {
+  .detail {
+    padding-top: 145px;
+  }
+}
+
+/* =========================================================
+   아래 섹션들은 시안 1920px 기준 데스크톱 레이아웃만 작성했습니다.
+   태블릿·모바일 대응은 반응형 일괄 작업에서 추가합니다.
+   ========================================================= */
+
+/* =========================================================
+   promo — bespoke / shop 공통 소개 블록
+   ========================================================= */
+
+.promo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 40px;
+}
+
+.promo_text {
+  display: flex;
+  flex: 1 1 320px;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.promo_figure {
+  flex: 1 1 320px;
+  min-width: 0;
+  max-width: 727px;
+}
+
+.promo_title {
+  margin-bottom: 40px;
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight_sm);
+  text-transform: uppercase;
+}
+
+.promo_lead_group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 60px;
+}
+
+.promo_lead {
+  color: #1e1e1e;
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  font-weight: 500;
+  line-height: var(--lh_body_24);
+}
+
+.promo_desc {
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: var(--lh_body_20);
+}
+
+.promo_link {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  font-weight: 500;
+  line-height: var(--lh_body_24);
+  text-transform: uppercase;
+}
+
+.promo_img {
+  width: 100%;
+  height: auto;
+}
+
+/* --- bespoke: 글 왼쪽 / 사진 오른쪽 --- */
+
+/* bespoke_banner 무드 영상 (Figma node 1712:4394) */
+.promo_media {
+  width: 100%;
+  aspect-ratio: 1923 / 1043;
+  overflow: hidden;
+}
+
+.promo_media_video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promo_bespoke {
+  padding: 82px 0 146px;
+}
+
+.promo_bespoke .promo_text {
+  max-width: 746px;
+  margin-top: 85px;
+}
+
+/* =========================================================
+   marquee — 띠 형태 롤링 텍스트
+   같은 내용의 줄을 두 벌 두고 한 벌 길이만큼 밀어 끊김 없이 반복합니다.
+   ========================================================= */
+
+.marquee {
+  overflow: hidden;
+  padding: 54px 0;
+}
+
+.marquee_track {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+  width: max-content;
+  animation: marquee_scroll 32s linear infinite;
+}
+
+.marquee_row {
+  display: flex;
+  align-items: center;
+  gap: 38px;
+}
+
+.marquee_word {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: 50px;
+  font-weight: 500;
+  line-height: 1.22;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.marquee_dot {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--color_text);
+}
+
+/* 두 줄 사이 gap(38px)의 절반을 함께 밀어야 이음매가 맞습니다. */
+@keyframes marquee_scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 19px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee_track {
+    animation: none;
+  }
+}
+
+/* =========================================================
+   shop
+   ========================================================= */
+
+.shop {
+  padding-bottom: 155px;
+}
+
+.promo_shop {
+  padding: 145px 0 0;
+}
+
+.promo_shop .promo_text {
+  max-width: 606px;
+  margin-top: 98px;
+}
+
+/* product 열 — 시안(Figma node 1712:4438)은 5장을 정적으로 나열합니다 */
+.shop_products {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 52px;
+}
+
+.shop_product {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.shop_product.is_dim {
+  opacity: 0.2;
+}
+
+.shop_product img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+/* =========================================================
+   collection — Two lines. One extraordinary aesthetic.
+   (Figma node 1712:4444, celeb 섹션을 대체)
+   ========================================================= */
+
+.collection {
+  overflow: hidden;
+  padding: 120px 0;
+  text-align: center;
+}
+
+.collection_container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+}
+
+.collection_title {
+  color: #1e1e1e;
+  font-family: var(--font_display);
+  font-size: var(--fs_display_48);
+  font-weight: 600;
+  line-height: var(--lh_display_48);
+  letter-spacing: var(--ls_tight);
+}
+
+.collection_row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 3vw, 40px);
+  width: 100%;
+  min-width: 0;
+}
+
+.collection_item {
+  /* 시안 실제 폭 비율(344 / 320.5 / 360 / 320.5 / 344)을 flex-grow로 유지합니다 */
+  flex: 344 1 0;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.collection_item.is_size_md {
+  flex: 320.5 1 0;
+}
+
+.collection_item.is_size_bts {
+  flex: 360 1 0;
+}
+
+.collection_item img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.collection_bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.collection_desc {
+  color: var(--color_text);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_24);
+  font-weight: 500;
+  line-height: 1.42;
+  letter-spacing: 0.01em;
+}
+
+.collection_links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 40px 150px;
+}
+
+.collection_link {
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  line-height: 1.63;
+}
+
+
+/* =========================================================
+   클로징 (Figma 1920 × 620 절대좌표 → common_container 기반 흐름 배치로 전환)
+   시안은 글과 아이콘이 겹쳐 있지만, .common_container 도입에 맞춰
+   아래로 쌓는 배치로 단순화했습니다.
+   ========================================================= */
+
+.closing {
+  overflow: hidden;
+  padding: 150px 0;
+}
+
+.closing_inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+}
+
+.closing_head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  max-width: 894px;
+  text-align: center;
+}
+
+.closing_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: 56px;
+  font-weight: 700;
+  /* Trirong 기본 행간 — 시안 텍스트 높이 97 / 56 */
+  line-height: 1.73;
+}
+
+.closing_desc {
+  color: #262626;
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  font-weight: 400;
+  line-height: 1.2;
+}
+
+.closing_icons {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+}
+
+.closing_icon_people {
+  width: 200px;
+  height: auto;
+}
+
+.closing_icon_dog {
+  width: 120px;
+  height: auto;
+}
