@@ -255,20 +255,31 @@
 
    position: relative가 필요한 이유: JS가 `offsetLeft`/`offsetTop`으로
    사진의 중심을 섹션 기준으로 잰다. 이게 없으면 offsetParent가 body가 되어
-   (실측으로 확인함) 좌표가 어긋난다.
+   (실측으로 확인함) 좌표가 어긋난다. offset 계열은 transform과 pin 상태에
+   영향을 받지 않는 레이아웃 값이라, 확대 도중에 다시 재도 값이 흔들리지 않는다.
+
+   z-index를 섹션에 주는 이유: ScrollTrigger가 pin을 걸면 섹션이
+   `position: fixed`가 되고, 그 순간 섹션 자체가 쌓임 맥락을 만든다.
+   그러면 안쪽 .atelier_image의 z-index 1이 섹션 밖으로 나가지 못해,
+   문서 순서상 뒤에 있는 .quote(position: relative)가 확대된 사진 위에
+   그려진다. 섹션을 2로 올려야 아래 섹션들보다 확실히 위에 온다.
+   헤더는 layout.css에서 z-index 50이라 그대로 사진 위에 남는다.
 
    확대는 transform: scale만 쓴다. 박스의 aspect-ratio가 554/648로 고정돼
    있고 안쪽 img는 object-fit: cover라, 배율만 올리면 잘리는 범위가 그대로인
-   채 돋보기처럼 커진다.
+   채 돋보기처럼 커진다. transform-origin은 반드시 중앙이어야 한다 —
+   JS가 상자 중심을 화면 중앙으로 옮긴 뒤 그 중심을 기준으로 키운다.
    --------------------------------------------------------- */
 
 .atelier.is_zoom_ready {
   position: relative;
+  z-index: 2;
 }
 
 .atelier.is_zoom_ready .atelier_image {
   position: relative;
   z-index: 1; /* 커지면서 오른쪽 텍스트를 덮는다 */
+  transform-origin: 50% 50%;
   will-change: transform;
 }
 

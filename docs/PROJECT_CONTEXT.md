@@ -169,8 +169,89 @@ Lenis를 GSAP 티커·ScrollTrigger에 연결해 둬서 scrub이 부드럽게 �
   속도감은 사용자가 직접 봐야 합니다.** `prefers-reduced-motion: reduce` 환경의
   실제 동작도 실행해 보지 못했습니다(`gsap.matchMedia()`가 되돌리도록 작성).
 
+### atelier 확대(pin) 인터랙션 (2026-08-07)
+
+섹션이 화면에 고정된 채 왼쪽 사진이 돋보기처럼 커져 오른쪽 글을 덮고 화면 전체를
+채웁니다. 다 채우면 고정이 풀리고 quote 섹션으로 스크롤이 이어집니다.
+`css/bespoke.css`와 `js/bespoke.js`만 바꿨습니다. **HTML과 `common/`은 그대로입니다.**
+
+GSAP pin + scrub입니다. `.atelier`를 `start: "center center"`, `end: "+=120%"`,
+`pin: true`, `scrub: 0.6`으로 잡고 `.atelier_image`에 `x` / `y` / `scale` 하나짜리
+트윈을 겁니다. 확대는 **`transform: scale` 하나뿐**이라 가로세로 비율이 구조적으로
+깨질 수 없습니다(측정: 진행도 0~1 전 구간에서 비율이 0.85494로 고정).
+
+#### 이 인터랙션에서 반드시 지켜야 하는 것
+
+1. **섹션에 `z-index: 2`가 필요합니다.** pin이 걸리면 섹션이 `position: fixed`가
+   되고 그 순간 섹션 자체가 쌓임 맥락을 만듭니다. 그러면 안쪽 `.atelier_image`의
+   `z-index: 1`이 섹션 밖으로 나가지 못해, 문서 순서상 뒤에 있는 `.quote`
+   (`position: relative`)가 확대된 사진 위에 그려집니다.
+   헤더는 `layout.css`에서 `z-index: 50`이라 사진 위에 그대로 남습니다.
+   (참고: 이 페이지 헤더는 `position: sticky`인데 슬롯 div 안에 갇혀 있어 원래부터
+   따라오지 않고 위로 흘러갑니다 — 이번 작업과 무관한 기존 상태입니다.)
+2. **목표값을 `onRefreshInit`에서 재면 안 됩니다.** 그 시점에는 ScrollTrigger가
+   아직 pin-spacer를 새 폭으로 고쳐놓기 전이라 이전 창 크기의 spacer
+   (`width: 1728px; margin: 0 88.5px`)가 남아 있습니다. 실제로 1905 → 1425로
+   줄였을 때 사진이 **88px 어긋난 자리**로 커졌습니다. 지금은 `onRefreshInit`에서
+   캐시를 비우기만 하고, 실제 측정은 GSAP이 함수형 값을 부를 때(= refresh가 끝난 뒤)
+   합니다.
+3. **크기·중심은 `offsetWidth`가 아니라 rect로 잽니다.** offset 계열은 정수로
+   반올림되는데, 1280~1839px 구간에서 사진 폭이 42%라 소수점이 남습니다
+   (실제 428.86 → offsetWidth 429). 큰 값으로 나누면 배율이 모자라서 다 커진 뒤에도
+   화면 가장자리에 **0.2~0.5px 크림색 실선**이 남습니다(1425px에서 실측).
+   rect는 transform이 반영된 값이므로 지금 걸린 이동·배율을 도로 빼서 씁니다.
+4. **`ATELIER_COVER_BLEED`를 1보다 키우지 마세요.** 이 사진(554×648)은 화면보다
+   세로로 긴 비율이라 확대를 제한하는 쪽이 **항상 가로**입니다. 여유를 주면 그만큼
+   사진이 화면 좌우 밖으로 나가고 그 폭이 문서에 가로 넘침으로 남습니다
+   — 1.04로 뒀을 때 pin이 풀린 뒤 실제로 38px이 남았습니다
+   (`body { overflow-x: hidden }`은 휠 조작만 막을 뿐 없애지 않습니다).
+5. **1280px 미만에는 걸지 않습니다.** 그 아래에서는 사진이 글 옆이 아니라 위에
+   세로로 쌓여서 "글을 덮는다"가 성립하지 않습니다.
+
+조절값은 `js/bespoke.js`의 atelier 블록 상단에 모여 있습니다:
+`ATELIER_PIN_LENGTH`("+=120%") `ATELIER_SCRUB`(0.6) `ATELIER_COVER_BLEED`(1)
+`ATELIER_GATE`.
+
+#### 검증 (1920×1080 = 화면 1905×1080, localhost:5612)
+
+- pin 2825 → 4121(1296px = 화면 높이 ×1.2). 구간 내내 섹션이 `position: fixed`이고
+  섹션 중심 y가 **정확히 540**(화면 중앙)에 머묾.
+- 진행도 0 / 0.25 / 0.5 / 0.75 / 1에서 사진 크기 554×648 → 892×1043 → 1229×1438 →
+  1567×1833 → **1905×2228**, 비율 전부 0.85494(= 554/648) 그대로.
+- 중심이 429.5 → 952.5로 이동해 **화면 중앙(952.5, 540)에 정확히 안착**.
+  마지막 프레임 rect가 `[0.01, -574.17, 1904.99, 1654.04]`으로 화면 전체를 덮음.
+- 글 위 지점(1400, 540)의 최상단 요소가 진행도 0.5까지 `.atelier_body`,
+  0.75부터 사진으로 바뀜 — 사진이 글을 덮는 것 확인.
+- pin이 풀린 뒤 quote가 위로 올라오며 스크롤이 이어지는 것 확인.
+- **가로 스크롤 0** — 진행도 0~1의 11개 지점과 pin 전후에서 `scrollLeft`를 300으로
+  밀어도 0에서 움직이지 않음.
+- 1425×900에서도 동일: 덮음 성립, 중심 오차 가로 0 / 세로 0.4px, 가로 스크롤 0.
+- **1264px(게이트 아래)**: pin 트리거 0개, `is_zoom_ready` 없음, `transform: none`,
+  pin-spacer 0개, `z-index: auto` — 기존 세로 레이아웃 그대로.
+- `node --check js/bespoke.js` 통과. CSS 규칙 153개, 버려진 규칙 0, 빈 규칙 0,
+  중괄호 균형 0. 콘솔 오류 0, 실패한 요청 0건, 깨진 이미지 0장.
+
+#### 확인하지 못한 부분
+
+- **이번 세션도 Browser 미리보기 패널이 표시되지 않아 화면 캡처를 못 했습니다**
+  (`Screenshot timed out: the pane is not compositing frames`). 위 수치는 전부
+  `getBoundingClientRect` / `elementsFromPoint` 측정입니다. **실제로 커지는 모습과
+  속도감(`ATELIER_PIN_LENGTH` 120%, `ATELIER_SCRUB` 0.6)은 사용자가 직접 봐야 합니다**
+  (`http://localhost:5612/test/bespoke_test/index.html`).
+- 숨겨진 탭이라 `requestAnimationFrame`이 돌지 않아 `ScrollTrigger.update()` 뒤
+  타임라인을 직접 진행시켜 쟀습니다. scrub의 관성 자체는 재생해 보지 못했습니다.
+- **이 탭에서는 창 크기를 바꿔도 `matchMedia`의 `change` 이벤트가 뜨지 않습니다.**
+  그래서 1264 ↔ 1905를 오갈 때 `gsap.matchMedia()`가 붙었다 떨어지는 것을 보지
+  못했습니다(폭별 동작은 각 폭에서 새로고침해 확인). 같은 폭 안에서의 재측정은
+  `ScrollTrigger.refresh()`를 직접 불러 확인했고 정상입니다.
+- `prefers-reduced-motion: reduce` 환경의 실제 동작(philosophy와 동일한
+  `gsap.matchMedia()` 게이트로 작성).
+
 ### 이 세션의 환경 메모
 
+- 정적 서버 포트를 **5612**로 옮겼습니다. 다른 세션의 서버가 5611을 잡고 있어
+  충돌했습니다. `.claude/launch.json`의 `tchaikimm_node`가 이 세션 스크래치패드의
+  `serve.js`를 가리키므로 **다른 세션에서는 스크립트를 다시 만들어야 합니다.**
 - **Figma MCP**: 프로젝트 `.mcp.json`에 `figma-desktop`
   (`https://mcp.figma.com/mcp`, OAuth 필요)을 등록했습니다.
   이 파일은 저장소에 커밋되므로 팀원마다 승인 창이 뜹니다.
