@@ -282,6 +282,46 @@
       </div>
     </section>
 
+    <!-- scroll — 두루마기 영상. Figma 'intro_open'(1561:2140) 기준 카피/아이콘.
+         제목은 영상과 무관하게 항상 보입니다. JS(js/brand.js의
+         initScrollVideo)가 있고 1280px 이상 + 모션 허용이면 화면에 붙잡힌
+         채(pin) 스크롤 진행률을 영상 재생 시간(0~4.04초)에 그대로
+         매핑합니다(스크럽 — 재생이 아니라 스크롤한 만큼만 진행). 3초
+         지점부터 .scroll_overlay(안내 문구·예약 버튼·소셜 아이콘)가
+         페이드인해 영상이 끝나는 4초에 완전히 보입니다 — 두루마리가 다
+         펼쳐져야 그 위에 적힌 내용이 읽히는 것과 같은 순서입니다. 조건이 안
+         맞으면 영상이 그냥 무한 반복 재생되고 오버레이는 항상 보입니다. -->
+    <section class="scroll" aria-labelledby="scroll_title">
+      <h2 class="scroll_title" id="scroll_title">Find Your Difference</h2>
+
+      <div class="scroll_stage">
+        <video class="scroll_video" src="assets/video/intro.mp4" muted loop autoplay playsinline preload="auto" aria-hidden="true"></video>
+
+        <div class="scroll_overlay">
+          <p class="scroll_overlay_eyebrow">Where tradition finds freedom</p>
+
+          <a class="scroll_overlay_book" href="../bespoke_test/reservation.html">
+            <img src="assets/images/brand_btn_book.png" alt="Book a Bespoke visit" width="80" height="80">
+          </a>
+
+          <ul class="scroll_overlay_social">
+            <li>
+              <a href="https://www.instagram.com/tchaikim/" target="_blank" rel="noopener noreferrer">
+                <img src="assets/icons/Instagram.svg" alt="" aria-hidden="true">
+                <span class="a11y_hidden">Instagram (opens in a new tab)</span>
+              </a>
+            </li>
+            <li>
+              <a href="#" target="_blank" rel="noopener noreferrer">
+                <img src="assets/icons/Facebook.svg" alt="" aria-hidden="true">
+                <span class="a11y_hidden">Facebook (opens in a new tab)</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
   </main>
 
 <div class="common_footer_slot" data-component="/common/components/footer.html">

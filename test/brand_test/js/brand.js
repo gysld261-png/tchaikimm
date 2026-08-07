@@ -17,7 +17,11 @@
       사진과 함께 한 번만 나타나고, 마지막 사진 뒤에 Bespoke 버튼이
       뜹니다. 조절 값은 파일 위쪽 HERITAGE_* 상수에 모아 두었습니다.
 
-   5. tchaikim 영상 5개는 그 섹션을 보고 있을 때만 재생합니다.
+   5. scroll 두루마기 영상 — 화면을 붙잡아 둔 채(pin) 스크롤 진행률을 영상의
+      재생 시간(0~4.04초)에 그대로 매핑합니다(재생이 아니라 스크럽). 3초
+      지점부터 텍스트가 페이드인합니다. 조절 값은 SCROLL_* 상수에 있습니다.
+
+   6. tchaikim 영상 5개는 그 섹션을 보고 있을 때만 재생합니다.
 
    HTML/CSS의 기본 상태는 전부 "다 끝난 모습"입니다. 이 스크립트는 시작 상태로
    되돌린 뒤 재생합니다. 그래서 JS나 GSAP이 없으면 완성된 화면이 그대로 보입니다.
@@ -152,6 +156,44 @@
      FROM을 1보다 낮추면 "완전 흑백"까지는 안 가고 시작합니다. */
   var HERITAGE_GRAYSCALE_FROM = 1;
   var HERITAGE_GRAYSCALE_TO = 0;
+
+  /* ---- scroll 두루마기 영상 스크럽 -----------------------------------------
+     디자이너 주석 원문(Figma 'intro' 노드): "스크롤 4번에 두루마리가 펼쳐지게
+     하면 좋을듯 / 두루마리 펼쳐지면서 텍스트 페이드아웃?되게 -> keyframe 사용? /
+     brand 영상관련 / 영상 총 4초로 추정 / 1,2,3,4 스크롤에 맞춰서 4초로 /
+     fade in opacity 3초부터해서 4초에 딱 텍스트가 보이게"
+
+     구현: 화면에 붙잡아 둔(pin) 채로 스크롤 진행률(0→1)을 영상의
+     currentTime(0→영상 길이)에 그대로 매핑합니다("영상 재생"이 아니라
+     "스크롤한 만큼만 영상이 진행"). 별도 GSAP 트윈 없이, 진행률을 담은
+     proxy 객체 하나를 ScrollTrigger로 스크럽하면서 매 프레임 video.currentTime을
+     직접 seek합니다. */
+  var SCROLL_MIN_WIDTH = 1280;
+
+  /* ★ 화면에 붙잡아 두는 길이. 늘리면 영상 4초를 다 보려면 스크롤을 더 많이
+     해야 합니다 — 더 천천히 진행됩니다. */
+  var SCROLL_PIN_LENGTH = "+=250%";
+
+  /* ★ 텍스트가 뜨기 시작하는 영상 시점(초). 디자이너 주석의 "3초부터"
+     그대로입니다. 영상 길이(video.duration, 지금은 약 4.04초)는 하드코딩하지
+     않고 재생 시점에 직접 읽으므로, 영상 파일이 바뀌어 길이가 달라져도
+     이 숫자만 "영상이 끝나기 몇 초 전"이라는 의미로 자동 환산됩니다. */
+  var SCROLL_TEXT_START_SECONDS = 3;
+
+  /* ★ 핀에 붙잡히는 순간 / 풀리는 순간이 "뚝" 걸리듯 무겁게 느껴지는 문제를
+     줄이는 값 둘입니다.
+
+     LEAD_RATIO — 핀 구간 맨 앞의 여유(0~1 비율). 붙잡히자마자 바로 영상이
+     움직이기 시작하면 "잡힘"과 "움직임"이 겹쳐서 더 무겁게 느껴집니다.
+     이 비율만큼은 스크롤해도 영상이 그대로 있다가 그다음부터 움직입니다.
+
+     SETTLE_RATIO — 핀 구간 끝의 여유. 영상/텍스트가 다 끝난 뒤에도 곧바로
+     풀리지 않고, 이 비율까지는 화면이 가만히 멈춰 있다가 풀립니다. 풀리는
+     순간 화면이 같이 바뀌지 않아야 "뚝" 하는 느낌이 없습니다.
+
+     실제 영상 재생은 이 둘 사이 구간(LEAD~SETTLE)에서만 0→1로 진행됩니다. */
+  var SCROLL_LEAD_RATIO = 0.08;
+  var SCROLL_SETTLE_RATIO = 0.88;
 
   function isReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -474,6 +516,124 @@
     );
   }
 
+  /* scroll 섹션 — 두루마기 영상을 스크롤로 스크럽합니다. 위 SCROLL_* 상수
+     설명을 먼저 보세요.
+
+     ★ assets/video/intro.mp4는 매 프레임이 키프레임입니다(ffmpeg -g 1로
+     재인코딩, 원본 1840×1124·24fps·97프레임 그대로, 자르지 않음, 1.7MB).
+     브라우저가 영상을 되감을 때 가장 가까운 키프레임부터 다시 디코딩하는데,
+     일반적인 인코딩(키프레임 간격 넓음)은 이 되감기가 스크롤 속도를 못
+     따라가 "멈췄다가 마지막 장면으로 점프"하는 것처럼 보입니다. 영상을
+     새로 받으면 같은 명령으로 다시 인코딩해야 스크럽이 매끄럽습니다:
+     ffmpeg -i 원본.mp4 -an -c:v libx264 -profile:v high -pix_fmt yuv420p
+     -g 1 -keyint_min 1 -sc_threshold 0 -crf 20 -preset slow
+     -movflags +faststart intro.mp4 */
+  function initScrollVideo() {
+    var section = document.querySelector(".scroll");
+    var video = document.querySelector(".scroll_video");
+    var overlay = document.querySelector(".scroll_overlay");
+
+    if (
+      typeof window.gsap === "undefined" ||
+      typeof window.ScrollTrigger === "undefined" ||
+      !section || !video
+    ) {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    gsap.matchMedia().add(
+      "(min-width: " + SCROLL_MIN_WIDTH + "px) and (prefers-reduced-motion: no-preference)",
+      function () {
+        var scrollTween = null;
+
+        function start() {
+          var duration = video.duration;
+
+          if (!duration) {
+            return;
+          }
+
+          /* JS가 넘겨받는 순간부터는 스크롤이 재생을 대신합니다.
+             HTML의 autoplay/loop는 JS 없을 때를 위한 기본값이었을 뿐입니다. */
+          video.pause();
+          video.removeAttribute("loop");
+          video.currentTime = 0;
+
+          if (overlay) {
+            gsap.set(overlay, { opacity: 0 });
+          }
+
+          /* 영상 길이 안에서 "텍스트가 뜨기 시작하는 지점"의 비율.
+             예: 4.04초 영상에 SCROLL_TEXT_START_SECONDS=3이면 0.743. */
+          var textStartRatio = Math.min(0.99, SCROLL_TEXT_START_SECONDS / duration);
+          var settleSpan = SCROLL_SETTLE_RATIO - SCROLL_LEAD_RATIO;
+          var proxy = { progress: 0 };
+
+          scrollTween = gsap.to(proxy, {
+            progress: 1,
+            ease: "none",
+            scrollTrigger: {
+              trigger: section,
+              start: "top top",
+              end: SCROLL_PIN_LENGTH,
+              pin: true,
+              scrub: 1,
+              anticipatePin: 1,
+              invalidateOnRefresh: true
+            },
+            onUpdate: function () {
+              /* 핀 구간 전체(0~1)에서 앞뒤 여유(LEAD~SETTLE)를 뺀 가운데
+                 구간만 영상 진행(0~1)으로 다시 매핑합니다. 여유 구간에서는
+                 eased가 0 또는 1에 고정돼 있어 영상/텍스트가 그대로입니다. */
+              var eased = Math.max(0, Math.min(1, (proxy.progress - SCROLL_LEAD_RATIO) / settleSpan));
+
+              video.currentTime = eased * duration;
+
+              if (overlay) {
+                var textProgress = (eased - textStartRatio) / (1 - textStartRatio);
+                overlay.style.opacity = String(Math.max(0, Math.min(1, textProgress)));
+              }
+            }
+          });
+        }
+
+        if (video.readyState >= 1) {
+          start();
+        } else {
+          video.addEventListener("loadedmetadata", start, { once: true });
+        }
+
+        /* 조건이 어긋나면(창을 좁히거나 모션 축소 설정을 켜면) pin과 스크럽을
+           걷어내고, 영상은 다시 자동 반복 재생으로, 텍스트는 다시 항상 보이는
+           상태로 되돌립니다. */
+        return function () {
+          if (scrollTween) {
+            if (scrollTween.scrollTrigger) {
+              scrollTween.scrollTrigger.kill();
+            }
+            scrollTween.kill();
+          }
+
+          video.setAttribute("loop", "");
+          var played = video.play();
+
+          if (played && typeof played.catch === "function") {
+            played.catch(function () {
+              /* 자동재생이 거절되면 첫 프레임에 멈춘 채로 남습니다. */
+            });
+          }
+
+          if (overlay) {
+            overlay.style.opacity = "";
+          }
+        };
+      }
+    );
+  }
+
   /* 영상은 그 섹션을 보고 있는 동안에만 재생합니다.
      재생 요청이 거절될 수 있어(자동재생 정책) 반환된 Promise를 받아둡니다. */
   function initYoungjinMotion() {
@@ -720,6 +880,7 @@
     initYoungjinMotion();
     initAtelierMarquee();
     initHeritageReveal();
+    initScrollVideo();
     initTchaikimTabs();
     initVideos();
   }

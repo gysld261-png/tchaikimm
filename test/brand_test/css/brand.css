@@ -760,3 +760,125 @@
 .heritage_button:focus-visible {
   background-color: var(--color_text);
 }
+
+/* =========================================================
+   scroll — 두루마기 영상. Figma 'intro'(1829:6844, 닫힌 두루마리 정지 이미지)
+   대신 실제 촬영 영상(assets/video/intro.mp4, 1840×1124)을 쓰고, 다 펼쳐진
+   뒤의 문구·아이콘은 'intro_open'(1561:2140) 기준입니다.
+
+   1920 화면에서 좌우 여백 없이 꽉 차야 합니다 — .scroll_stage를 영상의
+   실제 비율(1840:1124) 그대로 최대 1920px까지 늘립니다(다른 섹션의 1920
+   캔버스 기준과 동일). 세로로 자른 좁은 상자에 넣지 않습니다. */
+
+.scroll {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 100px;
+  padding-block: 100px;
+  overflow-x: clip;
+}
+
+/* 제목은 영상 스크럽과 무관하게 항상 보입니다 — 두루마리가 아직 안
+   펼쳐졌어도 섹션 제목 자체는 읽을 수 있어야 합니다. */
+.scroll_title {
+  font-family: var(--font_display);
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 1.29;
+  letter-spacing: -0.48px;
+  color: var(--color_point);
+  text-align: center;
+}
+
+/* 영상의 실제 비율(1840:1124) 그대로 최대 1920px까지 폭을 채웁니다.
+   비율이 영상과 같아서 object-fit: cover가 사실상 자르지 않고 꽉 채웁니다. */
+.scroll_stage {
+  position: relative;
+  width: 100%;
+  max-width: 1920px;
+  aspect-ratio: 1840 / 1124;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+.scroll_video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 두루마리가 다 펼쳐져야 그 위에 적힌 안내 문구·예약 버튼·소셜 아이콘이
+   보이는 순서입니다. JS(initScrollVideo, js/brand.js)가 없거나 조건이 안
+   맞으면(1280px 미만 · 모션 축소) opacity: 1로 항상 보이는 "다 끝난 모습"이
+   기본값이고, JS가 있으면 시작할 때 0으로 되돌린 뒤 영상 진행률(3~4초
+   구간)에 맞춰 다시 올립니다.
+
+   위치는 상자(.scroll_stage) 정중앙(50%)이 아니라 47.5%입니다. 두루마리
+   그림에서 글이 들어갈 흰 종이 칸은 위쪽 걸이·술 때문에 상자 전체 높이의
+   정중앙보다 살짝 위(y 324~744 / 전체 1124, 중심 47.5%)에 있어서, 50%로
+   두면 종이 칸보다 아래로 처져 보입니다. */
+.scroll_overlay {
+  position: absolute;
+  top: 47.5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+  color: var(--color_text);
+}
+
+.scroll_overlay_eyebrow {
+  max-width: 200px;
+  font-family: var(--font_body);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+  text-transform: uppercase;
+}
+
+.scroll_overlay_book {
+  display: block;
+  width: 80px;
+  height: 80px;
+  transition: transform var(--duration_base, 0.4s) ease;
+}
+
+.scroll_overlay_book:hover,
+.scroll_overlay_book:focus-visible {
+  transform: scale(1.06);
+}
+
+.scroll_overlay_book img {
+  width: 100%;
+  height: 100%;
+}
+
+.scroll_overlay_social {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scroll_overlay_social a {
+  display: flex;
+  transition: opacity var(--duration_fast) var(--easing_base);
+}
+
+.scroll_overlay_social a:hover,
+.scroll_overlay_social a:focus-visible {
+  opacity: 0.6;
+}
+
+.scroll_overlay_social img {
+  width: 24px;
+  height: 24px;
+}
