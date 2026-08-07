@@ -117,6 +117,58 @@ begin 카드 1652). hero·philosophy·atelier·quote는 시안이 160 근처라 
   (`http://localhost:5611/test/bespoke_test/index.html`).
 - 실제 마우스 hover, 스크롤 감각, 스크린리더 낭독.
 
+### philosophy 스크롤 인터랙션 (2026-08-07)
+
+`css/bespoke.css`와 `js/bespoke.js`에 등장 + 패럴랙스를 넣었습니다. HTML은 그대로입니다.
+
+**GSAP + ScrollTrigger를 씁니다.** 이 페이지가 이미 둘 다 불러오고 있고 `common.js`가
+Lenis를 GSAP 티커·ScrollTrigger에 연결해 둬서 scrub이 부드럽게 따라옵니다.
+같은 파일의 process 섹션은 IntersectionObserver를 쓰는데, **패럴랙스는
+스크롤 위치에 비례하는 연속 이동이라 IO로는 만들 수 없어** 방식이 다릅니다.
+
+- **등장**: `.philosophy_title` → `.philosophy_desc` 순서로 `y 30 → 0`,
+  `opacity 0 → 1`. `power3.out`, 1.1초, 시차 0.18초. 배경은 조금 더 길게(×1.3)
+  `power2.out`으로 따라옵니다. `once: true`라 한 번만 재생됩니다.
+  `gsap.from()`이라 **끝값은 CSS가 정한 값 그대로**입니다(배경 불투명도 0.6을 알아서 읽음).
+- **패럴랙스**: 섹션이 화면을 지나가는 동안(`top bottom` → `bottom top`)
+  배경을 `y -80 → +80`, `scrub: true`, `ease: "none"`.
+  페이지가 올라가는 만큼 배경이 아래로 상쇄돼 배경이 더 천천히 지나갑니다.
+
+#### 이 인터랙션에서 반드시 지켜야 하는 것
+
+1. **배경의 등장 이동은 `y`가 아니라 `yPercent`입니다.** 같은 요소의 `y`를
+   패럴랙스가 계속 쓰기 때문입니다. GSAP은 `y`와 `yPercent`를 따로 들고 있다가
+   더해서 그리므로 두 트리거가 서로를 덮어쓰지 않습니다.
+   초기값이 `-50.2px`(= 패럴랙스 −80 + 등장 +29.8)로 정확히 합산되는 것을 확인했습니다.
+2. **`--philosophy_parallax_overscan`은 두 이동량의 합보다 커야 합니다.**
+   배경을 밀면 섹션 위/아래에 빈 줄이 드러나므로 미리 이미지를 키워 둡니다.
+   처음에 96px(패럴랙스 80만 고려)로 뒀다가 실제로 걸렸습니다 — **등장이 끝나기 전에
+   빠르게 스크롤하면 합이 109.8px이 되어 섹션 위에 약 14px 빈 줄이 보입니다.**
+   지금은 128px입니다. JS 상수를 바꾸면 이 값도 같이 확인해야 합니다.
+3. **`.is_motion_ready` class가 게이트입니다.** JS가 붙입니다. GSAP·ScrollTrigger가
+   없거나 모션 감소 설정이면 붙지 않고 CSS 레이아웃 그대로 보입니다
+   (hero_gallery의 `is_ready`와 같은 방식). class를 떼면 배경이 다시
+   `top: 0 / height: 100%`로 섹션에 딱 맞는 것을 확인했습니다.
+
+조절값은 `js/bespoke.js`의 philosophy 블록 상단에 모여 있습니다:
+`PHILOSOPHY_RISE`(30) `PHILOSOPHY_BG_RISE`(2.5%) `PHILOSOPHY_DURATION`(1.1)
+`PHILOSOPHY_STAGGER`(0.18) `PHILOSOPHY_START`("top 78%") `PHILOSOPHY_PARALLAX_SHIFT`(80).
+
+#### 검증
+
+- 트리거 3개 생성(등장 2 + scrub 1). 패럴랙스 progress 0/0.25/0.5/0.75/1에서
+  배경 y가 40px씩 정확히 등간격 이동(총 160px = 2×80), `ease: "none"` 확인.
+- 티커를 직접 돌려 등장 재생 확인: 제목·본문 `opacity 0 → 1`, `y 30 → 0`,
+  배경 `opacity 0 → 0.6`(CSS 값과 정확히 일치), 등장 `yPercent → 0`.
+- 섹션 높이 8개 전부 시안 그대로 유지(인터랙션이 레이아웃을 건드리지 않음),
+  가로 스크롤 0, philosophy 안 넘치는 요소 0개.
+- `node --check js/bespoke.js` 통과. CSS 규칙 151개, 버려진 규칙 0, 빈 규칙 0.
+  실패한 요청 0건, 깨진 이미지 0장(404는 기존 히어로 영상 하나뿐).
+- **확인하지 못한 부분**: 숨겨진 탭이라 `requestAnimationFrame`이 돌지 않아
+  `gsap.globalTimeline`을 직접 진행시켜 측정했습니다. **실제로 흐르는 모습과
+  속도감은 사용자가 직접 봐야 합니다.** `prefers-reduced-motion: reduce` 환경의
+  실제 동작도 실행해 보지 못했습니다(`gsap.matchMedia()`가 되돌리도록 작성).
+
 ### 이 세션의 환경 메모
 
 - **Figma MCP**: 프로젝트 `.mcp.json`에 `figma-desktop`

@@ -164,6 +164,36 @@
   pointer-events: none;
 }
 
+/* ---------------------------------------------------------
+   philosophy 스크롤 인터랙션 (js/bespoke.js가 붙이는 class)
+
+   .is_motion_ready는 GSAP·ScrollTrigger가 있고 모션 감소 설정이 아닐 때만
+   붙는다. JS가 없거나 꺼져 있으면 이 아래 규칙이 전부 적용되지 않고
+   위의 기본 레이아웃 그대로 보인다(기존 hero_gallery와 같은 방식).
+
+   배경을 위아래로 밀면 섹션 위/아래에 빈 줄이 드러나므로, 미리 그만큼
+   이미지를 키워 둔다. 필요한 크기는 **두 이동량의 합**이다 —
+   패럴랙스(PHILOSOPHY_PARALLAX_SHIFT 80px)와 등장(PHILOSOPHY_BG_RISE 2.5%,
+   약 31px)이 같은 요소에 동시에 걸릴 수 있기 때문이다.
+   96px으로 뒀다가 실제로 걸렸다: 등장이 끝나기 전에 빠르게 스크롤하면
+   합이 109.8px이 되어 섹션 위에 약 14px 빈 줄이 보였다. 128px이면 덮는다.
+   --------------------------------------------------------- */
+
+.philosophy {
+  --philosophy_parallax_overscan: 128px;
+}
+
+.philosophy.is_motion_ready .philosophy_bg {
+  top: calc(var(--philosophy_parallax_overscan) * -1);
+  height: calc(100% + var(--philosophy_parallax_overscan) * 2);
+  will-change: transform, opacity;
+}
+
+.philosophy.is_motion_ready .philosophy_title,
+.philosophy.is_motion_ready .philosophy_desc {
+  will-change: transform, opacity;
+}
+
 .philosophy_body {
   position: relative;
   z-index: 1;
@@ -215,6 +245,31 @@
   width: 100%;
   aspect-ratio: 554 / 648;
   overflow: hidden;
+}
+
+/* ---------------------------------------------------------
+   atelier 확대 인터랙션 (js/bespoke.js가 붙이는 class)
+
+   philosophy와 같은 방식이다 — JS나 GSAP이 없거나 모션 감소 설정이면
+   class가 붙지 않고 아래 규칙이 전혀 적용되지 않는다.
+
+   position: relative가 필요한 이유: JS가 `offsetLeft`/`offsetTop`으로
+   사진의 중심을 섹션 기준으로 잰다. 이게 없으면 offsetParent가 body가 되어
+   (실측으로 확인함) 좌표가 어긋난다.
+
+   확대는 transform: scale만 쓴다. 박스의 aspect-ratio가 554/648로 고정돼
+   있고 안쪽 img는 object-fit: cover라, 배율만 올리면 잘리는 범위가 그대로인
+   채 돋보기처럼 커진다.
+   --------------------------------------------------------- */
+
+.atelier.is_zoom_ready {
+  position: relative;
+}
+
+.atelier.is_zoom_ready .atelier_image {
+  position: relative;
+  z-index: 1; /* 커지면서 오른쪽 텍스트를 덮는다 */
+  will-change: transform;
 }
 
 .atelier_image img {
