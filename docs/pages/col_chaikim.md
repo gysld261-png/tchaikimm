@@ -96,9 +96,53 @@ showcase 사진 7장 (95,1429) (1451,1497) (605,2432) (1398,2695) (138,2867) (13
 
 ### 시안과 다르게 판단한 것 / 자매 페이지와 다른 것
 
-1. **hero는 영상이 아니라 이미지입니다.**
-   Figma 레이어 이름은 `Fashion_show_video`지만 실제 채우기는 정지 이미지입니다(사용자 확인).
-   `<video>` 대신 `<img class="collection_hero_image">`를 쓰고, JS의 `initHeroVideo()`는 지웠습니다.
+1. ~~**hero는 영상이 아니라 이미지입니다.**~~ → **2026-08-07 영상으로 교체했습니다.**
+   Figma 레이어 이름이 `Fashion_show_video`인데 시안 채우기가 정지 이미지라 처음엔
+   `<img class="collection_hero_image">`로 두었지만, 사용자 요청으로 `asset/chaikim_video.mp4`를
+   넣었습니다. 마크업·CSS는 자매 페이지(`col_chaikimyoungjin_test`)와 같은 구성입니다 —
+   `<video autoplay muted loop playsinline preload="metadata">` + `<source>`,
+   CSS class는 `.collection_hero_image` → **`.collection_hero_video`**로 바꿨습니다
+   (선언 내용은 `position: absolute; inset: 0; object-fit: cover`로 동일).
+   `poster`는 원래 쓰던 `asset/hero.png`를 그대로 씁니다.
+
+   교체할 때 고친 것 두 가지:
+   - **`</video>` 닫는 태그가 없었습니다.** 그러면 뒤따르는 `<h1>`이 video의
+     **대체 콘텐츠(fallback)로 빨려 들어가** 영상이 재생되는 브라우저에서는 제목이
+     아예 그려지지 않습니다. 실제로 `h1.parentElement`가 `VIDEO`였고, 지금은 `SECTION`입니다.
+   - `alt`는 `<video>`에 없는 속성이라 `aria-label`로 바꿨고,
+     `autoplay muted loop playsinline`이 없어 재생 자체가 시작되지 않던 것을 넣었습니다.
+
+   **재생하는 파일은 `chaikim_video_web.mp4`(H.264)입니다.**
+   사용자가 넣은 `chaikim_video.mp4`는 **HEVC(H.265)**라 그대로 쓰면 Firefox나 OS
+   디코더가 없는 환경에서 재생되지 않고 poster만 남습니다(이 PC의 Chrome은 재생됨).
+   자매 페이지와 같은 이유·같은 방식으로 변환했고, **HEVC 원본은 마스터로
+   asset에 그대로 두었습니다.**
+
+   | 파일 | 코덱 | 크기 | 원본 대비 SSIM |
+   |---|---|---|---|
+   | `chaikim_video.mp4` (원본·마스터) | HEVC Main | 15.4MB | — |
+   | `chaikim_video_web.mp4` (**사용 중**) | H.264 High | **12.2MB** | 0.9698 |
+   | (검토 후 버림) CRF 23 | H.264 High | 17.7MB | 0.9786 |
+
+   **CRF 23이 아니라 26을 골랐습니다.** 프로젝트 표준 명령(CRF 23)으로 뽑으면
+   17.7MB로 **HEVC 원본보다 오히려 커집니다**(HEVC가 더 효율적인 코덱이라 당연한
+   결과입니다). CRF 26은 31% 작으면서 SSIM 차이가 0.009뿐이고, 잔디 텍스처
+   구간을 640×400으로 잘라 눈으로 확인했을 때 블로킹·밴딩이 없었습니다.
+   더 높은 화질이 필요하면 아래에서 `-crf 26`을 `23`으로 바꿔 다시 뽑으면 됩니다.
+
+   ```
+   ffmpeg -i chaikim_video.mp4 -an -c:v libx264 -profile:v high -pix_fmt yuv420p \
+     -crf 26 -preset slow -movflags +faststart chaikim_video_web.mp4
+   ```
+
+   - 오디오(AAC)는 `-an`으로 제거했습니다. 음소거 배경 루프라 쓰이지 않습니다.
+   - `-movflags +faststart`라 앞부분부터 바로 재생됩니다.
+   - **`poster`는 `hero.png`(2.86MB) 그대로 둡니다.** 시안 스틸이라 바꾸는 것은
+     디자인 판단이라고 보고 손대지 않았습니다. 영상 첫 프레임(잔디밭 장면)은
+     `hero.png`(크림 배경 착장 클로즈업)와 **다른 장면**이라, poster에서 영상으로
+     넘어갈 때 화면이 한 번 바뀝니다. 그게 거슬리면 첫 프레임을 poster로 쓰면
+     됩니다(146KB로 줄어듭니다):
+     `ffmpeg -ss 0 -i chaikim_video.mp4 -frames:v 1 -q:v 4 chaikim_video_poster.jpg`
 
 2. **archive 연도 세트.** 시안은 **2019가 활성**이고 그 다섯 장만 그려져 있습니다.
    2020 / 2021은 시안에 없어서, 저장소에 있던 `archive_kim2020_*`(5장) / `archive_kim2021_*`(4장)

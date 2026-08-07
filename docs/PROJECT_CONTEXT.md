@@ -267,7 +267,7 @@ JS가 텍스트 노드를 단어 상자(`.atelier_word`) → 글자 상자(`.ate
 `ATELIER_ZOOM_END`("bottom 65%") `ATELIER_ZOOM_SCRUB`(1.2)
 `ATELIER_ZOOM_EASE`("power2.out") /
 `ATELIER_TEXT_RISE`(50) `ATELIER_TEXT_DURATION`(0.8)
-`ATELIER_TEXT_SPREAD`(1.2) `ATELIER_TEXT_START`("top 78%").
+`ATELIER_TEXT_SPREAD`(1.2) `ATELIER_TEXT_START`("top 82%", 기준은 `.atelier_body`).
 
 **둘 다 폭 조건이 없습니다.** 좁은 화면에서 사진이 위로 쌓여도 확대분은 여전히
 상자 안에서만 일어나므로 1-column에서도 그대로 씁니다.
