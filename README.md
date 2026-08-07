@@ -18,4 +18,4 @@ Start with:
 - [Common system guide](docs/COMMON_SYSTEM.md)
 - [Repository rules](AGENTS.md)
 
-Serve the repository root and open a page under `/test/`, for example `/test/shop_test/index.html`.
+Serve the repository root and open a page under `/test/`, for example `/test/shop/index.html`.

@@ -1,11 +1,11 @@
 # Collection 페이지 작업 기록
 
-`test/col_chaikimyoungjin_test/` 페이지의 작업 내역입니다.
+`test/col_chaikimyoungjin/` 페이지의 작업 내역입니다.
 페이지 전체 구조와 showcase 인터랙션은 `docs/PROJECT_CONTEXT.md`의 Collection 항목에 있습니다.
 이 문서는 그 이후 작업을 기록합니다.
 
 > **2026-08-06 폴더 이름이 바뀌었습니다.** 아래 본문의 옛 경로를 이렇게 읽으세요.
-> `test/collection_test/` → `test/col_chaikimyoungjin_test/`,
+> `test/collection_test/` → `test/col_chaikimyoungjin/`,
 > `css/collection.css` → `css/col_chaikimyoungjin.css`,
 > `js/collection.js` → `js/col_chaikimyoungjin.js`,
 > `/asset/collection/` → 페이지 폴더 안의 `asset/`.
@@ -143,7 +143,7 @@ opacity가 `[0, 1, 1, 1, 1]`인 것을 확인한 뒤 고쳤습니다.
 
 ### 5. Reverse Now
 
-`href="#"` → `/test/bespoke_test/index.html`.
+`href="#"` → `/test/bespoke/index.html`.
 공통 헤더/푸터가 쓰는 루트 기준 절대경로 표기와 같습니다.
 
 ---
@@ -219,7 +219,7 @@ lint / test / build: 이 저장소에 설정된 도구가 없어 실행하지 �
 
 - 네트워크: `archive_*.png` 15개 전부 200 OK. 콜렉션 페이지 요청 중 404 없음.
 - 콘솔 오류 없음.
-- Reverse Now → `/test/bespoke_test/index.html` 실제 이동 확인(Bespoke 페이지 로드됨).
+- Reverse Now → `/test/bespoke/index.html` 실제 이동 확인(Bespoke 페이지 로드됨).
 - archive 안의 Tab 순서: 2021 → 2020 → 2019 → 2018 → 2017 → 2015 → 2013 → Reverse Now.
   화면 순서와 일치하고 button 3개 모두 포커스를 받습니다.
 - 구조 검사: 중복 id 0, alt 없는 img 0, 이름 없는 입력요소 0,

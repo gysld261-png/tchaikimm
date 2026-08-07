@@ -5,7 +5,7 @@ import * as THREE from "three";
    가방 아이콘을 누르면 모두 같은 상세페이지로 이동합니다. 상품별 상세가
    추가되면 각 카드의 상품 식별값에 따라 경로만 나누면 됩니다. */
 (function connectProductDetailLinks() {
-  var detailUrl = "../shop_detail_test/index.html";
+  var detailUrl = "../shop_detail/index.html";
   var productLinks = document.querySelectorAll(
     ".card_product_media_link, .card_product_link, .card_product_action[href]"
   );

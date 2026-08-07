@@ -1,6 +1,6 @@
 # main 페이지 작업 기록
 
-`test/main_test/` 페이지의 작업 내역입니다.
+`test/main/` 페이지의 작업 내역입니다.
 페이지 전체 구조(hero, intro, brand, korea, shop, 코디, 클로징 등)와 첫 구현 내용은
 `docs/PROJECT_CONTEXT.md`에 있습니다. 이 문서는 그 이후 main 페이지에서 진행하는 작업을 기록합니다.
 
@@ -15,9 +15,9 @@
 
 ### 변경 파일
 
-- `test/main_test/index.html` — 두 hero_panel 안에 `<video class="hero_panel_video">` 추가
-- `test/main_test/css/main.css` — `.hero_panel_video` 스타일 추가
-- `test/main_test/js/main.js` — `setupHeroHoverFill()` 추가
+- `test/main/index.html` — 두 hero_panel 안에 `<video class="hero_panel_video">` 추가
+- `test/main/css/main.css` — `.hero_panel_video` 스타일 추가
+- `test/main/js/main.js` — `setupHeroHoverFill()` 추가
 - `.claude/launch.json` — 이 세션에서 쓴 로컬 서버 설정(`main_dev`, 5611) 추가.
   기존 `tchaikimm`(5610) 항목은 다른 세션의 스크래치패드 경로를 가리키고 있어 그대로 두었습니다.
 
@@ -108,7 +108,7 @@ GSAP으로 다음 네 가지를 함께 움직입니다(대상마다 duration 다
 - **실제 마우스로 호버했을 때의 체감 속도·전환 느낌**입니다. 위 검증은 모두 이벤트 디스패치와
   트윈 강제 진행(`progress(1)`)으로 최종 상태만 확인했고, `requestAnimationFrame`이 이 세션의
   미리보기 탭에서 진행되지 않아 0.5~0.7초짜리 전환 애니메이션이 실제로 재생되는 모습 자체는
-  보지 못했습니다. `http://localhost:5611/test/main_test/index.html`을 직접 열어 확인이 필요합니다.
+  보지 못했습니다. `http://localhost:5611/test/main/index.html`을 직접 열어 확인이 필요합니다.
 - `prefers-reduced-motion: reduce` 환경의 실제 동작(이 환경을 흉내 낼 방법이 없었습니다).
   코드상으로는 `matchMedia` 조건에 없어 인터랙션 자체가 초기화되지 않습니다.
 - 768~1279px 구간(태블릿 폭)에서의 실제 터치스크린 동작 — `hover: hover` 조건으로 걸러지긴
@@ -128,7 +128,7 @@ GSAP으로 다음 네 가지를 함께 움직입니다(대상마다 duration 다
 
 ### 변경 파일
 
-- `test/main_test/js/main.js` — `setupHeroHoverFill()` 폭 로직을 전부 다시 작성
+- `test/main/js/main.js` — `setupHeroHoverFill()` 폭 로직을 전부 다시 작성
 
 CSS(`main.css`)와 HTML은 그대로입니다. 비율과 애니메이션 방식만 JS 안에서 바뀌었습니다.
 
@@ -219,7 +219,7 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 ### 확인하지 못한 부분
 
 - 실제 사람이 마우스로 움직였을 때 지금 속도가 충분히 느긋한지, 혹은 더 늦춰야 하는지는
-  `http://localhost:5611/test/main_test/index.html`에서 직접 확인이 필요합니다.
+  `http://localhost:5611/test/main/index.html`에서 직접 확인이 필요합니다.
   더 늦추려면 `SMOOTH_LERP`를 더 낮추면 됩니다(예: 0.03).
 
 ---
@@ -251,7 +251,7 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 ### 확인하지 못한 부분
 
 - 3.8초가 실제로 만족스러운 속도인지, 혹은 더/덜 늦춰야 하는지는 사람이 직접 봐야 압니다.
-  `http://localhost:5611/test/main_test/index.html`에서 확인해 주세요. 전체 인터랙션(첫 호버 +
+  `http://localhost:5611/test/main/index.html`에서 확인해 주세요. 전체 인터랙션(첫 호버 +
   좌우 전환 + hero 이탈)이 같은 `SMOOTH_LERP` 값을 공유하므로, 이 값을 더 낮추면 세 가지가
   모두 함께 느려집니다.
 
@@ -287,9 +287,9 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 양쪽이 똑같은 방식으로 동작합니다. 패널이 30%~70% 사이 어디에 있든 사진/영상 자체의 크기는
 전혀 바뀌지 않으므로 `object-fit: cover`가 다시 계산될 일 자체가 없어집니다.
 
-- `test/main_test/js/main.js` — `applyFixedMediaSize()` 추가(가로/세로 최초 1회 계산 +
+- `test/main/js/main.js` — `applyFixedMediaSize()` 추가(가로/세로 최초 1회 계산 +
   `window resize`에서 재계산), cleanup에서 `width/left/right`도 함께 `clearProps`
-- `test/main_test/css/main.css` — `.hero_panel_img`, `.hero_panel_video`에 `max-width: none` 추가
+- `test/main/css/main.css` — `.hero_panel_img`, `.hero_panel_video`에 `max-width: none` 추가
 
 **`max-width: none`이 없으면 이 수정 전체가 조용히 무효화됩니다.** `common/css/reset.css`가
 모든 `img`/`video`에 `max-width: 100%`를 걸어 두고 있어서(Collection 페이지의 `arc.svg`에서
@@ -324,7 +324,7 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 - 이번 수정으로 hero가 아무것도 호버되지 않은 기본(50/50) 상태의 가로 크롭이 아주 미세하게
   달라집니다 — 이전에는 "그 순간의 50% 폭"에 맞춰 다시 계산된 크롭이었고, 지금은 "70% 폭에
   맞춘 크롭 중 절반만 보이는" 크롭입니다. 계산상 왼쪽 사진 기준 확대율 차이는 약 4%로 크지
-  않지만, 실제로 봤을 때 인물 위치가 어색해 보이는지는 `http://localhost:5611/test/main_test/index.html`에서
+  않지만, 실제로 봤을 때 인물 위치가 어색해 보이는지는 `http://localhost:5611/test/main/index.html`에서
   기본 화면(호버하지 않은 상태)을 직접 봐야 압니다.
 
 ---
@@ -340,7 +340,7 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 
 ### 변경 파일
 
-- `test/main_test/css/main.css` — `.hero_panel_bespoke`/`.hero_panel_shop`에
+- `test/main/css/main.css` — `.hero_panel_bespoke`/`.hero_panel_shop`에
   `--hero_img_position` 변수 추가, `.hero_panel_img`가 그 변수를 사용하도록 변경
 
 ```css
@@ -420,7 +420,7 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 
 ### 확인하지 못한 부분
 
-- 실제 스크롤 시 애니메이션이 눈으로 봤을 때 자연스러운지 — `http://localhost:5606/test/main_test/`
+- 실제 스크롤 시 애니메이션이 눈으로 봤을 때 자연스러운지 — `http://localhost:5606/test/main/`
   (또는 저장소 루트를 서빙하는 서버)에서 직접 확인 필요.
 - detail_sleeve/body/skirt의 원래 헤더 카피(당시엔 collar와 같을 것으로 추정만 하고
   아래 통합 작업에서 실제 Figma 조회로 확인함).
@@ -450,7 +450,7 @@ reflow가 없고, 목표가 둘뿐이라 GSAP의 기본 `overwrite`로도 자연
 3. 사용자가 "하나의 섹션에서 다 해결"을 요청해, 반복되던 헤더 3벌과 사진 3벌을 걷어내고
    **사진 한 장 위에 4개의 보이지 않는 호버 영역**을 얹는 구조로 재구성했습니다.
 
-### 최종 구조 (`test/main_test/index.html`, `css/main.css`)
+### 최종 구조 (`test/main/index.html`, `css/main.css`)
 
 `.detail_stage` 안에 이미지 1장 + `.detail_hotspot`(부위별 호버/포커스 트리거, `data-part`
 속성으로 구분) 4개 + 부위별 `.detail_text`/`.detail_zoom` 쌍 4벌. 확대컷·설명의 위치는
@@ -497,10 +497,10 @@ sleeve(우측 상단), body(좌측 중단), skirt(하단 넓은 영역).
 팀이 `common/css/{tokens,reset,common,layout}.css`, `common/components/{header,footer}.html`,
 `common/js/common.js`로 페이지 공통 요소를 분리하는 작업을 진행 중이었습니다. 사용자가
 `AGENTS.md`/`CLAUDE.md`/`docs/COMMON_SYSTEM.md`/`docs/PROJECT_CONTEXT.md`/
-`templates/default.html`를 먼저 읽고 규칙을 따르라고 지시했고, `test/main_test/`만 이
-마이그레이션이 안 된 상태였습니다(shop_test/bespoke_test는 이미 완료돼 있었음).
+`templates/default.html`를 먼저 읽고 규칙을 따르라고 지시했고, `test/main/`만 이
+마이그레이션이 안 된 상태였습니다(shop/bespoke는 이미 완료돼 있었음).
 
-### 변경 내용 (`test/main_test/index.html`, `css/main.css`만 — 공통 파일은 읽기만 함)
+### 변경 내용 (`test/main/index.html`, `css/main.css`만 — 공통 파일은 읽기만 함)
 
 - 하드코딩된 `<header>`/`<footer>` 마크업 → `common_header_slot`/`common_footer_slot`
   (`data-component`로 `common/js/common.js`가 `fetch`해 주입). 진행 도중 footer가
@@ -529,7 +529,7 @@ sleeve(우측 상단), body(좌측 중단), skirt(하단 넓은 영역).
 
 ### 보류한 것
 
-- `.top_button` — `common/css/common.css`에 스타일은 이미 있지만 `shop_test`/`bespoke_test`에도
+- `.top_button` — `common/css/common.css`에 스타일은 이미 있지만 `shop`/`bespoke`에도
   아직 마크업이 없어서, 다른 페이지와 다르게 main만 먼저 넣는 게 맞는지 확인 차 보류했습니다.
 
 ---

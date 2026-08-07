@@ -1,13 +1,9 @@
 @charset "utf-8";
 
 /* =========================================================
-   Collection (Tchai Kim) — Figma node 1710:3971 "col_chaikim"
+   Collection — Figma node 1710:3865 "col_chaikimyoungjin"
    시안 캔버스 1920 × 9796.75. 이번 구현은 데스크톱(1920) 기준이며
    반응형(360 / 768 / 1280)은 다음 단계입니다.
-
-   자매 페이지 test/col_chaikimyoungjin_test와 구조·class 이름이 같습니다.
-   두 시안이 같은 레이아웃을 공유하고 글과 사진만 다르기 때문입니다.
-   레이아웃 규칙을 고칠 일이 생기면 두 파일을 함께 봐야 합니다.
    ========================================================= */
 
 :root {
@@ -21,7 +17,7 @@
 
 /* 시안 좌표(1920 기준)를 그대로 쓰는 절대배치 요소를 담는 고정 폭 프레임.
    섹션 배경은 화면 폭에 맞춰 늘어나고 이 프레임만 1920px로 고정됩니다.
-   (shop_test의 .hero_section_frame과 같은 방식) */
+   (shop의 .hero_section_frame과 같은 방식) */
 .collection_frame {
   position: relative;
   width: var(--layout_canvas);
@@ -31,8 +27,7 @@
 }
 
 /* =========================================================
-   hero — Fashion_show_video (1710:3972)
-   레이어 이름은 video지만 시안의 채우기는 정지 이미지입니다. img로 구현합니다.
+   hero — Fashion_show_video (1710:3866)
    ========================================================= */
 
 .collection_hero {
@@ -69,7 +64,7 @@
 }
 
 /* =========================================================
-   showcase — arc(1710:3976) + Rounded Background(1710:3978) 위의
+   showcase — arc(1710:3870) + Rounded Background(1710:3872) 위의
    떠 있는 사진과 문장
    ========================================================= */
 
@@ -241,7 +236,7 @@
   white-space: nowrap;
 }
 
-/* stagger를 걸려면 단어마다 개별 요소가 필요합니다. `col_chaikim.js`가 이 두 span을 만듭니다.
+/* stagger를 걸려면 단어마다 개별 요소가 필요합니다. `collection.js`가 이 두 span을 만듭니다.
    래퍼가 한 겹 필요한 이유: .showcase_quote_line이 flex 컨테이너라 단어 span을 직접 넣으면
    사이의 공백 텍스트 노드가 무시돼 단어가 붙습니다. 래퍼 안은 일반 inline 흐름입니다.
    단어는 inline 요소에 transform이 먹지 않아 inline-block으로 둡니다. */
@@ -289,7 +284,7 @@
 }
 
 /* =========================================================
-   archive — card(1710:3979)
+   archive — card(1710:3873)
    ========================================================= */
 
 .archive {
@@ -400,8 +395,8 @@
    높이를 고정하면 잘라내야 하기 때문입니다. 높이는 img가 원본 비율대로 정합니다.
 
    위치·폭·기울기·쌓임 순서는 커스텀 속성 5개로 받습니다.
-   기본값은 아래 .archive_photo_1 ~ _5(= 2019 배치)에 있고,
-   연도를 바꾸면 col_chaikim.js가 같은 이름의 속성을 인라인으로 덮어씁니다. */
+   기본값은 아래 .archive_photo_1 ~ _5(= 2021 배치)에 있고,
+   연도를 바꾸면 collection.js가 같은 이름의 속성을 인라인으로 덮어씁니다. */
 .archive_photo {
   position: absolute;
   z-index: var(--archive_photo_layer);
@@ -438,55 +433,47 @@
     z-index 0s;
 }
 
-/* JS가 꺼져 있을 때 보이는 기본 배치이자 2019 배치입니다(시안의 활성 연도).
-   `col_chaikim.js`의 ARCHIVE_LAYOUTS["2019"]와 같은 값이어야 합니다.
-   좌표는 1920 프레임 기준이고, 왼쪽 sticky 글 영역이 x 120~470을 씁니다.
-   시안의 다섯 장이 놓인 순서(위 가운데 → 오른쪽 큰 것 → 왼쪽 → 오른쪽 아래 → 아래 가운데)를
-   유지하되, 세로로 2310px에 걸쳐 있는 배치를 프레임 높이(920px)에 맞게 압축했습니다. */
+/* JS가 꺼져 있을 때 보이는 기본 배치이자 2021 배치입니다.
+   `collection.js`의 ARCHIVE_LAYOUTS["2021"]과 같은 값이어야 합니다.
+   좌표는 1920 프레임 기준이고, 왼쪽 sticky 글 영역이 x 120~470을 씁니다. */
 .archive_photo_1 {
-  --archive_photo_left: 600px;
-  --archive_photo_top: 40px;
-  --archive_photo_width: 300px;
-  --archive_photo_tilt: -3.2deg;
-  --archive_photo_layer: 3;
-}
-
-.archive_photo_2 {
-  --archive_photo_left: 1180px;
-  --archive_photo_top: 120px;
-  --archive_photo_width: 400px;
-  --archive_photo_tilt: 2.6deg;
-  --archive_photo_layer: 1;
-}
-
-.archive_photo_3 {
-  --archive_photo_left: 520px;
-  --archive_photo_top: 300px;
+  --archive_photo_left: 530px;
+  --archive_photo_top: 90px;
   --archive_photo_width: 330px;
-  --archive_photo_tilt: -5.4deg;
-  --archive_photo_layer: 4;
-}
-
-.archive_photo_4 {
-  --archive_photo_left: 1500px;
-  --archive_photo_top: 470px;
-  --archive_photo_width: 230px;
-  --archive_photo_tilt: 6.8deg;
-  --archive_photo_layer: 5;
-}
-
-.archive_photo_5 {
-  --archive_photo_left: 800px;
-  --archive_photo_top: 420px;
-  --archive_photo_width: 320px;
-  --archive_photo_tilt: -1.8deg;
+  --archive_photo_tilt: -4.5deg;
   --archive_photo_layer: 2;
 }
 
-/* 연도마다 사진 수가 다릅니다(2019·2020은 5장, 2021은 4장).
-   남는 자리는 col_chaikim.js가 이 class로 감춥니다. */
-.archive_photo.is_empty {
-  display: none;
+.archive_photo_2 {
+  --archive_photo_left: 800px;
+  --archive_photo_top: 40px;
+  --archive_photo_width: 240px;
+  --archive_photo_tilt: 6.2deg;
+  --archive_photo_layer: 5;
+}
+
+.archive_photo_3 {
+  --archive_photo_left: 1000px;
+  --archive_photo_top: 150px;
+  --archive_photo_width: 480px;
+  --archive_photo_tilt: -2.1deg;
+  --archive_photo_layer: 1;
+}
+
+.archive_photo_4 {
+  --archive_photo_left: 800px;
+  --archive_photo_top: 400px;
+  --archive_photo_width: 300px;
+  --archive_photo_tilt: 3.4deg;
+  --archive_photo_layer: 4;
+}
+
+.archive_photo_5 {
+  --archive_photo_left: 1380px;
+  --archive_photo_top: 400px;
+  --archive_photo_width: 260px;
+  --archive_photo_tilt: -7.8deg;
+  --archive_photo_layer: 3;
 }
 
 /* =========================================================
@@ -537,7 +524,7 @@
 }
 
 /* =========================================================
-   as worn — colaboration(1710:4009)
+   as worn — colaboration(1710:3903)
    ========================================================= */
 
 .asworn {
@@ -611,8 +598,8 @@
   cursor: default;
 }
 
-/* 시안의 네 카드 폭 합계(3327px)가 캔버스(1920px)보다 넓습니다.
-   스크롤바 없이 읽히도록 카드가 스스로 왼쪽으로 흐르는 띠로 둡니다(js/col_chaikim.js).
+/* 시안의 세 카드 폭 합계(2475px)가 캔버스(1920px)보다 넓습니다.
+   스크롤바 없이 읽히도록 카드가 스스로 왼쪽으로 흐르는 띠로 둡니다(js/collection.js).
    overflow: hidden이 아니라 overflow-x: clip입니다. hidden은 스크롤 컨테이너를 만들어
    가로 스크롤바가 다시 생기고, hover 확대분이 위아래로도 잘립니다. */
 .asworn_track {
@@ -649,8 +636,7 @@
   gap: 48px;
 }
 
-.asworn_item_3,
-.asworn_item_4 {
+.asworn_item_3 {
   gap: 0;
 }
 
@@ -665,9 +651,8 @@
   width: 442px;
 }
 
-/* 세 번째·네 번째 카드는 시안에서 사진 둘레에 20px 여백이 있습니다. */
-.asworn_item_3 .asworn_figure,
-.asworn_item_4 .asworn_figure {
+/* 세 번째 카드만 시안에서 사진 둘레에 20px 여백이 있습니다. */
+.asworn_item_3 .asworn_figure {
   width: 481px;
   height: 721px;
   padding: 20px;
@@ -685,8 +670,7 @@
   width: 317px;
 }
 
-.asworn_item_3 .asworn_body,
-.asworn_item_4 .asworn_body {
+.asworn_item_3 .asworn_body {
   width: 337px;
   padding: 10px;
 }
@@ -702,8 +686,7 @@
   white-space: nowrap;
 }
 
-.asworn_item_3 .asworn_name,
-.asworn_item_4 .asworn_name {
+.asworn_item_3 .asworn_name {
   padding: 10px 0;
 }
 
@@ -719,8 +702,7 @@
   gap: 21px;
 }
 
-.asworn_item_3 .asworn_desc,
-.asworn_item_4 .asworn_desc {
+.asworn_item_3 .asworn_desc {
   gap: 15px;
   padding: 0;
 }
@@ -735,8 +717,7 @@
   line-height: 1.2;
 }
 
-.asworn_item_3 .asworn_text,
-.asworn_item_4 .asworn_text {
+.asworn_item_3 .asworn_text {
   width: 341px;
   padding: 10px 0;
 }

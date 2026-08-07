@@ -133,7 +133,7 @@ Load Lenis, GSAP, and ScrollTrigger before `common.js`. The shared scroll values
 `lerp: 0.06` and `wheelMultiplier: 0.75`; change them in `initSmoothScroll()` only.
 
 Page-specific motion remains in each page script. For example, the Shop 3D hero,
-Garment Story, category selector, and Motif interactions stay in `test/shop_test/js/shop.js`.
+Garment Story, category selector, and Motif interactions stay in `test/shop/js/shop.js`.
 
 ## 1920px layout baseline
 
@@ -162,14 +162,14 @@ rule into a page stylesheet. Check new pages at browser zoom 100% at these width
 
 ## Local development
 
-Serve the repository root, not an individual page folder. Shared URLs cannot load when the server root is `test/shop_test` or another nested folder.
+Serve the repository root, not an individual page folder. Shared URLs cannot load when the server root is `test/shop` or another nested folder.
 
 Example page URLs:
 
 ```text
-/test/main_test/index.html
-/test/shop_test/index.html
-/test/bespoke_test/index.html
+/test/main/index.html
+/test/shop/index.html
+/test/bespoke/index.html
 ```
 
 ## Open Graph image

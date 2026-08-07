@@ -2,7 +2,7 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "bespoke_test",
+      "name": "bespoke",
       "runtimeExecutable": "powershell",
       "runtimeArgs": [
         "-NoProfile",
@@ -13,7 +13,7 @@
         "-Port",
         "5605",
         "-Root",
-        "C:\\김시현\\tchaikimm\\test\\bespoke_test"
+        "C:\\김시현\\tchaikimm\\test\\bespoke"
       ],
       "port": 5605,
       "autoPort": false
