@@ -36,13 +36,59 @@
   width: 100%;
   background-color: var(--brand_black);
   overflow-x: clip;
+
+  /* ---- 무대 크기: 1920 × 1080 고정 -------------------------------------
+     섹션 높이는 이 무대 하나가 정합니다(.mood에 padding·margin 없음).
+     문(.mood_reveal)과 배경 사진(.mood_room)이 같은 값을 받습니다.
+     js/brand.js도 이 높이를 DOM에서 직접 읽으므로 여기만 바꾸면 전부 따라옵니다. */
+  --mood_stage_w: 1920px;
+  --mood_stage_h: 1080px;
+
+  /* ---- 세로 가운데 정렬용 값 --------------------------------------------
+     시안 좌표는 700 높이 밴드 기준이라 1080 무대에서는 위로 쏠립니다.
+     아래 값으로 글 상자와 단어 3개를 무대 세로 가운데(y 540)에 맞춥니다.
+
+     글 상자 높이. top 계산과 height가 같은 값을 써야 해서 변수로 뺐습니다. */
+  --mood_copy_h: 641px;
+
+  /* 단어 3개를 한 덩어리로 봤을 때의 시안 좌표
+     — 맨 위가 unique의 top 88, 맨 아래가 modern의 350 + 311 = 661. 높이 573. */
+  --mood_words_group_top: 88px;
+  --mood_words_group_h: 573px;
+
+  /* 그 덩어리를 무대 가운데로 내리는 양. 1080일 때 165.5px입니다.
+     세 블록의 top에 이 값을 더하므로 서로의 간격은 시안 그대로 유지됩니다. */
+  --mood_word_shift: calc(
+    (var(--mood_stage_h) - var(--mood_words_group_h)) / 2 - var(--mood_words_group_top)
+  );
+
+  /* ---- 배경 사진의 가로 위치 --------------------------------------------
+     ★ 배경 이미지를 1920 × 1080으로 만들어 넣으면 이 값은 아무 영향이 없습니다.
+       상자와 이미지 비율이 같아 넘치는 부분이 없기 때문입니다. 그때는
+       손대지 않아도 되고, 22%든 50%든 결과가 같습니다.
+
+     지금 쓰는 mood_inner.jpg가 1920 × 700이라서 필요한 값입니다.
+     비율을 지키며 높이를 채우면 1.5429배가 되어 폭이 2962px이 되고
+     가로로 1042px이 잘립니다(세로는 정확히 맞아 한 픽셀도 안 잘립니다).
+     창문은 창틀까지 원본 x 160~742 → 확대하면 247~1145이고,
+     0% ~ 23.7% 사이여야 창문이 잘리지 않습니다.
+
+       0%    창틀 왼쪽이 화면 x247. 대신 창문이 Unique 글자 밑으로 들어와
+             흰 글씨 대비가 1.85:1로 못 읽습니다
+       22%   지금 값. 창틀 왼쪽이 화면 x18에서 시작해 잘리지 않고,
+             글자 대비도 가장 낫습니다 (Unique 5.15 / Elegant 5.76)
+       23.7% 창틀이 화면 왼쪽 끝에 정확히 닿습니다. 더 키우면 잘립니다 */
+  --mood_room_pos: 22%;
 }
 
+/* 1920 × 1080 고정. 화면이 1920보다 좁으면 좌우가 똑같이 잘립니다
+   (.mood의 overflow-x: clip). margin-inline: auto는 왼쪽으로 붙어
+   좌우가 비대칭으로 잘리므로 calc를 씁니다. */
 .mood_stage {
   position: relative;
-  width: 1920px;
-  height: 700px;
-  margin-left: calc(50% - 960px);
+  width: var(--mood_stage_w);
+  height: var(--mood_stage_h);
+  margin-left: calc(50% - var(--mood_stage_w) / 2);
 }
 
 /* 문이 열릴 때 보이는 창. 가운데를 기준으로 커집니다.
@@ -51,47 +97,60 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1920px;
-  height: 700px;
+  width: var(--mood_stage_w);
+  height: var(--mood_stage_h);
   transform: translate(-50%, -50%);
   overflow: hidden;
 }
 
-/* 실내 전경. 창이 작아져도 화면 한가운데 원본 크기로 고정돼야
-   "가려졌던 부분이 드러나는" 느낌이 납니다.
-   width: 100%로 두면 창을 따라 늘어나 그냥 확대가 됩니다. */
+/* 배경 사진. 인트로 내내 이 한 장이 제자리에 고정입니다.
+
+   ★ 여기 넣을 이미지는 1920 × 1080으로 만들면 됩니다.
+     상자가 무대와 같은 1920 × 1080이라, 같은 크기 이미지를 넣으면 확대도 잘림도
+     없이 1:1로 그려집니다. 여백(레터박스)을 이미지 안에 직접 넣어 오셔도 되고,
+     그 여백 색은 .mood의 --brand_black(#120f0f)과 맞추면 이어져 보입니다.
+     교체는 index.html의 .mood_room 한 줄만 바꾸면 됩니다. CSS는 손댈 필요 없습니다.
+
+   크기가 다른 이미지를 넣어도 깨지지는 않습니다. object-fit: cover가 비율을
+   지키며 채우고, 남는 쪽(가로/세로)이 잘립니다. 잘리는 위치는 --mood_room_pos.
+
+   위치는 반드시 문(.mood_reveal)의 "가운데" 기준이어야 합니다.
+   문이 작을 때는 좌상단이 화면 가운데 쪽에 있다가 열리면서 바깥으로 움직입니다.
+   좌상단(top/left)에 붙이면 사진이 문을 따라 움직여서, 가려졌던 것이 드러나는
+   게 아니라 사진이 미끄러지는 것처럼 보입니다.
+
+   width/height를 %로 주면 안 됩니다. 문이 커질 때 사진도 같이 커져서
+   드러남이 아니라 확대가 됩니다. */
 .mood_room {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 1920px;
-  height: 700px;
+  width: var(--mood_stage_w);
+  height: var(--mood_stage_h);
   max-width: none;
   transform: translate(-50%, -50%);
   object-fit: cover;
+  object-position: var(--mood_room_pos) center;
   pointer-events: none;
 }
 
-/* 글이 왼쪽에 자리잡을 때 그 뒤로 깔리는 벽 근접 컷(원본 768 × 700). */
-.mood_wall {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 768px;
-  height: 700px;
-  max-width: none;
-  object-fit: cover;
-  pointer-events: none;
-}
+/* 무대 높이(1080) 안에서 세로 가운데 정렬입니다.
 
+   시안 좌표는 top 59였는데, 그건 700 높이 밴드 기준이라 1080에서는 위로 쏠립니다
+   (위 122 / 아래 444). 상자 안에서 실제 글(제목 63~339, 본문 257~636)의 중심이
+   320.5로 상자 높이 641의 중심과 거의 같아서, 상자만 가운데 두면 글도 가운데 옵니다.
+
+   transform이 아니라 top으로 가운데를 잡습니다. transform은 GSAP이 흐름(x)에
+   쓰고 있어서 여기서 쓰면 서로 덮어씁니다. */
 .mood_copy {
   position: absolute;
-  top: 59px;
+  top: calc((var(--mood_stage_h) - var(--mood_copy_h)) / 2);
   left: 0;
   z-index: 1;
   width: 768px;
-  height: 641px;
+  height: var(--mood_copy_h);
   color: var(--color_text);
+  will-change: transform;
 }
 
 .mood_copy_title {
@@ -124,48 +183,91 @@
 
 /* 브랜드 무드 3단어. 글 상자와 한 띠로 붙어 오른쪽에서 흘러 들어옵니다.
 
-   올리브 채우기(--brand_olive)와 사진 3장을 뺐습니다. 글자만 남아 실내 사진
-   위에 바로 놓입니다. 여기는 폭이 없는 투명한 클리핑 상자일 뿐입니다. */
+   올리브 채우기(--brand_olive)만 뺐습니다. 사진 3장은 시안대로 씁니다.
+   여기는 배경 없는 투명한 클리핑 상자일 뿐입니다. */
 .mood_words {
   position: absolute;
   top: 0;
   left: 768px;
   z-index: 1;
   width: 1152px;
-  height: 700px;
+  height: 1080px;
   overflow: hidden;
+  will-change: transform;
 }
 
+/* 사진과 글 사이 15px. 시안 mood_con에서 txt.y − 사진 높이입니다
+   (unique 195−180, modern 255−240, elegant 195−180 — 셋 다 15).
+   gap은 .mood_word의 직계 자식 사이에만 걸리므로 제목과 설명은 붙어 있습니다.
+   그래서 글 두 줄을 .mood_word_txt로 한 번 더 감싸야 합니다. */
+/* will-change: transform — 둥둥 흔들림이 버벅이지 않게 합니다.
+
+   14px을 4.2초에 걸쳐 움직이면 한 프레임에 약 0.05px씩 갑니다. 이렇게 작은
+   소수점 단위로 글자가 움직이면 브라우저가 매 프레임 글자를 다시 그리고,
+   그게 아른거림·버벅임으로 보입니다. 미리 합성 레이어로 올려 두면 글자를
+   한 번만 그린 뒤 옮기기만 하므로 사라집니다.
+
+   대가: 합성 레이어 위의 글자는 서브픽셀 안티에일리어싱이 꺼져 아주 약간
+   다르게 보일 수 있습니다. 사진 위 글자라 오히려 자연스러운 편입니다. */
 .mood_word {
   position: absolute;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+  gap: 15px;
+  will-change: transform;
 }
 
-/* 사진이 있던 때 글자가 놓였던 자리입니다.
-   블록 top = 시안 블록 top + 사진 높이 (unique·elegant 180, modern 240).
-   사진만 지우고 글자는 화면에서 움직이지 않게 하려는 것입니다. */
+.mood_word_media {
+  overflow: hidden;
+}
+
+.mood_word_media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mood_word_unique .mood_word_media,
+.mood_word_elegant .mood_word_media {
+  width: 260px;
+  height: 180px;
+}
+
+.mood_word_modern .mood_word_media {
+  width: 200px;
+  height: 240px;
+}
+
+/* 블록(사진 + 15 + 글) 전체의 왼쪽 위 좌표입니다.
+
+   ⚠ 블록을 옮기면 글자가 놓이는 배경색이 바뀝니다. mood_inner.jpg는 y 420 아래가
+   밝아지므로(창문 아래 바닥) 옮길 때마다 그 자리를 다시 재야 합니다.
+   현재 글자 자리의 배경과 흰 글씨 대비:
+     Unique  (939, 283) rgb(106,109,96)  5.21:1
+     Modern  (1234, 605) rgb(146,150,136) 2.98:1  ← 밝은 구간, 미달
+     Elegant (1556, 424) rgb(97,100,87)   5.96:1 */
 .mood_word_unique {
-  top: 268px;
+  top: calc(88px + var(--mood_word_shift));
   left: 171px;
   width: 260px;
 }
 
 .mood_word_modern {
-  top: 590px;
+  top: calc(350px + var(--mood_word_shift));
   left: 466px;
   width: 220px;
 }
 
 .mood_word_elegant {
-  top: 409px;
+  top: calc(229px + var(--mood_word_shift));
   left: 788px;
   width: 260px;
 }
 
-/* 어두운 실내 사진(대비 3.2~4.9:1) 위라 검은 글씨는 읽기 어렵습니다.
-   흰색으로 4.3~6.5:1을 확보합니다. 시안(#000)과 다른 판단입니다. */
+/* 어두운 실내 사진 위라 검은 글씨(3.3~3.7:1)는 읽기 어려워 흰색을 씁니다.
+   시안(#000)과 다른 판단입니다. Modern 자리만 배경이 밝아 2.98:1로 미달입니다 —
+   위 좌표 주석 참고. */
 .mood_word_title {
   font-family: var(--font_display);
   font-weight: 400;
@@ -196,7 +298,7 @@
 .kimyoungjin_frame {
   position: relative;
   width: 1920px;
-  height: 2499px;
+  height: 2560px;
   margin-left: calc(50% - 960px);
   padding-top: 400px;
 }
@@ -269,9 +371,26 @@
   color: var(--color_text);
 }
 
+.youngjin_wordmark {
+  position: absolute;
+  top: 1960px;
+  left: 80px;
+  display: flex;
+  align-items: center;
+  height: 600px;
+  color: transparent;
+  font-family: var(--font_display);
+  font-size: 600px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  -webkit-text-stroke: 3px rgba(10, 10, 10, 0.07);
+  padding-top: 20px;
+}
+
 .youngjin_handmade {
   position: absolute;
-  top: 2199px;
+  top: 2260px;
   left: 731px;
   display: flex;
   flex-direction: column;
@@ -295,13 +414,54 @@
   overflow-x: clip;
 }
 
+.tchaikim_track {
+  width: 1920px;
+  margin-left: calc(50% - 960px);
+  padding-block: 300px;
+}
+
+.tchaikim_tabs {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 27px;
+  margin-bottom: 120px;
+}
+
+.tchaikim_tab {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  border: 1px solid var(--color_border);
+  border-radius: 35px;
+  background-color: var(--color_surface);
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 1.28px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tchaikim_tab:hover,
+.tchaikim_tab.is_active {
+  border-color: var(--color_text_sub);
+}
+
+.tchaikim_tab.is_active {
+  box-shadow: inset 0 0 0 1px var(--color_text_sub);
+}
+
 .tchaikim_panel {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 1920px;
-  margin-left: calc(50% - 960px);
-  padding-block: 300px;
+}
+
+.tchaikim_panel[hidden] {
+  display: none;
 }
 
 .tchaikim_con {
@@ -478,23 +638,4 @@
 .heritage_button:hover,
 .heritage_button:focus-visible {
   background-color: var(--color_text);
-}
-
-/* =========================================================
-   tchaikim 가로 스크롤 향상 — js/brand.js가 is_horizontal을 붙였을 때만
-   적용됩니다. JS가 없거나 좁은 화면에서는 위의 세로 레이아웃이
-   그대로 보입니다.
-   ========================================================= */
-
-.tchaikim.is_horizontal .tchaikim_track {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  width: max-content;
-  margin-left: calc(50% - 960px);
-}
-
-.tchaikim.is_horizontal .tchaikim_panel {
-  flex-shrink: 0;
-  margin-left: 0;
 }
