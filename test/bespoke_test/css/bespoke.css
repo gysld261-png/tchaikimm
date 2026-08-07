@@ -783,3 +783,211 @@
     flex: 1 1 0;
   }
 }
+
+/* =========================================================
+   [시안 정렬 · 데스크톱 전용] Figma 1745:12160 (1920 × 10438.68)
+
+   위쪽 규칙은 그대로 두고, **1840px 이상에서만** 시안 좌표로 덮어쓴다.
+   모바일·태블릿·일반 노트북(1280~1839px) 레이아웃은 이 블록 밖이라 그대로다.
+
+   왜 1280이 아니라 1840인가:
+   이 블록의 값은 1920 캔버스 기준 절대 px이고, 1700 컨테이너가 온전히 들어가려면
+   1700 + gutter 64×2 = 1828px이 필요하다. 여유 12px을 더해 1840으로 잡았다.
+   1280px에 걸었을 때 실제로 두 가지가 깨졌다 —
+   (1) begin 카드 3장(500×3 + 76×2 = 1652)이 콘텐츠 폭 1152를 넘어 가로 스크롤 194px,
+   (2) process 목록이 727 → 404px까지 줄어 단계 설명이 여러 줄로 무너짐.
+   1920 화면에서는 스크롤바를 뺀 실제 폭이 1905px이라 이 블록이 걸린다.
+
+   근거: 저장소 에셋이 전부 시안 원본 크기다 —
+   atelier.png 554×648 / consultation.png 853×960 / silk.png 180×200 /
+   material.png 500×600 / reservation_section.png 1700×650 / philosophy.png 1920×1000.
+   기존 CSS가 이것을 비율(%)로 늘리거나 줄이고 있었다.
+
+   되돌리기: 이 주석부터 파일 끝까지 삭제.
+   ========================================================= */
+
+@media (min-width: 1840px) {
+
+  /* --- 1700px 컨테이너 — 세 섹션만 -------------------------------------
+     시안의 오른쪽 끝은 ~1810으로 일정한데 왼쪽 끝은 90~160으로 제각각이다.
+     콘텐츠 폭이 1600을 넘는 섹션만 1700으로 넓힌다(process 1680 / fabric 1719 /
+     begin 카드 1652). hero·philosophy·atelier·quote는 시안 좌표가 160 근처라
+     공통 1600 컨테이너가 그대로 맞다. reservation은 아래에서 1700 밴드로 따로 잡는다. */
+  .main .process,
+  .main .materials,
+  .main .begin {
+    max-width: calc(1700px + var(--layout_gutter) * 2);
+  }
+
+  /* 아래 고정폭은 전부 `flex: 0 1 <시안값>`이다(`0 0`이 아니다).
+     1840px 게이트가 이미 폭을 보장하므로 평소에는 줄어들지 않지만,
+     브라우저 확대나 좁은 창에서 경계를 넘나들 때 넘치지 않게 두는 안전장치다. */
+
+  /* --- hero: 1800 --------------------------------------------------------
+     181 + 텍스트 429 + 179 + 영상 760 + 250 = 1799
+     선택자에 .main이 필요하다 — `.main section`(0,1,1)이 padding을 쥐고 있다. */
+  .main .bespoke_hero {
+    gap: 179px;
+    padding-top: 181px;
+    padding-bottom: 250px;
+  }
+
+  .bespoke_hero_body {
+    gap: 30px;
+  }
+
+  /* --- philosophy: 1000 --------------------------------------------------
+     제목은 시안 스크린샷 실측이다(이 프레임은 글이 이미지에 구워져 있어
+     타입 스펙을 읽을 수 없다). "Only your measurements,"가 시안에서 808px인데
+     48px로는 603px, 64px로 804px이라 64px으로 판단했다.
+     max-width 840은 그 줄이 접히지 않게 하는 값이다. */
+  .philosophy {
+    min-height: 1000px;
+  }
+
+  .philosophy_title {
+    font-size: var(--fs_display_64);
+    line-height: 1.13;
+  }
+
+  .philosophy_body {
+    gap: 35px;
+    max-width: 840px;
+  }
+
+  /* --- atelier: 1000 -----------------------------------------------------
+     176 + 이미지 648 + 176 = 1000 */
+  .main .atelier {
+    gap: 200px;
+    padding-top: 176px;
+    padding-bottom: 176px;
+  }
+
+  .atelier_image {
+    flex: 0 1 554px;
+  }
+
+  .atelier_body {
+    gap: 30px;
+    max-width: 509px;
+  }
+
+  /* --- quote: 588 유지 ----------------------------------------------------
+     시안 텍스트 노드가 95px인데 현재 70px이라 인용문↔출처 간격만 넓힌다. */
+  .quote_cite {
+    margin-top: 41px;
+  }
+
+  /* --- process: 1505 -----------------------------------------------------
+     단계 하나 24+21+30+21+24+39 + 아래선 1px = 160, 목록 5×160 + 4×40 = 960,
+     섹션 272 + 960 + 272 = 1504.
+     padding-bottom이 40이 아니라 39인 것은 `border-bottom: 1px`이 높이에 더해지기 때문이다.
+     목록 727px은 임의값이 아니다 — 03번 설명이 시안에서 정확히 727px 한 줄이다.
+     720px로 두면 폰트 로딩에 따라 두 줄로 넘어가 단계 높이가 무너진다. */
+  .main .process {
+    gap: 100px;
+    padding-top: 272px;
+    padding-bottom: 272px;
+  }
+
+  .process_list {
+    flex: 0 1 727px;
+  }
+
+  .process_step {
+    gap: 21px;
+    padding-top: 0;
+    padding-bottom: 39px;
+  }
+
+  /* basis를 0으로 둬야 한다. 기본값 `flex: 1 1 auto`는 이미지의 고유 폭을
+     basis로 주장해서, 줄어들 수 있는 목록(0 1 727px)을 479px까지 밀어냈다.
+     basis 0이면 목록이 727을 지키고 이미지가 남은 873px을 가져간다. */
+  .process_image {
+    flex: 1 1 0;
+    height: 960px;
+    aspect-ratio: auto;
+  }
+
+  /* --- materials(fabric_section): 1408 -----------------------------------
+     294 + 제목 45 + 133 + 본문 678 + 258 = 1408
+     466 + 54 + 1180 = 1700 → 스와치 6칸이 정확히 180×200이 된다.
+     `.materials_body`의 gap만 시안(73)과 다르다 — 시안 그대로면 1719px라
+     1700을 19px 넘겨서 이 한 곳에서 줄였다.
+     캡션 padding-top 127은 시안이 목록보다 캡션을 그만큼 아래에 둔 값이다. */
+  .main .materials {
+    gap: 133px;
+    padding-top: 294px;
+    padding-bottom: 258px;
+  }
+
+  .materials_body {
+    gap: 54px;
+  }
+
+  .materials_content {
+    gap: 77px;
+  }
+
+  .materials_list {
+    gap: 20px;
+  }
+
+  .materials_detail {
+    gap: 224px;
+  }
+
+  .materials_caption {
+    padding-top: 127px;
+  }
+
+  /* --- reservation: 1700 × 650 -------------------------------------------
+     시안에서 위아래 섹션과 딱 붙어 있다(fabric 끝 7397 = reservation 시작).
+     그래서 세로 padding이 0이고, 위아래 간격은 이웃 섹션의 padding이 만든다.
+     215px은 밴드 왼쪽 끝에서 글까지의 거리(스크린샷 1:1 실측). */
+  .main .reservation {
+    max-width: 1700px;
+    padding: 0 0 0 215px;
+  }
+
+  .reservation_body {
+    gap: 8px;
+  }
+
+  .reservation_button {
+    align-self: flex-start;
+    min-width: 340px;
+    margin-top: 40px;
+    padding: 26px 32px;
+  }
+
+  /* --- begin: 1360 -------------------------------------------------------
+     254 + 머리말 89 + 160 + 카드 600 + 255 = 1358
+     카드 줄 3×500 + 2×76 = 1652를 1700 안에서 가운데 정렬한다.
+     opacity 1: material/timeline/contact.png는 이미 흐리게 처리된 상태로
+     저장돼 있다. 0.3을 또 곱하면 사진이 거의 보이지 않는다.
+     (philosophy.png·reservation_section.png는 원본 강도라 기존 0.6을 유지한다.) */
+  .main .begin {
+    gap: 160px;
+    padding-top: 254px;
+    padding-bottom: 255px;
+  }
+
+  .begin_head {
+    gap: 20px;
+  }
+
+  .begin_cards {
+    gap: 76px;
+    justify-content: center;
+  }
+
+  .begin_card {
+    flex: 0 1 500px;
+    padding: 48px;
+  }
+
+  .begin_card_bg {
+    opacity: 1;
+  }
+}
