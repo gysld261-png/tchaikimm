@@ -1,6 +1,6 @@
 # brand 페이지 작업 기록
 
-`test/brand/` 페이지의 작업 내역입니다.
+`pages/brand/` 페이지의 작업 내역입니다.
 대상 화면은 Figma `4조 한복판 - 차이킴` node `1707:6120`("brand_송명희", 13440 × 11260)입니다.
 
 캔버스가 13440px로 넓은 이유는 `mood`(3장면)와 `tchaikim`(5장면) 두 섹션이
@@ -10,7 +10,7 @@
 > 한 장으로 고정", "무드 단어 사진 복원 + gap 15", "흐름 속도 절반으로 + 둥둥 흔들림",
 > "문 열림 속도 조절 + 글 상자 둥둥 제거 + 버벅임 대책",
 > "배경 사진을 무대 전체로 확대").
-> 움직임 조절값은 `test/brand/js/brand.js` 위쪽 한 블록,
+> 움직임 조절값은 `pages/brand/js/brand.js` 위쪽 한 블록,
 > 무대 높이와 배경 위치는 `css/brand.css`의 `.mood` 안 `--mood_*` 변수에 있습니다.
 > 1차 구현의 가로 3패널 스크롤은 페이지 진입 시 저절로 재생되는 인트로로 바뀌었고,
 > 그 인트로의 타임라인도 다시 한 번 바뀌었습니다. 1차 구현 항목에서 mood에 관한 내용
@@ -27,17 +27,17 @@
 
 ### 변경 파일
 
-- `test/brand/index.html` — 새로 만듦
-- `test/brand/css/brand.css` — 새로 만듦
-- `test/brand/js/brand.js` — 새로 만듦
-- `test/brand/assets/images/` — 이미지 23 + 영상 5
-- `test/brand/assets/icons/` — `Instagram.png`, `Facebook.png`
+- `pages/brand/index.html` — 새로 만듦
+- `pages/brand/css/brand.css` — 새로 만듦
+- `pages/brand/js/brand.js` — 새로 만듦
+- `pages/brand/assets/images/` — 이미지 23 + 영상 5
+- `pages/brand/assets/icons/` — `Instagram.png`, `Facebook.png`
 
 공통 파일은 하나도 건드리지 않았습니다.
 
 ### 에셋 정리
 
-`asset/brand/`에 있던 25개를 `test/brand/assets/`로 옮겼습니다(`git mv`, 커밋 `e9be1b6`).
+`asset/brand/`에 있던 25개를 `pages/brand/assets/`로 옮겼습니다(`git mv`, 커밋 `e9be1b6`).
 다른 페이지와 같은 규칙으로 `images/`(사진·영상)와 `icons/`(아이콘)로 나눴습니다.
 
 **시안에는 있는데 내보내기에서 빠져 있던 이미지 5장을 Figma에서 직접 받아 추가했습니다.**
@@ -570,7 +570,7 @@ Modern만 그 경계에 걸칩니다. **처리 방향은 사용자 결정이 필
 
 ### 조절값이 파일 위쪽 한 블록에 모였습니다
 
-`test/brand/js/brand.js`의 `▼▼ 여기 숫자만 바꾸면 됩니다 ▼▼` 블록입니다.
+`pages/brand/js/brand.js`의 `▼▼ 여기 숫자만 바꾸면 됩니다 ▼▼` 블록입니다.
 사용자가 직접 만지는 곳이라 다른 상수와 분리해 두었습니다.
 
 | 상수 | 이전 | 지금 | 의미 |

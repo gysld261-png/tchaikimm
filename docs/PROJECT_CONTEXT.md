@@ -3,10 +3,10 @@
 
 ## Bespoke 메인 1920×1080 시안 정렬 — 2026-08-07
 
-발표 PC(1920 × 1080 / 배율 100%) 기준으로 `test/bespoke/index.html`을
+발표 PC(1920 × 1080 / 배율 100%) 기준으로 `pages/bespoke/index.html`을
 Figma `1745:12160`(1920 × 10438.68)에 맞췄습니다.
 
-**변경 파일은 `test/bespoke/css/bespoke.css` 하나뿐입니다.**
+**변경 파일은 `pages/bespoke/css/bespoke.css` 하나뿐입니다.**
 `bespoke.css`는 `index.html`만 불러옵니다 — `reservation.html`·`reservation_done.html`은
 `bespoke_base.css`를 쓰므로 영향이 없습니다. 공통 파일(`common/`)은 건드리지 않았습니다.
 
@@ -114,7 +114,7 @@ begin 카드 1652). hero·philosophy·atelier·quote는 시안이 160 근처라 
 - **이번 세션도 Browser 미리보기 패널이 온전히 표시되지 않아 화면 캡처가
   일부만 합성됐습니다.** 위 수치는 전부 `getBoundingClientRect` 측정입니다.
   **시안과 눈으로 비교하는 것은 사용자가 직접 해야 합니다**
-  (`http://localhost:5611/test/bespoke/index.html`).
+  (`http://localhost:5611/pages/bespoke/index.html`).
 - 실제 마우스 hover, 스크롤 감각, 스크린리더 낭독.
 
 ### philosophy 스크롤 인터랙션 (2026-08-07)
@@ -335,7 +335,7 @@ JS가 텍스트 노드를 단어 상자(`.atelier_word`) → 글자 상자(`.ate
   스크립트는 **세션 스크래치패드의 `serve.js`**라 다른 세션에서는 다시 만들어야 합니다.
 
 
-## Bespoke 페이지 묶음 (`test/bespoke/`) — 2026-08-07
+## Bespoke 페이지 묶음 (`pages/bespoke/`) — 2026-08-07
 
 Bespoke는 **한 폴더 안에 세 페이지**가 들어 있습니다. 다른 화면(shop / shop_detail)처럼
 페이지마다 폴더를 나누지 않았습니다. 세 페이지가 에셋과 기본 틀을 함께 쓰기 때문입니다.
@@ -447,14 +447,14 @@ Figma 변수 세트를 프로젝트 이름 규칙으로 옮겼습니다. 기존 
 4. 예약 폼의 선택 내용을 완료 페이지에서 다시 보여줄지 결정 (현재는 넘기지 않음)
 
 
-## Collection 페이지 (`test/col_chaikimyoungjin/`) — 2026-08-06
+## Collection 페이지 (`pages/col_chaikimyoungjin/`) — 2026-08-06
 
 > **2026-08-06 폴더·파일 이름이 바뀌었습니다.** 아래 본문의 옛 경로를 이렇게 읽으세요.
-> `test/collection_test/` → `test/col_chaikimyoungjin/`,
+> `pages/collection_test/` → `pages/col_chaikimyoungjin/`,
 > `css/collection.css` → `css/col_chaikimyoungjin.css`,
 > `js/collection.js` → `js/col_chaikimyoungjin.js`,
 > `/asset/collection/` → 페이지 폴더 안의 `asset/`(같은 파일, 위치만 이동).
-> 같은 레이아웃을 쓰는 자매 페이지 `test/col_chaikim/`가 생겼습니다 — `docs/pages/col_chaikim.md`.
+> 같은 레이아웃을 쓰는 자매 페이지 `pages/col_chaikim/`가 생겼습니다 — `docs/pages/col_chaikim.md`.
 
 - 대상 화면: Figma `4조 한복판 - 차이킴` node `1710:3865`("col_chaikimyoungjin", 1920 × 9796.75).
 - 범위: **데스크톱(1920) 우선**. 반응형(360 / 768 / 1280)은 다음 단계입니다.
@@ -513,11 +513,11 @@ Figma 변수 세트를 프로젝트 이름 규칙으로 옮겼습니다. 기존 
 - 가로 스크롤 없음(`scrollLeft`가 0에서 움직이지 않음), 콘솔 오류 없음(404는 favicon뿐).
 - Tab 순서 39개가 화면 순서와 일치(skip → 헤더 → 연도 → Reverse Now → 태그 → 트랙 → 카드 링크 → 푸터).
 - 공유 파일 변경 영향: `common/components/header.html`·`footer.html`의 Collection 링크를
-  `#` → `/test/collection_test/index.html`로 바꿨습니다. Shop·Bespoke에서 링크와 현재 페이지 표시 정상 확인.
+  `#` → `/pages/collection_test/index.html`로 바꿨습니다. Shop·Bespoke에서 링크와 현재 페이지 표시 정상 확인.
   (main는 아직 공통 헤더/푸터 슬롯을 쓰지 않고 자체 마크업을 씁니다 — 이번 변경과 무관)
 - **확인하지 못한 부분**: 이번 세션도 Browser 미리보기 패널이 화면에 표시되지 않아
   일부 구간만 캡처됐습니다(hero, arc + 문장 구간은 눈으로 확인). 아래 전체 화면 비교와
-  실제 마우스 hover·휠 스크롤 감각은 사용자가 `http://localhost:5610/test/collection_test/index.html`을
+  실제 마우스 hover·휠 스크롤 감각은 사용자가 `http://localhost:5610/pages/collection_test/index.html`을
   직접 열어 확인이 필요합니다.
 ### Collection showcase 스크롤 인터랙션 (2026-08-06)
 
@@ -673,7 +673,7 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
 - **확인하지 못한 부분**: 이번 세션도 Browser 미리보기 패널이 표시되지 않아 `document.hidden`이 true라
   `requestAnimationFrame`이 한 번도 돌지 않았습니다. 위 측정은 `gsap.ticker.tick()`을 직접 불러
   프레임을 진행시킨 값입니다. **실제로 흐르는 모습과 진짜 마우스 hover 확대는 사용자가
-  `http://localhost:5611/test/collection_test/index.html`에서 확인해야 합니다.**
+  `http://localhost:5611/pages/collection_test/index.html`에서 확인해야 합니다.**
   속도(42px/초)와 멈춤 시간(2.4초)이 느리거나 빠르면 위 상수만 바꾸면 됩니다.
 - `.claude/launch.json`의 `tchaikimm` 포트를 5610 → **5611**로 바꿨습니다.
   이전 항목이 가리키던 스크립트 경로가 지난 세션 스크래치패드라 이번 세션 경로로 갱신했습니다.
@@ -705,10 +705,10 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
 
 ## Shared system migration (2026-08-06)
 
-- Repository-wide rules and project documents moved from `test/main/` to the repository root and `docs/`.
+- Repository-wide rules and project documents moved from `pages/main/` to the repository root and `docs/`.
 - Shared tokens, reset, base components, header/footer layout, and common behavior now live in `common/`.
 - Main, Shop, and Bespoke load the same shared CSS and JavaScript files.
-- Bespoke-only header/footer differences remain in `test/bespoke/css/bespoke.css` as page overrides.
+- Bespoke-only header/footer differences remain in `pages/bespoke/css/bespoke.css` as page overrides.
 - Local development must serve the repository root so `/common/` resources are reachable.
 - Browser verification completed for Main, Shop, and Bespoke with no console warnings or errors.
 - Footer markup is shared from `common/components/footer.html` and injected by `common/js/common.js`.
@@ -804,10 +804,10 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
 - 코디 자리 전환은 `top / left / width` transition(0.6s)입니다.
   자리마다 크기가 달라 transform만으로는 시안 좌표를 유지할 수 없습니다.
 
-## Shop 페이지 (`test/shop/`)
+## Shop 페이지 (`pages/shop/`)
 
 - 대상 화면: Figma `4조 한복판 - 차이킴` node `1523:1094`("shop_박효민"). main 페이지와 별도 폴더에 독립 구현.
-  **폴더 위치가 `test/main/shop/` → `test/shop/`(main의 형제 폴더)로 이동했습니다.** 헤더 로고 링크(`../main/index.html`)와 `.claude/launch.json`의 `shop` 설정 경로를 이 위치 기준으로 갱신했습니다.
+  **폴더 위치가 `pages/main/shop/` → `pages/shop/`(main의 형제 폴더)로 이동했습니다.** 헤더 로고 링크(`../main/index.html`)와 `.claude/launch.json`의 `shop` 설정 경로를 이 위치 기준으로 갱신했습니다.
 - 범위: 반응형은 다음 단계 예정. **레이아웃 구조는 main와 동일한 방식으로 전환**했습니다 — `body`/`.main`과 각 섹션(`hero_section`/`banner`/`new_arrivals_section`/`shop_section`)은 `width:100%`로 창 너비에 맞춰 늘어나고, Figma 절대좌표(1920 기준)에 의존하는 `hero_section`의 watermark·갤러리·카테고리 내비만 `.hero_section_frame`(1920px 고정, 가운데 정렬)으로 감쌌습니다. main가 코디·클로징 섹션에만 쓰는 "1920px 고정 프레임 가운데 정렬" 패턴을 hero_section에 적용한 것과 같은 방식입니다.
   이전에는 body/.main과 모든 섹션에 `width:1920px`를 직접 걸어서, 창이 1920px보다 넓으면 페이지 전체가 가운데의 작은 고정 박스로 보였습니다(main는 대부분 유동적이라 꽉 차 보였음) — 그 차이를 없앤 것입니다. 2560px 창에서 `hero_section_frame`이 정확히 1920px폭·가운데 정렬로 뜨는 것, 1920px 창에서 기존 레이아웃과 픽셀 단위로 동일한 것을 스크립트로 확인했습니다.
 - 구현 완료 섹션: hero_section(카테고리 내비 + 회전 갤러리), banner, new_arrivals_section(2×2 상품 카드), shop(필터바 + 3×2 상품 카드 + View More), 공용 header/footer(main와 동일 마크업 재사용).
@@ -839,7 +839,7 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
 - 상품 카드 hover는 "원단 디테일컷으로 전환" 대신 **동일 사진의 확대(scale) 효과**로 단순화했습니다. 각 카드의 두 번째(hover) 이미지 URL이 카드마다 신뢰성 있게 식별되지 않아, 확인된 사진 한 장만 사용하고 확대 효과로 대체했습니다.
 - 검색창(`shop_search`)의 "클릭 시 늘어남" 주석은 JS 없이 CSS `:focus-within`으로 구현(포커스 시 400→520px).
 - "All"/"Filter" 버튼은 이번 1차 구현에서 시각적 정적 버튼만 배치(드롭다운/실제 필터링 로직 없음).
-- 실행: `.claude/launch.json`의 `shop` 설정(PowerShell 정적 서버, `http://localhost:5602`, `test/shop`를 루트로 서빙, 스크립트는 세션 스크래치패드에 위치).
+- 실행: `.claude/launch.json`의 `shop` 설정(PowerShell 정적 서버, `http://localhost:5602`, `pages/shop`를 루트로 서빙, 스크립트는 세션 스크래치패드에 위치).
 - 검증: 네트워크 요청 전량 200 OK(자산 경로 오류 없음), 콘솔 에러 없음, 8장 이미지 중 4장이 정확히 자리 class를 받는 것과 자동 회전 타이머가 실제로 진행되는 것을 스크립트로 확인, 카테고리 focus 이벤트로 해당 이미지가 featured 자리로 정확히 이동하는 것 확인. **다만 이번 세션에서는 Browser 미리보기 패널이 화면에 표시되지 않아 스크린샷 기반 시각 비교와 실제 마우스 hover(`:hover`) 동작 확인은 하지 못했습니다** — 이벤트 리스너 로직 자체는 focus 이벤트로 검증했지만, 사용자가 `http://localhost:5602`을 직접 열어 눈으로 확인 필요.
 
 ### Shop 발표용 축소 (2026-08-07)
@@ -851,7 +851,7 @@ GSAP·ScrollTrigger는 페이지에 이미 로드돼 있어 CDN 추가 없이 `j
   (상품 행 1764 / 필터바 1712 / New 1679 / motif 1523) 창을 넓혀도 크기가 그대로고
   좌우 여백만 늘어납니다. 1920과 2560에서 콘텐츠 폭·페이지 높이가 완전히 동일합니다.
   즉 **이미 이너와 같은 상태**이고, 여백을 늘리려면 콘텐츠를 줄이는 수밖에 없습니다.
-- `test/shop/css/shop.css` 맨 끝, `@media (min-width: 1850px) and (max-width: 1990px)`
+- `pages/shop/css/shop.css` 맨 끝, `@media (min-width: 1850px) and (max-width: 1990px)`
   블록 하나에 전부 들어 있습니다. `html { zoom: var(--shop_view_scale) }`, 값은 `0.75`
   (= 1920 ÷ 2560이라 2560에서 100%로 보던 비율과 같아집니다).
 - **`transform: scale()`이 아니라 `zoom`을 씁니다.** zoom은 레이아웃을 다시 계산해서
@@ -891,7 +891,7 @@ ScrollTrigger는 pin을 걸 때 `getBoundingClientRect`로 잰 크기를 그대�
 
 #### 되돌리기 / 조절
 
-- 되돌리기: `git restore test/shop/css/shop.css`
+- 되돌리기: `git restore pages/shop/css/shop.css`
   또는 `[발표용 · 되돌리기 쉬움]` 주석부터 파일 끝까지 삭제.
 - 크기 조절: `--shop_view_scale`만 변경(0.8 / 0.85는 덜 줄어듭니다).
   garment story의 역보정은 같은 변수를 쓰므로 자동으로 따라갑니다.
@@ -903,7 +903,7 @@ ScrollTrigger는 pin을 걸 때 `getBoundingClientRect`로 잰 크기를 그대�
 3. shop 페이지 반응형(360/768/1280) 대응
 4. 실제 브라우저 스크린샷으로 Figma 시안과 픽셀 단위 비교, 실제 마우스 hover(원통형 갤러리 회전, 카드 hover, 검색창 확장) 수동 확인
 
-## Shop Detail 페이지 (`test/shop_detail/`) — 2026-08-06
+## Shop Detail 페이지 (`pages/shop_detail/`) — 2026-08-06
 
 ### purchase_panel
 

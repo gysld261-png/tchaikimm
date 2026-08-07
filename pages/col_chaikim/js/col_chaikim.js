@@ -1,5 +1,5 @@
 /* Collection (Tchai Kim) — Figma node 1710:3971 "col_chaikim".
-   자매 페이지 test/col_chaikimyoungjin와 인터랙션이 같습니다.
+   자매 페이지 pages/col_chaikimyoungjin와 인터랙션이 같습니다.
    다른 것은 아래 데이터(연도별 사진·배치)와 기본 연도뿐입니다. */
 (function () {
   "use strict";

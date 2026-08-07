@@ -13,7 +13,7 @@
         "-Port",
         "5605",
         "-Root",
-        "C:\\김시현\\tchaikimm\\test\\bespoke"
+        "C:\\김시현\\tchaikimm\\pages\\bespoke"
       ],
       "port": 5605,
       "autoPort": false

@@ -1,11 +1,11 @@
 # Collection 페이지 작업 기록
 
-`test/col_chaikimyoungjin/` 페이지의 작업 내역입니다.
+`pages/col_chaikimyoungjin/` 페이지의 작업 내역입니다.
 페이지 전체 구조와 showcase 인터랙션은 `docs/PROJECT_CONTEXT.md`의 Collection 항목에 있습니다.
 이 문서는 그 이후 작업을 기록합니다.
 
 > **2026-08-06 폴더 이름이 바뀌었습니다.** 아래 본문의 옛 경로를 이렇게 읽으세요.
-> `test/collection_test/` → `test/col_chaikimyoungjin/`,
+> `pages/collection_test/` → `pages/col_chaikimyoungjin/`,
 > `css/collection.css` → `css/col_chaikimyoungjin.css`,
 > `js/collection.js` → `js/col_chaikimyoungjin.js`,
 > `/asset/collection/` → 페이지 폴더 안의 `asset/`.
@@ -25,9 +25,9 @@
 
 ### 변경 파일
 
-- `test/collection_test/index.html` — 연도 목록, 사진 5장, Reverse Now 링크
-- `test/collection_test/css/collection.css` — archive 슬롯 레이아웃, hover, 연도 목록 전환
-- `test/collection_test/js/collection.js` — `ARCHIVE_PHOTOS` 데이터와 `initArchive()`
+- `pages/collection_test/index.html` — 연도 목록, 사진 5장, Reverse Now 링크
+- `pages/collection_test/css/collection.css` — archive 슬롯 레이아웃, hover, 연도 목록 전환
+- `pages/collection_test/js/collection.js` — `ARCHIVE_PHOTOS` 데이터와 `initArchive()`
 - `asset/collection/archive_*.png` — 파일 15개 이름 정리 (내용 변경 없음)
 
 ### 0. 에셋 정리
@@ -143,7 +143,7 @@ opacity가 `[0, 1, 1, 1, 1]`인 것을 확인한 뒤 고쳤습니다.
 
 ### 5. Reverse Now
 
-`href="#"` → `/test/bespoke/index.html`.
+`href="#"` → `/pages/bespoke/index.html`.
 공통 헤더/푸터가 쓰는 루트 기준 절대경로 표기와 같습니다.
 
 ---
@@ -219,7 +219,7 @@ lint / test / build: 이 저장소에 설정된 도구가 없어 실행하지 �
 
 - 네트워크: `archive_*.png` 15개 전부 200 OK. 콜렉션 페이지 요청 중 404 없음.
 - 콘솔 오류 없음.
-- Reverse Now → `/test/bespoke/index.html` 실제 이동 확인(Bespoke 페이지 로드됨).
+- Reverse Now → `/pages/bespoke/index.html` 실제 이동 확인(Bespoke 페이지 로드됨).
 - archive 안의 Tab 순서: 2021 → 2020 → 2019 → 2018 → 2017 → 2015 → 2013 → Reverse Now.
   화면 순서와 일치하고 button 3개 모두 포커스를 받습니다.
 - 구조 검사: 중복 id 0, alt 없는 img 0, 이름 없는 입력요소 0,
@@ -233,7 +233,7 @@ lint / test / build: 이 저장소에 설정된 도구가 없어 실행하지 �
 - 실제 네트워크에서의 체감 속도. localhost라 159MB가 문제없이 보였습니다.
   위 "에셋 정리"의 리사이즈 작업 전에는 실제 배포 환경에서 사진이 늦게 뜰 것으로 보입니다.
 - 미리보기 패널이 화면 일부만 그려서, 전체 화면을 한눈에 비교하는 확인은 하지 못했습니다.
-  `http://localhost:5610/test/collection_test/index.html`을 직접 열어 확인이 필요합니다.
+  `http://localhost:5610/pages/collection_test/index.html`을 직접 열어 확인이 필요합니다.
 
 ---
 
@@ -243,9 +243,9 @@ lint / test / build: 이 저장소에 설정된 도구가 없어 실행하지 �
 
 ### 변경 파일
 
-- `test/collection_test/index.html` — 기본 연도 2019 → 2021 (활성 표시 + 사진 5장)
-- `test/collection_test/css/collection.css` — 액자 스타일 제거, 배치를 커스텀 속성으로, `overflow: clip`
-- `test/collection_test/js/collection.js` — `ARCHIVE_LAYOUTS` 신설, 날아드는 등장으로 교체
+- `pages/collection_test/index.html` — 기본 연도 2019 → 2021 (활성 표시 + 사진 5장)
+- `pages/collection_test/css/collection.css` — 액자 스타일 제거, 배치를 커스텀 속성으로, `overflow: clip`
+- `pages/collection_test/js/collection.js` — `ARCHIVE_LAYOUTS` 신설, 날아드는 등장으로 교체
 
 ### 1. 등장 — 각자 다른 방향·거리에서 날아 들어옴
 
@@ -375,7 +375,7 @@ showcase와 같은 점: figure는 가만히 두고 안쪽 `img`만 움직입니�
 - `prefers-reduced-motion: reduce` 환경(1차와 같음).
 - 미리보기 패널이 화면을 축소해 그려서 전체 화면 비교는 하지 못했습니다.
   특히 2019 세트는 흰 스튜디오 배경이라 크림색 페이지 배경과 붙어 보입니다.
-  액자를 없앤 뒤 이 세트가 어떻게 보이는지는 `http://localhost:5610/test/collection_test/index.html`을
+  액자를 없앤 뒤 이 세트가 어떻게 보이는지는 `http://localhost:5610/pages/collection_test/index.html`을
   직접 열어 눈으로 확인이 필요합니다.
 - 반응형(360 / 768 / 1280). 배치는 여전히 1920 고정 프레임 기준입니다.
 

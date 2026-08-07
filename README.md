@@ -8,7 +8,7 @@ Static HTML, CSS, and JavaScript implementation of the Tchai Kim website.
 common/       Shared design tokens, reset, components, layout, and behavior
 docs/         PRD, implementation context, design analysis, and system guide
 templates/    Starter HTML for new pages
-test/         Page implementations
+pages/         Page implementations
 asset/        Project-wide source assets
 ```
 
@@ -18,4 +18,4 @@ Start with:
 - [Common system guide](docs/COMMON_SYSTEM.md)
 - [Repository rules](AGENTS.md)
 
-Serve the repository root and open a page under `/test/`, for example `/test/shop/index.html`.
+Serve the repository root and open a page under `/pages/`, for example `/pages/shop/index.html`.
