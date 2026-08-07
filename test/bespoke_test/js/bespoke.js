@@ -53,12 +53,18 @@
      --------------------------------------------------------- */
 
   /* 조절값 — 숫자만 바꾸면 된다 */
-  var PHILOSOPHY_RISE = 30; /* 글이 아래에서 올라오는 거리(px) */
+  var PHILOSOPHY_RISE = 72; /* 글이 아래에서 올라오는 거리(px) */
   var PHILOSOPHY_BG_RISE = 2.5; /* 배경이 올라오는 거리(자기 높이의 %) */
-  var PHILOSOPHY_DURATION = 1.1; /* 등장 길이(초) */
-  var PHILOSOPHY_STAGGER = 0.18; /* 제목 → 본문 시차(초) */
-  var PHILOSOPHY_START = "top 78%"; /* 섹션 윗변이 화면 78% 지점에 오면 시작 */
-  var PHILOSOPHY_PARALLAX_SHIFT = 80; /* 배경이 위아래로 움직이는 거리(px) */
+  var PHILOSOPHY_DURATION = 1.25; /* 등장 길이(초) */
+  var PHILOSOPHY_STAGGER = 0.26; /* 제목 → 본문 시차(초) */
+  /* **글 상자를 기준으로 잡는다(섹션이 아니다).** 섹션은 1000px인데 글은 그
+     한가운데 있어서, 섹션 윗변으로 재면 글이 아직 화면 아래 172px 밖에 있을
+     때 등장이 시작돼 화면 밖에서 다 끝나 버린다(실측: 시작 시점 노출 0%).
+     글 상자의 윗변이 화면 82% 지점에 오면 시작한다. */
+  var PHILOSOPHY_START = "top 82%";
+  var PHILOSOPHY_PARALLAX_SHIFT = 110; /* 배경이 위아래로 움직이는 거리(px)
+     주의: 이 값을 올리면 css의 --philosophy_parallax_overscan도 같이 올려야
+     한다. overscan은 이 값 + 배경 등장 이동(자기 높이의 2.5%)보다 커야 한다. */
 
   function initPhilosophyMotion() {
     var section = document.querySelector(".philosophy");
@@ -68,9 +74,10 @@
     }
 
     var background = section.querySelector(".philosophy_bg");
+    var body = section.querySelector(".philosophy_body");
     var contents = section.querySelectorAll(".philosophy_title, .philosophy_desc");
 
-    if (!background || !contents.length || !window.gsap || !window.ScrollTrigger) {
+    if (!background || !body || !contents.length || !window.gsap || !window.ScrollTrigger) {
       return;
     }
 
@@ -91,7 +98,7 @@
         stagger: PHILOSOPHY_STAGGER,
         ease: "power3.out",
         scrollTrigger: {
-          trigger: section,
+          trigger: body,
           start: PHILOSOPHY_START,
           once: true
         }
@@ -109,7 +116,7 @@
         duration: PHILOSOPHY_DURATION * 1.3,
         ease: "power2.out",
         scrollTrigger: {
-          trigger: section,
+          trigger: body,
           start: PHILOSOPHY_START,
           once: true
         }
@@ -142,30 +149,41 @@
   }
 
   /* ---------------------------------------------------------
-     atelier — 섹션이 화면에 잠시 고정되고, 그 동안 왼쪽 사진이 돋보기처럼
-     커지면서 오른쪽 글을 덮고 화면 전체를 채운다. 다 채우면 고정이 풀리고
-     다음 섹션(quote)으로 스크롤이 그대로 이어진다.
+     atelier — 왼쪽 사진이 스크롤에 따라 아주 조금 커진다.
+
+     레이아웃은 건드리지 않는다. 2단(사진 + 글) 구성, 여백, 섹션 높이가
+     그대로다. 커지는 것은 상자가 아니라 **상자 안의 img**이고,
+     .atelier_image의 `overflow: hidden`이 넘치는 부분을 잘라낸다.
+     그래서 사진이 자기 자리 밖으로 나가거나 오른쪽 글을 밀어낼 수 없고,
+     transform만 쓰므로 reflow도 없다.
 
      philosophy와 같이 GSAP + ScrollTrigger를 쓴다. 스크롤 위치에 비례해
-     연속으로 커져야 하므로 IntersectionObserver로는 만들 수 없다.
+     연속으로 변해야 하므로 IntersectionObserver로는 만들 수 없다.
+     JS나 GSAP이 없거나 모션 감소 설정이면 아무것도 하지 않는다.
 
-     기본값은 시안 레이아웃 그대로다. JS나 GSAP이 없거나, 화면이 좁거나,
-     모션 감소 설정이면 아무것도 하지 않는다.
+     이징 성격은 verostudio.com의 Diptych 계열을 참고했다. 코드를 옮긴 것이
+     아니라, 그 사이트의 이징 어휘(`--ease-out-quint`,
+     `cubic-bezier(.22, 1, .36, 1)`)에 overshoot가 없다는 점만 가져왔다.
+     그래서 "또잉"을 튕김(bounce)으로 만들지 않았다. 아래 두 가지가 겹쳐서
+     여운을 만든다:
+     · `power2.out` — 앞에서 자라고 뒤로 갈수록 느려지며 안착한다
+     · `scrub` 지연 — 스크롤을 멈춰도 사진이 조금 더 따라와 멎는다
+
+     **확대량은 처음에 1.06이었는데 화면에서 너무 약해서 1.18로 올렸다.**
+     1.06은 가장자리가 33px 자라는 것이라 스크롤 중에 알아채기 어려웠다.
+     1.18은 가로 100 / 세로 117px이라 분명히 보인다. 상자에 잘리므로
+     아무리 키워도 레이아웃에는 영향이 없다.
      --------------------------------------------------------- */
 
   /* 조절값 — 숫자만 바꾸면 된다 */
-  var ATELIER_PIN_LENGTH = "+=120%"; /* 고정된 채 스크롤하는 길이(화면 높이 기준) */
-  var ATELIER_SCRUB = 0.6; /* 스크롤을 따라오는 지연(초). 0이면 1:1로 딱 붙는다 */
-  /* 화면을 딱 채우는 배율에 곱하는 여유. 1이 "정확히 꽉 참"이다.
-     1보다 키우지 말 것 — 이 사진(554×648)은 화면보다 세로로 긴 비율이라
-     확대를 제한하는 쪽이 항상 가로다. 즉 여유를 주면 그만큼 사진이 화면
-     좌우 밖으로 나가고, 그 폭이 문서에 가로 넘침으로 남는다.
-     (`body { overflow-x: hidden }`이 휠 조작만 막을 뿐 없애지는 않는다 —
-      1.04로 두었을 때 pin이 풀린 뒤 실제로 38px이 남는 것을 확인했다.) */
-  var ATELIER_COVER_BLEED = 1;
-  /* 1280px 미만에서는 사진이 글 위가 아니라 위쪽에 세로로 쌓이므로
-     "글을 덮는다"가 성립하지 않는다. 그래서 가로 배치 구간에만 건다. */
-  var ATELIER_GATE = "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
+  var ATELIER_ZOOM_TO = 1.18; /* 최대 배율. 554×648 기준 가로 100 / 세로 117px 성장 */
+  var ATELIER_ZOOM_START = "top 85%"; /* 섹션 윗변이 화면 85% 지점에 오면 시작 */
+  var ATELIER_ZOOM_END = "bottom 65%"; /* 섹션 아랫변이 화면 65% 지점에 오면 최대 */
+  var ATELIER_ZOOM_SCRUB = 1.2; /* 스크롤을 따라오는 지연(초). 여운의 크기다 */
+  var ATELIER_ZOOM_EASE = "power2.out"; /* 끝으로 갈수록 느려지는 안착. 튕기지 않는다 */
+  /* 폭 조건을 걸지 않는다. 좁은 화면에서 사진이 위로 쌓여도 확대분은
+     여전히 상자 안에서만 일어나므로 레이아웃이 깨지지 않는다. */
+  var ATELIER_ZOOM_GATE = "(prefers-reduced-motion: no-preference)";
 
   function initAtelierZoom() {
     var section = document.querySelector(".atelier");
@@ -174,7 +192,8 @@
       return;
     }
 
-    var image = section.querySelector(".atelier_image");
+    /* 상자가 아니라 그 안의 사진을 키운다 */
+    var image = section.querySelector(".atelier_image img");
 
     if (!image || !window.gsap || !window.ScrollTrigger) {
       return;
@@ -183,90 +202,27 @@
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
-    gsap.matchMedia().add(ATELIER_GATE, function () {
+    gsap.matchMedia().add(ATELIER_ZOOM_GATE, function () {
       section.classList.add("is_zoom_ready");
 
-      /* 목표값.
-
-         **재는 시점이 중요하다.** `onRefreshInit`에서 재면 안 된다.
-         그 시점에는 ScrollTrigger가 아직 pin-spacer를 새 폭으로 고쳐놓기
-         전이라 이전 창 크기의 spacer(예: width 1728 / margin 0 88.5px)가
-         그대로 남아 있고, 그걸 재면 창을 줄였을 때 사진이 88px 어긋난 자리로
-         커진다(1905 → 1425로 줄여 실제로 확인함).
-         그래서 여기서는 "다시 재야 한다"는 표시만 하고, 실제 측정은 아래
-         함수형 값이 불릴 때 한다. GSAP은 invalidate 뒤 첫 렌더에서 이 함수를
-         부르는데, 그때는 refresh가 이미 끝나 레이아웃이 제자리에 있다.
-
-         **`offsetWidth`가 아니라 rect를 쓰는 이유**: offset 계열은 정수로
-         반올림된다. 이 사진의 폭은 1280~1839px 구간에서 42%라 소수점이 남는데
-         (예: 실제 428.86 → offsetWidth 429), 큰 값으로 나누면 배율이 그만큼
-         모자라서 다 커진 뒤에도 화면 가장자리에 크림색 실선이 남는다.
-         rect는 transform이 반영된 값이므로, 지금 걸려 있는 이동·배율을 도로
-         빼서 변형 전 크기와 중심을 되찾는다. 중심은 이동량만 빼면 된다 —
-         scale은 transform-origin이 중앙이라 중심을 움직이지 않는다. */
-      var target = null;
-
-      function measured() {
-        if (target) {
-          return target;
-        }
-
-        var view = document.documentElement;
-        var scaleNow = Number(gsap.getProperty(image, "scaleX")) || 1;
-        var xNow = Number(gsap.getProperty(image, "x")) || 0;
-        var yNow = Number(gsap.getProperty(image, "y")) || 0;
-
-        var sectionBox = section.getBoundingClientRect();
-        var imageBox = image.getBoundingClientRect();
-
-        var width = imageBox.width / scaleNow;
-        var height = imageBox.height / scaleNow;
-        var centerX = imageBox.left + imageBox.width / 2 - xNow;
-        var centerY = imageBox.top + imageBox.height / 2 - yNow;
-
-        target = {
-          /* pin이 섹션 중심을 화면 중앙에 놓으므로(start: "center center"),
-             사진 중심을 섹션 중심으로 옮기면 그대로 화면 중앙이다.
-             두 rect를 같은 순간에 재므로 스크롤 위치는 서로 상쇄된다. */
-          x: sectionBox.left + sectionBox.width / 2 - centerX,
-          y: sectionBox.top + sectionBox.height / 2 - centerY,
-
-          /* 가로·세로 중 더 모자란 쪽에 맞춘다. 하나의 값으로 x·y를 함께
-             키우므로 가로세로 비율이 그대로 유지된다(돋보기 확대).
-             innerWidth가 아니라 clientWidth를 쓰는 이유는 세로 스크롤바를 뺀
-             실제로 보이는 폭이 기준이어야 하기 때문이다. */
-          scale:
-            Math.max(view.clientWidth / width, view.clientHeight / height) * ATELIER_COVER_BLEED
-        };
-
-        return target;
-      }
-
-      gsap.to(image, {
-        /* 함수로 주면 invalidateOnRefresh가 새로 잰 값을 다시 읽어간다 */
-        x: function () {
-          return measured().x;
-        },
-        y: function () {
-          return measured().y;
-        },
-        scale: function () {
-          return measured().scale;
-        },
-        ease: "none",
-        scrollTrigger: {
-          trigger: section,
-          start: "center center",
-          end: ATELIER_PIN_LENGTH,
-          pin: true,
-          anticipatePin: 1,
-          scrub: ATELIER_SCRUB,
-          invalidateOnRefresh: true,
-          onRefreshInit: function () {
-            target = null;
+      /* `fromTo`라 시작값이 명시돼 있다. 위로 되감을 때도 정확히 1로
+         돌아온다. 1보다 작게 시작하면 안 된다 — img가 상자를 꽉 채우고
+         있어서(object-fit: cover) 줄이면 가장자리에 빈 줄이 드러난다. */
+      gsap.fromTo(
+        image,
+        { scale: 1 },
+        {
+          scale: ATELIER_ZOOM_TO,
+          ease: ATELIER_ZOOM_EASE,
+          scrollTrigger: {
+            trigger: section,
+            start: ATELIER_ZOOM_START,
+            end: ATELIER_ZOOM_END,
+            scrub: ATELIER_ZOOM_SCRUB,
+            invalidateOnRefresh: true
           }
         }
-      });
+      );
 
       return function () {
         section.classList.remove("is_zoom_ready");
@@ -274,6 +230,182 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     atelier 글 — 섹션에 들어오면 글자가 하나씩 아래에서 올라온다.
+
+     제목 → 리드 → 본문이 한 줄기 물결처럼 이어진다. 세 요소를 따로
+     재생하지 않고 글자를 한 배열로 모아 `stagger`를 한 번만 건다.
+
+     `stagger: { amount: N }`을 쓴다(`each`가 아니다). `each`는 글자 수에
+     비례해 전체 길이가 늘어나서, 본문(140자 남짓)이 제목(10자)보다 열 배
+     넘게 오래 걸린다. `amount`는 글자가 몇 개든 **전체를 N초 안에** 흘려
+     보내므로 문구를 고쳐도 리듬이 그대로다.
+
+     `once: true`라 한 번만 재생된다. 본문은 읽는 글이라 scrub으로 묶으면
+     스크롤 위치에 따라 반쯤 지워진 상태로 멈춰 읽기가 어렵다.
+     (사진 확대만 scrub이고, 이쪽은 philosophy와 같은 방식이다.)
+     --------------------------------------------------------- */
+
+  /* 조절값 — 숫자만 바꾸면 된다 */
+  var ATELIER_TEXT_RISE = 50; /* 글자가 올라오는 거리(자기 높이의 %) */
+  var ATELIER_TEXT_DURATION = 0.8; /* 글자 하나가 자리잡는 시간(초) */
+  var ATELIER_TEXT_SPREAD = 1.2; /* 첫 글자부터 마지막 글자까지 걸리는 시간(초) */
+  /* **글 상자를 기준으로 잡는다(섹션이 아니다).** 섹션은 1000px인데 글은 그
+     한가운데 있어서, 섹션 윗변으로 재면 글이 아직 화면 아래 116px 밖에 있을
+     때 시작해 화면 밖에서 다 끝나 버린다(실측: 시작 시점 노출 0%).
+     글 상자의 윗변이 화면 82% 지점에 오면 시작한다 — 그 순간 글의 약 3분의
+     2가 이미 화면 안에 있다. */
+  var ATELIER_TEXT_START = "top 82%";
+  var ATELIER_TEXT_GATE = "(prefers-reduced-motion: no-preference)";
+
+  /* 글을 단어 상자로 감싸고, 그 안을 다시 글자 상자로 나눈다.
+     `perChar`가 false면 단어 상자 자체가 움직이는 단위가 된다.
+
+     **단어 상자가 반드시 필요하다.** 글자마다 inline-block을 주면 줄바꿈이
+     글자 사이 어디에서나 일어나 단어가 중간에서 끊긴다. 단어를 한 번 더
+     감싸야 줄바꿈이 단어 경계에서만 생긴다.
+
+     `<br>`은 건드리지 않는다 — 텍스트 노드만 바꿔 끼우므로 시안의 줄바꿈이
+     그대로 남는다. 공백도 텍스트 노드로 그대로 두어 단어 간격이 유지된다. */
+  function splitAtelierBlock(element, perChar) {
+    var units = [];
+    var textNodes = [];
+    var walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, null);
+
+    while (walker.nextNode()) {
+      textNodes.push(walker.currentNode);
+    }
+
+    textNodes.forEach(function (node) {
+      if (!node.nodeValue.trim()) {
+        return; /* 들여쓰기로 생긴 공백 노드는 그대로 둔다 */
+      }
+
+      var fragment = document.createDocumentFragment();
+
+      node.nodeValue.split(/(\s+)/).forEach(function (chunk) {
+        if (!chunk) {
+          return;
+        }
+
+        if (/^\s+$/.test(chunk)) {
+          fragment.appendChild(document.createTextNode(chunk));
+          return;
+        }
+
+        var word = document.createElement("span");
+        word.className = "atelier_word";
+
+        if (perChar) {
+          chunk.split("").forEach(function (character) {
+            var span = document.createElement("span");
+            span.className = "atelier_char";
+            span.textContent = character;
+            word.appendChild(span);
+            units.push(span);
+          });
+        } else {
+          word.textContent = chunk;
+          units.push(word);
+        }
+
+        fragment.appendChild(word);
+      });
+
+      node.parentNode.replaceChild(fragment, node);
+    });
+
+    return units;
+  }
+
+  /* 글자 단위로 나누되, **줄 수가 늘어나면 단어 단위로 되돌린다.**
+
+     글자를 inline-block으로 만들면 글자마다 폭이 소수점에서 올림돼 줄 전체가
+     아주 조금 넓어진다. 실측하면 `.atelier_lead`가 44글자에 2.74px 늘어나는데,
+     이 줄은 원래 상자(509px)보다 0.77px 좁을 뿐이라 그대로 두면 두 줄로
+     넘어간다(높이 32 → 64px). 단어 단위는 같은 줄에서 0.11px밖에 늘지 않아
+     안전하다.
+
+     폭이나 폰트에 따라 아슬아슬한 줄이 달라지므로 값을 박아두지 않고
+     매번 실제 높이를 재서 정한다. 그래서 어느 화면 폭에서도 시안의 줄 수가
+     그대로 유지된다. */
+  function splitAtelierText(element) {
+    var original = element.innerHTML;
+    var heightBefore = element.offsetHeight;
+    var units = splitAtelierBlock(element, true);
+
+    if (element.offsetHeight > heightBefore) {
+      element.innerHTML = original;
+      units = splitAtelierBlock(element, false);
+    }
+
+    return units;
+  }
+
+  function initAtelierText() {
+    var section = document.querySelector(".atelier");
+
+    if (!section) {
+      return;
+    }
+
+    var body = section.querySelector(".atelier_body");
+    var blocks = section.querySelectorAll(".atelier_title, .atelier_lead, .atelier_desc");
+
+    if (!body || !blocks.length || !window.gsap || !window.ScrollTrigger) {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    /* 조건이 다시 맞아도 두 번 쪼개지 않도록 밖에 둔다 */
+    var units = null;
+
+    gsap.matchMedia().add(ATELIER_TEXT_GATE, function () {
+      /* class가 먼저 붙어야 한다 — 나눈 뒤 높이를 재서 줄 수가 늘었는지
+         판단하는데, inline-block이 걸려 있지 않으면 그 차이가 드러나지 않는다. */
+      section.classList.add("is_text_ready");
+
+      if (!units) {
+        units = [];
+        blocks.forEach(function (block) {
+          units = units.concat(splitAtelierText(block));
+        });
+      }
+
+      /* `from`이라 끝값은 CSS가 정한 값 그대로다. 트윈이 만들어지는 즉시
+         시작 상태(투명 + 아래)가 적용되므로 재생 전에 글이 비쳐 보이지 않는다. */
+      gsap.from(units, {
+        yPercent: ATELIER_TEXT_RISE,
+        opacity: 0,
+        duration: ATELIER_TEXT_DURATION,
+        ease: "power3.out",
+        stagger: { amount: ATELIER_TEXT_SPREAD },
+        scrollTrigger: {
+          trigger: body,
+          start: ATELIER_TEXT_START,
+          once: true
+        }
+      });
+
+      /* class를 떼면 span이 평범한 inline이 되어 원래 글과 똑같이 보인다.
+         GSAP이 자기가 넣은 인라인 스타일은 알아서 되돌린다. */
+      return function () {
+        section.classList.remove("is_text_ready");
+      };
+    });
+  }
+
   initPhilosophyMotion();
   initAtelierZoom();
+
+  /* 글 나누기는 **웹폰트가 적용된 뒤**에 해야 한다. 시스템 폰트로 재면 줄 폭이
+     달라서 "글자로 나눠도 되는가" 판단이 뒤집힌다. 폰트를 못 기다리는
+     환경에서는 바로 실행한다. */
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(initAtelierText);
+  } else {
+    initAtelierText();
+  }
 })();

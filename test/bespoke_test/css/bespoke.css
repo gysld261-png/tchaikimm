@@ -173,14 +173,15 @@
 
    배경을 위아래로 밀면 섹션 위/아래에 빈 줄이 드러나므로, 미리 그만큼
    이미지를 키워 둔다. 필요한 크기는 **두 이동량의 합**이다 —
-   패럴랙스(PHILOSOPHY_PARALLAX_SHIFT 80px)와 등장(PHILOSOPHY_BG_RISE 2.5%,
-   약 31px)이 같은 요소에 동시에 걸릴 수 있기 때문이다.
+   패럴랙스(PHILOSOPHY_PARALLAX_SHIFT 110px)와 등장(PHILOSOPHY_BG_RISE 2.5%,
+   약 34px)이 같은 요소에 동시에 걸릴 수 있기 때문이다. 합이 144px이라
+   176px으로 둔다.
    96px으로 뒀다가 실제로 걸렸다: 등장이 끝나기 전에 빠르게 스크롤하면
    합이 109.8px이 되어 섹션 위에 약 14px 빈 줄이 보였다. 128px이면 덮는다.
    --------------------------------------------------------- */
 
 .philosophy {
-  --philosophy_parallax_overscan: 128px;
+  --philosophy_parallax_overscan: 176px;
 }
 
 .philosophy.is_motion_ready .philosophy_bg {
@@ -241,52 +242,63 @@
   gap: 40px;
 }
 
+/* 이 상자가 사진의 경계다. `overflow: hidden`이 확대분을 잘라내므로
+   안쪽 img를 아무리 키워도 오른쪽 글 영역을 침범할 수 없다.
+   상자 자체는 크기가 바뀌지 않으므로 섹션 높이도 그대로다. */
 .atelier_image {
   width: 100%;
   aspect-ratio: 554 / 648;
   overflow: hidden;
 }
 
-/* ---------------------------------------------------------
-   atelier 확대 인터랙션 (js/bespoke.js가 붙이는 class)
-
-   philosophy와 같은 방식이다 — JS나 GSAP이 없거나 모션 감소 설정이면
-   class가 붙지 않고 아래 규칙이 전혀 적용되지 않는다.
-
-   position: relative가 필요한 이유: JS가 `offsetLeft`/`offsetTop`으로
-   사진의 중심을 섹션 기준으로 잰다. 이게 없으면 offsetParent가 body가 되어
-   (실측으로 확인함) 좌표가 어긋난다. offset 계열은 transform과 pin 상태에
-   영향을 받지 않는 레이아웃 값이라, 확대 도중에 다시 재도 값이 흔들리지 않는다.
-
-   z-index를 섹션에 주는 이유: ScrollTrigger가 pin을 걸면 섹션이
-   `position: fixed`가 되고, 그 순간 섹션 자체가 쌓임 맥락을 만든다.
-   그러면 안쪽 .atelier_image의 z-index 1이 섹션 밖으로 나가지 못해,
-   문서 순서상 뒤에 있는 .quote(position: relative)가 확대된 사진 위에
-   그려진다. 섹션을 2로 올려야 아래 섹션들보다 확실히 위에 온다.
-   헤더는 layout.css에서 z-index 50이라 그대로 사진 위에 남는다.
-
-   확대는 transform: scale만 쓴다. 박스의 aspect-ratio가 554/648로 고정돼
-   있고 안쪽 img는 object-fit: cover라, 배율만 올리면 잘리는 범위가 그대로인
-   채 돋보기처럼 커진다. transform-origin은 반드시 중앙이어야 한다 —
-   JS가 상자 중심을 화면 중앙으로 옮긴 뒤 그 중심을 기준으로 키운다.
-   --------------------------------------------------------- */
-
-.atelier.is_zoom_ready {
-  position: relative;
-  z-index: 2;
-}
-
-.atelier.is_zoom_ready .atelier_image {
-  position: relative;
-  z-index: 1; /* 커지면서 오른쪽 텍스트를 덮는다 */
-  transform-origin: 50% 50%;
-  will-change: transform;
-}
-
 .atelier_image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* ---------------------------------------------------------
+   atelier 사진 — 스크롤에 따라 아주 조금 커진다
+   (js/bespoke.js가 붙이는 is_zoom_ready class)
+
+   philosophy와 같은 방식이다 — JS나 GSAP이 없거나 모션 감소 설정이면
+   class가 붙지 않고 아래 규칙이 전혀 적용되지 않는다.
+
+   **크기를 바꾸는 대상은 상자가 아니라 안쪽 img다.** 상자(.atelier_image)를
+   키우면 flex 형제인 .atelier_body를 밀어내지만, img는 상자에 잘리므로
+   레이아웃이 전혀 움직이지 않는다. `transform`만 쓰므로 reflow도 없다.
+
+   transform-origin이 중앙이어야 사진이 상자 안에서 사방으로 고르게
+   커진다. 기본값이지만 의도를 남기려고 적어 둔다.
+   --------------------------------------------------------- */
+
+.atelier.is_zoom_ready .atelier_image img {
+  transform-origin: 50% 50%;
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------
+   atelier 글 — 글자가 하나씩 올라온다
+   (js/bespoke.js가 넣는 span과 is_text_ready class)
+
+   **단어 상자(.atelier_word)가 반드시 있어야 한다.** 글자마다
+   inline-block을 주면 줄바꿈이 글자 사이 어디에서나 일어나 단어가
+   중간에서 끊긴다. 단어를 한 겹 더 감싸야 줄바꿈이 단어 경계에서만 생긴다.
+
+   글자에는 will-change를 주지 않는다. 이 섹션의 글자가 200개쯤 되는데
+   전부 합성 레이어로 올리면 얻는 것보다 잃는 것이 크다.
+
+   class가 없으면(모션 감소 설정 등) 두 span 모두 평범한 inline이라
+   원래 글과 똑같이 흐른다.
+   --------------------------------------------------------- */
+
+.atelier.is_text_ready .atelier_word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.atelier.is_text_ready .atelier_char {
+  display: inline-block;
 }
 
 .atelier_body {
