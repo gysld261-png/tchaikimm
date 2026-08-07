@@ -1,6 +1,71 @@
 # Tchai Kim 현재 상태
 
 
+## Bespoke 메인 1920×1080 레이아웃 정리 (진행 중) — 2026-08-07
+
+발표 PC가 1920 × 1080 / 배율 100%인 것을 기준으로 `test/bespoke_test/index.html`을
+Figma `1745:12160`에 맞추는 작업입니다. **아직 끝나지 않았습니다.**
+
+### 작업 조건 (중요)
+
+- **이 세션에는 Figma MCP가 연결돼 있지 않습니다.** 이전 세션이 쓰던 커넥터
+  (`mcp__5c34bce5-…__get_design_context`)가 도구 목록에 없고, Figma 데스크톱의
+  로컬 Dev Mode 서버(127.0.0.1:3845)도 응답하지 않습니다.
+  대신 사용자가 준 **시안 스크린샷 1장(1920 → 368px, 5.2배 축소)**으로 작업했습니다.
+  이 해상도에서는 **구조는 읽히지만 픽셀 수치는 읽히지 않습니다**(1px ≈ 실제 5.2px).
+- `.claude/launch.json`의 기존 두 설정(`python3` / `py`)이 이 PC에서 실행되지 않습니다
+  (`spawn ENOENT`). node 기반 `tchaikimm_node` 항목을 추가했습니다.
+  스크립트는 세션 스크래치패드의 `serve.js`이며, 저장소 루트를 5611 포트로 서빙합니다.
+  **다른 세션에서는 경로가 달라 동작하지 않으므로 다시 만들어야 합니다.**
+
+### 고친 것 (`css/bespoke.css`)
+
+1. **히어로 글이 영상과 같은 열에 왼쪽 정렬됩니다.** `.bespoke_hero_body`의
+   `max-width`를 840px → **1400px**로 바꿨습니다. 840px일 때는 `.bespoke_hero`의
+   `align-items: center` 때문에 글이 x=533에 서서 영상(x=253)보다 280px 안쪽으로
+   들어가 있었습니다. 시안은 둘이 같은 왼쪽 끝을 씁니다.
+2. **philosophy와 quote가 화면 끝까지 닿는 통짜 띠가 됐습니다.**
+   `.main section { max-width: 1728px }` 때문에 1920 화면에서 양옆에 96px씩
+   크림색 띠가 남아 있었습니다. `.main .philosophy, .main .quote`에
+   `max-width: none` + `padding-inline: max(gutter, (100% - 1600px) / 2)`를 줍니다.
+   배경은 화면 폭 전체(1905px), 글 시작점은 다른 섹션과 같은 152.5px입니다.
+   - **선택자에 `.main`이 꼭 필요합니다.** `.philosophy`(특정도 0,1,0)만으로는
+     위의 `.main section`(0,1,1)을 이기지 못해 적용되지 않습니다. 실제로 한 번 겪었습니다.
+   - **reservation은 여기 넣지 않았습니다.** 시안에서도 좌우 여백이 있는 안쪽 배치입니다
+     (현재 x=89 / w=1728). 이 점이 위 두 띠를 통짜로 읽은 근거이기도 합니다 —
+     같은 스크린샷에서 reservation만 좌우 여백이 보입니다.
+
+### 남은 문제
+
+1. **세로 리듬이 시안보다 1950px 짧습니다.** 페이지 전체 높이가 현재 **8488px**,
+   시안 프레임은 **10438px**입니다. 콘텐츠 폭(1600px)과 각 요소의 가로 배치는 맞습니다.
+   축소된 스크린샷으로는 어느 섹션에 얼마가 부족한지 ±260px 오차라 손대지 않았습니다.
+   **섹션별 시안 y좌표 또는 고해상도 크롭이 필요합니다.**
+2. **히어로 영상이 여전히 없습니다.** `index.html:41`이
+   `assets/main/bespoke_main.mov`를 가리키는데 파일이 없습니다
+   (`MEDIA_ELEMENT_ERROR: Format error`). 1400 × 760 자리가 비어 있습니다.
+   저장소를 뒤졌지만 **시안의 히어로 화면(자수 원단 위 안경 클로즈업)과 맞는 파일이 없습니다.**
+   후보로 본 것과 실제 내용:
+   - `asset/main/bespoke/bespokevod.mp4` — 흰 한복을 입고 걷는 아틀리에 영상
+   - `asset/main/hero/bespoke.mp4` — 옆얼굴 클로즈업 (main 페이지 히어로용)
+   - `asset/main/hero/bespoke.png` — 검은 배경 착장 사진 (main 페이지 히어로용)
+
+   셋 다 시안과 다른 장면이라 임의로 바꾸지 않았습니다. 사용자 결정이 필요합니다.
+
+### 검증 (1920 × 1080, localhost:5611)
+
+- 히어로 제목·영상 둘 다 x=253 / w=1400으로 일치.
+- philosophy·quote: x=0 / w=1905(화면 전체), 안쪽 글은 x=153.
+- reservation: x=89 / w=1728 유지(변경 없음).
+- **1920 / 1280 / 768 / 360 네 폭에서 가로 스크롤 0.**
+  philosophy padding이 152.5 / 64 / 40 / 20px으로 gutter를 따라갑니다.
+- `bespoke.css` 규칙 93개, 파서가 버린 규칙 0, 빈 규칙 0. 404 요청 없음.
+- **확인하지 못한 부분**: 이번 세션도 Browser 미리보기 패널이 표시되지 않아
+  (`the Browser pane is not displayed`) **화면 캡처를 하지 못했습니다.**
+  위 값은 전부 `getBoundingClientRect` 측정입니다. 시안과 눈으로 비교하는 것은
+  사용자가 `http://localhost:5611/test/bespoke_test/index.html`에서 해야 합니다.
+
+
 ## Bespoke 페이지 묶음 (`test/bespoke_test/`) — 2026-08-07
 
 Bespoke는 **한 폴더 안에 세 페이지**가 들어 있습니다. 다른 화면(shop / shop_detail)처럼

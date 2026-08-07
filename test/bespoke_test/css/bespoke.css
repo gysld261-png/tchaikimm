@@ -59,6 +59,17 @@
   }
 }
 
+/* 시안에서 philosophy와 quote는 배경이 화면 좌우 끝까지 닿는 통짜 띠다.
+   위의 max-width(1728px)를 그대로 두면 1920 화면에서 양옆에 96px씩 크림색 띠가 남는다.
+   reservation은 시안에서도 좌우 여백이 있는 안쪽 배치라 여기 포함하지 않는다.
+   좌우 padding은 다른 섹션의 글 시작점(1600px 컨테이너)과 같은 자리를 유지한다.
+   선택자에 .main을 붙여야 한다 — 위의 `.main section`이 특정도(0,1,1)로 더 세다. */
+.main .philosophy,
+.main .quote {
+  max-width: none;
+  padding-inline: max(var(--layout_gutter), calc((100% - var(--layout_inner)) / 2));
+}
+
 /* =========================================================
    hero
    ========================================================= */
@@ -79,12 +90,14 @@
   font-size: var(--fs_ui_16);
 }
 
+/* 시안: 히어로 글은 가운데 정렬이 아니라 아래 영상과 같은 열(1400px)의 왼쪽 끝에 맞는다.
+   840px로 두면 1920 화면에서 글이 x=533에 서서 영상(x=253)보다 280px 안쪽으로 들어간다. */
 .bespoke_hero_body {
   display: flex;
   flex-direction: column;
   gap: 20px;
   width: 100%;
-  max-width: 840px;
+  max-width: 1400px;
 }
 
 .bespoke_hero_eyebrow {

@@ -24,6 +24,16 @@
       "port": 5611,
       "url": "http://localhost:5611",
       "autoPort": false
+    },
+    {
+      "name": "tchaikimm_node",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "C:/Users/EZEN/AppData/Local/Temp/claude/C--Users-EZEN-Desktop-----kbrand-tchaikimm/76edbd59-efd1-4d19-ac62-bc07abcf4136/scratchpad/serve.js"
+      ],
+      "port": 5611,
+      "url": "http://localhost:5611",
+      "autoPort": false
     }
   ]
 }
