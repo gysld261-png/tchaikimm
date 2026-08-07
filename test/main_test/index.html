@@ -123,7 +123,9 @@
     </div>
   </section>
 
-  <!-- brand_01~04 — 스크롤에 따라 글자가 바뀌는 시퀀스 (js/main.js에서 GSAP로 고정+크로스페이드) -->
+  <!-- brand_01~05 — 스크롤에 따라 글자가 바뀌다가 마지막에 콜라주로 이어지는 하나의 시퀀스
+       (js/main.js에서 GSAP로 고정+크로스페이드). brand_05는 brand_06과 같은 사진을 씁니다 —
+       여기서는 서서히 나타나고, 아래 정적 brand_06에서 완전히 보입니다. -->
   <div class="brand_word_pin" id="brand_word_pin">
     <section class="brand_word is_active" data-step="0">
       <p class="brand_word_text">TCHAI</p>
@@ -137,34 +139,31 @@
       <p class="brand_word_text">TCHAI Kim Young Jin</p>
     </section>
 
-    <section class="brand_word brand_word_split" data-step="3">
-      <p class="brand_word_text">TCHAI Kim</p>
-      <p class="brand_word_text">Young Jin</p>
+    <!-- brand_04 + brand_05 통합: 같은 텍스트가 페이드가 아니라 슬라이드로 갈라지고,
+         그 뒤로 사진이 서서히 나타납니다(js/main.js). "TCHAI Kim"은 안 바뀌니 그대로 두고,
+         "Young Jin" 앞에 숨어 있던 "TCHAI Kim " 접두어가 같이 나타나 "TCHAI Kim Young Jin"이 됩니다. -->
+    <section class="brand_collage" data-step="3">
+      <div class="brand_collage_cards">
+        <ul class="brand_collage_row">
+          <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_06/img4.png" alt=""></li>
+          <li class="brand_collage_card is_size_lg"><img src="assets/main/brand/brand_06/img3.png" alt=""></li>
+          <li class="brand_collage_card is_size_lg"><img src="assets/main/brand/brand_06/img2.png" alt=""></li>
+          <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_06/img1.png" alt=""></li>
+        </ul>
+        <div class="brand_collage_btn">
+          <a class="brand_collage_link" href="#promo_bespoke_title">Tchai Kim Young Jin</a>
+          <a class="brand_collage_link brand_collage_link_right" href="#promo_shop_title">Tchai Kim</a>
+        </div>
+      </div>
+      <p class="brand_collage_name">
+        <span class="brand_collage_name_left">TCHAI Kim</span>
+        <span class="brand_collage_name_right"><span class="brand_collage_name_prefix">TCHAI Kim </span>Young Jin</span>
+      </p>
     </section>
   </div>
 
-  <!-- brand_05 -->
-  <section class="brand_collage">
-    <div class="brand_collage_cards">
-      <ul class="brand_collage_row">
-        <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_05/img4.png" alt=""></li>
-        <li class="brand_collage_card is_size_lg"><img src="assets/main/brand/brand_05/img3.png" alt=""></li>
-        <li class="brand_collage_card is_size_lg"><img src="assets/main/brand/brand_05/img2.png" alt=""></li>
-        <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_05/img1.png" alt=""></li>
-      </ul>
-      <div class="brand_collage_btn">
-        <p class="brand_collage_link">Tchai Kim Young Jin</p>
-        <p class="brand_collage_link brand_collage_link_right">Tchai Kim</p>
-      </div>
-    </div>
-    <p class="brand_collage_name">
-      <span>TCHAI Kim</span>
-      <span>TCHAI Kim Young Jin</span>
-    </p>
-  </section>
-
-  <!-- brand_06 -->
-  <section class="brand_collage brand_collage_lg">
+  <!-- brand_06 — brand_05와 같은 사진, 여기서는 애니메이션 없이 완전히 보이는 정적 상태 -->
+  <section class="brand_collage brand_collage_lg brand_collage_static">
     <div class="brand_collage_cards">
       <ul class="brand_collage_row">
         <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_06/img4.png" alt=""></li>
@@ -173,8 +172,8 @@
         <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_06/img1.png" alt=""></li>
       </ul>
       <div class="brand_collage_btn">
-        <p class="brand_collage_link">Tchai Kim Young Jin</p>
-        <p class="brand_collage_link brand_collage_link_right">Tchai Kim</p>
+        <a class="brand_collage_link" href="#promo_bespoke_title">Tchai Kim Young Jin</a>
+        <a class="brand_collage_link brand_collage_link_right" href="#promo_shop_title">Tchai Kim</a>
       </div>
     </div>
     <p class="brand_collage_name">
@@ -278,7 +277,7 @@
       </div>
 
       <ul class="shop_products">
-        <li class="shop_product is_dim"><img src="assets/main/shop/shop_look_1.png" alt="A Tchai Kim look, faded"></li>
+        <li class="shop_product is_dim"><img src="assets/main/shop/shop_look1.png" alt="A Tchai Kim look, faded"></li>
         <li class="shop_product"><img src="assets/main/shop/shop_look2.png" alt="A blue silk ruffled vest dress"></li>
         <li class="shop_product"><img src="assets/main/shop/shop_look3.png" alt="A taupe long coat"></li>
         <li class="shop_product"><img src="assets/main/shop/shop_look4.png" alt="A pair of olive green wide trousers"></li>

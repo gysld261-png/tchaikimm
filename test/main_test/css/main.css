@@ -22,11 +22,11 @@
    세로는 top(0%) ~ bottom(100%)/center(가운데)이고 %값으로도 조정할 수 있습니다.
    (예: "center 30%"로 하면 지금보다 사진이 조금 더 아래쪽을 기준으로 잘립니다) */
 .hero_panel_bespoke {
-  --hero_img_position: center bottom;
+  --hero_img_position: center top;
 }
 
 .hero_panel_shop {
-  --hero_img_position: center bottom;
+  --hero_img_position: center top;
 }
 
 .hero_panel_img {
@@ -36,7 +36,7 @@
   max-width: none;
   height: 100%;
   object-fit: cover;
-  object-position: var(--hero_img_position, bottom);
+  object-position: var(--hero_img_position, top);
   opacity: 0.9;
   pointer-events: none;
 }
@@ -48,7 +48,7 @@
   max-width: none;
   height: 100%;
   object-fit: cover;
-  object-position: bottom;
+  object-position: top;
   opacity: 0;
   pointer-events: none;
 }
@@ -263,14 +263,16 @@
   overflow: hidden;
 }
 
-.brand_word_pin.is_pinned .brand_word {
+.brand_word_pin.is_pinned .brand_word,
+.brand_word_pin.is_pinned .brand_collage {
   position: absolute;
   inset: 0;
   min-height: 0;
   opacity: 0;
 }
 
-.brand_word_pin.is_pinned .brand_word.is_active {
+.brand_word_pin.is_pinned .brand_word.is_active,
+.brand_word_pin.is_pinned .brand_collage.is_active {
   opacity: 1;
 }
 
@@ -327,7 +329,7 @@
 
 .brand_collage_cards {
   position: relative;
-  z-index: 1;
+  z-index: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -386,7 +388,7 @@
 
 .brand_collage_name {
   position: absolute;
-  z-index: 0;
+  z-index: 1;
   top: 50%;
   left: 50%;
   display: flex;
@@ -407,33 +409,42 @@
   pointer-events: none;
 }
 
-/* 스크롤로 들어올 때: 사진이 서서히 나타나고, 이름 두 줄이 벌어지며 갈라집니다.
-   기본(js/main.js 미동작)은 최종 상태 그대로 보입니다. */
+/* brand_collage_name의 "TCHAI Kim " 접두어 — 기본(JS 미동작)은 항상 보여서
+   "TCHAI Kim Young Jin"으로 온전히 읽힙니다. .is_enhanced일 때만 JS가 opacity 0에서 시작해
+   슬라이드와 같은 구간에서 서서히 나타나게 합니다(페이드가 아니라 텍스트가 채워지는 느낌). */
+.brand_collage_name_prefix {
+  display: inline-block;
+}
+
+/* 스크롤로 들어올 때: 사진이 서서히 나타나고, 이름 두 줄이 (페이드가 아니라) 더 벌어지며
+   갈라집니다 — brand_04에서 이미 갈라진 상태가 이어지는 것이라 여기서는 "조금 더 벌어지는"
+   정도로만 시작합니다. 기본(js/main.js 미동작)은 최종 상태 그대로 보입니다. */
 .brand_collage.is_enhanced .brand_collage_cards {
   opacity: 0;
   transform: scale(0.94);
 }
 
 .brand_collage.is_enhanced .brand_collage_name span {
+  /* transform은 js/main.js의 GSAP 타임라인이 매 스크롤 프레임마다 직접 씁니다.
+     여기서 CSS transition을 같이 걸면 GSAP 값과 서로 쫓아가며 밀리는 문제가 생겨 뺐습니다. */
   display: inline-block;
-  transition: transform 0.2s linear;
 }
 
-.brand_collage.is_enhanced .brand_collage_name span:first-child {
-  transform: translateY(14px);
+.brand_collage.is_enhanced .brand_collage_name_left {
+  transform: translateY(40px);
 }
 
-.brand_collage.is_enhanced .brand_collage_name span:last-child {
-  transform: translateY(-14px);
+.brand_collage.is_enhanced .brand_collage_name_right {
+  transform: translateY(-40px);
 }
 
 @media (min-width: 1280px) {
-  .brand_collage.is_enhanced .brand_collage_name span:first-child {
-    transform: translateX(30px);
+  .brand_collage.is_enhanced .brand_collage_name_left {
+    transform: translateX(120px);
   }
 
-  .brand_collage.is_enhanced .brand_collage_name span:last-child {
-    transform: translateX(-30px);
+  .brand_collage.is_enhanced .brand_collage_name_right {
+    transform: translateX(-120px);
   }
 }
 
