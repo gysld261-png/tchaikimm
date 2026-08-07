@@ -409,16 +409,10 @@
   pointer-events: none;
 }
 
-/* brand_collage_name의 "TCHAI Kim " 접두어 — 기본(JS 미동작)은 항상 보여서
-   "TCHAI Kim Young Jin"으로 온전히 읽힙니다. .is_enhanced일 때만 JS가 opacity 0에서 시작해
-   슬라이드와 같은 구간에서 서서히 나타나게 합니다(페이드가 아니라 텍스트가 채워지는 느낌). */
-.brand_collage_name_prefix {
-  display: inline-block;
-}
-
-/* 스크롤로 들어올 때: 사진이 서서히 나타나고, 이름 두 줄이 (페이드가 아니라) 더 벌어지며
-   갈라집니다 — brand_04에서 이미 갈라진 상태가 이어지는 것이라 여기서는 "조금 더 벌어지는"
-   정도로만 시작합니다. 기본(js/main.js 미동작)은 최종 상태 그대로 보입니다. */
+/* brand_collage 진입 시점(brand_04 상태)에는 이름 두 줄이 이미 갈라진 큰 글자로 시작하고,
+   스크롤이 진행되며(brand_05) 작아지고(scale) 더 벌어지고(x), "Young Jin" 앞의 숨은
+   "TCHAI Kim " 접두어가 나타납니다 — 시작/끝 옵셋은 실제 레이아웃을 측정해 js/main.js가
+   계산하므로 여기서는 값을 하드코딩하지 않습니다. */
 .brand_collage.is_enhanced .brand_collage_cards {
   opacity: 0;
   transform: scale(0.94);
@@ -428,24 +422,6 @@
   /* transform은 js/main.js의 GSAP 타임라인이 매 스크롤 프레임마다 직접 씁니다.
      여기서 CSS transition을 같이 걸면 GSAP 값과 서로 쫓아가며 밀리는 문제가 생겨 뺐습니다. */
   display: inline-block;
-}
-
-.brand_collage.is_enhanced .brand_collage_name_left {
-  transform: translateY(40px);
-}
-
-.brand_collage.is_enhanced .brand_collage_name_right {
-  transform: translateY(-40px);
-}
-
-@media (min-width: 1280px) {
-  .brand_collage.is_enhanced .brand_collage_name_left {
-    transform: translateX(120px);
-  }
-
-  .brand_collage.is_enhanced .brand_collage_name_right {
-    transform: translateX(-120px);
-  }
 }
 
 .brand_collage_lg .brand_collage_card {
@@ -464,7 +440,7 @@
   .brand_collage_name {
     flex-direction: row;
     justify-content: center;
-    gap: clamp(60px, 20vw, 422px);
+    gap: clamp(60px, 21.98vw, 422px);
     white-space: nowrap;
   }
 }
@@ -591,18 +567,21 @@
   line-height: var(--lh_body_20);
 }
 
-/* 시안(Figma node 1712:4266 외 3개)의 좌표를 그대로 옮깁니다.
-   글과 확대컷은 이미지 옆이 아니라 이미지 위로 겹쳐 걸립니다.
-   퍼센트는 전부 .detail_stage(이미지) 기준입니다 — 좌우는 이미지 폭(1460),
-   상하는 이미지 높이(635) 대비 값입니다.
-   margin-top/bottom은 위아래로 겹쳐 걸리는 글·확대컷이 다른 섹션과
-   부딪히지 않도록 비워 두는 여백입니다(고정값 — % padding은 폭 기준으로 계산되어
-   여기서는 쓸 수 없습니다). */
+/* 시안(Figma node 1712:4266 외 3개, collar/sleeve/body/skirt 4개 variant 전부 이미지
+   좌표가 동일)의 좌표를 그대로 옮깁니다. 글과 확대컷은 이미지 옆이 아니라 이미지
+   위로 겹쳐 걸립니다. 퍼센트는 전부 .detail_stage(이미지) 기준입니다 — 좌우는
+   이미지 폭(1460), 상하는 이미지 높이(635) 대비 값입니다.
+   이미지는 화면 중앙이 아니라 피그마 그대로 왼쪽에서 10.99%(211px/1920px) 지점에
+   있습니다(가운데 정렬 아님 — 오른쪽에 확대컷이 겹쳐 걸릴 여유를 더 두는 배치).
+   위아래 여백은 위아래로 겹쳐 걸리는 글·확대컷이 다른 섹션과 부딪히지 않도록 비워
+   두는 값입니다(고정값 — % margin은 폭 기준으로 계산되어 세로 여백에는 쓸 수
+   없습니다). */
 .detail_stage {
   position: relative;
   width: 76.04%;
   max-width: 1460px;
-  margin: clamp(140px, 20vw, 400px) 0 clamp(160px, 24vw, 470px) 10.99%;
+  margin-block: clamp(160px, 24vw, 470px);
+  margin-left: 10.99%;
 }
 
 .detail_img {
@@ -1039,10 +1018,6 @@
   display: block;
   width: 100%;
   height: auto;
-}
-
-.collection_item.is_flip img {
-  transform: scaleX(-1);
 }
 
 .collection_bottom {

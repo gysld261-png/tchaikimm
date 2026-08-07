@@ -139,9 +139,11 @@
       <p class="brand_word_text">TCHAI Kim Young Jin</p>
     </section>
 
-    <!-- brand_04 + brand_05 통합: 같은 텍스트가 페이드가 아니라 슬라이드로 갈라지고,
-         그 뒤로 사진이 서서히 나타납니다(js/main.js). "TCHAI Kim"은 안 바뀌니 그대로 두고,
-         "Young Jin" 앞에 숨어 있던 "TCHAI Kim " 접두어가 같이 나타나 "TCHAI Kim Young Jin"이 됩니다. -->
+    <!-- brand_04 + brand_05 + brand_06(등장부) 통합: 피그마 원본처럼 brand_03(중앙 큰 글자)이
+         끝나며 이 섹션이 페이드인될 때는 "TCHAI Kim"(왼쪽) / "Young Jin"(오른쪽)이 이미 갈라진
+         큰 글자(brand_04) 상태로 시작합니다. 이어서 글자가 작아지고(scale) 더 벌어지며(x),
+         "Young Jin" 앞에 숨어 있던 "TCHAI Kim " 접두어가 함께 나타나 "TCHAI Kim Young Jin"이
+         되고(brand_05), 그와 동시에 사진 4장이 서서히 나타납니다 — 전부 js/main.js가 계산. -->
     <section class="brand_collage" data-step="3">
       <div class="brand_collage_cards">
         <ul class="brand_collage_row">
@@ -157,13 +159,13 @@
       </div>
       <p class="brand_collage_name">
         <span class="brand_collage_name_left">TCHAI Kim</span>
-        <span class="brand_collage_name_right"><span class="brand_collage_name_prefix">TCHAI Kim </span>Young Jin</span>
+        <span class="brand_collage_name_right"><span class="brand_collage_name_prefix">TCHAI Kim </span><span class="brand_collage_name_suffix">Young Jin</span></span>
       </p>
     </section>
   </div>
 
   <!-- brand_06 — brand_05와 같은 사진, 여기서는 애니메이션 없이 완전히 보이는 정적 상태 -->
-  <section class="brand_collage brand_collage_lg brand_collage_static">
+  <!-- <section class="brand_collage brand_collage_lg brand_collage_static">
     <div class="brand_collage_cards">
       <ul class="brand_collage_row">
         <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_06/img4.png" alt=""></li>
@@ -180,7 +182,7 @@
       <span>TCHAI Kim</span>
       <span>TCHAI Kim Young Jin</span>
     </p>
-  </section>
+  </section> -->
 
   <!-- kyj_brand_story — 1장 → 3장 → 확대 → 페이드아웃(js/main.js) -->
   <section class="kyj_sequence" aria-label="A Tchai Kim Youngjin story in three details">
@@ -293,10 +295,10 @@
 
       <ul class="collection_row">
         <li class="collection_item is_size_lg"><img src="assets/main/collction/collction1.png" alt="A model in a red winter hanbok coat, back view"></li>
-        <li class="collection_item is_size_md is_flip"><img src="assets/main/collction/collction2.png" alt="Five models in white hanbok-inspired gowns"></li>
+        <li class="collection_item is_size_md"><img src="assets/main/collction/collction2.png" alt="Five models in white hanbok-inspired gowns"></li>
         <li class="collection_item is_size_bts"><img src="assets/main/collction/collction3.png" alt="Seven members of a band in blue and grey hanbok"></li>
         <li class="collection_item is_size_md"><img src="assets/main/collction/collction4.png" alt="A model in a floral print hanbok gown with a tiara"></li>
-        <li class="collection_item is_size_lg is_flip"><img src="assets/main/collction/collction5.png" alt="A model draped in a pink patterned shawl"></li>
+        <li class="collection_item is_size_lg"><img src="assets/main/collction/collction5.png" alt="A model draped in a pink patterned shawl"></li>
       </ul>
 
       <div class="collection_bottom">
