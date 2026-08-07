@@ -316,7 +316,7 @@
 
 .youngjin_group_second {
   position: absolute;
-  top: 1199px;
+  top: 1109px;
   right: 0;
   width: 1071px;
 }
@@ -417,7 +417,7 @@
 .tchaikim_track {
   width: 1920px;
   margin-left: calc(50% - 960px);
-  padding-block: 300px;
+  padding-block: 600px;
 }
 
 .tchaikim_tabs {
@@ -518,8 +518,9 @@
   overflow-x: clip;
 }
 
-/* 시안 폭 합계 2380px로 캔버스(1920)보다 넓습니다.
-   시안 그대로 가운데 정렬하고 좌우를 잘라냅니다. */
+/* 시안 폭 합계 2380px로 캔버스(1920)보다 넓습니다. JS가 없거나
+   prefers-reduced-motion일 때는 이 기본값 그대로 — 가운데 정렬 +
+   좌우 크롭(시안과 동일)이 정지 화면으로 보입니다. */
 .atelier_row {
   display: flex;
   align-items: flex-start;
@@ -527,6 +528,26 @@
   gap: 20px;
   width: 2380px;
   margin-left: calc(50% - 1190px);
+}
+
+/* JS(initAtelierMarquee, js/brand.js)가 사진을 복제해 붙인 뒤 이 class를
+   붙이면 마퀴로 전환됩니다. --atelier_period / --atelier_duration도
+   그 JS가 계산해서 인라인으로 넣어줍니다. */
+.atelier_row.is_marquee {
+  justify-content: flex-start;
+  width: max-content;
+  margin-left: 0;
+  will-change: transform;
+  animation: atelier_marquee var(--atelier_duration, 40s) linear infinite;
+}
+
+@keyframes atelier_marquee {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-1 * var(--atelier_period, 0px)), 0, 0);
+  }
 }
 
 .atelier_photo {
@@ -575,7 +596,7 @@
 }
 
 /* =========================================================
-   heritage — 제목 한 장면 + 사진 세 장면
+   heritage — 제목 한 장면 + [왼쪽 사진 세 장 / 오른쪽 고정 텍스트 + 버튼]
    ========================================================= */
 
 .heritage {
@@ -592,6 +613,86 @@
   gap: 20px;
   height: 1080px;
   padding: 100px 240px;
+}
+
+/* JS 없음 / 1280px 미만 / 모션 축소일 때의 기본 레이아웃입니다.
+   사진 세 장을 그냥 세로로 쌓고, 그 아래에 고정 텍스트 + 버튼을 둡니다.
+   pin 인터랙션과 똑같은 모습은 아니지만(가로 분할이 아니라 세로로 이어짐)
+   순서대로 다 읽히는 완성된 화면입니다. */
+.heritage_split {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+  padding: 100px 240px;
+}
+
+.heritage_photos {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
+}
+
+.heritage_info {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 480px;
+  text-align: center;
+}
+
+/* JS(initHeritageReveal, js/brand.js)가 1280px 이상 + 모션 허용일 때만
+   이 class를 붙입니다.
+
+   - .heritage_frame(100vh)을 기준으로 title 장면과 .heritage_split을
+     같은 자리에 포개, 제목이 사라지며 split으로 넘어갑니다.
+   - .heritage_split 안에서는 사진 칼럼(왼쪽)과 텍스트 칼럼(오른쪽)을
+     좌우로 나눕니다.
+   - .heritage_photos는 사진 한 장 크기(400×714)로 고정해, 그 안의 사진
+     세 장(.heritage_stage)을 서로 포개 쌓습니다(position: absolute,
+     inset: 0). 오버레이 타이밍은 JS의 GSAP 타임라인이 만듭니다.
+   - 오른쪽 텍스트(.heritage_info)는 사진과 달리 겹치지 않고 한 번만
+     나타나 그대로 있습니다.
+   이 class가 없으면 위 기본값인 세로 스택 레이아웃이 그대로 보입니다. */
+.heritage.is_pinned .heritage_frame {
+  position: relative;
+  height: 100vh;
+}
+
+.heritage.is_pinned .heritage_stage_title {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+}
+
+.heritage.is_pinned .heritage_split {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 0;
+}
+
+.heritage.is_pinned .heritage_photos {
+  position: relative;
+  width: 400px;
+  height: 714px;
+  flex-shrink: 0;
+}
+
+.heritage.is_pinned .heritage_photos .heritage_stage {
+  position: absolute;
+  inset: 0;
+  height: 100%;
+  padding: 0;
+  display: block;
+}
+
+.heritage.is_pinned .heritage_info {
+  text-align: left;
 }
 
 .heritage_headline {
@@ -618,7 +719,27 @@
   object-fit: cover;
 }
 
+/* youngjin_title / tchaikim_panel_title과 같은 제목+본문 짝(24px display +
+   20px body, line-height 1.6)을 그대로 재사용합니다. */
+.heritage_info_title {
+  font-family: var(--font_display);
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 1.25;
+  color: var(--color_text);
+}
+
+.heritage_info_desc {
+  font-family: var(--font_body);
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 1.6;
+  color: var(--color_text);
+}
+
 .heritage_button {
+  /* ★ 본문과 버튼 사이 간격. */
+  margin-top: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;

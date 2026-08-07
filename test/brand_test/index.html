@@ -216,8 +216,10 @@
       </div>
     </section>
 
-    <!-- atelier — 사진 7장이 가운데 정렬된 띠. 시안 폭 합계가 2380px이라
-         1920 화면에서는 좌우가 잘립니다(시안과 동일). -->
+    <!-- atelier — 사진 7장. JS(js/brand.js의 initAtelierMarquee)가 있으면
+         왼쪽으로 흐르는 무한 마퀴가 됩니다. JS/GSAP이 없거나
+         prefers-reduced-motion이면 시안 그대로 가운데 정렬 + 좌우 크롭된
+         정지 화면입니다(시안 폭 합계 2380px, 1920 화면 기준). -->
     <section class="atelier" aria-labelledby="atelier_title">
       <h2 class="a11y_hidden" id="atelier_title">The atelier</h2>
 
@@ -234,29 +236,49 @@
       <p class="atelier_desc">Where craftsmanship lives.<br>Every piece begins here, in a quiet atelier in Seoul.</p>
     </section>
 
-    <!-- heritage — 제목 한 장면 + 사진 세 장면. 마지막에 Bespoke로 가는 버튼. -->
+    <!-- heritage — 제목 한 장면 + [왼쪽 사진 세 장 / 오른쪽 고정 텍스트 + 버튼].
+         JS(js/brand.js의 initHeritageReveal)가 있고 1280px 이상 +
+         모션 허용이면 화면에 붙잡힌 채(pin) 제목이 사라진 뒤 사진 세 장이
+         왼쪽에서 차례로 겹쳐 들어오고, 오른쪽 텍스트·버튼은 그 사이 한 번만
+         나타나 그대로 있습니다. 조건이 안 맞으면 아래 순서 그대로 위아래로
+         쌓인 정지 레이아웃이 보입니다. -->
     <section class="heritage" aria-labelledby="heritage_title">
-      <div class="heritage_stage heritage_stage_title">
-        <h2 class="heritage_headline" id="heritage_title">Find Your Difference</h2>
-      </div>
+      <div class="heritage_frame">
+        <div class="heritage_stage heritage_stage_title">
+          <h2 class="heritage_headline" id="heritage_title">Find Your Difference</h2>
+        </div>
 
-      <div class="heritage_stage">
-        <figure class="heritage_figure">
-          <img loading="lazy" decoding="async" src="assets/images/heritage_past.png" alt="Hanbok as it was worn in the past">
-        </figure>
-      </div>
+        <div class="heritage_split">
+          <div class="heritage_photos">
+            <div class="heritage_stage">
+              <figure class="heritage_figure">
+                <img loading="lazy" decoding="async" src="assets/images/heritage_past.png" alt="Hanbok as it was worn in the past">
+              </figure>
+            </div>
 
-      <div class="heritage_stage">
-        <figure class="heritage_figure">
-          <img loading="lazy" decoding="async" src="assets/images/heritage_ing.png" alt="Hanbok in transition, between tradition and today">
-        </figure>
-      </div>
+            <div class="heritage_stage">
+              <figure class="heritage_figure">
+                <img loading="lazy" decoding="async" src="assets/images/heritage_ing.png" alt="Hanbok in transition, between tradition and today">
+              </figure>
+            </div>
 
-      <div class="heritage_stage heritage_stage_last">
-        <figure class="heritage_figure">
-          <img loading="lazy" decoding="async" src="assets/images/heritage_now.png" alt="Hanbok as Tchai Kim makes it today">
-        </figure>
-        <a class="heritage_button" href="../bespoke_test/index.html">Visit Bespoke</a>
+            <div class="heritage_stage">
+              <figure class="heritage_figure">
+                <img loading="lazy" decoding="async" src="assets/images/heritage_now.png" alt="Hanbok as Tchai Kim makes it today">
+              </figure>
+            </div>
+          </div>
+
+          <div class="heritage_info">
+            <h3 class="heritage_info_title">The Original Line</h3>
+            <p class="heritage_info_desc">Drawn from the silhouette of an 18th-century portrait &mdash;<br>
+              the perfect proportion, the straight sleeve, the jar-shaped line.<br>
+              Informed by costume unearthed from ancient tombs,<br>
+              shaped in fabrics from French lace to mosi and Sangju silk.<br>
+              Many materials. One restrained beauty.</p>
+            <a class="heritage_button" href="../bespoke_test/index.html">Visit Bespoke</a>
+          </div>
+        </div>
       </div>
     </section>
 

@@ -9,7 +9,15 @@
 
    2. tchaikim(5장면) 가로 스크롤 — 화면을 붙잡아 둔 채 트랙을 왼쪽으로 밉니다.
 
-   3. tchaikim 영상 5개는 그 섹션을 보고 있을 때만 재생합니다.
+   3. atelier 사진 7장 — 왼쪽으로 계속 흐르는 무한 마퀴(CSS 애니메이션 +
+      JS의 사진 복제/폭 측정). 속도는 ATELIER_SPEED 하나로 조절합니다.
+
+   4. heritage — 화면을 붙잡아 둔 채(pin) 제목이 커지며 사라지고, 왼쪽
+      사진 세 장이 순서대로 겹쳐 들어옵니다. 오른쪽 고정 텍스트는 첫
+      사진과 함께 한 번만 나타나고, 마지막 사진 뒤에 Bespoke 버튼이
+      뜹니다. 조절 값은 파일 위쪽 HERITAGE_* 상수에 모아 두었습니다.
+
+   5. tchaikim 영상 5개는 그 섹션을 보고 있을 때만 재생합니다.
 
    HTML/CSS의 기본 상태는 전부 "다 끝난 모습"입니다. 이 스크립트는 시작 상태로
    되돌린 뒤 재생합니다. 그래서 JS나 GSAP이 없으면 완성된 화면이 그대로 보입니다.
@@ -96,6 +104,54 @@
   /* ---- tchaikim 가로 스크롤 --------------------------------------------- */
   var HORIZONTAL_MIN_WIDTH = 1280;
   var PANEL_WIDTH = 1920;
+
+  /* ---- atelier 무한 마퀴 -------------------------------------------------
+     ★ 속도를 바꾸고 싶으면 이 숫자만 고치면 됩니다. 사진 띠가 1초에 흐르는
+     거리(px)입니다. 낮출수록 천천히 흐릅니다. */
+  var ATELIER_SPEED = 40;
+
+  /* ---- heritage 스크롤 리빌 -----------------------------------------------
+     디자이너 주석 원문: "스크롤 하면 텍스트(Find Your Difference)가 앞으로
+     커지면서 스크롤 한 번에 이미지 하나씩 오버레이 되고 3번째 사진 하단에
+     비스포크로 이동하는 버튼이 나옴"
+
+     구현: 화면에 붙잡아 둔(pin) 채로 스크롤량에 그대로 연결된(scrub) 타임라인
+     하나가 4장면을 순서대로 재생합니다 — initHeritageReveal() 참고. */
+  var HERITAGE_MIN_WIDTH = 1280;
+
+  /* ★ 화면에 붙잡아 두는 길이. 늘리면 스크롤을 더 많이 해야 다음 장면으로
+     넘어갑니다 — 전체 인터랙션이 더 천천히 진행됩니다. */
+  var HERITAGE_PIN_LENGTH = "+=320%";
+
+  /* ★ 제목이 앞으로 커지며 사라질 때의 최종 배율. 1.5면 원래 크기의
+     1.5배까지 커진 뒤 사라집니다. */
+  var HERITAGE_TITLE_SCALE = 1.5;
+  var HERITAGE_TITLE_DURATION = 1; /* 제목이 커지며 사라지는 데 걸리는 길이(타임라인 단위) */
+
+  /* ★ 사진이 겹쳐 들어오는 데 걸리는 길이(장당). 사진마다 이만큼씩 씁니다. */
+  var HERITAGE_IMAGE_STEP = 1;
+
+  /* ★ 사진이 자리를 잡기 전 살짝 확대돼 있는 시작 배율. 1에 가까울수록
+     확대 느낌이 옅어집니다. */
+  var HERITAGE_IMAGE_SCALE_FROM = 1.12;
+
+  /* ★ 앞 장면이 채 안 끝났을 때 다음 장면이 미리 시작하는 겹침 길이.
+     0이면 장면 사이가 뚝뚝 끊깁니다. */
+  var HERITAGE_OVERLAP = 0.2;
+
+  /* ★ 마지막 사진이 다 들어온 뒤 Bespoke 버튼이 뜨기까지 쉬는 시간 / 뜨는 길이.
+     DURATION을 늘리면 버튼이 다 뜰 때까지 스크롤을 더 많이 해야 해서
+     "천천히 올라온다"는 느낌이 강해집니다. */
+  var HERITAGE_BUTTON_DELAY = 0.2;
+  var HERITAGE_BUTTON_DURATION = 1.5;
+
+  /* ★ 흑백 → 컬러. "과거 → 현재"를 색으로 보여주는 연출입니다. 전체 사진이
+     겹쳐지는 동안 이 범위(FROM → TO) 안에서 사진 수만큼 고르게 나눠 갖습니다
+     (3장이면 1→0.66→0.33→0 이런 식). 즉 첫 사진이 가장 흑백에 가깝게
+     시작하고, 마지막 사진이 다 들어왔을 때 완전한 컬러(0)가 됩니다.
+     FROM을 1보다 낮추면 "완전 흑백"까지는 안 가고 시작합니다. */
+  var HERITAGE_GRAYSCALE_FROM = 1;
+  var HERITAGE_GRAYSCALE_TO = 0;
 
   function isReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -272,6 +328,152 @@
     );
   }
 
+  /* heritage 섹션 — 제목이 커지며 사라지고, 사진 세 장이 차례로 겹쳐
+     들어온 뒤 Bespoke 버튼이 뜹니다. 위 HERITAGE_* 상수 설명을 먼저 보세요.
+
+     타이밍은 "고정 초"가 아니라 "타임라인 단위"입니다. scrub:1이라
+     타임라인 진행이 스크롤 위치에 그대로 묶여 있고, 전체 길이는
+     HERITAGE_PIN_LENGTH(스크롤 거리)가 정합니다. 그래서 여기 숫자를 조절해도
+     "몇 초"가 아니라 "전체 스크롤 구간에서 몇 %를 쓰는지"가 바뀝니다.
+
+     사진 오버레이는 왼쪽 사진 칼럼(.heritage_photos, CSS에서 400×714로
+     고정된 자리) 안에서 세 장을 전부 같은 자리(position:absolute + inset:0)에
+     포개 두고 opacity만 바꾸는 방식입니다. 나중 사진일수록 HTML에서 뒤에
+     오므로 저절로 위에 그려져서, 앞 사진을 따로 숨기지 않아도 "겹쳐
+     들어오는" 것처럼 보입니다. 오른쪽 텍스트(.heritage_info)는 사진과
+     달리 겹치지 않는 고정 칼럼이라, 첫 사진이 뜨는 시점에 딱 한 번만
+     나타나 그대로 있습니다. */
+  function initHeritageReveal() {
+    var section = document.querySelector(".heritage");
+    var frame = document.querySelector(".heritage_frame");
+    var titleStage = document.querySelector(".heritage_stage_title");
+    var info = document.querySelector(".heritage_info");
+    var imageStages = Array.prototype.slice.call(
+      document.querySelectorAll(".heritage_photos .heritage_stage")
+    );
+
+    if (
+      typeof window.gsap === "undefined" ||
+      typeof window.ScrollTrigger === "undefined" ||
+      !section || !frame || !titleStage || imageStages.length < 1
+    ) {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    /* matchMedia를 쓰면 조건이 어긋날 때(창을 좁히거나 모션 축소 설정을
+       켜면) GSAP이 스스로 원래 상태로 되돌립니다. is_pinned도 같이 떼어
+       CSS를 정지 레이아웃으로 원상복구합니다. */
+    gsap.matchMedia().add(
+      "(min-width: " + HERITAGE_MIN_WIDTH + "px) and (prefers-reduced-motion: no-preference)",
+      function () {
+        section.classList.add("is_pinned");
+
+        var title = titleStage.querySelector(".heritage_headline");
+        var button = document.querySelector(".heritage_button");
+
+        /* 시작 상태 — 제목만 보이고 사진 세 장·오른쪽 텍스트·버튼은 투명합니다. */
+        gsap.set(imageStages, { opacity: 0 });
+
+        if (info) {
+          gsap.set(info, { opacity: 0, y: 24 });
+        }
+
+        if (button) {
+          gsap.set(button, { opacity: 0, y: 40 });
+        }
+
+        var timeline = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: HERITAGE_PIN_LENGTH,
+            pin: true,
+            scrub: 1,
+            invalidateOnRefresh: true
+          }
+        });
+
+        /* 1. 제목 — 앞으로 커지며(scale) 흐려져 사라짐 */
+        if (title) {
+          timeline.to(title, {
+            scale: HERITAGE_TITLE_SCALE,
+            opacity: 0,
+            ease: "power1.in",
+            duration: HERITAGE_TITLE_DURATION
+          }, 0);
+        }
+
+        /* 2~4. 사진 세 장이 순서대로 겹쳐 들어옵니다. previousEnd를 계속
+           갱신하면서 다음 장면 시작점을 "직전 장면 끝 − 겹침"으로 잡으므로,
+           사진을 늘리거나 줄여도(HTML의 .heritage_stage 개수 변경) 이 함수는
+           손댈 필요 없이 자동으로 이어집니다.
+
+           사진마다 흑백→컬러 구간을 (HERITAGE_GRAYSCALE_FROM ~ TO) 안에서
+           균등하게 나눠 갖습니다. imageStages.length로 나누므로 사진 수가
+           바뀌어도 항상 첫 장 = 가장 흑백, 마지막 장 끝 = 완전 컬러(TO)로
+           맞춰집니다. */
+        var previousEnd = HERITAGE_TITLE_DURATION;
+        var grayscaleRange = HERITAGE_GRAYSCALE_TO - HERITAGE_GRAYSCALE_FROM;
+
+        imageStages.forEach(function (stage, index) {
+          var img = stage.querySelector("img");
+          var startAt = Math.max(0, previousEnd - HERITAGE_OVERLAP);
+          var endAt = startAt + HERITAGE_IMAGE_STEP;
+          var grayscaleFrom = HERITAGE_GRAYSCALE_FROM + grayscaleRange * (index / imageStages.length);
+          var grayscaleTo = HERITAGE_GRAYSCALE_FROM + grayscaleRange * ((index + 1) / imageStages.length);
+
+          timeline.fromTo(
+            stage,
+            { opacity: 0 },
+            { opacity: 1, duration: HERITAGE_IMAGE_STEP, ease: "power1.inOut" },
+            startAt
+          );
+
+          if (img) {
+            timeline.fromTo(
+              img,
+              { scale: HERITAGE_IMAGE_SCALE_FROM, filter: "grayscale(" + grayscaleFrom + ")" },
+              { scale: 1, filter: "grayscale(" + grayscaleTo + ")", duration: HERITAGE_IMAGE_STEP, ease: "power1.inOut" },
+              startAt
+            );
+          }
+
+          /* 오른쪽 텍스트는 사진처럼 매번 나타나지 않고, 첫 사진(past)이
+             뜨는 시점에 딱 한 번만 같이 페이드인합니다. */
+          if (index === 0 && info) {
+            timeline.to(info, {
+              opacity: 1,
+              y: 0,
+              duration: HERITAGE_IMAGE_STEP,
+              ease: "power1.inOut"
+            }, startAt);
+          }
+
+          previousEnd = endAt;
+        });
+
+        /* 5. 마지막 사진이 다 들어온 뒤 Bespoke 버튼이 아래에서 올라옴 */
+        if (button) {
+          var buttonStart = previousEnd + HERITAGE_BUTTON_DELAY;
+
+          timeline.to(button, {
+            opacity: 1,
+            y: 0,
+            duration: HERITAGE_BUTTON_DURATION,
+            ease: "power2.out"
+          }, buttonStart);
+        }
+
+        return function () {
+          section.classList.remove("is_pinned");
+        };
+      }
+    );
+  }
+
   /* 영상은 그 섹션을 보고 있는 동안에만 재생합니다.
      재생 요청이 거절될 수 있어(자동재생 정책) 반환된 Promise를 받아둡니다. */
   function initYoungjinMotion() {
@@ -328,6 +530,72 @@
         }
       }
     );
+  }
+
+  /* atelier 섹션의 사진 7장을 왼쪽으로 계속 흘려보내는 무한 마퀴입니다.
+
+     실제로 흐르게 하는 건 CSS(@keyframes atelier_marquee, css/brand.css)입니다.
+     여기서는 시작 전에 딱 한 번:
+       1) 사진을 이어붙일 만큼 통째로 복제하고 (aria-hidden="true" — 스크린리더가
+          같은 사진을 여러 번 읽지 않도록)
+       2) 원본 한 벌의 폭(period)을 재서 --atelier_period로 CSS에 넘기고
+       3) period ÷ ATELIER_SPEED로 애니메이션 길이(--atelier_duration)를 정합니다.
+     그다음 CSS가 0 → -period로 무한 반복하고, 마지막에 원본 자리로 돌아온
+     순간이 곧 복제본이 원본과 겹치는 순간이라 이음매가 보이지 않습니다.
+
+     사진은 전부 고정 px 크기(css의 .atelier_photo_1~7)라 이미지 로딩을
+     기다리지 않고 바로 폭을 잴 수 있습니다.
+
+     ★ 속도는 이 함수가 아니라 위쪽 ATELIER_SPEED에서 바꾸세요.
+     ★ 사진을 늘리거나 줄이면(HTML의 .atelier_photo 개수 변경) 이 함수는
+       손댈 필요 없이 자동으로 새 폭에 맞춰집니다.
+     ★ prefers-reduced-motion에서는 아예 실행하지 않습니다 — CSS 기본값인
+       "가운데 정렬 + 좌우 크롭" 정지 화면(시안 그대로)이 보입니다. */
+  function initAtelierMarquee() {
+    var row = document.querySelector(".atelier_row");
+
+    if (!row || isReducedMotion()) {
+      return;
+    }
+
+    var originals = Array.prototype.slice.call(row.children);
+
+    if (originals.length < 2) {
+      return;
+    }
+
+    function appendOneSet() {
+      originals.forEach(function (node) {
+        var clone = node.cloneNode(true);
+        clone.setAttribute("aria-hidden", "true");
+        row.appendChild(clone);
+      });
+    }
+
+    /* period를 재려면 최소 한 벌은 더 있어야 "원본 시작 ~ 복제본 시작"
+       사이 거리를 잴 수 있습니다. */
+    appendOneSet();
+    row.classList.add("is_marquee");
+
+    var firstOriginal = originals[0];
+    var firstClone = row.children[originals.length];
+    var period = firstClone.getBoundingClientRect().left - firstOriginal.getBoundingClientRect().left;
+
+    if (!(period > 0)) {
+      /* 폭을 하나도 못 쟀으면(레이아웃이 아직 안 잡힌 특수한 경우) 마퀴를
+         켜지 않습니다 — 끊기는 애니메이션보다 정지 화면이 낫습니다. */
+      row.classList.remove("is_marquee");
+      return;
+    }
+
+    row.style.setProperty("--atelier_period", period + "px");
+    row.style.setProperty("--atelier_duration", (period / ATELIER_SPEED) + "s");
+
+    /* 넓은 화면(예: 2560px)에서 이음매가 화면 밖으로 나가도록, 화면 폭 +
+       한 벌을 채울 때까지 계속 복제해 둡니다. */
+    while (row.scrollWidth < window.innerWidth + period) {
+      appendOneSet();
+    }
   }
 
   function initTchaikimTabs() {
@@ -450,6 +718,8 @@
 
   function init() {
     initYoungjinMotion();
+    initAtelierMarquee();
+    initHeritageReveal();
     initTchaikimTabs();
     initVideos();
   }
