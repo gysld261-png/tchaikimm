@@ -27,13 +27,13 @@
     },
     {
       "name": "tchaikimm_node",
-      "runtimeExecutable": "node",
+      "runtimeExecutable": "C:/Program Files/nodejs/node.exe",
       "runtimeArgs": [
-        "C:/Users/EZEN/AppData/Local/Temp/claude/C--Users-EZEN-Desktop-----kbrand-tchaikimm/c7ecd601-615e-4d89-9105-900a96fa0d43/scratchpad/serve.js",
-        "5612"
+        "C:/Users/EZEN/AppData/Local/Temp/claude/C--Users-EZEN-Desktop-tchaikimm/9c9e4a4f-ed78-4b81-9aee-eb98dd7504bc/scratchpad/serve.js",
+        "5613"
       ],
-      "port": 5612,
-      "url": "http://localhost:5612",
+      "port": 5613,
+      "url": "http://localhost:5613",
       "autoPort": false
     }
   ]

@@ -180,20 +180,21 @@
      이 숫자만 "영상이 끝나기 몇 초 전"이라는 의미로 자동 환산됩니다. */
   var SCROLL_TEXT_START_SECONDS = 3;
 
-  /* ★ 핀에 붙잡히는 순간 / 풀리는 순간이 "뚝" 걸리듯 무겁게 느껴지는 문제를
-     줄이는 값 둘입니다.
+  /* ★ 핀이 풀리는 순간이 "뚝" 걸리듯 느껴지는 문제를 줄이는 값입니다.
+     SETTLE_RATIO — 핀 구간 끝의 여유(0~1 비율). 영상/텍스트가 다 끝난
+     뒤에도 곧바로 풀리지 않고, 이 비율까지는 화면이 가만히 멈춰 있다가
+     풀립니다. 풀리는 순간 화면이 같이 바뀌지 않아야 "뚝" 하는 느낌이
+     없습니다. 실제 영상 재생은 0에서 이 지점까지 0→1로 진행됩니다.
 
-     LEAD_RATIO — 핀 구간 맨 앞의 여유(0~1 비율). 붙잡히자마자 바로 영상이
-     움직이기 시작하면 "잡힘"과 "움직임"이 겹쳐서 더 무겁게 느껴집니다.
-     이 비율만큼은 스크롤해도 영상이 그대로 있다가 그다음부터 움직입니다.
-
-     SETTLE_RATIO — 핀 구간 끝의 여유. 영상/텍스트가 다 끝난 뒤에도 곧바로
-     풀리지 않고, 이 비율까지는 화면이 가만히 멈춰 있다가 풀립니다. 풀리는
-     순간 화면이 같이 바뀌지 않아야 "뚝" 하는 느낌이 없습니다.
-
-     실제 영상 재생은 이 둘 사이 구간(LEAD~SETTLE)에서만 0→1로 진행됩니다. */
-  var SCROLL_LEAD_RATIO = 0.08;
-  var SCROLL_SETTLE_RATIO = 0.88;
+     ★ 붙잡히는 순간(진입) 쪽 여유는 뺐습니다. 핀에 걸리자마자 영상이
+     바로 반응해야 "스크롤이 씹힌다"는 느낌이 안 듭니다 — 여유를 두면
+     오히려 그 구간 동안 스크롤해도 아무 반응이 없어서 더 "걸린" 것처럼
+     보였습니다. 진입이 무겁게 느껴지는 진짜 원인은 바로 앞 heritage
+     섹션도 핀 섹션이라 두 핀이 곧바로 이어지는 것이었고, 이건
+     anticipatePin으로 다룹니다(heritage/scroll 두 ScrollTrigger 모두 켜져
+     있습니다). */
+  var SCROLL_LEAD_RATIO = 0;
+  var SCROLL_SETTLE_RATIO = 0.9;
 
   function isReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -434,6 +435,7 @@
             end: HERITAGE_PIN_LENGTH,
             pin: true,
             scrub: 1,
+            anticipatePin: 1,
             invalidateOnRefresh: true
           }
         });
@@ -580,7 +582,13 @@
               start: "top top",
               end: SCROLL_PIN_LENGTH,
               pin: true,
-              scrub: 1,
+              /* scrub: 1처럼 숫자를 주면 스크롤을 따라가는 데 최대 1초의
+                 지연(관성)이 붙습니다. 이 사이트는 이미 Lenis로 스크롤
+                 자체가 부드러운데, 그 위에 이 지연까지 겹치면 핀에 걸리는
+                 순간 "즉각 반응 → 1초 늦게 따라옴"으로 반응 방식이 바뀌어
+                 버려서 "턱 걸리고 나서야 움직인다"로 느껴집니다. true는
+                 지연 없이 스크롤 위치에 그대로 붙습니다. */
+              scrub: true,
               anticipatePin: 1,
               invalidateOnRefresh: true
             },
