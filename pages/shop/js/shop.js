@@ -110,17 +110,6 @@ function initHeroGallery() {
     return;
   }
 
-  /* 768 미만에서는 WebGL 원통을 만들지 않습니다(css/shop.css 반응형 블록과 짝).
-     .hero_gallery에 is_ready가 붙지 않으므로 .hero_gallery_fallback 정지
-     이미지가 그대로 보입니다 — 원래 있던 점진적 향상 경로를 그대로 씁니다.
-
-     innerWidth가 아니라 matchMedia를 쓰는 이유: 스크롤바가 있는 창에서
-     innerWidth(1280)와 CSS 미디어쿼리가 보는 폭(1265)이 다릅니다. 경계에서
-     JS와 CSS 판정이 어긋나면 캔버스는 도는데 레이아웃은 모바일이 됩니다. */
-  if (!window.matchMedia("(min-width: 768px)").matches) {
-    return;
-  }
-
   var gsap = window.gsap;
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -351,9 +340,62 @@ function initHeroGallery() {
   gsap.ticker.add(render);
   heroGallery.classList.add("is_ready");
   startAutoRotate();
+
+  /* 아래 syncHeroGallery()가 폭에 따라 껐다 켜기 위해 씁니다.
+     정지("viewport")는 pauseReasons에 넣습니다 — startAutoRotate()가
+     그 집합이 비어 있을 때만 돌기 때문에, 마우스 호버 같은 다른 정지
+     이유와 서로 덮어쓰지 않습니다. */
+  return {
+    show: function () {
+      pauseReasons.delete("viewport");
+      heroGallery.classList.add("is_ready");
+      handleWindowResize();
+      startAutoRotate();
+    },
+    hide: function () {
+      pauseReasons.add("viewport");
+      stopAutoRotate();
+      heroGallery.classList.remove("is_ready");
+    }
+  };
 }
 
-initHeroGallery();
+/* 폭 조건을 로드 시점에 한 번만 보면 두 방향 모두 어긋납니다.
+   1920에서 연 창을 좁히면 모바일 레이아웃 위에서 WebGL이 계속 돌고,
+   반대로 좁게 열었다 넓히면 영영 안 켜집니다.
+   그래서 미디어쿼리 변화를 계속 듣고,
+   - 조건을 처음 만족하는 순간에만 초기화합니다(그전까지 Three.js를 아예
+     만들지 않아 모바일에서 WebGL 부담이 없습니다 — 지연 초기화).
+   - 조건을 벗어나면 is_ready를 떼서 .hero_gallery_fallback 정지 이미지로
+     돌리고 자동 회전을 멈춥니다. 캔버스는 그대로 두고 다시 넓어지면
+     show()로 살립니다.
+
+   innerWidth가 아니라 matchMedia를 쓰는 이유: 스크롤바가 있는 창에서
+   innerWidth와 CSS 미디어쿼리가 보는 폭이 다릅니다. 경계에서 JS와 CSS
+   판정이 어긋나면 캔버스는 도는데 레이아웃은 모바일이 됩니다. */
+var heroGalleryQuery = window.matchMedia("(min-width: 768px)");
+var heroGalleryApi = null;
+
+function syncHeroGallery() {
+  if (!heroGalleryQuery.matches) {
+    if (heroGalleryApi) {
+      heroGalleryApi.hide();
+    }
+    return;
+  }
+
+  if (heroGalleryApi) {
+    heroGalleryApi.show();
+    return;
+  }
+
+  /* 초기화가 실패하면(WebGL 불가, 폭 0 등) null이 돌아옵니다. 그대로 두면
+     다음 변화 때 다시 시도합니다 — 처음에 폭이 0이었던 경우를 구제합니다. */
+  heroGalleryApi = initHeroGallery() || null;
+}
+
+syncHeroGallery();
+heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
 /* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)가 휠 스크롤
    양에 비례해 연속적으로 부드럽게 도는 원통형 인터랙션입니다(레퍼런스
@@ -382,15 +424,6 @@ initHeroGallery();
     typeof window.gsap === "undefined" ||
     typeof window.ScrollTrigger === "undefined"
   ) {
-    return;
-  }
-
-  /* 1280 미만에서는 휠 재킹을 걸지 않습니다(css/shop.css 반응형 블록과 짝).
-     ScrollTrigger pin을 만들지 않으므로 섹션이 일반 흐름으로 남고, CSS가
-     사진+글 4쌍을 세로로 쌓습니다. 좁은 화면에서 스크롤을 가로채면 사용자가
-     이 섹션을 빠져나가기 어렵습니다.
-     matchMedia를 쓰는 이유는 initHeroGallery의 주석과 같습니다. */
-  if (!window.matchMedia("(min-width: 1280px)").matches) {
     return;
   }
 
@@ -525,28 +558,68 @@ initHeroGallery();
     animateTo(clamped);
   }
 
-  applyProgress();
+  /* 1280 미만에서는 pin을 걸지 않습니다(css/shop.css의 max-width: 1279px
+     블록과 짝). 섹션이 일반 흐름으로 남고 CSS가 사진+글 4쌍을 세로로 쌓습니다.
 
-  var garmentTimeline = gsap.timeline({
-    scrollTrigger: {
-      trigger: scrollWrap,
-      start: "top top",
-      end: "+=" + SCROLL_DISTANCE_PERCENT + "%",
-      pin: section,
-      pinSpacing: true,
-      anticipatePin: 1,
-      scrub: true,
-      invalidateOnRefresh: true
-    }
-  });
+     ★ 단순 early return이면 안 됩니다. 폭을 로드 시점에 한 번만 보게 되어,
+     1920에서 연 창을 좁히면 CSS는 세로 스택으로 바뀌는데 pin은 살아 있어
+     섹션이 화면 높이(1080px)에 갇힙니다. 실제로 1100px에서 안쪽 내용
+     5265px 중 1080px만 보이고 나머지가 잘렸습니다(사진·글 3·4번은
+     멈춘 인터랙션 상태 그대로 opacity 0).
 
-  garmentTimeline
-    .to(state, {
-      progress: STEP_COUNT - 1,
-      duration: 1,
-      ease: "none",
-      onUpdate: applyProgress
+     gsap.matchMedia()는 창 크기가 바뀔 때마다 다시 평가하고, 조건에서
+     벗어나면 이 컨텍스트에서 만든 ScrollTrigger(pin 포함)와 트윈을
+     자동으로 되돌립니다. */
+  gsap.matchMedia().add("(min-width: 1280px)", function () {
+    applyProgress();
+
+    var garmentTimeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: scrollWrap,
+        start: "top top",
+        end: "+=" + SCROLL_DISTANCE_PERCENT + "%",
+        pin: section,
+        pinSpacing: true,
+        anticipatePin: 1,
+        scrub: true,
+        invalidateOnRefresh: true
+      }
     });
+
+    garmentTimeline
+      .to(state, {
+        progress: STEP_COUNT - 1,
+        duration: 1,
+        ease: "none",
+        onUpdate: applyProgress
+      });
+
+    /* GSAP은 자기가 만든 트윈·트리거만 되돌립니다. applyProgress()는
+       element.style에 직접 쓰기 때문에 그 인라인 값은 남습니다 — 특히
+       opacity가 0으로 굳으면 세로 스택에서 사진과 글이 안 보입니다.
+       여기서 손으로 지워야 CSS 값(opacity: 1)이 다시 이깁니다. */
+    return function cleanupGarmentStory() {
+      state.progress = 0;
+
+      orbitItems.forEach(function (item) {
+        item.style.left = "";
+        item.style.top = "";
+        item.style.transform = "";
+        item.classList.remove("is_pos_active");
+      });
+
+      if (marker) {
+        marker.style.left = "";
+        marker.style.top = "";
+      }
+
+      panels.concat(mediaImages).forEach(function (element) {
+        element.style.transform = "";
+        element.style.opacity = "";
+        element.classList.remove("is_active");
+      });
+    };
+  });
 })();
 
 /* shop — 카테고리 선택 목록. 버튼을 누르면 일곱 개 항목이 위에서부터 하나씩

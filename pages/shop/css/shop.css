@@ -1943,17 +1943,49 @@
     gap: 56px;
   }
 
+  /* 상품 스트립 — 한 줄 나눠 갖기 → 가로 스와이프
+
+     기본 배치는 카드 8장이 스트립 폭을 flex-grow 비율로 나눠 갖습니다.
+     1920에서는 스트립이 넓어 카드가 약 210px이지만, 1085px 화면에서는
+     한 장이 100 × 165px까지 눌려 옷이 보이지 않습니다(원본 828 × 836).
+     높이만 키우면 세로로 길어질 뿐이라 가로 폭을 확보해야 합니다.
+
+     그래서 flex-grow 배분을 끄고(flex-basis 고정) 스트립을 옆으로 밀어
+     보게 합니다. 누르면 커지는 기존 인터랙션은 그대로 살아 있고,
+     transition 대상만 flex-grow → flex-basis로 바뀝니다. */
   .motif_product_strip {
     width: 100%;
-    height: 240px;
+    max-width: none;
+    /* 선택된 카드(320) + 스크롤바 자리(20). 높이를 auto로 두면 선택이
+       바뀔 때마다 가장 큰 카드가 달라져 스트립 높이가 출렁입니다
+       (기본 규칙의 주석과 같은 이유). */
+    height: 340px;
+    padding-bottom: 20px;
+    gap: 16px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
   }
 
-  .motif_product_card { height: 165px; }
-  .motif_product_card.is_selected { height: 240px; }
+  .motif_product_card {
+    flex: 0 0 190px;
+    height: 250px;
+    scroll-snap-align: center;
+    transition: flex-basis 620ms cubic-bezier(0.22, 1, 0.36, 1),
+                height 620ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .motif_product_card.is_selected {
+    flex-basis: 270px;
+    height: 320px;
+  }
 
   .motif_product_card.is_selected + .motif_product_card,
   .motif_product_card:has(+ .motif_product_card.is_selected) {
-    height: 190px;
+    flex-basis: 220px;
+    height: 285px;
   }
 }
 
@@ -2118,16 +2150,28 @@
     gap: 80px;
   }
 
+  /* 스와이프 스트립은 유지하고 한 단계만 작게. 360px에서 카드 155px은
+     화면의 43%라 옷이 알아볼 만한 크기로 남습니다. */
   .motif_product_strip {
-    height: 170px;
+    height: 300px;
+    padding-bottom: 16px;
+    gap: 12px;
   }
 
-  .motif_product_card { height: 120px; }
-  .motif_product_card.is_selected { height: 170px; }
+  .motif_product_card {
+    flex-basis: 155px;
+    height: 215px;
+  }
+
+  .motif_product_card.is_selected {
+    flex-basis: 215px;
+    height: 284px;
+  }
 
   .motif_product_card.is_selected + .motif_product_card,
   .motif_product_card:has(+ .motif_product_card.is_selected) {
-    height: 140px;
+    flex-basis: 180px;
+    height: 250px;
   }
 }
 

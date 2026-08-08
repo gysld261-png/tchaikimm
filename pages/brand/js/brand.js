@@ -1,16 +1,19 @@
 /* brand 페이지 스크립트
 
-   1. mood 문 열림 — 스크롤해서 mood 섹션에 들어오면 한 번 재생됩니다
-      (ScrollTrigger, once: true). 가운데 얇은 띠(30 × 484)에서 문
-      (.mood_reveal)이 **세로 → 가로** 순서로 커집니다. 세로가 먼저
-      무대 높이의 60%만큼만 자라 "띠 모양"이 완성되고(화면을 다 채우지
-      않고 멈춤), 잠깐 뒤에 가로로 펼쳐지며 남은 세로(60% → 100%)도
-      함께 자라 배경 사진이 다 드러납니다(레퍼런스 영상 순서). "초록 띠"로
-      보이는 건 mood_inner.png 사진 한가운데의 좁은 부분(올리브색 벽)이고,
-      문이 넓어질수록 사진에서 보이는 범위가 늘어날 뿐 사진 자체는 한 번도
-      움직이지 않습니다. **사진이 다 드러난 뒤에야** 글·무드 단어
-      (.mood_inner)가 옅게 떠오르며 나타납니다 — 그 전까지는 투명합니다.
-      조절 값은 파일 위쪽 REVEAL_* 상수에 모아 두었습니다.
+   1. mood 문 열림 — 화면을 붙잡아 둔(pin) 채로 스크롤량에 그대로
+      연결됩니다(scrub, MOOD_PIN_LENGTH). 페이지를 열면 처음 상태(닫힌
+      문)가 고정되어 그대로 보이고, 스크롤해야 진행됩니다 — 자동 재생이
+      아닙니다. 가운데 얇은 띠(30 × 484)에서 문(.mood_reveal)이
+      **세로 → 가로** 순서로 커집니다. 세로가 먼저 무대 높이의 60%만큼만
+      자라 "띠 모양"이 완성되고(화면을 다 채우지 않고 멈춤), 잠깐 뒤에
+      가로로 펼쳐지며 남은 세로(60% → 100%)도 함께 자라 배경 사진이 다
+      드러납니다(레퍼런스 영상 순서). "초록 띠"로 보이는 건 mood_inner.png
+      사진 한가운데의 좁은 부분(올리브색 벽)이고, 문이 넓어질수록 사진에서
+      보이는 범위가 늘어날 뿐 사진 자체는 한 번도 움직이지 않습니다.
+      **사진이 다 드러난 뒤에야** 글(.mood_copy)이 오른쪽에서 왼쪽으로
+      슬라이드해 들어오고, 무드 단어(.mood_right)가 아래에서 떠오릅니다 —
+      그 전까지는 둘 다 투명합니다.
+      조절 값은 파일 위쪽 MOOD_PIN_LENGTH·REVEAL_* 상수에 모아 두었습니다.
 
    2. tchaikim(5장면) 가로 스크롤 — 화면을 붙잡아 둔 채 트랙을 왼쪽으로 밉니다.
 
@@ -49,6 +52,12 @@
   var REVEAL_STAGE_WIDTH = 1920;
   var REVEAL_STAGE_HEIGHT = 1080;
 
+  /* ★ 화면을 붙잡아 두는(pin) 길이 — heritage/scroll 섹션과 같은 방식입니다.
+     페이지를 열었을 때는 처음 상태(닫힌 문)가 고정된 채 그대로 보이고,
+     사용자가 이 길이만큼 스크롤해야 문이 다 열리고 글·무드 단어까지
+     등장합니다. 늘리면 스크롤을 더 많이 해야 끝까지 진행됩니다. */
+  var MOOD_PIN_LENGTH = "+=200%";
+
   /* ★ "띠 모양"이 완성됐을 때의 높이 — 무대 높이의 비율입니다. 레퍼런스
      영상에서 세로가 화면 높이를 다 채우지 않고 60%만큼만 자란 뒤 멈춥니다.
      1로 두면 무대 높이(1080)까지 다 자랍니다. */
@@ -66,10 +75,26 @@
      다 드러나기까지 걸리는 시간(초). */
   var REVEAL_WIDTH_DURATION = 2.5;
 
-  /* ★ 4) 사진이 다 드러난 뒤, 글·무드 단어(.mood_inner)가 떠오르며
-     나타나는 데 걸리는 시간(초). 그 전까지는 배경 사진만 보입니다. */
-  var REVEAL_TEXT_RISE = 24;       /* 아래에서 떠오르는 거리(px) */
-  var REVEAL_TEXT_DURATION = 0.9;
+  /* ★ 4) 사진이 다 드러난 뒤, 글(.mood_copy)·무드 단어(.mood_right)가
+     나타나는 데 걸리는 시간(초). 그 전까지는 배경 사진만 보입니다.
+     무드 단어는 기존처럼 아래에서 떠오릅니다(REVEAL_TEXT_RISE).
+
+     글은 세 박자로 움직입니다 — ① 오른쪽(REVEAL_TEXT_SLIDE만큼)에
+     멈춰 있는 채로 페이드인 → ② 그 자리에서 잠깐 멈춤(HOLD) →
+     ③ 왼쪽 최종 자리로 슬라이드. "오른쪽에 텍스트가 조금 유지되면
+     좋겠다"는 요청으로 ②를 추가했습니다 — 그 전까지는 페이드인 직후
+     바로 슬라이드가 시작돼 멈추는 느낌이 없었습니다.
+
+     REVEAL_TEXT_SLIDE 700px = 최종 자리(left: 380px)에서 오른쪽으로 700px,
+     즉 화면 x≈1080에서 시작합니다 — mood_left/mood_right 경계(768px)를
+     넘어선 화면 오른쪽 영역이라 "글이 오른쪽에 있다가 왼쪽으로 이동"하는
+     게 뚜렷하게 보입니다. */
+  var REVEAL_TEXT_SLIDE = 700;             /* 글이 오른쪽에서 들어오는 거리(px) */
+  var REVEAL_TEXT_RISE = 24;               /* 무드 단어가 아래에서 떠오르는 거리(px) */
+  var REVEAL_TEXT_FADE_DURATION = 0.6;     /* ① 오른쪽에 멈춰서 페이드인 */
+  var REVEAL_TEXT_HOLD_DURATION = 0.5;     /* ② 오른쪽에서 멈춰 있는 시간 */
+  var REVEAL_TEXT_SLIDE_DURATION = 0.8;    /* ③ 왼쪽으로 슬라이드 */
+  var REVEAL_TEXT_DURATION = 0.9;          /* 무드 단어(.mood_right) 등장 길이 — 글과 무관 */
 
   /* ---- tchaikim 가로 스크롤 --------------------------------------------- */
   var HORIZONTAL_MIN_WIDTH = 1280;
@@ -167,14 +192,16 @@
   }
 
   /* mood 문 열림. 스크립트가 body 끝에 있어 이 함수는 DOMContentLoaded를
-     기다리지 않고 바로 실행됩니다 — mood가 첫 화면이라 스크롤 조건이 거의
-     즉시 만족되므로, 늦게 붙이면 문이 열리기 전에 완성된 모습이 먼저
-     비칠 수 있습니다.
+     기다리지 않고 바로 실행됩니다 — CSS 기본값은 "다 열리고 다 보이는"
+     완성된 모습이라, gsap.set()으로 닫힌 초기 상태를 최대한 빨리 되돌려야
+     페이지를 열자마자 완성된 모습이 잠깐 비쳤다가 닫히는 깜빡임이 없습니다.
+     이후 진행은 pin + scrub이라 사용자가 실제로 스크롤해야만 열립니다.
 
-     이 함수는 문(.mood_reveal)의 크기만 움직입니다. 배경 사진(.mood_room),
-     .mood_left / .mood_right 안의 글·무드 단어는 시작부터 끝까지 한 번도
-     건드리지 않습니다(정적 레이아웃) — 전부 문 안에 무대 전체 크기로
-     이미 놓여 있고, 문이 열리는 만큼 보이는 범위만 늘어날 뿐입니다. */
+     이 함수는 문(.mood_reveal)의 크기, 그리고 문이 다 열린 뒤 글
+     (.mood_copy)·무드 단어(.mood_right)의 등장만 움직입니다. 배경 사진
+     (.mood_room)은 시작부터 끝까지 한 번도 건드리지 않습니다 — 무대
+     전체 크기로 이미 놓여 있고, 문이 열리는 만큼 보이는 범위만 늘어날
+     뿐입니다. */
   function initMoodReveal() {
     if (
       typeof window.gsap === "undefined" ||
@@ -190,33 +217,44 @@
     var section = document.querySelector(".mood");
     var reveal = document.querySelector(".mood_reveal");
     var room = document.querySelector(".mood_room");
-    var inner = document.querySelector(".mood_inner");
+    var copy = document.querySelector(".mood_copy");
+    var wordPanel = document.querySelector(".mood_right");
 
-    if (!section || !reveal || !room || !inner) {
+    if (!section || !reveal || !room || !copy || !wordPanel) {
       return;
     }
 
-    /* 시작 상태 — 닫힌 문(30 × 484), 글·무드 단어(.mood_inner)는 투명 +
-       아래로 24px. CSS 기본값(끝난 모습 = 다 열리고 다 보이는 상태)과
-       반대이므로, 재생 전에 반드시 되돌려야 합니다. */
+    /* 시작 상태 — 닫힌 문(30 × 484). 글(.mood_copy)은 투명 + 오른쪽으로
+       REVEAL_TEXT_SLIDE만큼, 무드 단어(.mood_right)는 투명 + 아래로
+       REVEAL_TEXT_RISE만큼. CSS 기본값(끝난 모습 = 다 열리고 다 보이는
+       상태)과 반대이므로, 재생 전에 반드시 되돌려야 합니다. */
     gsap.set(reveal, {
       width: REVEAL_CLOSED_WIDTH,
       height: REVEAL_CLOSED_HEIGHT
     });
-    gsap.set(inner, {
+    gsap.set(copy, {
+      opacity: 0,
+      x: REVEAL_TEXT_SLIDE
+    });
+    gsap.set(wordPanel, {
       opacity: 0,
       y: REVEAL_TEXT_RISE
     });
 
     function play() {
-      /* 스크롤로 mood 섹션에 들어오는 순간 한 번만 재생합니다(once: true).
-         섹션이 첫 화면이라 페이지를 열자마자(=거의 즉시 스크롤 조건을
-         만족) 재생되는 게 정상입니다. */
+      /* 화면을 붙잡아 둔(pin) 채로 스크롤량에 그대로 연결됩니다(scrub) —
+         heritage/scroll 섹션과 같은 방식입니다. 페이지를 열면 처음 상태
+         (닫힌 문)가 고정되어 그대로 보이고, MOOD_PIN_LENGTH만큼 스크롤해야
+         문이 다 열리고 글·무드 단어까지 등장합니다. 자동으로 재생되지
+         않습니다 — 아래 timeline.to()의 duration은 "고정 초"가 아니라
+         "타임라인 단위"이고, scrub이 스크롤 진행률을 그 단위에 매핑합니다. */
       var timeline = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: "top 85%",
-          once: true
+          start: "top top",
+          end: MOOD_PIN_LENGTH,
+          pin: true,
+          scrub: 1
         }
       });
 
@@ -240,11 +278,28 @@
         ease: "power2.inOut"
       }, REVEAL_HEIGHT_DURATION + REVEAL_WIDTH_DELAY);
 
-      /* 3. 사진이 다 드러난 뒤에야 글·무드 단어(.mood_inner)가 떠오르며
-            나타납니다 — "사진이 드러난 후 텍스트가 뜬다" 순서입니다. */
+      /* 3. 사진이 다 드러난 뒤에야 글(.mood_copy)이 오른쪽에서 슬라이드해
+            들어오고, 무드 단어(.mood_right)가 아래에서 떠오릅니다 —
+            "사진이 드러난 후 텍스트가 뜬다" 순서는 그대로입니다. */
       var revealEnd = REVEAL_HEIGHT_DURATION + REVEAL_WIDTH_DELAY + REVEAL_WIDTH_DURATION;
 
-      timeline.to(inner, {
+      /* 3-①. 오른쪽에 멈춰 있는 채로 페이드인만 합니다(x는 아직 그대로). */
+      timeline.to(copy, {
+        opacity: 1,
+        duration: REVEAL_TEXT_FADE_DURATION,
+        ease: "power1.out"
+      }, revealEnd);
+
+      /* 3-③. 페이드인(①) + 멈춤(②, HOLD_DURATION)이 끝난 뒤에야
+              왼쪽 최종 자리로 슬라이드합니다. 이미 다 보이는 상태라
+              opacity는 건드리지 않습니다. */
+      timeline.to(copy, {
+        x: 0,
+        duration: REVEAL_TEXT_SLIDE_DURATION,
+        ease: "power2.out"
+      }, revealEnd + REVEAL_TEXT_FADE_DURATION + REVEAL_TEXT_HOLD_DURATION);
+
+      timeline.to(wordPanel, {
         opacity: 1,
         y: 0,
         duration: REVEAL_TEXT_DURATION,

@@ -99,9 +99,10 @@
   pointer-events: none;
 }
 
-/* 글·무드 단어 전체 묶음. 기본(끝난 모습)은 opacity: 1(다 보임)입니다.
-   js/brand.js가 재생 전 opacity: 0 + 아래로 24px로 되돌린 뒤, 배경 사진이
-   다 드러난 뒤에 떠오르며 나타나게 합니다. */
+/* 글(.mood_copy)·무드 단어(.mood_right) 전체 묶음 — 레이아웃 컨테이너일
+   뿐이고 등장 애니메이션은 js/brand.js가 이 둘을 따로 다룹니다(글은
+   오른쪽에서 슬라이드, 무드 단어는 아래에서 떠오름). 기본(끝난 모습)은
+   둘 다 opacity: 1(다 보임)입니다. */
 .mood_inner {
   position: relative;
   z-index: 1;
@@ -165,12 +166,15 @@
   margin-top: 1.58em;
 }
 
-/* 무드 단어 3개. 배경은 이 상자가 아니라 .mood_room(공유 배경 사진)입니다. */
+/* 무드 단어 3개. 왼쪽(.mood_left)은 계속 .mood_room 사진이 보이고,
+   오른쪽은 이 단색이 그 위(.mood_inner가 z-index: 1)를 덮어 화면이
+   사진/단색 2분할로 나뉩니다. */
 .mood_right {
   position: relative;
   flex-shrink: 0;
   width: 1152px;
   height: 1080px;
+  background-color: #3b3c32;
 }
 
 /* 사진과 글 사이 간격 없음(0px) — Figma mood_con에 gap이 없습니다. */
