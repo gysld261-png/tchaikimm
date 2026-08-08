@@ -13,7 +13,7 @@
     var gsap = window.gsap;
     var lenis = new window.Lenis({
       autoRaf: false,
-      lerp: 0.06,
+      lerp: 0.045,
       wheelMultiplier: 0.75
     });
 
