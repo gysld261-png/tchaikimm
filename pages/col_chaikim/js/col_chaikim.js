@@ -17,18 +17,29 @@
      예전에는 pin 길이를 화면 높이의 배수(`"+=140%"` / `"+=1000%"`)로 직접 적었습니다.
      그러면 pin 길이와 타임라인 길이가 따로 놀아서, 구간을 하나 더하면
      전체 속도가 같이 바뀌었습니다. 지금은 타임라인이 길이를 정합니다. */
-  var SHOWCASE_PX_PER_UNIT = 512;
+  var SHOWCASE_PX_PER_UNIT = 380;
 
-  /* 갤러리 카드 한 장이 등장하는 동안 프레임을 붙잡아 두는 타임라인 길이.
-     이 구간에서 프레임은 1px도 움직이지 않으므로 카드가 제자리에서 나타납니다. */
-  var GALLERY_HOLD = 0.9;
+  /* 갤러리 카드 한 장이 등장하는 타임라인 길이. 이 중 뒷부분에서는 프레임이
+     1px도 움직이지 않으므로 카드가 제자리에서 나타납니다. */
+  var GALLERY_HOLD = 0.62;
 
   /* 프레임을 안쪽에서 밀어 올리는 속도(px / 타임라인 1단위).
-     SHOWCASE_PX_PER_UNIT과 같게 두면 이동 구간의 체감 속도가 평소 스크롤과 같습니다. */
-  var GALLERY_TRAVEL_SPEED = 512;
+     SHOWCASE_PX_PER_UNIT보다 크게 두면 "다음 카드로 넘어가는" 이동 구간이
+     짧아집니다. 이 구간에는 뜨는 카드가 없어서 길면 멈춘 것처럼 느껴집니다. */
+  var GALLERY_TRAVEL_SPEED = 880;
+
+  /* 이동이 끝나기 이만큼 전에 카드 등장을 시작합니다. 이동과 등장 사이의
+     이음매를 없애는 값입니다. 0으로 두면 "이동 → 딱 멈춤 → 등장"으로 끊깁니다.
+     이동보다 길 수는 없어 실제로는 이동 길이로 잘립니다. */
+  var GALLERY_LEAD = 0.3;
+
+  /* 인트로가 끝나기 이만큼 전에 갤러리 이동을 시작합니다.
+     상단 두 장이 물러나는 동안 프레임이 이미 움직이기 시작해,
+     인트로와 갤러리 사이에 아무 일도 없는 구간이 생기지 않습니다. */
+  var INTRO_HANDOFF = 0.75;
 
   /* 마지막 카드까지 끝나고 pin이 풀리기 전까지 머무는 길이. */
-  var SHOWCASE_TAIL_HOLD = 0.4;
+  var SHOWCASE_TAIL_HOLD = 0.25;
 
   /* 스크롤 진행도에 맞춰 프레임 안에서 차례로 등장하는 갤러리 카드입니다.
      배열 순서가 곧 등장 순서입니다. */
@@ -63,14 +74,18 @@
 
   /* 단어 연출. STAGGER가 클수록 "한 단어씩" 끊어져 올라오는 느낌이 또렷해집니다. */
   var WORD_SLIDE = 64;
-  var WORD_DURATION = 0.45;
-  var WORD_STAGGER = 0.22;
+  var WORD_DURATION = 0.4;
+  var WORD_STAGGER = 0.16;
 
-  /* 타임라인 위에서 각 박자가 시작하는 지점. */
+  /* 타임라인 위에서 각 박자가 시작하는 지점.
+
+     EXIT_START는 상단 두 장이 안착하는 지점(B가 1.08)의 바로 뒤여야 합니다.
+     예전 값 1.55는 두 장이 다 뜬 뒤 0.47(약 241px) 동안 아무것도 하지 않아
+     "카드 두 장 뜨고 멈춘다"고 느껴졌습니다. */
   var CARD_B_DELAY = 0.08;
   var WORDS_START = 0.55;
-  var EXIT_START = 1.55;
-  var EXIT_DURATION = 1.4;
+  var EXIT_START = 1.2;
+  var EXIT_DURATION = 1.15;
 
   /* 하단 갤러리 카드가 떠오르는 기본 거리(px). 카드마다 STEP만큼 더해 패럴랙스를 만듭니다. */
   var RISE_BASE = 110;
@@ -95,14 +110,14 @@
      "한 장씩" 쌓이는 것이 또렷하게 보입니다. 예전 값(0.95 / 0.18)은 겹침이 커서
      다섯 장이 거의 동시에 들어왔습니다. */
   var ARCHIVE_DURATION = 0.75;
-  var ARCHIVE_STAGGER = 0.5;
+  var ARCHIVE_STAGGER = 0.42;
 
   /* 마지막 장이 도착한 뒤 pin이 풀리기 전까지 붙잡아 두는 길이.
      이 구간이 없으면 마지막 장을 보자마자 화면이 흘러갑니다. */
-  var ARCHIVE_HOLD = 0.7;
+  var ARCHIVE_HOLD = 0.45;
 
   /* 타임라인 1단위가 몇 px의 스크롤에 해당하는지. pin 구간 길이를 이 값으로 냅니다. */
-  var ARCHIVE_PX_PER_UNIT = 520;
+  var ARCHIVE_PX_PER_UNIT = 400;
 
   /* 연도를 바꿀 때 이전 세트가 사라지는 시간. 이 사이에 새 사진이 내려받기를 시작합니다. */
   var ARCHIVE_SWAP_FADE = 0.25;
@@ -580,13 +595,16 @@
 
     addIntro(gsap, timeline, cards, words);
 
-    var cursor = timeline.duration();
+    /* 인트로가 끝나기 전에 갤러리를 시작합니다. 상단 두 장이 물러나는 동안
+       프레임이 이미 움직이기 시작해 두 구간이 한 줄기로 이어집니다. */
+    var cursor = Math.max(timeline.duration() - INTRO_HANDOFF, 0);
     var offset = 0;
 
     gallery.forEach(function (card, index) {
       var image = card.querySelector("img");
       var stop = stops[index];
       var distance = stop - offset;
+      var lead = 0;
 
       /* --- 이동: 다음 카드가 화면 가운데에 오도록 프레임을 밀어 올립니다 --- */
       if (distance > 1) {
@@ -601,19 +619,28 @@
 
         cursor += moveLength;
         offset = stop;
+
+        /* 이동이 다 끝나기를 기다리지 않고 조금 일찍 등장을 겁니다.
+           이동보다 길게 잡을 수는 없습니다(앞 카드의 등장을 침범합니다). */
+        lead = Math.min(GALLERY_LEAD, moveLength);
       }
 
-      /* --- 등장: 이 구간에는 프레임 트윈이 없어 화면이 완전히 멈춰 있습니다 --- */
+      /* --- 등장 ---
+         겹치는 구간에서도 위쪽이 잘리지 않습니다. 프레임은 위로 올라가는 중이라
+         카드는 늘 아래에서 올라오며 나타나고, 이동이 끝나는 지점이 곧 카드가
+         화면 한가운데에 서는 자리입니다. 그 뒤로는 프레임이 멈춰 있습니다. */
+      var revealAt = cursor - lead;
+
       if (image) {
         timeline.fromTo(
           image,
           { y: RISE_BASE + index * RISE_STEP, opacity: 0 },
           { y: 0, opacity: 1, ease: "power3.out", duration: GALLERY_HOLD },
-          cursor
+          revealAt
         );
       }
 
-      cursor += GALLERY_HOLD;
+      cursor = revealAt + GALLERY_HOLD;
     });
 
     /* 마지막 카드까지 끝나면 프레임 바닥이 화면 아래와 맞도록 내려갑니다.
