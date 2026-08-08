@@ -134,53 +134,9 @@
   gap: 18px;
 }
 
-.header_menu_item_has_submenu {
-  position: relative;
-}
-
-.header_submenu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  width: max-content;
-  padding-top: 20px;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transform: translateY(-6px);
-  transition: opacity var(--duration_fast) var(--easing_base),
-              visibility 0s linear var(--duration_fast),
-              transform var(--duration_fast) var(--easing_base);
-}
-
-.header_menu_item_has_submenu:hover .header_submenu,
-.header_menu_item_has_submenu:focus-within .header_submenu {
-  opacity: 1;
-  visibility: visible;
-  pointer-events: auto;
-  transform: translateY(0);
-  transition-delay: 0s;
-}
-
-.header_submenu_link {
-  display: inline-block;
-  color: var(--color_text_sub);
-  font-family: var(--font_ui);
-  font-size: var(--fs_ui_14);
-  font-weight: 300;
-  white-space: nowrap;
-  transition: color var(--duration_fast) var(--easing_base),
-              opacity var(--duration_fast) var(--easing_base);
-}
-
-.header_submenu_link:hover,
-.header_submenu_link:focus-visible {
-  color: var(--color_text_sub);
-  opacity: .65;
-}
+/* COLLECTION 하위메뉴(TCHAI KIM YOUNG JIN / TCHAI KIM)는 제거했습니다.
+   collection 페이지 안에서 탭바로 나누기로 했습니다. (2026-08-09)
+   되살리려면: git log -- common/css/layout.css common/components/header.html */
 
 .header_menu_link {
   display: inline-flex;

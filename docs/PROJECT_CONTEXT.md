@@ -1,6 +1,50 @@
 # Tchai Kim 현재 상태
 
 
+## 공통 헤더 — COLLECTION 하위메뉴 제거 (2026-08-09)
+
+COLLECTION에 마우스를 올리면 뜨던 하위메뉴(TCHAI KIM YOUNG JIN / TCHAI KIM)를 없앴습니다.
+**collection 페이지 안에서 탭바로 나누기로 결정**됐기 때문입니다.
+
+수정 파일 두 개뿐입니다. 저장소 전체에서 `submenu`를 참조하던 곳이 이 둘밖에 없습니다.
+
+- `common/components/header.html` — `<li>`를 다른 메뉴 항목과 같은 한 줄로 되돌림
+  (`header_menu_item_has_submenu` class와 `<ul class="header_submenu">` 제거)
+- `common/css/layout.css` — 하위메뉴 전용 규칙 4개 블록 제거,
+  자리에 제거 사유 주석을 남김
+
+COLLECTION 링크는 **`../col_chaikimyoungjin/index.html` 그대로** 두었습니다.
+탭바가 들어갈 페이지가 아직 없어서 임의로 바꾸지 않았습니다.
+
+### ★ col_chaikim 페이지가 고아가 됐습니다
+
+`pages/col_chaikim/index.html`로 가는 링크가 **저장소에서 이 하위메뉴 하나뿐이었습니다.**
+지금은 어떤 페이지에서도 도달할 수 없습니다. 탭바를 만들 때 그 안에서 연결해야 합니다.
+(푸터의 Collection 링크는 `col_chaikimyoungjin` 쪽을 가리킵니다)
+
+### 검증 (localhost:5621, 1920 × 1080)
+
+main · bespoke 두 페이지에서 확인했습니다(bespoke는 자체 헤더 override가 있어 같이 봄).
+
+| 항목 | 결과 |
+|---|---|
+| 메뉴 항목 | BRAND / SHOP / BESPOKE / COLLECTION 4개 |
+| `.header_submenu` DOM | **0개** |
+| `.header_menu_item_has_submenu` | **0개** |
+| CSSOM에 남은 submenu 규칙 | **0개** |
+| COLLECTION `<li>`의 자식 | `<a>` 하나뿐, `position: static` |
+| 헤더 높이 / 로고 / 메뉴 글자 | 66px / 225×34 / 20px — **변경 전과 동일** |
+| COLLECTION hover 후 | 헤더 높이 그대로 66px, 팝업 0개 |
+| 헤더 안 넘치는 요소 / 페이지 가로 스크롤 | 0 / 0 |
+
+### 확인하지 못한 부분
+
+- 실제 마우스 hover는 확인하지 못했습니다. `mouseover`/`mouseenter` 디스패치와
+  CSSOM에 규칙이 남아 있지 않은 것으로 확인했습니다.
+- 1280px 미만의 모바일 토글 메뉴 안에서의 모습. 하위메뉴는 `position: absolute`라
+  원래도 좁은 화면에서 제대로 안 보였고, 이번 제거로 그 문제도 같이 없어집니다.
+
+
 ## 공통 헤더/푸터 경로 점검 — 루트 절대경로 없음 (2026-08-08)
 
 헤더 작업 전에 "어느 PC/어느 배포 경로에서 열어도 헤더가 뜨는지"를 전수 확인했습니다.
