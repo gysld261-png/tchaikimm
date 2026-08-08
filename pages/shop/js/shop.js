@@ -110,6 +110,17 @@ function initHeroGallery() {
     return;
   }
 
+  /* 768 미만에서는 WebGL 원통을 만들지 않습니다(css/shop.css 반응형 블록과 짝).
+     .hero_gallery에 is_ready가 붙지 않으므로 .hero_gallery_fallback 정지
+     이미지가 그대로 보입니다 — 원래 있던 점진적 향상 경로를 그대로 씁니다.
+
+     innerWidth가 아니라 matchMedia를 쓰는 이유: 스크롤바가 있는 창에서
+     innerWidth(1280)와 CSS 미디어쿼리가 보는 폭(1265)이 다릅니다. 경계에서
+     JS와 CSS 판정이 어긋나면 캔버스는 도는데 레이아웃은 모바일이 됩니다. */
+  if (!window.matchMedia("(min-width: 768px)").matches) {
+    return;
+  }
+
   var gsap = window.gsap;
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
@@ -371,6 +382,15 @@ initHeroGallery();
     typeof window.gsap === "undefined" ||
     typeof window.ScrollTrigger === "undefined"
   ) {
+    return;
+  }
+
+  /* 1280 미만에서는 휠 재킹을 걸지 않습니다(css/shop.css 반응형 블록과 짝).
+     ScrollTrigger pin을 만들지 않으므로 섹션이 일반 흐름으로 남고, CSS가
+     사진+글 4쌍을 세로로 쌓습니다. 좁은 화면에서 스크롤을 가로채면 사용자가
+     이 섹션을 빠져나가기 어렵습니다.
+     matchMedia를 쓰는 이유는 initHeroGallery의 주석과 같습니다. */
+  if (!window.matchMedia("(min-width: 1280px)").matches) {
     return;
   }
 
