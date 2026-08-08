@@ -73,12 +73,15 @@
    떠 있는 사진과 문장
    ========================================================= */
 
+/* 시안은 1182 → 4516.07(3335px)에 사진 일곱 장이 흩어진 구간이었습니다.
+   c~g 다섯 장이 가운데 캐러셀로 합쳐지면서 화면 한 장이면 충분해졌습니다.
+   pin이 걸리면 아래 .is_pinned가 정확히 창 높이로 맞춥니다. */
 .showcase {
   position: relative;
   overflow: hidden;
   width: 100%;
-  /* 시안 1182 → 4516.07 */
-  height: 3335px;
+  height: 100vh;
+  min-height: 820px;
   background-color: var(--color_bg);
 }
 
@@ -95,15 +98,18 @@
   left: 0;
   width: 102.0834%;
   max-width: none;
-  height: 738px;
+  /* 시안은 738px 고정이었지만 섹션이 화면 한 장으로 줄어 비율로 잡습니다. */
+  height: var(--showcase_arc_h);
 }
 
+/* 아치 아래부터 섹션 바닥까지 채웁니다. 시안의 2597px 고정 높이는
+   섹션이 3335px일 때의 값이라 더 이상 맞지 않습니다. */
 .showcase_gradient {
   position: absolute;
-  top: 738px;
+  top: var(--showcase_arc_h);
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 2597px;
   background-image: linear-gradient(
     0deg,
     #fffdf9 0%,
@@ -116,7 +122,14 @@
 }
 
 .showcase_frame {
-  height: 3335px;
+  --showcase_arc_h: 40%;
+
+  height: 100%;
+}
+
+/* 아치 높이는 배경(.showcase_bg)이 읽어야 해서 섹션에도 둡니다. */
+.showcase {
+  --showcase_arc_h: 40%;
 }
 
 /* JS가 pin 인터랙션을 켤 때만 붙습니다(js/col_chaikim.js의 buildShowcaseTimeline).
@@ -193,41 +206,6 @@
   transform: rotate(13.07deg);
 }
 
-.showcase_photo_c {
-  top: 1250px;
-  left: 605px;
-  width: 710px;
-  height: 959px;
-}
-
-.showcase_photo_d {
-  top: 1513px;
-  left: 1398px;
-  width: 307px;
-  height: 315px;
-}
-
-.showcase_photo_e {
-  top: 1685px;
-  left: 138px;
-  width: 347px;
-  height: 468px;
-}
-
-.showcase_photo_f {
-  top: 2143px;
-  left: 1391px;
-  width: 309px;
-  height: 441px;
-}
-
-.showcase_photo_g {
-  top: 2340px;
-  left: 371px;
-  width: 348px;
-  height: 468px;
-}
-
 /* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다.
 
    세로 위치만 시안 값을 그대로 쓰지 않습니다. 시안의 712px는 화면 높이 1080을 전제한
@@ -236,22 +214,30 @@
    "Ordinary Fashion" 줄이 화면 밖으로 나갑니다.
    그래서 화면이 충분히 높으면 시안 값(712px)을 쓰고, 낮으면 세 줄 전체가 들어오도록
    위로 올립니다. 360px = 블록 높이 311 + 아래 여백 49입니다. */
+/* 시안은 세 줄이 계단처럼 어긋난 배치였지만, 가운데 캐러셀이 주인공이 되면서
+   문장을 화면 한가운데로 모았습니다(사용자 요청). */
 .showcase_quote {
   position: absolute;
-  top: min(712px, calc(100vh - 360px));
-  left: 760px;
-  width: 288.5px;
-  height: 311px;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+  width: max-content;
+  max-width: calc(100% - 160px);
+  height: auto;
   margin: 0;
+  transform: translate(-50%, -50%);
 }
 
 .showcase_quote_line {
-  position: absolute;
+  position: static;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 288.5px;
-  height: 82px;
+  width: auto;
+  height: auto;
   color: var(--collection_quote);
   font-family: var(--font_display);
   font-size: 48px;
@@ -273,20 +259,8 @@
   display: inline-block;
 }
 
-.showcase_quote_line1 {
-  top: 0;
-  left: 0;
-}
-
-.showcase_quote_line2 {
-  top: 117px;
-  left: 266px;
-}
-
-.showcase_quote_line3 {
-  top: 229px;
-  left: 0;
-}
+/* 계단 좌표(top 0/117/229, left 0/266/0)는 위 flex 가운데 정렬로 대체했습니다.
+   되돌리려면 .showcase_quote를 absolute 좌표 배치로 돌리고 이 셋을 살리면 됩니다. */
 
 /* 스크롤 인터랙션 대상 — scrub 중 매 프레임 다시 그리므로 합성 레이어를 미리 잡아 둡니다.
    transform-style: preserve-3d는 3D 자식이 없어 쓰지 않았고, 대신 backface-visibility로
@@ -306,6 +280,110 @@
 /* 상단 두 장만 blur까지 움직입니다. */
 .showcase_photo_tilt {
   will-change: transform, opacity, filter;
+}
+
+/* =========================================================
+   showcase 캐러셀 — 시안 사진 c~g를 가운데 한 장씩 보여 줍니다.
+
+   인트로에서 좌우 두 장이 가운데로 모여 물러나면 이 캐러셀이 자리를 넘겨받습니다.
+   예전에는 다섯 장이 프레임 y 1250~2808에 흩어져 스크롤로 하나씩 떴는데,
+   가운데 한 장을 크게 보여 주는 쪽으로 바꾸면서 그 구간이 사라졌습니다.
+   ========================================================= */
+
+.showcase_carousel {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* 시안에서 가장 큰 사진(710 × 959)의 비율을 그대로 씁니다.
+   화면이 낮으면 높이에 맞춰 줄어들도록 두 축을 모두 제한합니다. */
+.showcase_carousel_viewport {
+  position: relative;
+  width: min(710px, calc(100vw - 160px));
+  height: min(959px, calc(100vh - 150px));
+  aspect-ratio: 710 / 959;
+}
+
+/* 다섯 장이 같은 자리에 겹쳐 있고 현재 한 장만 보입니다.
+   visibility까지 끄는 이유: opacity만 0으로 두면 보이지 않는 사진이
+   계속 클릭·탭 순서에 잡힙니다. */
+.showcase_slide {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  padding: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--duration_base) var(--easing_base),
+    transform var(--duration_base) var(--easing_base),
+    visibility 0s var(--duration_base);
+  transform: scale(1.04);
+}
+
+.showcase_slide.is_current {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--duration_base) var(--easing_base),
+    transform var(--duration_base) var(--easing_base),
+    visibility 0s;
+  transform: scale(1);
+}
+
+.showcase_slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 버튼은 사진 좌우 안쪽에 겹쳐 둡니다. 사진 바깥에 두면 화면이 좁아질 때
+   사진을 그만큼 더 줄여야 합니다. */
+.showcase_carousel_button {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: flex;
+  width: 52px;
+  height: 52px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  background-color: rgba(18, 18, 16, 0.42);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition:
+    background-color var(--duration_fast) var(--easing_base),
+    border-color var(--duration_fast) var(--easing_base);
+}
+
+.showcase_carousel_button:hover {
+  border-color: #ffffff;
+  background-color: rgba(18, 18, 16, 0.72);
+}
+
+.showcase_carousel_prev {
+  left: 18px;
+}
+
+.showcase_carousel_next {
+  right: 18px;
+}
+
+.showcase_carousel_icon {
+  width: 15px;
+  height: 12.5px;
+  /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
+  filter: brightness(0) invert(1);
+}
+
+/* 하나뿐인 svg를 좌우로 뒤집어 이전 화살표로 씁니다(bespoke의 chevron과 같은 방식). */
+.showcase_carousel_prev .showcase_carousel_icon {
+  transform: scaleX(-1);
 }
 
 /* =========================================================
@@ -880,8 +958,10 @@
   /* 폭과 정렬은 figure가, 크롭 비율은 img가 맡습니다.
      비율은 데스크톱 프레임의 가로세로 그대로라 구도가 유지되고,
      상대적 크기 위계(c가 가장 크고 d가 가장 작음)도 시안과 같습니다. */
+  /* 앞의 두 장은 뒤따르는 갤러리보다 작게 둡니다.
+     시안에서도 이 둘은 "떠 있는 작은 조각"이고 c가 주인공입니다. */
   .showcase_photo_a {
-    width: 62%;
+    width: 50%;
     align-self: flex-start;
   }
 
@@ -890,59 +970,12 @@
   }
 
   .showcase_photo_b {
-    width: 58%;
+    width: 46%;
     align-self: flex-end;
   }
 
   .showcase_photo_b img {
     aspect-ratio: 366 / 458;
-  }
-
-  /* 시안에서 가장 큰 한 장이라 상한도 혼자 넉넉하게 둡니다. */
-  .showcase_photo_c {
-    width: 82%;
-    max-width: 480px;
-    align-self: center;
-  }
-
-  .showcase_photo_c img {
-    aspect-ratio: 710 / 959;
-  }
-
-  .showcase_photo_d {
-    width: 44%;
-    align-self: flex-end;
-  }
-
-  .showcase_photo_d img {
-    aspect-ratio: 307 / 315;
-  }
-
-  .showcase_photo_e {
-    width: 58%;
-    align-self: flex-start;
-  }
-
-  .showcase_photo_e img {
-    aspect-ratio: 347 / 468;
-  }
-
-  .showcase_photo_f {
-    width: 52%;
-    align-self: flex-end;
-  }
-
-  .showcase_photo_f img {
-    aspect-ratio: 309 / 441;
-  }
-
-  .showcase_photo_g {
-    width: 64%;
-    align-self: flex-start;
-  }
-
-  .showcase_photo_g img {
-    aspect-ratio: 348 / 468;
   }
 
   /* 기울기는 시안(-15.55 / 13.07)보다 작게 남깁니다. 회전하면 가로로 커지는데,
@@ -958,27 +991,64 @@
   /* 세 줄이 계단처럼 어긋난 시안의 성격은 들여쓰기로 남깁니다.
      nowrap을 유지하려면 글자 크기가 줄 폭을 넘지 않아야 합니다
      — 가장 긴 줄이 48px에서 416px이라 화면 폭에 비례시켰습니다. */
+  /* 데스크톱과 같이 가운데로 모읍니다(사용자 요청). */
   .showcase_quote {
     position: static;
     display: flex;
     flex-direction: column;
     gap: clamp(2px, 1vw, 12px);
-    align-self: flex-start;
+    align-self: center;
     width: 100%;
     max-width: 460px;
     height: auto;
+    transform: none;
   }
 
   .showcase_quote_line {
-    position: static;
-    justify-content: flex-start;
-    width: auto;
-    height: auto;
+    justify-content: center;
     font-size: clamp(23px, 6vw, 44px);
   }
 
-  .showcase_quote_line2 {
-    padding-left: clamp(18px, 7vw, 66px);
+  /* ---------- 캐러셀 ----------
+     .showcase_photo의 흐름 배치가 슬라이드에도 걸리므로 되돌려 놓습니다.
+     슬라이드는 어느 폭에서든 뷰포트 안에 겹쳐 있어야 합니다. */
+  .showcase_carousel {
+    position: static;
+    width: 100%;
+    align-self: center;
+    transform: none;
+  }
+
+  .showcase_carousel_viewport {
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    margin-inline: auto;
+  }
+
+  .showcase_slide {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    max-width: none;
+    height: auto;
+  }
+
+  .showcase_slide img {
+    height: 100%;
+  }
+
+  .showcase_carousel_button {
+    width: 44px;
+    height: 44px;
+  }
+
+  .showcase_carousel_prev {
+    left: 12px;
+  }
+
+  .showcase_carousel_next {
+    right: 12px;
   }
 
   /* ---------- archive ----------
@@ -1070,18 +1140,20 @@
     font-size: 14px;
   }
 
+  /* 카드가 서로 붙어 보이지 않도록 사이를 넓혔습니다(예전 20px). */
   .asworn_list {
-    gap: clamp(20px, 3vw, 34px);
+    gap: clamp(32px, 9vw, 56px);
     align-items: stretch;
   }
 
   /* 아래 규칙들은 위쪽 `.asworn_item_2 / _3 / _4 .asworn_figure`와 특정도가 같습니다.
      이 블록이 파일 뒤에 있어 이깁니다. !important를 쓰지 않으려는 의도입니다. */
   .asworn_list .asworn_item {
+    position: relative;
     flex-direction: column;
-    gap: 14px;
+    gap: 0;
     align-items: stretch;
-    width: clamp(240px, 68vw, 360px);
+    width: clamp(250px, 70vw, 360px);
   }
 
   .asworn_list .asworn_figure {
@@ -1092,25 +1164,60 @@
     padding: 0;
   }
 
+  /* ★ 글이 사진 위에 얹힙니다.
+     아래로 갈수록 짙어지는 어두운 겹을 깔아 흰 글씨가 읽히게 합니다.
+     겹은 카드가 어디에 있든 그대로 남습니다 — 글과 "More collection" 링크가
+     항상 읽히고 눌리도록 한 결정입니다(사용자 요청).
+     한때 띠 가운데에 온 카드에서 겹을 걷어 사진만 보이게 했으나,
+     그 카드의 링크를 누를 수 없어 되돌렸습니다. */
   .asworn_list .asworn_body {
-    width: 100%;
-    padding: 0;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 10px;
+    width: auto;
+    padding: 22px 20px;
+    background-image: linear-gradient(
+      to top,
+      rgba(18, 18, 16, 0.9) 0%,
+      rgba(18, 18, 16, 0.66) 44%,
+      rgba(18, 18, 16, 0.14) 80%,
+      rgba(18, 18, 16, 0) 100%
+    );
   }
 
   .asworn_list .asworn_name {
     padding: 0;
-    font-size: 20px;
+    color: var(--color_text_inverse);
+    font-size: 19px;
     white-space: normal;
   }
 
   .asworn_list .asworn_desc {
-    gap: 14px;
+    gap: 12px;
     padding: 0;
   }
 
+  /* 글이 빽빽해 보이던 원인은 줄간격(1.2)이었습니다.
+     사진 위에 얹히면 더 답답해 보여 1.6으로 벌리고 크기를 한 단계 낮췄습니다. */
   .asworn_list .asworn_text {
     width: 100%;
     padding: 0;
+    color: var(--color_text_inverse);
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  .asworn_list .asworn_body .banner_crosslink_link {
+    border-bottom-color: rgba(255, 255, 255, 0.55);
+    color: var(--color_text_inverse);
+  }
+
+  /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
+  .asworn_list .asworn_body .banner_crosslink_icon {
+    filter: brightness(0) invert(1);
   }
 }
 
@@ -1126,14 +1233,6 @@
     gap: clamp(40px, 9vw, 72px);
   }
 
-  .showcase_photo_c {
-    width: 86%;
-  }
-
-  .showcase_photo_d {
-    width: 46%;
-  }
-
   /* archive는 2열을 유지합니다. 1열로 세우면 사진 다섯 장이 각각 한 화면을 차지해
      섹션이 2400px을 넘습니다(1차에서 실제로 그랬습니다).
      대신 짝수 번째를 아래로 내려 격자가 딱딱해 보이지 않게 합니다 —
@@ -1142,7 +1241,24 @@
     margin-top: clamp(24px, 9vw, 64px);
   }
 
+  /* 375px에서 가장 긴 설명이 카드 높이를 꽉 채웠습니다(여유 0).
+     글이 카드를 넘으면 flex-end 정렬이라 위로 넘쳐 사진 밖으로 흘러나갑니다.
+     좁은 화면에서만 한 단계 더 낮춰 여유를 만듭니다. */
+  .asworn_list .asworn_body {
+    gap: 8px;
+    padding: 18px 16px;
+  }
+
   .asworn_list .asworn_name {
     font-size: 18px;
+  }
+
+  .asworn_list .asworn_desc {
+    gap: 10px;
+  }
+
+  .asworn_list .asworn_text {
+    font-size: 12.5px;
+    line-height: 1.55;
   }
 }

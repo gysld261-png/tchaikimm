@@ -74,26 +74,39 @@
           <span class="showcase_quote_line showcase_quote_line3">Daily Life</span>
         </h2>
 
-        <figure class="showcase_photo showcase_photo_c">
-          <img src="asset/showcase_c.png" alt="A model in a mint sheer coat over a dark linen dress">
-        </figure>
+        <!-- 인트로에서 좌우 두 장이 가운데로 모인 뒤 이 캐러셀이 자리를 넘겨받습니다.
+           첫 장이 시안의 가장 큰 사진이고, 나머지는 <> 버튼으로 넘깁니다. -->
+        <div class="showcase_carousel" role="group" aria-roledescription="carousel"
+          aria-label="Collection images">
+          <div class="showcase_carousel_viewport">
+            <figure class="showcase_photo showcase_slide showcase_photo_c is_current">
+              <img src="asset/showcase_c.png" alt="A model in a mint sheer coat over a dark linen dress">
+            </figure>
+            <figure class="showcase_photo showcase_slide showcase_photo_d" aria-hidden="true">
+              <img src="asset/showcase_d.png" alt="Pastel silk lanterns gathered together">
+            </figure>
+            <figure class="showcase_photo showcase_slide showcase_photo_e" aria-hidden="true">
+              <img src="asset/showcase_e.png" alt="A model in a cream jacket and dotted full skirt">
+            </figure>
+            <figure class="showcase_photo showcase_slide showcase_photo_f" aria-hidden="true">
+              <img src="asset/showcase_f.png"
+                alt="A model in an embroidered grey dress holding a vase of dried flowers">
+            </figure>
+            <figure class="showcase_photo showcase_slide showcase_photo_g" aria-hidden="true">
+              <img src="asset/showcase_g.png" alt="An ink-washed landscape painted on hanbok silk">
+            </figure>
 
-        <figure class="showcase_photo showcase_photo_d">
-          <img src="asset/showcase_d.png" alt="Pastel silk lanterns gathered together">
-        </figure>
+            <button class="showcase_carousel_button showcase_carousel_prev" type="button"
+              aria-label="Previous image">
+              <img class="showcase_carousel_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
+            </button>
 
-        <figure class="showcase_photo showcase_photo_e">
-          <img src="asset/showcase_e.png" alt="A model in a cream jacket and dotted full skirt">
-        </figure>
-
-        <figure class="showcase_photo showcase_photo_f">
-          <img src="asset/showcase_f.png"
-            alt="A model in an embroidered grey dress holding a vase of dried flowers">
-        </figure>
-
-        <figure class="showcase_photo showcase_photo_g">
-          <img src="asset/showcase_g.png" alt="An ink-washed landscape painted on hanbok silk">
-        </figure>
+            <button class="showcase_carousel_button showcase_carousel_next" type="button"
+              aria-label="Next image">
+              <img class="showcase_carousel_icon" src="assets/icons/arrow_right.svg" alt="" aria-hidden="true">
+            </button>
+          </div>
+        </div>
       </div>
     </section>
 
