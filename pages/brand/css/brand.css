@@ -24,11 +24,24 @@
    비대칭으로 잘립니다. calc(50% - 960px)이라야 양쪽이 똑같이 잘립니다. */
 
 /* =========================================================
-   mood — 자동 인트로 (스크롤과 무관)
+   mood — 문(.mood_reveal) 열림 인터랙션
 
-   아래 값들은 전부 "인트로가 끝난 모습"입니다. 시안 3장면의 마지막 상태와
-   같습니다. js/brand.js가 시작 상태로 되돌린 뒤 재생하므로, JS가 없거나
-   모션 감소 설정이면 이 완성된 화면이 그대로 보입니다.
+   "초록 띠"는 별도 색 판이 아니라 mood_inner.png 사진 한가운데의 좁은
+   띠입니다(그 자리가 원래 올리브색 벽이라 초록으로 보입니다). 스크롤로
+   이 섹션에 들어오면 문(.mood_reveal)이 가운데 얇은 띠(30 × 484)에서
+   세로 → 가로 순서로 커집니다(레퍼런스 영상 순서) — 세로가 먼저 다
+   자라 띠 모양이 완성되고, 잠깐 뒤 가로로 펼쳐지며 그 문을 통해 보이는
+   사진의 범위가 넓어져 배경 사진이 다 드러납니다. **그 뒤에야** 글·무드
+   단어(.mood_inner)가 옅게 떠오르며 나타납니다.
+
+   레이아웃(글 상자·무드 단어 3개의 좌표·크기)은 Figma node 1962:6954
+   그대로입니다: mood_left(768px)에 글, mood_right(1152px)에 무드 단어
+   3개(Unique / Modern / Elegant). 사진 mood_inner.png 한 장이 문 안에서
+   두 영역 전체 뒤에 깔립니다.
+
+   배경 사진은 문이 열리는 동안 한 번도 움직이지 않습니다 — js/brand.js는
+   문(.mood_reveal)의 크기와 글·무드 단어(.mood_inner)의 opacity/y만
+   움직입니다. 조절 값은 js/brand.js 위쪽 REVEAL_* 상수에 있습니다.
    ========================================================= */
 
 .mood {
@@ -36,127 +49,94 @@
   width: 100%;
   background-color: var(--brand_black);
   overflow-x: clip;
-
-  /* ---- 무대 크기: 1920 × 1080 고정 -------------------------------------
-     섹션 높이는 이 무대 하나가 정합니다(.mood에 padding·margin 없음).
-     문(.mood_reveal)과 배경 사진(.mood_room)이 같은 값을 받습니다.
-     js/brand.js도 이 높이를 DOM에서 직접 읽으므로 여기만 바꾸면 전부 따라옵니다. */
-  --mood_stage_w: 1920px;
-  --mood_stage_h: 1080px;
-
-  /* ---- 세로 가운데 정렬용 값 --------------------------------------------
-     시안 좌표는 700 높이 밴드 기준이라 1080 무대에서는 위로 쏠립니다.
-     아래 값으로 글 상자와 단어 3개를 무대 세로 가운데(y 540)에 맞춥니다.
-
-     글 상자 높이. top 계산과 height가 같은 값을 써야 해서 변수로 뺐습니다. */
-  --mood_copy_h: 641px;
-
-  /* 단어 3개를 한 덩어리로 봤을 때의 시안 좌표
-     — 맨 위가 unique의 top 88, 맨 아래가 modern의 350 + 311 = 661. 높이 573. */
-  --mood_words_group_top: 88px;
-  --mood_words_group_h: 573px;
-
-  /* 그 덩어리를 무대 가운데로 내리는 양. 1080일 때 165.5px입니다.
-     세 블록의 top에 이 값을 더하므로 서로의 간격은 시안 그대로 유지됩니다. */
-  --mood_word_shift: calc(
-    (var(--mood_stage_h) - var(--mood_words_group_h)) / 2 - var(--mood_words_group_top)
-  );
-
-  /* ---- 배경 사진의 가로 위치 --------------------------------------------
-     ★ 배경 이미지를 1920 × 1080으로 만들어 넣으면 이 값은 아무 영향이 없습니다.
-       상자와 이미지 비율이 같아 넘치는 부분이 없기 때문입니다. 그때는
-       손대지 않아도 되고, 22%든 50%든 결과가 같습니다.
-
-     지금 쓰는 mood_inner.jpg가 1920 × 700이라서 필요한 값입니다.
-     비율을 지키며 높이를 채우면 1.5429배가 되어 폭이 2962px이 되고
-     가로로 1042px이 잘립니다(세로는 정확히 맞아 한 픽셀도 안 잘립니다).
-     창문은 창틀까지 원본 x 160~742 → 확대하면 247~1145이고,
-     0% ~ 23.7% 사이여야 창문이 잘리지 않습니다.
-
-       0%    창틀 왼쪽이 화면 x247. 대신 창문이 Unique 글자 밑으로 들어와
-             흰 글씨 대비가 1.85:1로 못 읽습니다
-       22%   지금 값. 창틀 왼쪽이 화면 x18에서 시작해 잘리지 않고,
-             글자 대비도 가장 낫습니다 (Unique 5.15 / Elegant 5.76)
-       23.7% 창틀이 화면 왼쪽 끝에 정확히 닿습니다. 더 키우면 잘립니다 */
-  --mood_room_pos: 22%;
 }
 
 /* 1920 × 1080 고정. 화면이 1920보다 좁으면 좌우가 똑같이 잘립니다
-   (.mood의 overflow-x: clip). margin-inline: auto는 왼쪽으로 붙어
-   좌우가 비대칭으로 잘리므로 calc를 씁니다. */
+   (.mood의 overflow-x: clip). margin-inline: auto는 왼쪽으로 붙어 좌우가
+   비대칭으로 잘리므로 calc를 씁니다. */
 .mood_stage {
   position: relative;
-  width: var(--mood_stage_w);
-  height: var(--mood_stage_h);
-  margin-left: calc(50% - var(--mood_stage_w) / 2);
+  width: 1920px;
+  height: 1080px;
+  margin-left: calc(50% - 960px);
 }
 
-/* 문이 열릴 때 보이는 창. 가운데를 기준으로 커집니다.
-   translate로 가운데 정렬해 두면 width/height만 바꿔도 중심이 안 움직입니다. */
+/* 문. 기본(끝난 모습) 상태는 다 열린 크기(1920 × 1080)입니다. js/brand.js가
+   재생 전 얇은 띠(30 × 484)로 되돌린 뒤 세로 → 가로 순서로 키웁니다.
+
+   top/left 50% + translate(-50%, -50%)로 가운데 정렬해 두면 width/height만
+   바꿔도 중심이 안 움직입니다(무대 한가운데에서 커집니다). overflow: hidden이
+   문 안쪽의 사진·글·무드 단어 중 아직 안 열린 부분을 가립니다. */
 .mood_reveal {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: var(--mood_stage_w);
-  height: var(--mood_stage_h);
+  width: 1920px;
+  height: 1080px;
   transform: translate(-50%, -50%);
   overflow: hidden;
 }
 
-/* 배경 사진. 인트로 내내 이 한 장이 제자리에 고정입니다.
+/* 배경 사진. 문이 열리는 동안 이 사진은 한 번도 움직이지 않습니다 —
+   문이 넓어질수록 사진에서 보이는 범위만 늘어납니다.
 
-   ★ 여기 넣을 이미지는 1920 × 1080으로 만들면 됩니다.
-     상자가 무대와 같은 1920 × 1080이라, 같은 크기 이미지를 넣으면 확대도 잘림도
-     없이 1:1로 그려집니다. 여백(레터박스)을 이미지 안에 직접 넣어 오셔도 되고,
-     그 여백 색은 .mood의 --brand_black(#120f0f)과 맞추면 이어져 보입니다.
-     교체는 index.html의 .mood_room 한 줄만 바꾸면 됩니다. CSS는 손댈 필요 없습니다.
-
-   크기가 다른 이미지를 넣어도 깨지지는 않습니다. object-fit: cover가 비율을
-   지키며 채우고, 남는 쪽(가로/세로)이 잘립니다. 잘리는 위치는 --mood_room_pos.
-
-   위치는 반드시 문(.mood_reveal)의 "가운데" 기준이어야 합니다.
-   문이 작을 때는 좌상단이 화면 가운데 쪽에 있다가 열리면서 바깥으로 움직입니다.
-   좌상단(top/left)에 붙이면 사진이 문을 따라 움직여서, 가려졌던 것이 드러나는
-   게 아니라 사진이 미끄러지는 것처럼 보입니다.
-
-   width/height를 %로 주면 안 됩니다. 문이 커질 때 사진도 같이 커져서
-   드러남이 아니라 확대가 됩니다. */
+   1.4배로 확대해서 왼쪽으로 밀어 창문을 화면 왼쪽으로 붙입니다. 원본
+   그대로(1920 × 1084, 거의 1:1)였을 때는 창문이 x 160~740px에 걸쳐 있어
+   .mood_left(0~768px) 칼럼의 텍스트(.mood_copy)와 그대로 겹쳤습니다
+   (실제 화면 캡처로 확인한 버그). 확대 후에는 창문이 x 0~약 350px에서
+   잘려 보이고 그 오른쪽(약 350~768px)이 빈 벽이 되어 텍스트가 놓일
+   자리가 생깁니다 — 창문 자체를 옮기는 게 아니라 사진을 키운 뒤 왼쪽
+   바깥으로 밀어서 보이는 범위만 바뀌는 것입니다. 세로는 그대로 중앙
+   정렬(위아래 216px씩 여유)이라 위아래로는 잘리지 않습니다. */
 .mood_room {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: var(--mood_stage_w);
-  height: var(--mood_stage_h);
+  top: -216px;
+  left: -686px;
+  width: 2688px;
+  height: 1512px;
   max-width: none;
-  transform: translate(-50%, -50%);
   object-fit: cover;
-  object-position: var(--mood_room_pos) center;
   pointer-events: none;
 }
 
-/* 무대 높이(1080) 안에서 세로 가운데 정렬입니다.
-
-   시안 좌표는 top 59였는데, 그건 700 높이 밴드 기준이라 1080에서는 위로 쏠립니다
-   (위 122 / 아래 444). 상자 안에서 실제 글(제목 63~339, 본문 257~636)의 중심이
-   320.5로 상자 높이 641의 중심과 거의 같아서, 상자만 가운데 두면 글도 가운데 옵니다.
-
-   transform이 아니라 top으로 가운데를 잡습니다. transform은 GSAP이 흐름(x)에
-   쓰고 있어서 여기서 쓰면 서로 덮어씁니다. */
-.mood_copy {
-  position: absolute;
-  top: calc((var(--mood_stage_h) - var(--mood_copy_h)) / 2);
-  left: 0;
+/* 글·무드 단어 전체 묶음. 기본(끝난 모습)은 opacity: 1(다 보임)입니다.
+   js/brand.js가 재생 전 opacity: 0 + 아래로 24px로 되돌린 뒤, 배경 사진이
+   다 드러난 뒤에 떠오르며 나타나게 합니다. */
+.mood_inner {
+  position: relative;
   z-index: 1;
-  width: 768px;
-  height: var(--mood_copy_h);
-  color: var(--color_text);
-  will-change: transform;
+  display: flex;
+  width: 1920px;
+  height: 1080px;
 }
 
+.mood_left {
+  position: relative;
+  flex-shrink: 0;
+  width: 768px;
+  height: 1080px;
+}
+
+.mood_copy {
+  position: absolute;
+  top: calc((1080px - 641px) / 2);
+  left: 0;
+  width: 768px;
+  height: 641px;
+  color: var(--color_text);
+}
+
+/* left: 70px(시안값)이었으나 창문(x 0~약 350px, 위 .mood_room 주석 참고)과
+   겹쳤습니다. 벽이 시작되는 지점(약 350px) 뒤로 여유를 두고 380px로
+   옮겼습니다 — .mood_copy_body와 같은 시작점입니다(원래 있던 314px
+   엇갈림은 시안에서 제목-왼쪽/본문-오른쪽으로 "가로 배치"였기 때문입니다 —
+   그래서 top이 서로 겹쳐도 문제가 없었습니다. 창문 위치가 바뀌며 둘 다
+   같은 x로 세로 배치로 바꿨으니 top도 아래 .mood_copy_body에서 같이
+   내렸습니다). */
 .mood_copy_title {
   position: absolute;
-  top: 63px;
-  left: 70px;
+  top: 55px;
+  left: 380px;
   font-family: var(--font_display);
   font-weight: 600;
   font-size: 64px;
@@ -165,10 +145,14 @@
   white-space: nowrap;
 }
 
+/* top: 205px(시안값)이었으나 제목과 같은 x(380px)로 옮기면서 세로로 겹쳤습니다
+   (제목이 3줄 · 217px 높이라 top 55~272px, 본문 205px는 그 한가운데를 뚫고
+   지나갔습니다). 제목이 끝나는 지점(55 + 217 = 272px) 아래로 40px 띄워
+   312px로 내렸습니다. */
 .mood_copy_body {
   position: absolute;
-  top: 198px;
-  left: 384px;
+  top: 312px;
+  left: 380px;
   font-family: var(--font_body);
   font-weight: 400;
   font-size: 24px;
@@ -181,41 +165,20 @@
   margin-top: 1.58em;
 }
 
-/* 브랜드 무드 3단어. 글 상자와 한 띠로 붙어 오른쪽에서 흘러 들어옵니다.
-
-   올리브 채우기(--brand_olive)만 뺐습니다. 사진 3장은 시안대로 씁니다.
-   여기는 배경 없는 투명한 클리핑 상자일 뿐입니다. */
-.mood_words {
-  position: absolute;
-  top: 0;
-  left: 768px;
-  z-index: 1;
+/* 무드 단어 3개. 배경은 이 상자가 아니라 .mood_room(공유 배경 사진)입니다. */
+.mood_right {
+  position: relative;
+  flex-shrink: 0;
   width: 1152px;
   height: 1080px;
-  overflow: hidden;
-  will-change: transform;
 }
 
-/* 사진과 글 사이 15px. 시안 mood_con에서 txt.y − 사진 높이입니다
-   (unique 195−180, modern 255−240, elegant 195−180 — 셋 다 15).
-   gap은 .mood_word의 직계 자식 사이에만 걸리므로 제목과 설명은 붙어 있습니다.
-   그래서 글 두 줄을 .mood_word_txt로 한 번 더 감싸야 합니다. */
-/* will-change: transform — 둥둥 흔들림이 버벅이지 않게 합니다.
-
-   14px을 4.2초에 걸쳐 움직이면 한 프레임에 약 0.05px씩 갑니다. 이렇게 작은
-   소수점 단위로 글자가 움직이면 브라우저가 매 프레임 글자를 다시 그리고,
-   그게 아른거림·버벅임으로 보입니다. 미리 합성 레이어로 올려 두면 글자를
-   한 번만 그린 뒤 옮기기만 하므로 사라집니다.
-
-   대가: 합성 레이어 위의 글자는 서브픽셀 안티에일리어싱이 꺼져 아주 약간
-   다르게 보일 수 있습니다. 사진 위 글자라 오히려 자연스러운 편입니다. */
+/* 사진과 글 사이 간격 없음(0px) — Figma mood_con에 gap이 없습니다. */
 .mood_word {
   position: absolute;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 15px;
-  will-change: transform;
 }
 
 .mood_word_media {
@@ -228,10 +191,23 @@
   object-fit: cover;
 }
 
-.mood_word_unique .mood_word_media,
-.mood_word_elegant .mood_word_media {
-  width: 260px;
-  height: 180px;
+/* 블록(사진 + 글) 전체의 왼쪽 위 좌표와 사진 크기입니다. mood_right(1152×1080)
+   기준 절대좌표이며, Figma mood_con 3개(1962:6960 / 6965 / 6970) 그대로입니다. */
+.mood_word_unique {
+  top: 263px;
+  left: 130px;
+  width: 298px;
+}
+
+.mood_word_unique .mood_word_media {
+  width: 298px;
+  height: 189px;
+}
+
+.mood_word_modern {
+  top: 639px;
+  left: 458px;
+  width: 220px;
 }
 
 .mood_word_modern .mood_word_media {
@@ -239,41 +215,33 @@
   height: 240px;
 }
 
-/* 블록(사진 + 15 + 글) 전체의 왼쪽 위 좌표입니다.
-
-   ⚠ 블록을 옮기면 글자가 놓이는 배경색이 바뀝니다. mood_inner.jpg는 y 420 아래가
-   밝아지므로(창문 아래 바닥) 옮길 때마다 그 자리를 다시 재야 합니다.
-   현재 글자 자리의 배경과 흰 글씨 대비:
-     Unique  (939, 283) rgb(106,109,96)  5.21:1
-     Modern  (1234, 605) rgb(146,150,136) 2.98:1  ← 밝은 구간, 미달
-     Elegant (1556, 424) rgb(97,100,87)   5.96:1 */
-.mood_word_unique {
-  top: calc(88px + var(--mood_word_shift));
-  left: 171px;
-  width: 260px;
-}
-
-.mood_word_modern {
-  top: calc(350px + var(--mood_word_shift));
-  left: 466px;
-  width: 220px;
+/* Figma에서 modern 사진만 object-position이 bottom입니다(다른 둘은 그냥 채움). */
+.mood_word_modern .mood_word_media img {
+  object-position: bottom;
 }
 
 .mood_word_elegant {
-  top: calc(229px + var(--mood_word_shift));
-  left: 788px;
-  width: 260px;
+  top: 390px;
+  left: 748px;
+  width: 306px;
 }
 
-/* 어두운 실내 사진 위라 검은 글씨(3.3~3.7:1)는 읽기 어려워 흰색을 씁니다.
-   시안(#000)과 다른 판단입니다. Modern 자리만 배경이 밝아 2.98:1로 미달입니다 —
-   위 좌표 주석 참고. */
+.mood_word_elegant .mood_word_media {
+  width: 306px;
+  height: 180px;
+}
+
+/* 흰색(--color_text_inverse)이 아니라 옅은 회색입니다 — Figma가 지정한 값이
+   공통 토큰 --color_border_disabled(#c9c9c9)와 정확히 같아 그대로
+   재사용했습니다. ⚠ 이 대비는 mood_right가 단색(#3b3c32)이었을 때 잰
+   값(6.8:1)입니다. 지금은 배경이 사진(mood_room)이라 실제 대비는 사진
+   위 이 글자가 놓이는 위치의 픽셀 값에 따라 달라집니다 — 확인이 필요합니다. */
 .mood_word_title {
   font-family: var(--font_display);
   font-weight: 400;
   font-size: 24px;
   line-height: 1.25;
-  color: var(--color_text_inverse);
+  color: var(--color_border_disabled);
 }
 
 .mood_word_desc {
@@ -281,7 +249,7 @@
   font-weight: 400;
   font-size: 16px;
   line-height: 1.63;
-  color: var(--color_text_inverse);
+  color: var(--color_border_disabled);
 }
 
 /* =========================================================
@@ -301,6 +269,7 @@
   height: 2560px;
   margin-left: calc(50% - 960px);
   padding-top: 400px;
+  background: linear-gradient(180deg, #f0ebe0 0%, #F7F7F7 100%);
 }
 
 .youngjin_group {
@@ -851,6 +820,22 @@
 .scroll_overlay_book img {
   width: 100%;
   height: 100%;
+  animation: scroll_overlay_book_spin 10s linear infinite;
+}
+
+@keyframes scroll_overlay_book_spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll_overlay_book img {
+    animation: none;
+  }
 }
 
 .scroll_overlay_social {

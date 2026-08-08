@@ -31,65 +31,73 @@
 
   <main class="main" id="main_content">
 
-    <!-- mood — 페이지에 들어오면 저절로 재생되는 인트로. 스크롤과 무관합니다.
-         검은 화면의 초록 띠가 열리며 실내가 드러납니다. 배경 사진은 한 장뿐이고
-         처음부터 끝까지 고정입니다. 그 위로 글과 무드 단어가 한 띠로 붙어
-         오른쪽에서 흘러 들어옵니다.
+    <!-- mood — "초록 띠"는 별도 색 판이 아니라 mood_inner.png 사진
+         한가운데의 좁은 띠입니다(그 자리가 원래 올리브색 벽이라 초록으로
+         보입니다). 스크롤로 이 섹션에 들어오면 문(.mood_reveal)이 가운데
+         얇은 띠(30 × 484)에서 세로 → 가로 순서로 커집니다(레퍼런스 영상
+         순서) — 세로가 먼저 다 자라 띠 모양이 완성되고, 잠깐 뒤 가로로
+         펼쳐지며 그 문을 통해 보이는 사진의 범위가 넓어져 무대
+         (1920 × 1080) 전체가 드러납니다. 사진은 처음부터 끝까지 제자리에
+         고정이고, 문이 열리는 만큼만 보이는 부분이 늘어납니다 — 사진이
+         움직이는 게 아닙니다.
 
-         HTML/CSS 기본 상태는 "다 끝난 모습"입니다. JS가 시작 상태로 되돌린 뒤
-         재생하므로, JS가 없거나 모션 감소 설정이면 완성된 화면이 그대로 보입니다. -->
+         글 상자·무드 단어 3개도 이 문 안에 있어 문이 열리는 만큼 함께
+         드러나며, 그 자체는 움직이지 않습니다(좌표는 Figma node 1962:6954
+         그대로: mood_left 768px에 글, mood_right 1152px에 무드 단어
+         Unique / Modern / Elegant). -->
     <section class="mood" data-header-theme="white" aria-labelledby="mood_title">
       <h2 class="a11y_hidden" id="mood_title">A quiet balance of restraint and originality</h2>
 
       <div class="mood_stage">
         <div class="mood_reveal">
-          <!-- 배경은 이 사진 한 장뿐입니다. 처음부터 끝까지 제자리에 고정입니다.
-               시안의 mood_inner2(1707:6124)와 mood_inner3(1707:6129)이 같은 배경을
-               쓰기 때문입니다. 두 장면의 차이는 그 위에 놓인 콘텐츠뿐입니다. -->
+          <!-- 배경. 문이 열리는 동안 이 사진은 한 번도 움직이지 않습니다.
+               문이 넓어질수록 사진에서 보이는 범위만 늘어납니다. -->
           <img class="mood_room" src="assets/images/mood_inner.png" alt="" aria-hidden="true">
 
-          <div class="mood_copy">
-            <p class="mood_copy_title">Refined<br>into<br>elegance</p>
-            <div class="mood_copy_body">
-              <p>A quiet balance<br>of restraint and originality.</p>
-              <p>Tradition,<br>held onto.<br>Modernity,<br>let in.</p>
-              <p>That&rsquo;s the direction<br>Tchai kim moves toward.</p>
+          <div class="mood_inner">
+            <div class="mood_left">
+              <div class="mood_copy">
+                <p class="mood_copy_title">Refined<br>into<br>elegance</p>
+                <div class="mood_copy_body">
+                  <p>A quiet balance<br>of restraint and originality.</p>
+                  <p>Tradition,<br>held onto.<br>Modernity,<br>let in.</p>
+                  <p>That&rsquo;s the direction<br>Tchai kim moves toward.</p>
+                </div>
+              </div>
             </div>
-          </div>
 
-          <!-- 설문에서 가장 많이 나온 세 단어. 올리브 채우기만 없애고 사진은 씁니다.
-               블록 = 사진 + 15px 간격 + 글(제목·설명). 간격 15는 시안값입니다
-               (mood_con 1707:6135 / 6140 / 6145에서 txt.y − 사진 높이). -->
-          <div class="mood_words">
-            <article class="mood_word mood_word_unique">
-              <div class="mood_word_media">
-                <img src="assets/images/unique.jpg" alt="A Tchai Kim look photographed close up">
-              </div>
-              <div class="mood_word_txt">
-                <h3 class="mood_word_title">Unique</h3>
-                <p class="mood_word_desc">Unmistakably hanbok,<br>unmistakably Tchai kim.</p>
-              </div>
-            </article>
+            <!-- 설문에서 가장 많이 나온 세 단어. -->
+            <div class="mood_right">
+              <article class="mood_word mood_word_unique">
+                <div class="mood_word_media">
+                  <img src="assets/images/unique.jpg" alt="A Tchai Kim look photographed close up">
+                </div>
+                <div class="mood_word_txt">
+                  <h3 class="mood_word_title">Unique</h3>
+                  <p class="mood_word_desc">Unmistakably hanbok,<br>unmistakably Tchai kim.</p>
+                </div>
+              </article>
 
-            <article class="mood_word mood_word_modern">
-              <div class="mood_word_media">
-                <img src="assets/images/modern.jpg" alt="A model wearing a modern Tchai Kim silhouette">
-              </div>
-              <div class="mood_word_txt">
-                <h3 class="mood_word_title">Modern</h3>
-                <p class="mood_word_desc">Tradition, worn for today.</p>
-              </div>
-            </article>
+              <article class="mood_word mood_word_modern">
+                <div class="mood_word_media">
+                  <img src="assets/images/modern.jpg" alt="A model wearing a modern Tchai Kim silhouette">
+                </div>
+                <div class="mood_word_txt">
+                  <h3 class="mood_word_title">Modern</h3>
+                  <p class="mood_word_desc">Tradition, worn for today.</p>
+                </div>
+              </article>
 
-            <article class="mood_word mood_word_elegant">
-              <div class="mood_word_media">
-                <img src="assets/images/elegant.jpg" alt="A detail of a Tchai Kim garment">
-              </div>
-              <div class="mood_word_txt">
-                <h3 class="mood_word_title">Elegant</h3>
-                <p class="mood_word_desc">Elegance, without excess.</p>
-              </div>
-            </article>
+              <article class="mood_word mood_word_elegant">
+                <div class="mood_word_media">
+                  <img src="assets/images/elegant.jpg" alt="A detail of a Tchai Kim garment">
+                </div>
+                <div class="mood_word_txt">
+                  <h3 class="mood_word_title">Elegant</h3>
+                  <p class="mood_word_desc">Elegance, without excess.</p>
+                </div>
+              </article>
+            </div>
           </div>
         </div>
       </div>
