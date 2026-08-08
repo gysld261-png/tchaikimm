@@ -130,24 +130,25 @@
 }
 
 /* =========================================================
-   intro — 브랜드 한 줄 소개
+   brand_story — 브랜드 한 줄 소개 + 배너 (Figma node 1794:7100)
    ========================================================= */
 
-.intro {
-  border-bottom: 1px solid var(--color_line);
-  padding: 60px 0;
-}
-
-.intro_container {
+.brand_story {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  text-align: center;
+  background-color: #0a0a0a;
 }
 
-.intro_title {
-  color: var(--color_text);
+.brand_story_textbox {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 48px var(--layout_gutter);
+}
+
+.brand_story_title {
+  color: var(--color_text_inverse);
   font-family: var(--font_display);
   font-size: var(--fs_display_48);
   font-weight: 600;
@@ -155,39 +156,46 @@
   letter-spacing: var(--ls_tight);
 }
 
-.intro_desc {
-  color: var(--color_text_sub);
+.brand_story_desc {
+  color: var(--color_text_inverse);
   font-family: var(--font_body);
   font-size: var(--fs_body_20);
   font-weight: 400;
   line-height: var(--lh_body_20);
 }
 
-@media (min-width: 1280px) {
-  .intro {
-    padding-top: 100px;
-    padding-bottom: 100px;
-  }
+.brand_story_link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--color_text_inverse);
+  color: var(--color_text_inverse);
+  font-family: var(--font_body);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+  text-transform: uppercase;
 }
 
-/* =========================================================
-   banner
-   ========================================================= */
-
-.banner {
-  padding: 40px 0;
-  background-image: linear-gradient(to bottom, #fffdf9, #fcfcfb);
+.brand_story_link_icon {
+  width: 15px;
+  height: 15px;
 }
 
-.banner_img {
+.brand_story_banner {
+  display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 1024 / 384;
+  object-fit: cover;
 }
 
 @media (min-width: 1280px) {
-  .banner {
-    /* 시안 1920px: 상단 69px, 이미지 720px, 하단 150px */
-    padding: 69px 0 150px;
+  .brand_story_textbox {
+    gap: 10px;
+    padding: 100px 120px;
   }
 }
 

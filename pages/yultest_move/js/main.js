@@ -48,7 +48,8 @@
           pin: true,
           scrub: 0.2,
           anticipatePin: 1,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 
@@ -211,7 +212,8 @@
           end: "+=" + window.innerHeight * scrollLength,
           pin: true,
           scrub: 1,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 
@@ -321,7 +323,8 @@
           end: "+=" + window.innerHeight * 2,
           pin: true,
           scrub: 1,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 
