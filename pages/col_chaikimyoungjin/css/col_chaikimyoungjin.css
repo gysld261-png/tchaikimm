@@ -114,6 +114,26 @@
   height: 3335px;
 }
 
+/* JS가 pin 인터랙션을 켤 때만 붙습니다(js/col_chaikimyoungjin.js의 buildShowcaseTimeline).
+
+   섹션 자체를 화면 한 장 크기로 줄여 "창"으로 씁니다. 안쪽 배경과 프레임은
+   3335px 그대로 남아 위 규칙의 overflow: hidden에 잘리고, 스크롤 진행도에 맞춰
+   GSAP이 두 겹을 함께 밀어 올립니다.
+
+   섹션을 3335px 그대로 두고 pin하면 안 됩니다. 화면에는 위 1080px만 남아
+   갤러리 사진 다섯 장(프레임 좌표 y 1250~2808)이 pin 내내 화면 밖에 있게 됩니다.
+
+   class를 떼면 3335px 원래 레이아웃으로 그대로 돌아갑니다. */
+.showcase.is_pinned {
+  height: 100vh;
+}
+
+/* pin 구간에서 매 프레임 다시 그려지는 두 겹입니다. */
+.showcase.is_pinned > .showcase_bg,
+.showcase.is_pinned > .showcase_frame {
+  will-change: transform;
+}
+
 /* 시안의 사진 프레임은 모두 10px 안쪽 여백을 가집니다. */
 .showcase_photo {
   position: absolute;

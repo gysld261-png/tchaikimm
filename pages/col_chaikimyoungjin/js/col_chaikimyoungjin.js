@@ -8,9 +8,34 @@
   /* 시안 캔버스 폭. 상단 카드가 "가운데로 모이는" 목표 지점을 잡을 때 씁니다. */
   var CANVAS_WIDTH = 1920;
 
-  /* pin 구간 길이. 화면 높이의 몇 배만큼 붙잡아 둘지입니다.
-     늘리면 인트로 전체가 더 천천히, 더 여유 있게 진행됩니다. */
-  var PIN_LENGTH = "+=140%";
+  /* 타임라인 1단위가 몇 px의 스크롤에 해당하는지. pin 구간 전체 길이를
+     "타임라인 총 길이 × 이 값"으로 냅니다. 올리면 전 구간이 함께 느려집니다.
+
+     예전에는 pin 길이를 화면 높이의 배수(`"+=140%"`)로 직접 적었습니다.
+     그러면 pin 길이와 타임라인 길이가 따로 놀아서, 구간을 하나 더하면
+     전체 속도가 같이 바뀌었습니다. 지금은 타임라인이 길이를 정합니다. */
+  var SHOWCASE_PX_PER_UNIT = 512;
+
+  /* 갤러리 카드 한 장이 등장하는 동안 프레임을 붙잡아 두는 타임라인 길이.
+     이 구간에서 프레임은 1px도 움직이지 않으므로 카드가 제자리에서 나타납니다. */
+  var GALLERY_HOLD = 0.9;
+
+  /* 프레임을 안쪽에서 밀어 올리는 속도(px / 타임라인 1단위).
+     SHOWCASE_PX_PER_UNIT과 같게 두면 이동 구간의 체감 속도가 평소 스크롤과 같습니다. */
+  var GALLERY_TRAVEL_SPEED = 512;
+
+  /* 마지막 카드까지 끝나고 pin이 풀리기 전까지 머무는 길이. */
+  var SHOWCASE_TAIL_HOLD = 0.4;
+
+  /* 스크롤 진행도에 맞춰 프레임 안에서 차례로 등장하는 갤러리 카드입니다.
+     배열 순서가 곧 등장 순서입니다. */
+  var SHOWCASE_GALLERY = [
+    ".showcase_photo_c",
+    ".showcase_photo_d",
+    ".showcase_photo_e",
+    ".showcase_photo_f",
+    ".showcase_photo_g"
+  ];
 
   /* 상단 카드가 화면 바깥 어디에서 출발할지(px). 카드 폭보다 커야 완전히 가려집니다. */
   var ENTER_OFFSET = 560;
@@ -62,17 +87,31 @@
   var ARCHIVE_ENTER_SCALE = 0.78;
   var ARCHIVE_ENTER_SPIN = 14;
 
-  /* 한 장이 날아드는 시간과 장 사이 간격. STAGGER가 DURATION의 절반보다 작아야
-     앞 카드가 도착하기 전에 다음 카드가 출발해 "겹겹이 쌓이는" 흐름이 이어집니다. */
-  var ARCHIVE_DURATION = 0.95;
-  var ARCHIVE_STAGGER = 0.18;
+  /* 한 장이 날아드는 길이와 장 사이 간격. scrub이므로 초가 아니라 스크롤 진행도입니다.
+     STAGGER를 DURATION의 3분의 2쯤으로 두면 앞 장이 거의 도착한 뒤 다음 장이 출발해
+     "한 장씩" 쌓이는 것이 또렷하게 보입니다. 예전 값(0.95 / 0.18)은 겹침이 커서
+     다섯 장이 거의 동시에 들어왔습니다. */
+  var ARCHIVE_DURATION = 0.75;
+  var ARCHIVE_STAGGER = 0.5;
+
+  /* 마지막 장이 도착한 뒤 pin이 풀리기 전까지 붙잡아 두는 길이.
+     이 구간이 없으면 마지막 장을 보자마자 화면이 흘러갑니다. */
+  var ARCHIVE_HOLD = 0.7;
+
+  /* 타임라인 1단위가 몇 px의 스크롤에 해당하는지. pin 구간 길이를 이 값으로 냅니다. */
+  var ARCHIVE_PX_PER_UNIT = 520;
 
   /* 연도를 바꿀 때 이전 세트가 사라지는 시간. 이 사이에 새 사진이 내려받기를 시작합니다. */
   var ARCHIVE_SWAP_FADE = 0.25;
 
-  /* 날아들기 시작하는 지점. 섹션 상단이 화면 위에서 이만큼 내려온 순간입니다.
-     섹션 높이가 화면 한 장 정도라, 이 값이 크면 아래쪽 카드가 아직 화면 밖일 때 시작합니다. */
-  var ARCHIVE_START = "top top+=10%";
+  /* 연도를 바꿨을 때 다시 한 번 날아드는 트윈의 길이(초). 이쪽은 스크롤과 무관한
+     한 번짜리 재생이라 스크롤용 값과 따로 둡니다. */
+  var ARCHIVE_REPLAY_DURATION = 0.95;
+  var ARCHIVE_REPLAY_STAGGER = 0.18;
+
+  /* pin이 시작되는 지점. 프레임(920px)이 화면 한가운데에 놓인 순간 고정됩니다.
+     화면(1080px)보다 작으므로 위아래에 여백이 남아 어느 카드도 잘리지 않습니다. */
+  var ARCHIVE_START = "center center";
 
   var ARCHIVE_DEFAULT_YEAR = "2021";
 
@@ -237,6 +276,61 @@
     ]
   };
 
+  /* =========================================================
+     공통 — 데스크톱 게이트와 창 크기 변화
+     ========================================================= */
+
+  /* 두 인터랙션 모두 이 조건에서만 켜집니다. 어긋나면 gsap.matchMedia()가
+     설정한 값을 알아서 되돌려 CSS 레이아웃 그대로 보입니다. */
+  var DESKTOP_MOTION = "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
+
+  /* 창 크기가 이만큼(px) 넘게 달라졌을 때만 다시 만듭니다.
+     주소창이 접히는 정도의 변화로 매번 다시 만들지 않기 위한 여유입니다. */
+  var REBUILD_TOLERANCE = 40;
+  var REBUILD_DELAY = 200;
+
+  /* 카드가 멈추는 위치와 이동 거리는 창 높이에서 나옵니다. 그런데 그 값은
+     타임라인의 길이까지 정하기 때문에 함수형 값이나 invalidateOnRefresh로는
+     따라잡을 수 없습니다(길이는 함수로 줄 수 없습니다).
+     그래서 창이 실제로 달라졌을 때 matchMedia를 통째로 새로 만듭니다. */
+  function createRebuilder(gsap, build) {
+    var context = null;
+    var height = window.innerHeight;
+    var width = window.innerWidth;
+    var timer = null;
+
+    function apply() {
+      if (context) {
+        context.revert();
+      }
+
+      context = gsap.matchMedia();
+      context.add(DESKTOP_MOTION, build);
+    }
+
+    function handleResize() {
+      if (timer) {
+        window.clearTimeout(timer);
+      }
+
+      timer = window.setTimeout(function () {
+        timer = null;
+
+        if (Math.abs(window.innerHeight - height) < REBUILD_TOLERANCE &&
+          Math.abs(window.innerWidth - width) < REBUILD_TOLERANCE) {
+          return;
+        }
+
+        height = window.innerHeight;
+        width = window.innerWidth;
+        apply();
+      }, REBUILD_DELAY);
+    }
+
+    apply();
+    window.addEventListener("resize", handleResize);
+  }
+
   /* hero 영상은 시안에 재생 컨트롤이 없습니다.
      모션 감소 설정에서는 자동 재생 대신 첫 화면에서 멈춰 있게 합니다. */
   function initHeroVideo() {
@@ -313,7 +407,7 @@
      2박자 — 가운데 문장이 한 단어씩 차례로 상승
      3박자 — 두 장이 중앙으로 모이며 커지고, 흐려지고 밝아지며 물러남
      2·3박자를 겹쳐 두어 사진이 물러나는 동안 문장이 자리를 넘겨받습니다. */
-  function buildIntroTimeline(gsap, showcase, cards, words) {
+  function addIntro(gsap, timeline, cards, words) {
     var cardA = cards[0];
     var cardB = cards[1];
     var imageA = cardA.querySelector("img");
@@ -322,19 +416,6 @@
     /* 원근은 각 img 자신에게 겁니다. 부모에 CSS perspective를 두면
        showcase_frame의 다른 사진들까지 3D 맥락에 들어갑니다. */
     gsap.set([imageA, imageB], { transformPerspective: PERSPECTIVE });
-
-    var timeline = gsap.timeline({
-      scrollTrigger: {
-        trigger: showcase,
-        start: "top top",
-        end: PIN_LENGTH,
-        pin: true,
-        pinSpacing: true,
-        scrub: 1,
-        anticipatePin: 1,
-        invalidateOnRefresh: true
-      }
-    });
 
     timeline
       /* --- 1박자: 등장 --- */
@@ -442,51 +523,141 @@
         },
         EXIT_START
       );
-
-    return timeline;
   }
 
-  /* 하단 갤러리는 카드마다 따로 트리거를 답니다.
-     한 타임라인으로 묶으면 카드가 1500px 넘게 흩어져 있어 화면 위치와 어긋납니다.
-     트리거는 figure(움직이지 않음), 움직이는 건 안쪽 img라서 시작 지점이 흔들리지 않습니다.
+  /* 갤러리 카드가 등장할 때 프레임이 멈춰 있어야 할 위치입니다(프레임 상단 기준 px).
+     카드 중심이 화면 중심에 오는 지점이라, 그 순간 카드 전체가 화면 안에 들어옵니다.
 
-     pinnedContainer가 반드시 필요합니다. 이 카드들은 위에서 pin되는 .showcase 안에 있어서,
-     지정하지 않으면 pin이 끼워 넣는 여백만큼 시작 지점이 앞으로 당겨집니다.
-     그러면 화면에 보이지도 않는 pin 구간에서 이미 애니메이션이 끝나 버립니다. */
-  function buildGalleryTimelines(gsap, showcase) {
-    var selectors = [
-      ".showcase_photo_c",
-      ".showcase_photo_d",
-      ".showcase_photo_e",
-      ".showcase_photo_f",
-      ".showcase_photo_g"
-    ];
+     누적 최댓값으로 단조 증가시킵니다. 시안 좌표상 뒤 카드가 앞 카드보다 위에 놓인
+     경우가 있어(d의 중심이 c보다 59px 위입니다) 그대로 쓰면 스크롤을 내리는데
+     프레임이 되올라갑니다. 그때는 앞 카드의 자리에 머문 채 다음 카드만 나타납니다. */
+  function galleryStops(cards, viewHeight, travel) {
+    var reached = 0;
 
-    selectors.forEach(function (selector, index) {
-      var card = document.querySelector(selector);
-      var image = card && card.querySelector("img");
+    return cards.map(function (card) {
+      var center = card.offsetTop + card.offsetHeight / 2;
+      var stop = Math.min(Math.max(center - viewHeight / 2, 0), travel);
 
-      if (!image) {
-        return;
+      reached = Math.max(reached, stop);
+      return reached;
+    });
+  }
+
+  /* showcase 전체를 하나의 pin 구간으로 만듭니다.
+
+     섹션은 3335px인데 화면은 1080px입니다. 그래서 예전처럼 섹션을 그대로 pin하면
+     위 1080px만 보이고 갤러리 다섯 장(프레임 좌표 y 1250~2808)은 pin이 끝날 때까지
+     한 번도 화면에 들어오지 못했습니다. pin이 풀린 뒤에야 등장이 시작되니
+     카드가 뜨는 동안 페이지가 계속 흘러 상단이 잘렸습니다.
+
+     여기서는 섹션을 화면 한 장 크기(`is_pinned`)로 줄여 창처럼 쓰고,
+     그 안에서 배경과 프레임을 스크롤 진행도에 맞춰 밀어 올립니다.
+     이동과 등장을 번갈아 두어, 카드가 뜨는 동안에는 프레임이 1px도 움직이지 않습니다.
+
+     시안 좌표·크기·간격은 하나도 바뀌지 않습니다. 프레임 안의 배치는 그대로이고
+     "언제 얼마나 올라가는가"만 스크롤이 정합니다. */
+  function buildShowcaseTimeline(gsap, showcase, cards, words) {
+    var frame = showcase.querySelector(".showcase_frame");
+    var backdrop = showcase.querySelector(".showcase_bg");
+
+    if (!frame) {
+      return;
+    }
+
+    var gallery = SHOWCASE_GALLERY
+      .map(function (selector) {
+        return showcase.querySelector(selector);
+      })
+      .filter(Boolean);
+
+    /* 배경(아치 + 그라디언트)과 프레임은 같은 만큼 움직여야 합니다.
+       프레임만 밀면 사진이 그라디언트 위를 미끄러져 시안의 색 배치가 어긋납니다. */
+    var stage = [backdrop, frame].filter(Boolean);
+
+    /* class가 섹션을 화면 한 장 크기로 줄입니다. 실제 창 높이는 그 뒤에 재야 맞습니다. */
+    showcase.classList.add("is_pinned");
+
+    var viewHeight = showcase.offsetHeight;
+    var travel = Math.max(0, frame.offsetHeight - viewHeight);
+    var stops = galleryStops(gallery, viewHeight, travel);
+
+    var timeline = gsap.timeline();
+
+    addIntro(gsap, timeline, cards, words);
+
+    var cursor = timeline.duration();
+    var offset = 0;
+
+    gallery.forEach(function (card, index) {
+      var image = card.querySelector("img");
+      var stop = stops[index];
+      var distance = stop - offset;
+
+      /* --- 이동: 다음 카드가 화면 가운데에 오도록 프레임을 밀어 올립니다 --- */
+      if (distance > 1) {
+        var moveLength = distance / GALLERY_TRAVEL_SPEED;
+
+        timeline.fromTo(
+          stage,
+          { y: -offset },
+          { y: -stop, ease: "none", duration: moveLength },
+          cursor
+        );
+
+        cursor += moveLength;
+        offset = stop;
       }
 
-      gsap
-        .timeline({
-          scrollTrigger: {
-            trigger: card,
-            pinnedContainer: showcase,
-            start: "top bottom-=40",
-            end: "top center+=80",
-            scrub: 1,
-            invalidateOnRefresh: true
-          }
-        })
-        .fromTo(
+      /* --- 등장: 이 구간에는 프레임 트윈이 없어 화면이 완전히 멈춰 있습니다 --- */
+      if (image) {
+        timeline.fromTo(
           image,
           { y: RISE_BASE + index * RISE_STEP, opacity: 0 },
-          { y: 0, opacity: 1, ease: "none", duration: 1 }
+          { y: 0, opacity: 1, ease: "power3.out", duration: GALLERY_HOLD },
+          cursor
         );
+      }
+
+      cursor += GALLERY_HOLD;
     });
+
+    /* 마지막 카드까지 끝나면 프레임 바닥이 화면 아래와 맞도록 내려갑니다.
+       pin이 풀리는 순간의 화면이 아래 archive 섹션과 자연스럽게 이어집니다. */
+    if (travel - offset > 1) {
+      var tailLength = (travel - offset) / GALLERY_TRAVEL_SPEED;
+
+      timeline.fromTo(
+        stage,
+        { y: -offset },
+        { y: -travel, ease: "none", duration: tailLength },
+        cursor
+      );
+
+      cursor += tailLength;
+    }
+
+    /* 빈 트윈이 곧 "머무는 구간"입니다. scrub은 타임라인 길이를 스크롤 길이에
+       비례해 나누므로, 길이를 더한 만큼 화면이 멈춰 있습니다. */
+    timeline.to({}, { duration: SHOWCASE_TAIL_HOLD }, cursor);
+
+    window.ScrollTrigger.create({
+      animation: timeline,
+      trigger: showcase,
+      start: "top top",
+      end: "+=" + Math.round(timeline.duration() * SHOWCASE_PX_PER_UNIT),
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true
+    });
+
+    /* 조건이 어긋나(창을 좁히거나 모션 감소로 바꾸면) matchMedia가 되돌릴 때
+       class와 인라인 transform을 함께 지웁니다. 그러면 3335px 원래 레이아웃입니다. */
+    return function () {
+      showcase.classList.remove("is_pinned");
+      gsap.set(stage, { clearProps: "transform" });
+    };
   }
 
   function initShowcaseScroll() {
@@ -508,15 +679,10 @@
     var words = splitQuoteWords();
 
     /* 이번 구현은 데스크톱 기준입니다. 1280px 미만과 모션 감소 설정에서는
-       인터랙션 없이 CSS 레이아웃 그대로 보입니다. matchMedia가 조건이 어긋나면
-       설정한 값을 알아서 되돌립니다. */
-    gsap.matchMedia().add(
-      "(min-width: 1280px) and (prefers-reduced-motion: no-preference)",
-      function () {
-        buildIntroTimeline(gsap, showcase, [cardA, cardB], words);
-        buildGalleryTimelines(gsap, showcase);
-      }
-    );
+       인터랙션 없이 CSS 레이아웃 그대로 보입니다. */
+    createRebuilder(gsap, function () {
+      return buildShowcaseTimeline(gsap, showcase, [cardA, cardB], words);
+    });
   }
 
   /* =========================================================
@@ -633,27 +799,26 @@
     };
   }
 
+  /* 연도를 바꿨을 때 한 번만 다시 날아드는 트윈. 아래 onUpdate가 들고 있어야 해서
+     함수 밖에 둡니다. 스크롤이 들어오면 즉시 끊깁니다. */
+  var archiveReplay = null;
+
   /* showcase 하단 갤러리와 같이 figure는 가만히 두고 안쪽 img만 움직입니다.
-     다른 점은 카드마다 트리거를 달지 않고 타임라인 하나에 stagger로 묶는다는 것입니다.
-     연도를 바꿀 때 처음부터 다시 재생해야 하는데, scrub 트리거는 값이 스크롤 위치에
-     묶여 있어 다시 재생할 수 없기 때문입니다. */
+
+     프레임(920px)이 화면(1080px)보다 작아 통째로 pin할 수 있습니다.
+     예전에는 pin 없이 `toggleActions: "play"`로 재생했습니다. 그러면 다섯 장이
+     1.65초에 걸쳐 날아드는 동안 페이지가 계속 스크롤돼 프레임이 위로 빠져나갔습니다
+     (스크롤 15500에서 프레임 top −119px, 첫 장 top −87px로 잘림).
+     이제 화면을 고정하고 스크롤 진행도가 곧 등장 진행도입니다 — 역스크롤도 역재생됩니다. */
   function buildArchiveTimeline(gsap, archive, images, enterVars) {
     /* stagger를 건 fromTo는 각 대상의 차례가 와야 from 값을 적용합니다.
        그래서 미리 넣어 두지 않으면 두 번째 사진부터는 트리거 전까지 제자리에 보이다가
        자기 차례에 갑자기 화면 밖으로 튀었다 다시 들어옵니다. */
     gsap.set(images, enterVars);
 
-    return gsap
-      .timeline({
-        scrollTrigger: {
-          trigger: archive,
-          start: ARCHIVE_START,
-          /* scrub이 아닙니다. 한 번 지나가면 재생하고, 그 뒤로는 스크롤이
-             값을 건드리지 않으므로 연도 전환 때 restart()로 다시 쓸 수 있습니다. */
-          toggleActions: "play none none none",
-          invalidateOnRefresh: true
-        }
-      })
+    var timeline = gsap.timeline();
+
+    timeline
       .fromTo(
         images,
         enterVars,
@@ -667,7 +832,33 @@
           duration: ARCHIVE_DURATION,
           stagger: ARCHIVE_STAGGER
         }
-      );
+      )
+      /* 빈 트윈이 곧 "머무는 구간"입니다. 마지막 장이 도착한 뒤에도 잠시 고정돼
+         다섯 장이 다 놓인 화면을 읽을 수 있습니다. */
+      .to({}, { duration: ARCHIVE_HOLD });
+
+    window.ScrollTrigger.create({
+      animation: timeline,
+      trigger: archive,
+      start: ARCHIVE_START,
+      end: "+=" + Math.round(timeline.duration() * ARCHIVE_PX_PER_UNIT),
+      pin: true,
+      pinSpacing: true,
+      scrub: 1,
+      anticipatePin: 1,
+      invalidateOnRefresh: true,
+      /* 연도 전환 다시보기가 도는 중에 스크롤이 들어오면 두 트윈이 같은 값을
+         서로 덮어씁니다. 스크롤 쪽을 진실로 삼고 다시보기를 끊습니다.
+         스크롤이 정하는 값은 언제나 올바른 상태라 화면이 튀지 않습니다. */
+      onUpdate: function () {
+        if (archiveReplay) {
+          archiveReplay.kill();
+          archiveReplay = null;
+        }
+      }
+    });
+
+    return timeline;
   }
 
   function initArchive() {
@@ -737,7 +928,11 @@
         fadeTween.kill();
       }
 
-      timeline.pause();
+      if (archiveReplay) {
+        archiveReplay.kill();
+        archiveReplay = null;
+      }
+
       fadeTween = window.gsap.to(images, {
         opacity: 0,
         duration: ARCHIVE_SWAP_FADE,
@@ -747,7 +942,25 @@
           applyYearPhotos(figures, year);
           /* invalidate()가 없으면 from 값이 첫 연도 배치 그대로 굳어 있습니다.
              기록해 둔 시작값을 버려야 위 함수형 값이 새 배치로 다시 계산됩니다. */
-          timeline.invalidate().restart();
+          timeline.invalidate();
+
+          /* scrub 타임라인은 값이 스크롤 위치에 묶여 있어 restart()로 다시 재생할 수
+             없습니다. 대신 같은 값을 한 번만 재생하는 트윈을 따로 만듭니다.
+             스크롤이 들어오면 위 onUpdate가 이 트윈을 끊고 스크롤 값이 이깁니다. */
+          window.gsap.set(images, enterVars);
+          archiveReplay = window.gsap.to(images, {
+            x: 0,
+            y: 0,
+            rotation: 0,
+            scale: 1,
+            opacity: 1,
+            ease: "power3.out",
+            duration: ARCHIVE_REPLAY_DURATION,
+            stagger: ARCHIVE_REPLAY_STAGGER,
+            onComplete: function () {
+              archiveReplay = null;
+            }
+          });
         }
       });
     }
@@ -763,19 +976,27 @@
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
-    gsap.matchMedia().add(
-      "(min-width: 1280px) and (prefers-reduced-motion: no-preference)",
-      function () {
-        timeline = buildArchiveTimeline(gsap, archive, images, enterVars);
+    createRebuilder(gsap, function () {
+      timeline = buildArchiveTimeline(gsap, archive, images, enterVars);
 
-        return function () {
-          timeline = null;
-          /* 연도 전환 fade는 이 context 밖에서 만들어져 자동 복구 대상이 아닙니다.
-             전환 도중 조건이 어긋나도 사진이 숨은 채 남지 않도록 직접 되돌립니다. */
-          gsap.set(images, { clearProps: "all" });
-        };
-      }
-    );
+      return function () {
+        timeline = null;
+
+        /* 연도 전환 fade와 다시보기는 이 context 밖에서 만들어져 자동 복구 대상이
+           아닙니다. 전환 도중 조건이 어긋나도 사진이 숨은 채 남지 않도록 직접 끕니다. */
+        if (fadeTween) {
+          fadeTween.kill();
+          fadeTween = null;
+        }
+
+        if (archiveReplay) {
+          archiveReplay.kill();
+          archiveReplay = null;
+        }
+
+        gsap.set(images, { clearProps: "all" });
+      };
+    });
   }
 
   /* =========================================================

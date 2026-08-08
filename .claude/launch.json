@@ -37,6 +37,17 @@
       "autoPort": false
     },
     {
+      "name": "tchaikimm_mac",
+      "runtimeExecutable": "/usr/local/bin/node",
+      "runtimeArgs": [
+        "/private/tmp/claude-501/-Users-yun-eunseon-Desktop-kbrand-tchaikimm/b615209c-6f0f-4895-8c92-257330c63445/scratchpad/serve.js",
+        "5615"
+      ],
+      "port": 5615,
+      "url": "http://localhost:5615",
+      "autoPort": false
+    },
+    {
       "name": "tchaikimm_node_2",
       "runtimeExecutable": "C:/Program Files/nodejs/node.exe",
       "runtimeArgs": [
