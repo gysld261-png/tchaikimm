@@ -16,27 +16,33 @@
      전체 속도가 같이 바뀌었습니다. 지금은 타임라인이 길이를 정합니다. */
   var SHOWCASE_PX_PER_UNIT = 380;
 
-  /* 갤러리 카드 한 장이 등장하는 타임라인 길이. 이 중 뒷부분에서는 프레임이
-     1px도 움직이지 않으므로 카드가 제자리에서 나타납니다. */
-  var GALLERY_HOLD = 0.62;
+  /* 갤러리 카드 한 장이 떠오르는 타임라인 길이. */
+  var GALLERY_REVEAL = 0.62;
 
-  /* 프레임을 안쪽에서 밀어 올리는 속도(px / 타임라인 1단위).
-     SHOWCASE_PX_PER_UNIT보다 크게 두면 "다음 카드로 넘어가는" 이동 구간이
-     짧아집니다. 이 구간에는 뜨는 카드가 없어서 길면 멈춘 것처럼 느껴집니다. */
-  var GALLERY_TRAVEL_SPEED = 880;
+  /* 프레임이 안쪽에서 올라가는 속도(px / 타임라인 1단위).
+     SHOWCASE_PX_PER_UNIT으로 나눈 값이 곧 "평소 스크롤 대비 배속"입니다
+     (520 / 380 = 1.37배). 이 값은 pin 구간 내내 일정합니다.
 
-  /* 이동이 끝나기 이만큼 전에 카드 등장을 시작합니다. 이동과 등장 사이의
-     이음매를 없애는 값입니다. 0으로 두면 "이동 → 딱 멈춤 → 등장"으로 끊깁니다.
-     이동보다 길 수는 없어 실제로는 이동 길이로 잘립니다. */
-  var GALLERY_LEAD = 0.3;
+     ★ 구간마다 다르게 두면 안 됩니다. 예전에는 "이동 → 정지 → 이동"으로 나누고
+     이동만 880(2.32배)으로 몰아쳤는데, 속도가 0과 2.32 사이를 계단처럼 오가서
+     스크롤이 뚝뚝 끊겨 보였습니다(pin 2454px 중 1360px이 완전 정지였습니다).
+     끊김은 속도의 크기가 아니라 속도가 갑자기 바뀌는 데서 옵니다. */
+  var GALLERY_TRAVEL_SPEED = 520;
 
-  /* 인트로가 끝나기 이만큼 전에 갤러리 이동을 시작합니다.
-     상단 두 장이 물러나는 동안 프레임이 이미 움직이기 시작해,
-     인트로와 갤러리 사이에 아무 일도 없는 구간이 생기지 않습니다. */
-  var INTRO_HANDOFF = 0.75;
+  /* 카드가 제자리에 서는 지점 사이의 최소 간격(px).
+     시안 좌표상 d의 중심이 c보다 59px 위라, 이 값이 없으면 두 장이 같은 지점에서
+     동시에 떠 버립니다. 한 장씩 차례로 보이게 하는 값입니다. */
+  var GALLERY_MIN_GAP = 150;
 
-  /* 마지막 카드까지 끝나고 pin이 풀리기 전까지 머무는 길이. */
-  var SHOWCASE_TAIL_HOLD = 0.25;
+  /* 좌우 카드가 날아 들어오기 시작하는 지점. pin 구간 밖이라 이 구간의 스크롤
+     속도는 평소와 같은 1배입니다. 끝은 항상 "top top"(= pin 시작 지점)이라
+     카드가 다 앉는 순간 곧바로 pin으로 넘어갑니다.
+     늦추고 싶으면 "top bottom-=200"처럼 줄이면 됩니다. */
+  var INTRO_ENTER_START = "top bottom";
+
+  /* 마지막 카드까지 끝나고 pin이 풀리기 전까지 머무는 길이.
+     이 구간만 속도가 0이라 길게 잡으면 끝에서 한 번 걸리는 느낌이 납니다. */
+  var SHOWCASE_TAIL_HOLD = 0.15;
 
   /* 스크롤 진행도에 맞춰 프레임 안에서 차례로 등장하는 갤러리 카드입니다.
      배열 순서가 곧 등장 순서입니다. */
@@ -69,20 +75,28 @@
   var ENTER_TILT_RATIO = 2.2;
   var EXIT_TILT_RATIO = 0.13;
 
-  /* 단어 연출. STAGGER가 클수록 "한 단어씩" 끊어져 올라오는 느낌이 또렷해집니다. */
+  /* 단어 연출. STAGGER가 클수록 "한 단어씩" 끊어져 올라오는 느낌이 또렷해집니다.
+
+     ★ 올릴 때는 문장이 화면 밖으로 나가기 전에 다 뜨는지 확인해야 합니다.
+     문장은 프레임 y 712에 있고 pin이 시작되면 프레임이 1.37배로 올라가므로,
+     단어가 늦게 뜰수록 문장 블록이 화면 위쪽으로 밀립니다.
+     0.16이었을 때 자매 페이지(단어 7개)에서 마지막 단어가 뜨는 순간
+     문장 top이 11px까지 올라갔습니다 — 화면이 조금만 낮아도 잘립니다.
+     0.12면 단어가 5개일 때 top 254, 7개일 때 130으로 여유가 있습니다. */
   var WORD_SLIDE = 64;
   var WORD_DURATION = 0.4;
-  var WORD_STAGGER = 0.16;
+  var WORD_STAGGER = 0.12;
 
-  /* 타임라인 위에서 각 박자가 시작하는 지점.
+  /* CARD_B_DELAY는 등장 타임라인(pin 밖) 기준,
+     WORDS_START / EXIT_START는 pin 타임라인 기준입니다.
 
-     EXIT_START는 상단 두 장이 안착하는 지점(B가 1.08)의 바로 뒤여야 합니다.
-     예전 값 1.55는 두 장이 다 뜬 뒤 0.47(약 241px) 동안 아무것도 하지 않아
-     "카드 두 장 뜨고 멈춘다"고 느껴졌습니다. */
+     pin이 시작되는 순간 좌우 카드는 이미 제자리에 앉아 있습니다. 그래서 문장과
+     퇴장이 pin의 맨 앞에서 바로 시작합니다. 여기서 지체하면 그만큼
+     "화면이 멈춘 채 기다리는" 구간이 됩니다. */
   var CARD_B_DELAY = 0.08;
-  var WORDS_START = 0.55;
-  var EXIT_START = 1.2;
-  var EXIT_DURATION = 1.15;
+  var WORDS_START = 0;
+  var EXIT_START = 0.15;
+  var EXIT_DURATION = 1;
 
   /* 하단 갤러리 카드가 떠오르는 기본 거리(px). 카드마다 STEP만큼 더해 패럴랙스를 만듭니다. */
   var RISE_BASE = 110;
@@ -417,12 +431,18 @@
     return "blur(" + blur + "px) brightness(" + brightness + ")";
   }
 
-  /* 상단 두 장은 세 박자로 움직입니다.
-     1박자 — 화면 양 끝 바깥에서 시안 자리로 날아 들어와 안착
-     2박자 — 가운데 문장이 한 단어씩 차례로 상승
-     3박자 — 두 장이 중앙으로 모이며 커지고, 흐려지고 밝아지며 물러남
-     2·3박자를 겹쳐 두어 사진이 물러나는 동안 문장이 자리를 넘겨받습니다. */
-  function addIntro(gsap, timeline, cards, words) {
+  /* --- 1박자: 좌우 카드 등장 ---
+
+     ★ 이 박자만 pin 구간 밖, 섹션이 화면으로 올라오는 평범한 스크롤 구간에서
+     재생됩니다. pin 안에 두면 화면이 멈춘 상태에서 카드가 들어와
+     "스크롤이 뚝 멈추고 카드가 나타나는" 느낌이 납니다(사용자 지적).
+
+     여기서는 섹션 윗변이 화면 아래에서 화면 위까지 올라오는 동안(화면 한 장 분량)
+     두 장이 좌우 바깥에서 시안 자리로 날아 들어옵니다. 그 구간의 스크롤 속도는
+     평소와 똑같은 1배이고, 카드가 다 앉는 순간이 곧 pin이 시작되는 지점입니다.
+
+     프레임은 이 구간 내내 offset 0이라 카드가 시안 좌표(247 / 315) 그대로 앉습니다. */
+  function buildIntroEntrance(gsap, showcase, cards) {
     var cardA = cards[0];
     var cardB = cards[1];
     var imageA = cardA.querySelector("img");
@@ -432,8 +452,9 @@
        showcase_frame의 다른 사진들까지 3D 맥락에 들어갑니다. */
     gsap.set([imageA, imageB], { transformPerspective: PERSPECTIVE });
 
+    var timeline = gsap.timeline();
+
     timeline
-      /* --- 1박자: 등장 --- */
       .fromTo(
         cardA,
         {
@@ -486,8 +507,32 @@
         { rotationY: -ENTER_TURN, rotation: TILT_B * ENTER_TILT_RATIO },
         { rotationY: 0, rotation: TILT_B, ease: "power3.out", duration: 1 },
         CARD_B_DELAY
-      )
+      );
 
+    window.ScrollTrigger.create({
+      animation: timeline,
+      trigger: showcase,
+      start: INTRO_ENTER_START,
+      /* pin이 시작되는 바로 그 지점에서 끝납니다. 두 구간이 빈틈 없이 이어집니다. */
+      end: "top top",
+      scrub: 1,
+      invalidateOnRefresh: true
+    });
+  }
+
+  /* --- 2박자: 문장 / 3박자: 좌우 카드 퇴장 ---
+     이 둘은 pin 안에서 프레임이 흐르는 동안 함께 재생됩니다.
+
+     `to`가 아니라 `fromTo`입니다. 등장이 다른 트리거에 있어서, `to`로 두면
+     시작값을 언제 기록하느냐에 따라(빠르게 스크롤하거나 refresh가 겹치면)
+     등장 도중의 값이 시작값으로 굳을 수 있습니다. */
+  function addIntroBody(gsap, timeline, cards, words) {
+    var cardA = cards[0];
+    var cardB = cards[1];
+    var imageA = cardA.querySelector("img");
+    var imageB = cardB.querySelector("img");
+
+    timeline
       /* --- 2박자: 단어가 하나씩 --- */
       .fromTo(
         words,
@@ -503,8 +548,15 @@
       )
 
       /* --- 3박자: 중앙으로 모이며 물러남 --- */
-      .to(
+      .fromTo(
         [cardA, cardB],
+        {
+          x: 0,
+          y: 0,
+          scale: 1,
+          opacity: 1,
+          filter: filterOf(0, 1)
+        },
         {
           x: function (index, target) {
             return convergeDistance(target);
@@ -518,8 +570,9 @@
         },
         EXIT_START
       )
-      .to(
+      .fromTo(
         imageA,
+        { rotationY: 0, rotation: TILT_A },
         {
           rotationY: -EXIT_TURN,
           rotation: TILT_A * EXIT_TILT_RATIO,
@@ -528,8 +581,9 @@
         },
         EXIT_START
       )
-      .to(
+      .fromTo(
         imageB,
+        { rotationY: 0, rotation: TILT_B },
         {
           rotationY: EXIT_TURN,
           rotation: TILT_B * EXIT_TILT_RATIO,
@@ -540,21 +594,33 @@
       );
   }
 
-  /* 갤러리 카드가 등장할 때 프레임이 멈춰 있어야 할 위치입니다(프레임 상단 기준 px).
-     카드 중심이 화면 중심에 오는 지점이라, 그 순간 카드 전체가 화면 안에 들어옵니다.
+  /* 카드가 "다 뜬 순간" 프레임이 놓여 있어야 할 위치입니다(프레임 상단 기준 px).
+     프레임은 멈추지 않고 계속 올라가므로, 이 값은 멈추는 자리가 아니라
+     등장이 끝나는 시점을 정하는 기준입니다.
 
-     누적 최댓값으로 단조 증가시킵니다. 시안 좌표상 뒤 카드가 앞 카드보다 위에 놓인
-     경우가 있어(d의 중심이 c보다 59px 위입니다) 그대로 쓰면 스크롤을 내리는데
-     프레임이 되올라갑니다. 그때는 앞 카드의 자리에 머문 채 다음 카드만 나타납니다. */
-  function galleryStops(cards, viewHeight, travel) {
-    var reached = 0;
+     기본값은 카드 중심이 화면 중심에 오는 지점이고, 거기에 두 가지를 겁니다.
+     1. 앞 카드보다 최소 GALLERY_MIN_GAP만큼 뒤 — 한 장씩 차례로 뜨게 합니다.
+     2. 그 지점에서 카드의 위끝과 아래끝이 모두 화면 안 — [아래끝 − 화면높이, 위끝]
+        범위를 벗어나면 다 뜬 순간에 잘립니다. 이 범위가 위쪽 잘림을 막는 안전장치입니다. */
+  function galleryRestOffsets(cards, viewHeight, travel) {
+    var previous = 0;
 
     return cards.map(function (card) {
-      var center = card.offsetTop + card.offsetHeight / 2;
-      var stop = Math.min(Math.max(center - viewHeight / 2, 0), travel);
+      var top = card.offsetTop;
+      var bottom = top + card.offsetHeight;
+      var rest = top + card.offsetHeight / 2 - viewHeight / 2;
 
-      reached = Math.max(reached, stop);
-      return reached;
+      rest = Math.max(rest, previous + GALLERY_MIN_GAP);
+      /* 화면 안에 들어오는 범위로 자릅니다. 카드가 화면보다 크면 위끝을 우선합니다
+         (아래가 조금 넘치는 것보다 위가 잘리는 쪽이 눈에 띕니다). */
+      rest = Math.min(rest, top);
+      rest = Math.max(rest, Math.min(bottom - viewHeight, top));
+      rest = Math.min(Math.max(rest, 0), travel);
+
+      /* 위 자르기가 순서를 뒤집을 수 있어 마지막에 다시 단조 증가로 맞춥니다. */
+      rest = Math.max(rest, previous);
+      previous = rest;
+      return rest;
     });
   }
 
@@ -594,74 +660,54 @@
 
     var viewHeight = showcase.offsetHeight;
     var travel = Math.max(0, frame.offsetHeight - viewHeight);
-    var stops = galleryStops(gallery, viewHeight, travel);
+    var rests = galleryRestOffsets(gallery, viewHeight, travel);
+
+    /* 좌우 카드 등장은 pin 밖(섹션이 올라오는 평범한 스크롤 구간)에서 끝납니다. */
+    buildIntroEntrance(gsap, showcase, cards);
 
     var timeline = gsap.timeline();
 
-    addIntro(gsap, timeline, cards, words);
+    addIntroBody(gsap, timeline, cards, words);
 
-    /* 인트로가 끝나기 전에 갤러리를 시작합니다. 상단 두 장이 물러나는 동안
-       프레임이 이미 움직이기 시작해 두 구간이 한 줄기로 이어집니다. */
-    var cursor = Math.max(timeline.duration() - INTRO_HANDOFF, 0);
-    var offset = 0;
+    /* ★ 프레임은 pin의 첫 픽셀부터 흐릅니다. 예전에는 인트로가 다 끝날 때까지
+       기다렸는데(600px), 그 구간 내내 속도가 0이라 "스크롤이 멈췄다"고 느껴졌습니다. */
+    var travelStart = 0;
+    var travelLength = travel / GALLERY_TRAVEL_SPEED;
 
-    gallery.forEach(function (card, index) {
-      var image = card.querySelector("img");
-      var stop = stops[index];
-      var distance = stop - offset;
-      var lead = 0;
-
-      /* --- 이동: 다음 카드가 화면 가운데에 오도록 프레임을 밀어 올립니다 --- */
-      if (distance > 1) {
-        var moveLength = distance / GALLERY_TRAVEL_SPEED;
-
-        timeline.fromTo(
-          stage,
-          { y: -offset },
-          { y: -stop, ease: "none", duration: moveLength },
-          cursor
-        );
-
-        cursor += moveLength;
-        offset = stop;
-
-        /* 이동이 다 끝나기를 기다리지 않고 조금 일찍 등장을 겁니다.
-           이동보다 길게 잡을 수는 없습니다(앞 카드의 등장을 침범합니다). */
-        lead = Math.min(GALLERY_LEAD, moveLength);
-      }
-
-      /* --- 등장 ---
-         겹치는 구간에서도 위쪽이 잘리지 않습니다. 프레임은 위로 올라가는 중이라
-         카드는 늘 아래에서 올라오며 나타나고, 이동이 끝나는 지점이 곧 카드가
-         화면 한가운데에 서는 자리입니다. 그 뒤로는 프레임이 멈춰 있습니다. */
-      var revealAt = cursor - lead;
-
-      if (image) {
-        timeline.fromTo(
-          image,
-          { y: RISE_BASE + index * RISE_STEP, opacity: 0 },
-          { y: 0, opacity: 1, ease: "power3.out", duration: GALLERY_HOLD },
-          revealAt
-        );
-      }
-
-      cursor = revealAt + GALLERY_HOLD;
-    });
-
-    /* 마지막 카드까지 끝나면 프레임 바닥이 화면 아래와 맞도록 내려갑니다.
-       pin이 풀리는 순간의 화면이 아래 archive 섹션과 자연스럽게 이어집니다. */
-    if (travel - offset > 1) {
-      var tailLength = (travel - offset) / GALLERY_TRAVEL_SPEED;
-
+    /* ★ 프레임은 트윈 하나로 처음부터 끝까지 일정한 속도로 올라갑니다.
+       구간을 나눠 "이동 → 정지 → 이동"으로 만들면 스크롤 대비 속도가
+       0과 2.32배 사이를 계단처럼 오가서 뚝뚝 끊겨 보입니다(실제로 그랬습니다).
+       ease도 반드시 "none"입니다. 다른 이징을 주면 구간 안에서 속도가 변합니다. */
+    if (travel > 1) {
       timeline.fromTo(
         stage,
-        { y: -offset },
-        { y: -travel, ease: "none", duration: tailLength },
-        cursor
+        { y: 0 },
+        { y: -travel, ease: "none", duration: travelLength },
+        travelStart
       );
-
-      cursor += tailLength;
     }
+
+    /* 등장은 그 흐름 위에 얹힙니다. 프레임을 멈추지 않으므로 카드는 올라오는
+       도중에 떠오르고, 다 뜨는 순간 rest 위치에 정확히 놓입니다.
+       그 순간 카드가 화면 안에 있다는 것은 galleryRestOffsets가 보장합니다. */
+    gallery.forEach(function (card, index) {
+      var image = card.querySelector("img");
+
+      if (!image) {
+        return;
+      }
+
+      var restAt = travelStart + rests[index] / GALLERY_TRAVEL_SPEED;
+
+      timeline.fromTo(
+        image,
+        { y: RISE_BASE + index * RISE_STEP, opacity: 0 },
+        { y: 0, opacity: 1, ease: "power3.out", duration: GALLERY_REVEAL },
+        Math.max(restAt - GALLERY_REVEAL, 0)
+      );
+    });
+
+    var cursor = travelStart + travelLength;
 
     /* 빈 트윈이 곧 "머무는 구간"입니다. scrub은 타임라인 길이를 스크롤 길이에
        비례해 나누므로, 길이를 더한 만큼 화면이 멈춰 있습니다. */
