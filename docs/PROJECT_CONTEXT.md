@@ -1,6 +1,49 @@
 # Tchai Kim 현재 상태
 
 
+## 공통 헤더/푸터 경로 점검 — 루트 절대경로 없음 (2026-08-08)
+
+헤더 작업 전에 "어느 PC/어느 배포 경로에서 열어도 헤더가 뜨는지"를 전수 확인했습니다.
+
+**코드는 이미 전부 상대경로입니다.** `href="/`, `src="/`, `url(/`, `data-component="/`
+검색 결과 저장소 전체에서 **0건**입니다. 슬롯·공통 CSS/JS는 `../../common/...`,
+컴포넌트 안의 로고·아이콘은 `../../asset/...` / `../../common/assets/...`입니다.
+
+- 경로 해석 전수 검사: **10개 페이지 × (슬롯 2개 + 컴포넌트 내부 12개 경로) 전부 실제
+  파일로 해석됨.** (`pages/yultest/index.html`은 빈 껍데기라 슬롯 없음)
+- **하위 경로 배포 검증**: 상위 폴더를 서빙해 사이트를 `/tchaikimm/` 아래에 두고
+  (GitHub Pages `/저장소이름/`과 같은 상황) main · shop · col_chaikim ·
+  bespoke/reservation_done · yultest_move 다섯 페이지를 열었습니다.
+  **다섯 페이지 모두 헤더·푸터 주입 성공, 로고 로드 성공, 깨진 이미지 0장.**
+  로고가 `/tchaikimm/asset/logos/header_logo-02.svg`로, 메뉴 링크가
+  `/tchaikimm/pages/shop/index.html`로 해석됐습니다 — 루트였다면 전부 404 날 자리입니다.
+
+### 고친 것: 문서만 루트로 적혀 있었습니다
+
+`docs/COMMON_SYSTEM.md`의 헤더/푸터 슬롯 예제가 `data-component="/common/components/header.html"`
+였습니다. **코드는 `../../`인데 문서만 `/`**였고, 이걸 보고 새 페이지를 만들면 하위 경로
+배포에서 헤더가 사라집니다. 예제를 상대경로로 고치고 금지 규칙을 명시했습니다.
+
+### 헤더 작업 전에 알아야 할 제약
+
+- **컴포넌트 안의 경로는 컴포넌트 파일이 아니라 "불러가는 페이지" 기준으로 풀립니다.**
+  `fetch` 후 `innerHTML` 주입이라 그렇습니다.
+- **그래서 모든 페이지는 `pages/<페이지>/` 한 단계 깊이여야 합니다.**
+  `common/js/common.js`의 `HEADER_LOGO_BLACK`(96행) / `HEADER_LOGO_WHITE`(97행)도
+  `../../asset/logos/...`로 고정입니다. 저장소 루트의 `index.html`이나
+  `pages/shop/detail/` 같은 다른 깊이에 페이지를 만들면 **헤더 로고·아이콘이 깨집니다.**
+  깊이를 바꾸려면 `header.html`·`footer.html`과 `common.js` 로고 상수를 같이 고쳐야 합니다.
+- 저장소 루트에는 아직 `index.html`이 없습니다(`index_origin.html`만 있음).
+  배포용 루트 진입 페이지를 만들 때 위 깊이 제약에 걸립니다.
+
+### 확인하지 못한 부분
+
+- `file://`로 직접 여는 경우는 여전히 헤더가 뜨지 않습니다. `fetch`가 막히기 때문이며
+  경로와 무관한 제약입니다(문서에 이미 명시돼 있음).
+- 실제 배포 서버(GitHub Pages 등)에서의 확인은 하지 못했습니다. 로컬에서 하위 경로
+  상황을 재현해 검증한 것입니다.
+
+
 ## yultest_move detail — 헤더와 사진 사이 여백 축소 (2026-08-08)
 
 `.detail_head`와 `.detail_img`가 520.8px(1920 기준)이나 떨어져 있어 한 섹션으로

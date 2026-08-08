@@ -75,7 +75,7 @@ Add page and header-variant settings to the body:
 Load the header with this slot:
 
 ```html
-<div class="common_header_slot" data-component="/common/components/header.html">
+<div class="common_header_slot" data-component="../../common/components/header.html">
   <span class="a11y_hidden">Loading header</span>
 </div>
 ```
@@ -85,12 +85,29 @@ Load the header with this slot:
 Each page loads it with this slot:
 
 ```html
-<div class="common_footer_slot" data-component="/common/components/footer.html">
+<div class="common_footer_slot" data-component="../../common/components/footer.html">
   <span class="a11y_hidden">Loading footer</span>
 </div>
 ```
 
 The slot requires an HTTP server. Opening an HTML file directly with `file://` will not load the footer.
+
+### 경로 규칙 — 루트 절대경로(`/common/...`)를 쓰지 않습니다
+
+**슬롯 경로, 공통 CSS·JS, `header.html`·`footer.html` 안의 모든 `src`·`href`는 상대경로여야
+합니다.** 루트로 쓰면 사이트가 도메인 최상위에 있을 때만 동작하고, GitHub Pages처럼
+`/저장소이름/` 아래에 배포하거나 다른 사람이 다른 폴더 구조에서 열면 전부 404가 됩니다.
+현재 저장소에는 루트 절대경로가 한 곳도 없습니다.
+
+- **`header.html`·`footer.html` 안의 경로는 그 파일이 아니라 "불러가는 페이지" 기준으로
+  풀립니다.** 컴포넌트가 `fetch` 후 `innerHTML`로 주입되기 때문입니다. 그래서 컴포넌트
+  안에 `../../asset/...`이라고 적으면 `common/components/` 기준이 아니라
+  `pages/<페이지>/` 기준으로 해석됩니다.
+- **그 결과 모든 페이지는 `pages/<페이지>/` 한 단계 깊이에 있어야 합니다.**
+  `common/js/common.js`의 `HEADER_LOGO_BLACK` / `HEADER_LOGO_WHITE`도 같은 이유로
+  `../../asset/logos/...`로 고정돼 있습니다. 깊이가 다른 곳(저장소 루트의 `index.html`,
+  `pages/shop/detail/` 같은 하위 폴더)에 페이지를 만들면 **헤더 로고와 아이콘이 깨집니다.**
+  깊이를 바꿔야 한다면 컴포넌트 두 개와 `common.js`의 로고 상수를 같이 고쳐야 합니다.
 
 ## Shared JavaScript behaviors
 
