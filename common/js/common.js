@@ -93,8 +93,8 @@
     });
   }
 
-  var HEADER_LOGO_BLACK = "/asset/logos/header_logo-01.svg";
-  var HEADER_LOGO_WHITE = "/asset/logos/header_logo-02.svg";
+  var HEADER_LOGO_BLACK = "../../asset/logos/header_logo-01.svg";
+  var HEADER_LOGO_WHITE = "../../asset/logos/header_logo-02.svg";
 
   // data-header-variant로 정한 페이지 기본값. 배경색을 읽지 못할 때 여기로 돌아갑니다.
   var pageHeaderTheme = "white";
