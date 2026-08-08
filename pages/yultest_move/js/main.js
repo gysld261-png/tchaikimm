@@ -15,6 +15,21 @@
 
   gsap.registerPlugin(ScrollTrigger);
 
+  /* 페이지 안 이미지·웹폰트가 스크립트 실행 이후에 늦게 로드되면(특히 큰 사진들,
+     Trirong/Montserrat 웹폰트 교체), 그 아래 섹션들의 실제 위치가 ScrollTrigger가
+     처음 계산해 둔 값보다 밀려서 pin 시작 지점이 어긋나는 문제가 있었습니다
+     (brand_word_pin이 실제보다 이른 스크롤 위치에서 고정되어 다른 섹션 위에
+     겹쳐 보임). window의 load 이벤트는 웹폰트 교체를 기다려주지 않으므로
+     document.fonts.ready까지 함께 기다렸다가 다시 계산해 이 오차를 없앱니다. */
+  window.addEventListener("load", function () {
+    ScrollTrigger.refresh();
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      ScrollTrigger.refresh();
+    });
+  }
+
   /* ---------------------------------------------------------
      model — 스크롤을 5초 영상의 90% 지점까지 연결합니다.
      마지막 빈 프레임으로 넘어가지 않고 시안의 정면 자세에서 멈춥니다.
@@ -28,43 +43,66 @@
       return;
     }
 
-    function handleModelMetadata() {
-      var endTime = video.duration * 0.9;
+    video.pause();
 
-      video.pause();
+    function seekToRestPose() {
+      video.currentTime = video.duration * 0.9;
+    }
 
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-        video.currentTime = endTime;
-        return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (video.readyState >= 1) {
+        seekToRestPose();
+      } else {
+        video.addEventListener("loadedmetadata", seekToRestPose, { once: true });
       }
-
-      var timeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: function () {
-            return "+=" + window.innerHeight * 3;
-          },
-          pin: true,
-          scrub: 0.2,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          fastScrollEnd: true
-        }
-      });
-
-      timeline
-        .to(text, { autoAlpha: 0, y: -20, duration: 0.15, ease: "none" }, 0)
-        .to(video, { currentTime: endTime, duration: 0.85, ease: "none" }, 0.15);
-
-      ScrollTrigger.refresh();
+      return;
     }
 
-    if (video.readyState >= 1) {
-      handleModelMetadata();
-    } else {
-      video.addEventListener("loadedmetadata", handleModelMetadata, { once: true });
-    }
+    /* ★ 이 핀은 반드시 "동기적으로" 만들어야 합니다.
+       원래는 video.duration을 알아야 해서 loadedmetadata를 기다린 뒤에
+       만들었는데, 그러면 핀이 늦게 생기면서 pin-spacer(화면 높이 3배)가
+       뒤늦게 문서에 끼어들어 아래 섹션들이 그만큼 밀립니다. 그때는 이미
+       brand_word_pin의 트리거가 계산을 끝낸 뒤라 시작 지점이 화면 높이
+       3배만큼 이르게 굳어버렸고, 그 결과 brand_story(배너) 위에 "TCHAI"가
+       겹쳐 보였습니다. 영상이 캐시된 상태(readyState >= 1)에서는 동기적으로
+       만들어져 버그가 안 보이는 탓에 재현이 들쭉날쭉했습니다.
+       그래서 핀은 처음부터 만들고, duration이 필요한 재생 위치 계산만
+       매 프레임 그때의 값으로 미룹니다. */
+    var modelPlayhead = { progress: 0 };
+
+    var timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top top",
+        end: function () {
+          return "+=" + window.innerHeight * 3;
+        },
+        pin: true,
+        scrub: 0.2,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        fastScrollEnd: true
+      }
+    });
+
+    timeline
+      .to(text, { autoAlpha: 0, y: -20, duration: 0.15, ease: "none" }, 0)
+      .to(
+        modelPlayhead,
+        {
+          progress: 1,
+          duration: 0.85,
+          ease: "none",
+          onUpdate: function () {
+            /* 메타데이터가 아직 안 왔으면 duration이 NaN이라 건너뜁니다. */
+            if (!video.duration) {
+              return;
+            }
+            video.currentTime = video.duration * 0.9 * modelPlayhead.progress;
+          }
+        },
+        0.15
+      );
   })();
 
   gsap.matchMedia().add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", function () {

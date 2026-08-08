@@ -278,6 +278,10 @@
   height: 100vh;
   min-height: 600px;
   overflow: hidden;
+  /* 고정(pin)되는 동안 배경이 비어 있으면 뒤에 있는 다른 섹션이 그대로
+     비쳐서 글자와 겹쳐 보입니다. 시안에서도 이 구간은 크림 배경이라
+     페이지 기본 배경색으로 확실히 덮어둡니다. */
+  background-color: var(--color_bg);
 }
 
 .brand_word_pin.is_pinned .brand_word,
@@ -605,6 +609,7 @@
   display: block;
   width: 100%;
   height: auto;
+  aspect-ratio: 4380 / 1905;
 }
 
 /* 부위별 호버/포커스 영역 — Figma에 없는, 이번 통합을 위해 새로 정한 영역입니다 */
