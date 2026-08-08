@@ -303,6 +303,33 @@
   var MOBILE_REVEAL_DURATION = 0.75;
   var MOBILE_REVEAL_STAGGER = 0.09;
 
+  /* =========================================================
+     archive 카드 덱 조절값 (1279px 이하)
+     ========================================================= */
+
+  /* 뒤로 한 장 갈 때마다 위로 올라가는 거리(px)와 줄어드는 비율,
+     그리고 흐려지는 정도입니다.
+
+     ★ 예전 값(46 / 0.075 / 0.24)은 뒤 카드가 거의 보이지 않았습니다
+     (사용자 지적: "카드가 쌓이면 안 보여"). 세 가지를 함께 고쳤습니다.
+     1. 위로 더 많이 올려 위쪽이 더 드러나게(46 → 56)
+     2. 덜 흐려지게(0.24 → 0.15) — 세 장 뒤도 0.55는 남습니다
+     3. 카드 자체를 짧게(css의 --archive_card_h) — 같은 56px이라도
+        카드가 짧으면 드러나는 비율이 커집니다 */
+  var DECK_STEP_Y = 48;
+  var DECK_STEP_SCALE = 0.06;
+  /* ★ 0입니다. 레퍼런스의 뒤 카드는 흐려지지 않고 그대로 보입니다 —
+     반투명하면 앞뒤 사진이 서로 비쳐 지저분해집니다(실제로 그렇게 보였습니다).
+     깊이는 크기 차이와 그림자로만 만듭니다. */
+  var DECK_STEP_FADE = 0;
+
+  /* 뒤에 몇 장까지 보일지. 이보다 뒤는 맨 뒤 카드와 같은 자리에 숨습니다.
+     레퍼런스도 앞 카드 + 뒤 두 장까지만 보입니다. */
+  var DECK_VISIBLE_DEPTH = 2;
+
+  /* 이만큼(px) 위로 밀면 다음 장으로 넘어갑니다. */
+  var DECK_SWIPE_THRESHOLD = 56;
+
   /* 요소 윗변이 화면의 이 지점에 닿으면 시작합니다.
      88%는 "화면에 막 들어온 직후"라, 다 뜬 모습을 충분히 읽을 수 있습니다. */
   var MOBILE_REVEAL_START = "top 88%";
@@ -997,6 +1024,11 @@
       }
     );
 
+    /* 카드 덱(1279px 이하)이 첫 장으로 돌아가도록 알립니다. */
+    function notifyYearChange() {
+      archive.dispatchEvent(new CustomEvent("archive_year_change"));
+    }
+
     function handleYearClick(event) {
       var button = event.currentTarget;
       var year = button.getAttribute("data-year");
@@ -1010,6 +1042,7 @@
 
       if (!timeline) {
         applyYearPhotos(figures, year);
+        notifyYearChange();
         return;
       }
 
@@ -1037,6 +1070,7 @@
         onComplete: function () {
           fadeTween = null;
           applyYearPhotos(figures, year);
+          notifyYearChange();
           /* invalidate()가 없으면 from 값이 첫 연도 배치 그대로 굳어 있습니다.
              기록해 둔 시작값을 버려야 위 함수형 값이 새 배치로 다시 계산됩니다. */
           timeline.invalidate();
@@ -1094,6 +1128,133 @@
         gsap.set(images, { clearProps: "all" });
       };
     });
+  }
+
+  /* =========================================================
+     archive 카드 덱 — 위로 밀어 넘기기 (1279px 이하)
+     ========================================================= */
+
+  /* GSAP을 쓰지 않습니다. 상태가 "몇 번째 장인가" 하나뿐이고 자리 이동은
+     CSS 커스텀 속성 + transition으로 충분합니다. 스크롤과도 무관해
+     모션 감소 설정이나 GSAP 로드 실패와 관계없이 항상 넘길 수 있습니다.
+
+     데스크톱에서는 다섯 장이 시안 좌표에 흩어져 있어 덱이 아닙니다.
+     그래서 커스텀 속성을 쓰되, 그 속성을 읽는 CSS 규칙이 반응형 블록 안에만
+     있습니다 — 데스크톱에서는 아무 영향이 없습니다. */
+  function initArchiveDeck() {
+    var archive = document.querySelector(".archive");
+    var deck = archive && archive.querySelector(".archive_deck");
+
+    if (!deck) {
+      return;
+    }
+
+    var indexLabel = deck.querySelector(".archive_deck_index");
+    var totalLabel = deck.querySelector(".archive_deck_total");
+    var current = 0;
+
+    /* 그 해에 사진이 네 장뿐인 경우가 있어(col_chaikim 2021) 매번 다시 셉니다. */
+    function activeCards() {
+      return Array.prototype.slice
+        .call(deck.querySelectorAll(".archive_photo"))
+        .filter(function (card) {
+          return !card.classList.contains("is_empty");
+        });
+    }
+
+    function layout() {
+      var cards = activeCards();
+
+      if (cards.length === 0) {
+        return;
+      }
+
+      current = Math.min(current, cards.length - 1);
+
+      cards.forEach(function (card, index) {
+        /* 현재 장을 0으로 두고 뒤로 갈수록 depth가 커집니다. 끝까지 가면
+           앞쪽으로 감아 "다음 장"이 항상 뒤에서 나옵니다. */
+        var depth = (index - current + cards.length) % cards.length;
+        var capped = Math.min(depth, DECK_VISIBLE_DEPTH);
+
+        card.style.setProperty("--archive_deck_y", -DECK_STEP_Y * capped + "px");
+        card.style.setProperty("--archive_deck_scale", 1 - DECK_STEP_SCALE * capped);
+        card.style.setProperty("--archive_deck_opacity",
+          Math.max(1 - DECK_STEP_FADE * capped, 0));
+        /* 앞 장이 위에 오도록 z를 뒤집습니다. */
+        card.style.setProperty("--archive_deck_z", cards.length - depth);
+
+        card.classList.toggle("is_active", depth === 0);
+        /* 뒤 장은 읽기 도구에서 뺍니다 — 같은 자리에 겹쳐 있어 순서가 없습니다. */
+        if (depth === 0) {
+          card.removeAttribute("aria-hidden");
+        } else {
+          card.setAttribute("aria-hidden", "true");
+        }
+      });
+
+      if (indexLabel) {
+        indexLabel.textContent = String(current + 1);
+      }
+
+      if (totalLabel) {
+        totalLabel.textContent = "/ " + cards.length;
+      }
+    }
+
+    function move(step) {
+      var cards = activeCards();
+
+      if (cards.length === 0) {
+        return;
+      }
+
+      current = ((current + step) % cards.length + cards.length) % cards.length;
+      layout();
+    }
+
+    /* --- 위로 밀어 넘기기 ---
+       Pointer 이벤트라 마우스와 손가락을 같은 코드로 받습니다.
+       CSS의 touch-action: none이 있어야 세로 드래그가 페이지 스크롤로 넘어가지
+       않고 여기로 들어옵니다. */
+    var startY = 0;
+    var isDragging = false;
+
+    deck.addEventListener("pointerdown", function (event) {
+      isDragging = true;
+      startY = event.clientY;
+      deck.setPointerCapture(event.pointerId);
+    });
+
+    deck.addEventListener("pointerup", function (event) {
+      if (!isDragging) {
+        return;
+      }
+
+      isDragging = false;
+
+      var moved = event.clientY - startY;
+
+      /* 위로 밀면 다음 장, 아래로 밀면 이전 장입니다. */
+      if (moved <= -DECK_SWIPE_THRESHOLD) {
+        move(1);
+      } else if (moved >= DECK_SWIPE_THRESHOLD) {
+        move(-1);
+      }
+    });
+
+    deck.addEventListener("pointercancel", function () {
+      isDragging = false;
+    });
+
+    /* 연도를 바꾸면 사진 세트가 통째로 갈리므로 첫 장으로 돌아갑니다.
+       initArchive가 사진을 다 갈아 끼운 뒤 이 이벤트를 보냅니다. */
+    archive.addEventListener("archive_year_change", function () {
+      current = 0;
+      layout();
+    });
+
+    layout();
   }
 
   /* =========================================================
@@ -1332,13 +1493,38 @@
        넘기면 사진이 빈 채로 보일 수 있습니다.
        캐러셀은 아래에서 요소 하나로 통째로 띄웁니다. */
     var photos = Array.prototype.slice
-      .call(document.querySelectorAll(
-        ".showcase_photo:not(.showcase_slide), .archive_photo"
-      ))
+      .call(document.querySelectorAll(".showcase_photo:not(.showcase_slide)"))
       .map(function (figure) {
         return figure.querySelector("img");
       })
       .filter(Boolean);
+
+    /* ★ archive는 다섯 장이 겹친 덱이라 한 장씩 떠오르는 연출이 성립하지 않습니다
+       (같은 자리에 있어 순서가 보이지 않습니다). 덱 전체를 한 번에 띄우고,
+       장을 넘기는 것은 initArchiveDeck의 밀기 조작이 맡습니다. */
+    var deck = document.querySelector(".archive_deck");
+
+    if (deck) {
+      /* ★ y를 움직이지 않고 opacity만 씁니다.
+         GSAP이 y를 쓰면 덱에 인라인 transform이 남는데, transform이 걸린 요소는
+         그 안의 절대배치 자식에게 기준 상자가 됩니다. 그러면 카드가 프레임이 아니라
+         덱을 기준으로 앉아 화면 크기마다 자리가 틀어집니다.
+         이 탭에서는 트윈이 돌지 않아 못 봤지만 실제 기기에서 드러났습니다. */
+      gsap.fromTo(
+        deck,
+        { opacity: 0 },
+        {
+          opacity: 1,
+          ease: "power2.out",
+          duration: MOBILE_REVEAL_DURATION,
+          scrollTrigger: {
+            trigger: deck,
+            start: MOBILE_REVEAL_START,
+            once: true
+          }
+        }
+      );
+    }
 
     var carousel = document.querySelector(".showcase_carousel");
 
@@ -1422,6 +1608,7 @@
   initShowcaseScroll();
   initShowcaseCarousel();
   initArchive();
+  initArchiveDeck();
   initAsworn();
   initMobileReveal();
 })();

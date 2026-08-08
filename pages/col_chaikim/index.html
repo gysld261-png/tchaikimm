@@ -152,30 +152,37 @@
            `col_chaikim.js`의 ARCHIVE_PHOTOS["2019"]와 같은 순서·같은 파일이어야 합니다.
            width / height 속성은 로딩 전에 원본 비율만큼 자리를 잡아 두기 위한 것입니다
            (표시 크기는 CSS가 정합니다). -->
-        <figure class="archive_photo archive_photo_1">
-          <img src="asset/archive_2019_1.png" width="958" height="1190" loading="lazy" decoding="async"
-            alt="2019 collection — a white robe with a black conical hat, sleeves spread wide">
-        </figure>
+        <!-- 좁은 화면에서는 다섯 장이 세로로 겹친 덱이 됩니다(css의 .archive_deck).
+           위로 밀어 넘기고, 위쪽 연도 탭을 누르면 사진 세트가 바뀝니다.
+           데스크톱에서는 이 래퍼가 position: static이라 아래 figure들이
+           예전처럼 .archive_frame 기준 시안 좌표에 그대로 놓입니다. -->
+        <div class="archive_deck">
+          <figure class="archive_photo archive_photo_1">
+              <img src="asset/archive_2019_1.png" width="958" height="1190" loading="lazy" decoding="async"
+                alt="2019 collection — a white robe with a black conical hat, sleeves spread wide">
+            </figure>
+          <figure class="archive_photo archive_photo_2">
+              <img src="asset/archive_2019_2.png" width="1302" height="1744" loading="lazy" decoding="async"
+                alt="2019 collection — an orange quilted jeogori over a blue skirt, flowers pinned in the hair">
+            </figure>
+          <figure class="archive_photo archive_photo_3">
+              <img src="asset/archive_2019_3.png" width="1250" height="1594" loading="lazy" decoding="async"
+                alt="2019 collection — a floral sheer dress seated on a stone path in tall grass">
+            </figure>
+          <figure class="archive_photo archive_photo_4">
+              <img src="asset/archive_2019_4.png" width="780" height="1044" loading="lazy" decoding="async"
+                alt="2019 collection — a dark brown wool coat over an ivory shirt and trousers">
+            </figure>
+          <figure class="archive_photo archive_photo_5">
+              <img src="asset/archive_2019_5.png" width="1250" height="1476" loading="lazy" decoding="async"
+                alt="2019 collection — a floral organza dress in front of a pink lattice screen">
+            </figure>
 
-        <figure class="archive_photo archive_photo_2">
-          <img src="asset/archive_2019_2.png" width="1302" height="1744" loading="lazy" decoding="async"
-            alt="2019 collection — an orange quilted jeogori over a blue skirt, flowers pinned in the hair">
-        </figure>
-
-        <figure class="archive_photo archive_photo_3">
-          <img src="asset/archive_2019_3.png" width="1250" height="1594" loading="lazy" decoding="async"
-            alt="2019 collection — a floral sheer dress seated on a stone path in tall grass">
-        </figure>
-
-        <figure class="archive_photo archive_photo_4">
-          <img src="asset/archive_2019_4.png" width="780" height="1044" loading="lazy" decoding="async"
-            alt="2019 collection — a dark brown wool coat over an ivory shirt and trousers">
-        </figure>
-
-        <figure class="archive_photo archive_photo_5">
-          <img src="asset/archive_2019_5.png" width="1250" height="1476" loading="lazy" decoding="async"
-            alt="2019 collection — a floral organza dress in front of a pink lattice screen">
-        </figure>
+          <p class="archive_deck_counter" aria-live="polite">
+            <span class="archive_deck_index">1</span>
+            <span class="archive_deck_total">/ 5</span>
+          </p>
+        </div>
       </div>
     </section>
 
