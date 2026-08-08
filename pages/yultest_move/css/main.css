@@ -596,12 +596,18 @@
    있습니다(가운데 정렬 아님 — 오른쪽에 확대컷이 겹쳐 걸릴 여유를 더 두는 배치).
    위아래 여백은 위아래로 겹쳐 걸리는 글·확대컷이 다른 섹션과 부딪히지 않도록 비워
    두는 값입니다(고정값 — % margin은 폭 기준으로 계산되어 세로 여백에는 쓸 수
-   없습니다). */
+   없습니다).
+   위쪽은 헤더와 사진이 한 섹션으로 읽히도록 실제 돌출량에 맞춰 줄였습니다.
+   위로 가장 많이 튀어나오는 것은 .detail_text[data-part="sleeve"]의 top: -25.83%
+   이고, 그 값은 스테이지 높이(= 폭 76.04% × 1905/4380) 기준이라 화면 폭의 약
+   8.6vw입니다. 9.6vw는 거기에 여유를 둔 값입니다 — 이 값을 더 줄이면 호버 시
+   sleeve 설명이 .detail_head와 겹칩니다. */
 .detail_stage {
   position: relative;
   width: 76.04%;
   max-width: 1460px;
-  margin-block: clamp(160px, 24vw, 470px);
+  margin-top: clamp(120px, 9.6vw, 190px);
+  margin-bottom: clamp(160px, 24vw, 470px);
   margin-left: 10.99%;
 }
 
