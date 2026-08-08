@@ -310,8 +310,25 @@
      ========================================================= */
 
   /* 두 인터랙션 모두 이 조건에서만 켜집니다. 어긋나면 gsap.matchMedia()가
-     설정한 값을 알아서 되돌려 CSS 레이아웃 그대로 보입니다. */
+     설정한 값을 알아서 되돌려 CSS 레이아웃 그대로 보입니다.
+     CSS의 반응형 블록 경계(1279 / 1280)와 정확히 맞물립니다. */
   var DESKTOP_MOTION = "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
+
+  /* 1279px 이하에서 쓰는 인터랙션 조건입니다.
+     이 폭에서는 showcase 프레임이 흐름 배치라 pin·scrub이 성립하지 않습니다
+     (붙잡아 둘 1920 캔버스가 없습니다). 그래서 인터랙션을 없애는 대신
+     같은 요소에 훨씬 가벼운 "떠오르며 나타나기"를 겁니다. */
+  var MOBILE_MOTION = "(max-width: 1279px) and (prefers-reduced-motion: no-preference)";
+
+  /* 모바일 등장 연출. 데스크톱(RISE_BASE 110)보다 짧게 잡습니다 —
+     화면이 작아 이동 거리가 크면 스크롤 중에 떨려 보입니다. */
+  var MOBILE_RISE = 42;
+  var MOBILE_REVEAL_DURATION = 0.75;
+  var MOBILE_REVEAL_STAGGER = 0.09;
+
+  /* 요소 윗변이 화면의 이 지점에 닿으면 시작합니다.
+     88%는 "화면에 막 들어온 직후"라, 다 뜬 모습을 충분히 읽을 수 있습니다. */
+  var MOBILE_REVEAL_START = "top 88%";
 
   /* 창 크기가 이만큼(px) 넘게 달라졌을 때만 다시 만듭니다.
      주소창이 접히는 정도의 변화로 매번 다시 만들지 않기 위한 여유입니다. */
@@ -356,8 +373,29 @@
       }, REBUILD_DELAY);
     }
 
+    /* ★ 브레이크포인트를 넘는 순간은 디바운스에 맡기지 않고 즉시 다시 만듭니다.
+       resize 디바운스(200ms)만 믿으면 그 사이 데스크톱 pin(pin-spacer + 고정 폭)이
+       좁은 화면에 남아 가로 스크롤이 생깁니다. 실제로 1920 → 414에서 확인했습니다.
+       DESKTOP_MOTION의 폭 조건과 같은 경계를 봅니다. */
+    var boundary = window.matchMedia("(min-width: 1280px)");
+
+    function handleBoundary() {
+      height = window.innerHeight;
+      width = window.innerWidth;
+      apply();
+    }
+
+    if (boundary.addEventListener) {
+      boundary.addEventListener("change", handleBoundary);
+    } else if (boundary.addListener) {
+      boundary.addListener(handleBoundary);
+    }
+
     apply();
     window.addEventListener("resize", handleResize);
+    /* 세로 ↔ 가로 전환은 폭과 높이가 한꺼번에 바뀝니다. resize가 따라오지 않는
+       기기가 있어 함께 답니다(같은 디바운스를 타므로 중복 실행되지 않습니다). */
+    window.addEventListener("orientationchange", handleResize);
   }
 
   /* hero 영상은 시안에 재생 컨트롤이 없습니다.
@@ -1288,7 +1326,88 @@
   }
 
   initHeroVideo();
+  /* 1279px 이하 등장 연출.
+
+     데스크톱과 다른 점 세 가지입니다.
+     1. pin도 scrub도 쓰지 않습니다. 좁은 화면에서 스크롤을 붙잡으면
+        페이지가 길어 보이고 터치 스크롤과 싸웁니다.
+     2. `once: true`라 한 번만 재생합니다. 되돌아올 때 다시 재생하면
+        짧은 화면에서 같은 사진이 반복해 깜빡입니다.
+     3. figure가 아니라 안쪽 img를 움직입니다. figure에는 CSS가 기울기를
+        (archive는 `rotate(var(--archive_photo_tilt) * 0.45)`) 물려 두었는데,
+        GSAP이 figure에 인라인 transform을 쓰면 그 기울기가 사라집니다.
+
+     문장 세 줄만 묶어서 stagger로 흘리고, 사진은 각자 자기 트리거를 답니다
+     (사진끼리 세로로 멀리 떨어져 있어 한 묶음으로 묶으면 화면 밖에서 다 끝납니다). */
+  function buildMobileReveal(gsap) {
+    var photos = Array.prototype.slice
+      .call(document.querySelectorAll(".showcase_photo, .archive_photo"))
+      .map(function (figure) {
+        return figure.querySelector("img");
+      })
+      .filter(Boolean);
+
+    photos.forEach(function (image) {
+      gsap.fromTo(
+        image,
+        { y: MOBILE_RISE, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          ease: "power2.out",
+          duration: MOBILE_REVEAL_DURATION,
+          scrollTrigger: {
+            /* 트리거는 움직이지 않는 figure입니다. img를 트리거로 쓰면
+               자기 이동분 때문에 시작 지점이 흔들립니다. */
+            trigger: image.parentElement,
+            start: MOBILE_REVEAL_START,
+            once: true
+          }
+        }
+      );
+    });
+
+    var lines = Array.prototype.slice.call(document.querySelectorAll(".showcase_quote_line"));
+
+    if (lines.length > 0) {
+      gsap.fromTo(
+        lines,
+        { y: MOBILE_RISE, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          ease: "power2.out",
+          duration: MOBILE_REVEAL_DURATION,
+          stagger: MOBILE_REVEAL_STAGGER,
+          scrollTrigger: {
+            trigger: lines[0].parentElement,
+            start: MOBILE_REVEAL_START,
+            once: true
+          }
+        }
+      );
+    }
+  }
+
+  function initMobileReveal() {
+    if (typeof window.gsap === "undefined" || typeof window.ScrollTrigger === "undefined") {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    /* 여기는 createRebuilder를 쓰지 않습니다. 값이 창 높이에 기대지 않아
+       (타임라인 길이를 화면 크기로 계산하지 않습니다) matchMedia만으로 충분하고,
+       resize 리스너를 하나 더 만들 이유가 없습니다.
+       폭이 1280을 넘나들면 matchMedia가 알아서 만들고 되돌립니다. */
+    gsap.matchMedia().add(MOBILE_MOTION, function () {
+      buildMobileReveal(gsap);
+    });
+  }
+
   initShowcaseScroll();
   initArchive();
   initAsworn();
+  initMobileReveal();
 })();

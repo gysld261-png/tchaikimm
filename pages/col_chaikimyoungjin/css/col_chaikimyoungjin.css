@@ -741,3 +741,389 @@
   width: 341px;
   padding: 10px 0;
 }
+
+/* =========================================================
+   반응형 — 1279px 이하 (2026-08-09, 2차 개선)
+
+   이 파일의 위쪽 규칙은 전부 1920 시안 캔버스를 기준으로 한 데스크톱 레이아웃이고,
+   이미 검증이 끝나 있습니다. 그래서 그 값을 건드리지 않고 여기서만 덮어씁니다.
+   (저장소의 shop_detail.css와 같은 방식입니다.)
+
+   기준 폭은 공통 토큰과 같은 768 / 1280입니다.
+   JS 인터랙션 게이트도 `min-width: 1280px`이라 CSS와 경계가 일치합니다.
+
+   ── 1차에서 무엇이 깨졌는가 ──
+   사진을 `width: 100%` + `height: auto`로 두었더니 데스크톱이 `object-fit: cover`로
+   잘라내던 구도가 풀려 원본 세로 비율이 그대로 나왔습니다.
+   390px에서 사진 한 장이 800px 가까이 되어 화면을 꽉 채웠고,
+   showcase 섹션이 4148px까지 늘어났습니다.
+
+   ── 2차에서 세운 원칙 ──
+   1. 사진은 화면을 꽉 채우지 않습니다. 폭을 44~82%로 서로 다르게 줍니다.
+   2. 크롭 구도는 `aspect-ratio`로 데스크톱 프레임 비율을 그대로 지킵니다.
+   3. 좌우 정렬을 엇갈리게 해 시안의 "흩어져 떠 있는" 인상을 세로 흐름에서 되살립니다.
+   4. 데스크톱을 축소해 넣지 않습니다. 구조 자체를 세로 흐름으로 다시 짭니다.
+   ========================================================= */
+
+@media (max-width: 1279px) {
+  /* 시안 좌표 캔버스를 화면 폭에 맞춥니다. 아래 규칙들이 안쪽 요소를
+     absolute에서 흐름 배치로 돌려놓기 때문에 폭만 풀면 됩니다. */
+  .collection_frame {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  /* ---------- hero ---------- */
+
+  /* 시안 1182px은 1920 캔버스 기준입니다. 좁은 화면에서 그대로 두면
+     영상이 세로로만 길어져 인물이 잘립니다. 화면 한 장으로 맞춥니다.
+     100svh는 모바일 주소창이 접힐 때 높이가 튀지 않게 합니다. */
+  .collection_hero {
+    height: 100svh;
+    min-height: 520px;
+    max-height: 1182px;
+  }
+
+  .collection_hero_title {
+    font-size: clamp(30px, 7vw, 64px);
+  }
+
+  /* ---------- showcase ----------
+     사진 7장과 문장이 전부 absolute + 시안 좌표입니다.
+     좁은 화면에서는 HTML 순서(a → b → 문장 → c~g) 그대로 한 줄로 쌓습니다.
+     읽는 순서와 시각 위계가 시안과 같습니다. */
+
+  .showcase {
+    /* 아치 높이. 아래 그라디언트 시작점과 같아야 해서 변수로 묶습니다. */
+    --showcase_arc_h: clamp(150px, 26vw, 460px);
+
+    height: auto;
+    padding: clamp(72px, 11vw, 160px) 0 clamp(80px, 12vw, 180px);
+  }
+
+  /* JS가 pin을 켤 때만 붙는 class입니다. 이 폭에서는 pin이 없지만
+     데스크톱에서 창을 좁혔을 때 잔재가 남아도 레이아웃이 깨지지 않게 막아 둡니다. */
+  .showcase.is_pinned {
+    height: auto;
+  }
+
+  .showcase_arc {
+    height: var(--showcase_arc_h);
+  }
+
+  /* 시안은 높이 2597px 고정이지만, 섹션 높이가 내용에 따라 달라지므로
+     top과 bottom을 함께 잡아 남은 영역을 전부 채우게 합니다. */
+  .showcase_gradient {
+    top: var(--showcase_arc_h);
+    bottom: 0;
+    height: auto;
+  }
+
+  .showcase_frame {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(44px, 8vw, 110px);
+    align-items: center;
+    height: auto;
+    padding-inline: var(--layout_gutter);
+  }
+
+  .showcase_photo {
+    position: static;
+    width: 100%;
+    /* 태블릿에서 폭이 넓어지면 아래 퍼센트가 그대로 커져 사진 한 장이
+       600px을 넘습니다(753px에서 showcase가 4448px까지 늘어났습니다).
+       퍼센트는 좁은 화면의 리듬을 위한 값이고, 상한은 여기서 잡습니다. */
+    max-width: 360px;
+    height: auto;
+    padding: 0;
+  }
+
+  /* ★ aspect-ratio는 figure가 아니라 img에 걸어야 합니다.
+     figure에 걸고 안쪽 img를 `height: 100%`로 두면, 부모 높이가 auto라
+     퍼센트 높이가 auto로 풀리고 img의 원본 비율이 부모를 밀어 올려
+     aspect-ratio가 무시됩니다(실제로 이 문제를 겪었습니다 —
+     a가 217×267이어야 하는데 217×325로 나왔습니다).
+     img에 걸면 지정 비율이 원본 비율을 이기고, cover가 그 안에서 잘라 냅니다. */
+  .showcase_photo img {
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+  }
+
+  .showcase_photo_tilt img {
+    position: static;
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+
+  /* 폭과 정렬은 figure가, 크롭 비율은 img가 맡습니다.
+     비율은 데스크톱 프레임의 가로세로 그대로라 구도가 유지되고,
+     상대적 크기 위계(c가 가장 크고 d가 가장 작음)도 시안과 같습니다. */
+  .showcase_photo_a {
+    width: 62%;
+    align-self: flex-start;
+  }
+
+  .showcase_photo_a img {
+    aspect-ratio: 378 / 465;
+  }
+
+  .showcase_photo_b {
+    width: 58%;
+    align-self: flex-end;
+  }
+
+  .showcase_photo_b img {
+    aspect-ratio: 366 / 458;
+  }
+
+  /* 시안에서 가장 큰 한 장이라 상한도 혼자 넉넉하게 둡니다. */
+  .showcase_photo_c {
+    width: 82%;
+    max-width: 480px;
+    align-self: center;
+  }
+
+  .showcase_photo_c img {
+    aspect-ratio: 710 / 959;
+  }
+
+  .showcase_photo_d {
+    width: 44%;
+    align-self: flex-end;
+  }
+
+  .showcase_photo_d img {
+    aspect-ratio: 307 / 315;
+  }
+
+  .showcase_photo_e {
+    width: 58%;
+    align-self: flex-start;
+  }
+
+  .showcase_photo_e img {
+    aspect-ratio: 347 / 468;
+  }
+
+  .showcase_photo_f {
+    width: 52%;
+    align-self: flex-end;
+  }
+
+  .showcase_photo_f img {
+    aspect-ratio: 309 / 441;
+  }
+
+  .showcase_photo_g {
+    width: 64%;
+    align-self: flex-start;
+  }
+
+  .showcase_photo_g img {
+    aspect-ratio: 348 / 468;
+  }
+
+  /* 기울기는 시안(-15.55 / 13.07)보다 작게 남깁니다. 회전하면 가로로 커지는데,
+     위 폭(62 / 58%)이면 그 증가분이 좌우 여백 안에 들어옵니다. */
+  .showcase_photo_a img {
+    transform: rotate(-3.4deg);
+  }
+
+  .showcase_photo_b img {
+    transform: rotate(2.8deg);
+  }
+
+  /* 세 줄이 계단처럼 어긋난 시안의 성격은 들여쓰기로 남깁니다.
+     nowrap을 유지하려면 글자 크기가 줄 폭을 넘지 않아야 합니다
+     — 가장 긴 줄이 48px에서 416px이라 화면 폭에 비례시켰습니다. */
+  .showcase_quote {
+    position: static;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(2px, 1vw, 12px);
+    align-self: flex-start;
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+  }
+
+  .showcase_quote_line {
+    position: static;
+    justify-content: flex-start;
+    width: auto;
+    height: auto;
+    font-size: clamp(23px, 6vw, 44px);
+  }
+
+  .showcase_quote_line2 {
+    padding-left: clamp(18px, 7vw, 66px);
+  }
+
+  /* ---------- archive ----------
+     왼쪽 sticky 글 + 오른쪽 흩어진 사진 5장을,
+     글이 위에 오고 사진이 격자로 놓이는 구조로 바꿉니다. */
+
+  .archive_frame {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(14px, 3vw, 28px);
+    align-items: start;
+    height: auto;
+    padding: clamp(64px, 9vw, 128px) var(--layout_gutter);
+  }
+
+  .archive_sticky {
+    grid-column: 1 / -1;
+    width: 100%;
+    height: auto;
+    padding: 0;
+  }
+
+  /* 이 폭에서는 따라올 세로 여유가 없어 일반 흐름으로 둡니다. */
+  .archive_txt_area {
+    position: static;
+    gap: clamp(28px, 5vw, 50px);
+    width: 100%;
+  }
+
+  .archive_txt {
+    gap: clamp(24px, 5vw, 61px);
+  }
+
+  .archive_title {
+    font-size: clamp(28px, 6.4vw, 48px);
+  }
+
+  /* 세로 목록은 자리를 너무 차지해 가로로 눕힙니다. */
+  .archive_year_list {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    align-items: baseline;
+  }
+
+  .archive_year_item.is_active {
+    padding-left: 0;
+  }
+
+  .archive_photo {
+    position: static;
+    z-index: auto;
+    width: 100%;
+    /* 흩어진 느낌만 남기고 격자를 깨지 않을 만큼 줄입니다. */
+    transform: rotate(calc(var(--archive_photo_tilt) * 0.45));
+  }
+
+  .archive_photo:hover {
+    transform: rotate(calc(var(--archive_photo_tilt) * 0.45)) scale(1.04);
+  }
+
+  /* ---------- as worn ----------
+     사진과 글이 가로로 붙은 카드(818px)가 화면보다 넓습니다.
+     띠는 그대로 두고 카드만 세로로 세웁니다. */
+
+  .asworn {
+    padding: clamp(80px, 11vw, 200px) 0;
+  }
+
+  .asworn_head {
+    gap: clamp(24px, 4vw, 49px);
+    width: 100%;
+    margin-bottom: clamp(44px, 8vw, 100px);
+    padding-inline: var(--layout_gutter);
+  }
+
+  .asworn_title {
+    font-size: clamp(28px, 6.4vw, 48px);
+  }
+
+  .asworn_tags {
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    justify-content: center;
+  }
+
+  .asworn_tag {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  .asworn_list {
+    gap: clamp(20px, 3vw, 34px);
+    align-items: stretch;
+  }
+
+  /* 아래 규칙들은 위쪽 `.asworn_item_2 / _3 / _4 .asworn_figure`와 특정도가 같습니다.
+     이 블록이 파일 뒤에 있어 이깁니다. !important를 쓰지 않으려는 의도입니다. */
+  .asworn_list .asworn_item {
+    flex-direction: column;
+    gap: 14px;
+    align-items: stretch;
+    width: clamp(240px, 68vw, 360px);
+  }
+
+  .asworn_list .asworn_figure {
+    width: 100%;
+    height: auto;
+    /* 시안 카드 비율(441 × 681)을 유지합니다. */
+    aspect-ratio: 441 / 681;
+    padding: 0;
+  }
+
+  .asworn_list .asworn_body {
+    width: 100%;
+    padding: 0;
+  }
+
+  .asworn_list .asworn_name {
+    padding: 0;
+    font-size: 20px;
+    white-space: normal;
+  }
+
+  .asworn_list .asworn_desc {
+    gap: 14px;
+    padding: 0;
+  }
+
+  .asworn_list .asworn_text {
+    width: 100%;
+    padding: 0;
+  }
+}
+
+/* =========================================================
+   반응형 — 767px 이하
+   ========================================================= */
+
+@media (max-width: 767px) {
+  /* 좁은 화면일수록 사진을 더 줄입니다. 화면을 꽉 채우면 스크롤이
+     "사진 한 장 = 한 화면"이 되어 페이지가 끝없이 길어집니다.
+     레퍼런스(obsidianassembly)도 본문 이미지를 화면의 28~66%로 씁니다. */
+  .showcase_frame {
+    gap: clamp(40px, 9vw, 72px);
+  }
+
+  .showcase_photo_c {
+    width: 86%;
+  }
+
+  .showcase_photo_d {
+    width: 46%;
+  }
+
+  /* archive는 2열을 유지합니다. 1열로 세우면 사진 다섯 장이 각각 한 화면을 차지해
+     섹션이 2400px을 넘습니다(1차에서 실제로 그랬습니다).
+     대신 짝수 번째를 아래로 내려 격자가 딱딱해 보이지 않게 합니다 —
+     데스크톱의 흩어진 배치를 좁은 화면에서 대신하는 장치입니다. */
+  .archive_photo:nth-of-type(even) {
+    margin-top: clamp(24px, 9vw, 64px);
+  }
+
+  .asworn_list .asworn_name {
+    font-size: 18px;
+  }
+}
