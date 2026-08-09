@@ -47,11 +47,9 @@ Load shared CSS before page CSS:
 
 ## Top button
 
-Add this markup immediately before the closing `</body>` when the page needs it:
-
-```html
-<button class="top_button" type="button" aria-label="Back to top">Top</button>
-```
+`common/js/common.js`가 초기화될 때 `.top_button`을 `body` 끝에 한 번만 자동 생성합니다.
+페이지 HTML에 버튼을 직접 추가하지 않습니다. 공통 CSS·JS를 불러오는 모든 화면 크기에서
+600px 이상 스크롤하면 나타나며, 모션 감소 설정에서는 즉시 맨 위로 이동합니다.
 
 ## Header and footer HTML
 

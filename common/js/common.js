@@ -592,7 +592,18 @@
     emailInput.addEventListener("input", handleEmailInput);
   }
 
+  /* 모든 페이지가 같은 버튼을 쓰도록 공통 JS에서 한 번만 생성합니다.
+     이전 페이지 마크업이 남아 있어도 중복 생성하지 않습니다. */
   var topButton = document.querySelector(".top_button");
+
+  if (!topButton) {
+    topButton = document.createElement("button");
+    topButton.className = "top_button";
+    topButton.type = "button";
+    topButton.setAttribute("aria-label", "Back to top");
+    topButton.textContent = "Top";
+    document.body.appendChild(topButton);
+  }
 
   function updateTopButton() {
     if (topButton) {
