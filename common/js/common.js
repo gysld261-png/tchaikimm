@@ -48,13 +48,20 @@
       document.querySelectorAll(".card_product_img[data-hover-src]")
     );
 
-    productImages.forEach(function (defaultImage) {
-      var hoverSrc = defaultImage.getAttribute("data-hover-src").trim();
+    /* hover 이미지를 실제로 내려받아 카드에 끼워 넣습니다.
+       기존 동작(미리 받아 두고 hover 시 즉시 전환)은 그대로입니다 — 언제
+       시작하느냐만 달라집니다. */
+    function attachHoverImage(defaultImage) {
+      var hoverSrc = (defaultImage.getAttribute("data-hover-src") || "").trim();
       var media = defaultImage.closest(".card_product_media");
 
       if (!hoverSrc || !media || media.classList.contains("has_hover_image")) {
         return;
       }
+
+      /* 같은 카드가 두 번 들어오지 않도록 먼저 표시합니다. onload를 기다리면
+         그 사이에 다시 호출될 수 있습니다. */
+      media.classList.add("has_hover_image");
 
       var preload = new Image();
 
@@ -67,10 +74,42 @@
 
         defaultImage.classList.add("card_product_img_default");
         defaultImage.parentNode.insertBefore(hoverImage, defaultImage.nextSibling);
-        media.classList.add("has_hover_image");
+      };
+
+      preload.onerror = function () {
+        /* 파일이 없으면 hover 전환만 생기지 않고 카드는 그대로 동작합니다 */
+        media.classList.remove("has_hover_image");
       };
 
       preload.src = hoverSrc;
+    }
+
+    /* ★ 예전에는 페이지가 열리자마자 hover 이미지를 전부 내려받았습니다.
+       shop 페이지 기준 10장 32MB로, 사용자가 카드에 마우스를 올리지 않아도
+       첫 화면 로딩과 대역폭을 그만큼 잡아먹었습니다.
+       지금은 카드가 화면 근처(200px 앞)에 왔을 때 받습니다 — 화면에 보이는
+       카드는 hover 전에 이미 준비되므로 체감 동작은 같습니다.
+       IntersectionObserver가 없는 환경에서는 예전처럼 전부 받습니다. */
+    if (typeof window.IntersectionObserver === "undefined") {
+      productImages.forEach(attachHoverImage);
+      return;
+    }
+
+    var hoverObserver = new window.IntersectionObserver(
+      function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) {
+            return;
+          }
+          hoverObserver.unobserve(entry.target);
+          attachHoverImage(entry.target);
+        });
+      },
+      { rootMargin: "200px" }
+    );
+
+    productImages.forEach(function (defaultImage) {
+      hoverObserver.observe(defaultImage);
     });
   }
 

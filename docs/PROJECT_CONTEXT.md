@@ -1,6 +1,86 @@
 # Tchai Kim 현재 상태
 
 
+## Shop 첫 로딩 189MB → 27MB (2026-08-09)
+
+메인에서 헤더로 shop에 들어가면 히어로가 느리고 렉이 걸린다는 문제입니다.
+**에셋을 하나도 건드리지 않고** 첫 화면 전송량을 86% 줄였습니다.
+
+- `pages/shop/index.html` — 히어로 밖 `<img>` 51개에 `loading="lazy" decoding="async"`
+- `common/js/common.js` — hover 이미지 프리로드를 IntersectionObserver로 전환
+
+### 측정 (Playwright + Chromium, 1920 × 1080, localhost)
+
+| 항목 | 전 | 후 |
+|---|---|---|
+| 첫 화면 전송량 | **189.1 MB** | **27.4 MB** |
+| 첫 화면 요청 수 | 72건 | 26건 |
+| 로드 직후 hover 이미지 | 10장(32MB) 즉시 | **0장** |
+
+### ★ 원인 두 가지
+
+1. **`<img>` 53개에 `loading="lazy"`가 하나도 없었습니다.** 맨 아래 상품까지
+   전부 즉시 내려받았습니다.
+2. **`common.js`가 hover 이미지를 페이지 열자마자 전부 받았습니다.**
+   shop 기준 10장 32MB로, 마우스를 올리지 않아도 나가는 비용이었습니다.
+   지금은 카드가 화면 200px 앞에 왔을 때 받습니다 — 보이는 카드는 hover 전에
+   이미 준비되므로 **체감 동작은 같습니다**(느린 스크롤로 10/10 확인).
+   `IntersectionObserver`가 없으면 예전처럼 전부 받습니다.
+
+`has_hover_image` 표시를 `onload` 전에 붙이도록 바꿨습니다. 관찰자가 같은 카드를
+두 번 넘길 때 이미지가 두 장 끼는 것을 막습니다. `onerror`도 추가해 파일이 없으면
+표시를 되돌립니다.
+
+### ★ 남은 진짜 원인 — 에셋이 표시 크기의 4~31배입니다
+
+첫 화면에 남은 27.4MB 중 **11.3MB가 `gallery_image1.png` 한 장**입니다.
+히어로 fallback이라 지연로딩을 걸 수 없고, JS가 WebGL 텍스처로 4장을 더 받습니다.
+
+| 파일 | 원본 | 화면 표시 | 레티나(2배) 대비 | 용량 |
+|---|---|---|---|---|
+| `gallery_image1.png` | 3658 × 4942 | 320 × 460 | **31배** | 11.3 MB |
+| `gallery_image2.png` | 3250 × 4884 | 320 × 460 | **27배** | 12.1 MB |
+| `product_new_2.png` | 3403 × 4096 | 800 × 930 | 5배 | 16.3 MB |
+| `product_shop_1.png` | 3691 × 4096 | 528 × 950 | 8배 | 11.0 MB |
+
+**히어로 4장은 320 × 460 카드에 그려지는데 원본이 3500 × 5000입니다.**
+디코딩하면 한 장당 약 72MB의 메모리를 쓰고 그대로 GPU 텍스처로 올라갑니다 —
+"렉 걸린 것 같다"의 직접적인 원인입니다.
+
+줄이려면 이미지를 다시 내보내야 합니다. **이 컨테이너에는 ffmpeg·ImageMagick·
+Pillow가 전부 없어 작업하지 못했습니다.** 사용자 PC에서 처리해야 합니다.
+
+### 다른 페이지도 같은 상태입니다
+
+`col_chaikimyoungjin` 203MB / `shop` 200MB / `col_chaikim` 84MB / `main` 53MB.
+이번에는 요청 범위인 shop만 손댔습니다.
+
+### 검증
+
+- main / shop / shop_detail / bespoke / brand / col_chaikimyoungjin **6개 페이지**
+  헤더·푸터 주입, 깨진 이미지 0장, 가로 스크롤 0, JS 오류 0.
+- hover 전환 실제 동작 확인(`product_new_1_hover.png`, `opacity 1`).
+- 404 2건은 **이번 변경과 무관한 기존 문제**입니다 —
+  `bespoke_main.mp4`, `chaikimyoungjin_video.mp4`(저장소에 없는 영상).
+
+### 확인하지 못한 부분
+
+- **로딩 시간(초)은 측정하지 못했습니다.** 샌드박스가 CDN(폰트·GSAP·Lenis·
+  Three.js)을 막아 그 요청들이 타임아웃될 때까지 기다리느라 숫자가 오염됩니다.
+  전송량과 요청 수만 신뢰할 수 있습니다.
+- **히어로 WebGL이 실제로 빨라졌는지**는 Three.js가 CDN이라 이 환경에서
+  초기화되지 않아 보지 못했습니다. 히어로 이미지 4장은 이번에 줄지 않았으므로
+  **체감 개선은 히어로보다 그 아래 스크롤 구간에서 클 것으로 봅니다.**
+
+
+## Lenis는 이미 전 페이지에 들어가 있습니다 (2026-08-09 확인)
+
+`pages/yultest/`(빈 껍데기)를 뺀 **9개 페이지 전부** Lenis·GSAP CDN과
+`common/js/common.js`를 불러오고, `initSmoothScroll()`이 `lerp: 0.045` /
+`wheelMultiplier: 0.75`로 초기화합니다. 추가 작업이 필요 없습니다.
+`prefers-reduced-motion: reduce`이거나 CDN이 막히면 초기화하지 않습니다.
+
+
 ## 메인 페이지 폴더 이동 — `pages/yultest_move/` → `pages/main/` (2026-08-09)
 
 작업하던 메인 페이지를 배포 경로인 `pages/main/`으로 옮겼습니다. **옛 `pages/main/`
