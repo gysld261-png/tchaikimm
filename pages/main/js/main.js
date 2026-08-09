@@ -1,5 +1,5 @@
 /* 스크롤 인터랙션 — model 영상 스크럽, brand_01~04 고정+텍스트 전환,
-   brand_05/06 스크롤 리빌, kyj_brand_story 1장→3장→확대→페이드아웃.
+   brand_05/06 스크롤 리빌.
    model은 모든 화면에서 동작하고 나머지 장면은 768px 이상에서만 동작합니다. */
 (function () {
   "use strict";
@@ -14,6 +14,43 @@
   var ScrollTrigger = window.ScrollTrigger;
 
   gsap.registerPlugin(ScrollTrigger);
+
+  /* 카드 덱 CTA — 현재 보이는 브랜드의 다음 섹션까지 Lenis로 부드럽게 이동합니다. */
+  (function setupBrandStackAction() {
+    var action = document.querySelector(".brand_stack_action");
+    var bespokeTarget = document.getElementById("promo_bespoke_video");
+    var readyTarget = document.getElementById("promo_shop_video");
+
+    if (!action || !bespokeTarget || !readyTarget) {
+      return;
+    }
+
+    function handleBrandStackActionClick(event) {
+      var readyCopy = action.querySelector('[data-copy-variant="ready"]');
+      var isReadyActive = readyCopy && parseFloat(getComputedStyle(readyCopy).opacity) > 0.5;
+      var target = isReadyActive ? readyTarget : bespokeTarget;
+      var isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+      event.preventDefault();
+
+      if (window.tchaikimmLenis && !isReducedMotion) {
+        window.tchaikimmLenis.scrollTo(target, {
+          duration: 2.4,
+          easing: function (progress) {
+            return Math.min(1, 1.001 - Math.pow(2, -8 * progress));
+          }
+        });
+        return;
+      }
+
+      target.scrollIntoView({
+        behavior: isReducedMotion ? "auto" : "smooth",
+        block: "start"
+      });
+    }
+
+    action.addEventListener("click", handleBrandStackActionClick);
+  })();
 
   /* 페이지 안 이미지·웹폰트가 스크립트 실행 이후에 늦게 로드되면(특히 큰 사진들,
      Trirong/Montserrat 웹폰트 교체), 그 아래 섹션들의 실제 위치가 ScrollTrigger가
@@ -44,6 +81,38 @@
     }
 
     video.pause();
+
+    /* 스크롤 프레임마다 currentTime을 바로 바꾸면 이전 영상 탐색이 끝나기도 전에
+       새 디코딩 요청이 계속 쌓여 섹션 진입 순간 스크롤까지 잠깐 멎습니다.
+       가장 최근 재생 위치만 기억하고 seek가 끝난 뒤 다음 위치를 적용합니다. */
+    var requestedVideoTime = 0;
+    var appliedVideoTime = -1;
+    var isVideoSeeking = false;
+    var VIDEO_SEEK_THRESHOLD = 1 / 30;
+
+    function applyRequestedVideoTime() {
+      if (
+        !video.duration ||
+        isVideoSeeking ||
+        Math.abs(requestedVideoTime - appliedVideoTime) < VIDEO_SEEK_THRESHOLD
+      ) {
+        return;
+      }
+
+      isVideoSeeking = true;
+      appliedVideoTime = requestedVideoTime;
+      video.currentTime = requestedVideoTime;
+    }
+
+    function requestVideoTime(time) {
+      requestedVideoTime = time;
+      applyRequestedVideoTime();
+    }
+
+    video.addEventListener("seeked", function () {
+      isVideoSeeking = false;
+      window.requestAnimationFrame(applyRequestedVideoTime);
+    });
 
     function seekToRestPose() {
       video.currentTime = video.duration * 0.9;
@@ -98,7 +167,7 @@
             if (!video.duration) {
               return;
             }
-            video.currentTime = video.duration * 0.9 * modelPlayhead.progress;
+            requestVideoTime(video.duration * 0.9 * modelPlayhead.progress);
           }
         },
         0.15
@@ -125,9 +194,13 @@
       var nameLeft = collageStep ? collageStep.querySelector(".brand_collage_name_left") : null;
       var nameRight = collageStep ? collageStep.querySelector(".brand_collage_name_right") : null;
       var stackCopy = collageStep ? collageStep.querySelector(".brand_stack_copy") : null;
+      var stackAction = stackCopy ? stackCopy.querySelector(".brand_stack_action") : null;
       var stackCopyItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll("[data-copy-slot]")) : [];
       var stackCount = stackCopy ? stackCopy.querySelector(".brand_stack_count") : null;
       var stackCountItems = stackCount ? Array.prototype.slice.call(stackCount.querySelectorAll(".brand_stack_count_item")) : [];
+      var stackTitleItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll(".brand_stack_title_item")) : [];
+      var bespokeCopyItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll('[data-copy-variant="bespoke"]')) : [];
+      var readyCopyItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll('[data-copy-variant="ready"]')) : [];
       var hasCollageReveal = collageStep && cards && nameLeft && nameRight;
       var isDesktop = window.innerWidth >= 1280;
       var revealOrder = [1, 2, 0, 3];
@@ -178,9 +251,16 @@
         gsap.set([nameLeft, nameRight], { opacity: 1, scale: 1.06 });
         gsap.set(stackCopyItems, { opacity: 0, y: 18 });
         if (stackCountItems.length) {
-          gsap.set(stackCountItems, { opacity: 0, y: 12 });
-          gsap.set(stackCountItems[0], { opacity: 1, y: 0 });
+          gsap.set(stackCountItems, { opacity: 1, yPercent: 100 });
+          gsap.set(stackCountItems[0], { yPercent: 0 });
+          gsap.set(stackCount, { "--ring_progress": "25%" });
         }
+        if (stackTitleItems.length) {
+          gsap.set(stackTitleItems, { opacity: 0, y: 12 });
+          gsap.set(stackTitleItems[0], { opacity: 1, y: 0 });
+        }
+        gsap.set(bespokeCopyItems, { opacity: 1, y: 0 });
+        gsap.set(readyCopyItems, { opacity: 0, y: 12 });
         gsap.set(leftLetters, {
           opacity: 0,
           xPercent: -25,
@@ -293,47 +373,124 @@
           }, 4.02);
         }
 
-        /* 첫 장(가운데 세 번째 카드)을 시작으로, 스크롤 한 구간마다 다음 카드가
-           덱의 전면으로 올라옵니다. 이전 카드는 위로 빠지며 다음 카드의 내용을
-           완전히 보여주고, 우측 카운터도 같은 타이밍에 교체됩니다. */
-        [3, 0, 1].forEach(function (nextCardIndex, stepIndex) {
-          var previousCardIndex = [2, 3, 0][stepIndex];
-          var phaseStart = 5.15 + stepIndex * 1.15;
-          var nextCard = cardItems[nextCardIndex];
-          var previousCard = cardItems[previousCardIndex];
+        /* 첫 장(가운데 세 번째 카드)을 시작으로 네 장 전체가 한 칸씩 순환합니다.
+           맨 위의 뒷장만 덱 뒤에서 아래 슬롯으로 돌아가고, 나머지 세 장은 동시에
+           위 슬롯으로 이동해 낱장이 교체되는 대신 카드 덱 전체가 흐르도록 합니다. */
+        var deckSlotOrders = [
+          [1, -2, -1, 0],
+          [0, 1, -2, -1],
+          [-1, 0, 1, -2]
+        ];
+        var wrappingCardIndexes = [0, 1, 2];
 
-          tl.set(nextCard, { zIndex: 22 + stepIndex }, phaseStart)
-            .to(previousCard, {
-              y: window.innerHeight * -0.34,
-              scale: 1.82,
-              opacity: 0,
-              duration: 0.8,
-              ease: "power2.inOut"
-            }, phaseStart)
-            .to(nextCard, {
-              y: 0,
-              scale: 2,
+        deckSlotOrders.forEach(function (slotOrders, stepIndex) {
+          var phaseStart = 5.15 + stepIndex * 1.15;
+
+          cardItems.forEach(function (card, cardIndex) {
+            var targetOrder = slotOrders[cardIndex];
+            var targetScale = 2 * (1 - Math.abs(targetOrder) / 8);
+            var targetZIndex = 20 - Math.abs(targetOrder);
+            var isWrappingCard = cardIndex === wrappingCardIndexes[stepIndex];
+
+            if (isWrappingCard) {
+              /* -2 슬롯에서 +1 슬롯으로 화면을 가로질러 내려오지 않도록,
+                 덱 뒤에서 짧게 숨은 사이 아래쪽으로 위치를 넘깁니다. */
+              tl.to(card, {
+                y: window.innerHeight * -0.3,
+                scale: 1.45,
+                opacity: 0,
+                duration: 0.42,
+                ease: "sine.in"
+              }, phaseStart)
+                .set(card, {
+                  y: window.innerHeight * 0.16,
+                  scale: 1.65,
+                  zIndex: targetZIndex
+                }, phaseStart + 0.43)
+                .to(card, {
+                  y: targetOrder * window.innerHeight * 0.12,
+                  scale: targetScale,
+                  opacity: 1,
+                  force3D: true,
+                  duration: 0.47,
+                  ease: "sine.out"
+                }, phaseStart + 0.43);
+              return;
+            }
+
+            tl.to(card, {
+              y: targetOrder * window.innerHeight * 0.12,
+              scale: targetScale,
               opacity: 1,
-              duration: 0.8,
-              ease: "power2.inOut"
-            }, phaseStart);
+              force3D: true,
+              duration: 0.9,
+              ease: "sine.inOut"
+            }, phaseStart)
+              .set(card, { zIndex: targetZIndex }, phaseStart + 0.45);
+          });
 
           if (stackCountItems.length === 4) {
-            tl.to(stackCountItems[stepIndex], {
+            tl.to(stackCount, {
+              "--ring_progress": ((stepIndex + 2) * 25) + "%",
+              duration: 0.9,
+              ease: "sine.inOut"
+            }, phaseStart)
+              .to(stackCountItems[stepIndex], {
+                yPercent: -100,
+                duration: 0.5,
+                ease: "power2.inOut"
+              }, phaseStart)
+              .to(stackCountItems[stepIndex + 1], {
+                yPercent: 0,
+                duration: 0.5,
+                ease: "power2.inOut"
+              }, phaseStart)
+              .set(stackCount, {
+                attr: { "aria-label": "Card " + (stepIndex + 2) + " of 4" }
+              }, phaseStart + 0.25);
+          }
+
+          /* 세 번째 카드부터는 두 번째 제목으로 한 번만 교체하고,
+             네 번째 카드까지 같은 제목을 유지합니다. */
+          if (stepIndex === 1 && stackTitleItems.length === 2) {
+            tl.to(stackTitleItems[0], {
               opacity: 0,
               y: -12,
               duration: 0.3,
               ease: "power2.in"
             }, phaseStart)
-              .to(stackCountItems[stepIndex + 1], {
+              .to(stackTitleItems[1], {
                 opacity: 1,
                 y: 0,
                 duration: 0.3,
                 ease: "power2.out"
-              }, phaseStart + 0.25)
-              .set(stackCount, {
-                attr: { "aria-label": "Card " + (stepIndex + 2) + " of 4" }
               }, phaseStart + 0.25);
+          }
+
+          /* 3/4부터 제목뿐 아니라 주변 설명도 Tchai Kim 카피로 함께 바뀝니다. */
+          if (stepIndex === 1 && bespokeCopyItems.length && readyCopyItems.length) {
+            tl.to(bespokeCopyItems, {
+              opacity: 0,
+              y: -12,
+              duration: 0.3,
+              ease: "power2.in"
+            }, phaseStart)
+              .to(readyCopyItems, {
+                opacity: 1,
+                y: 0,
+                duration: 0.3,
+                stagger: 0.03,
+                ease: "power2.out"
+              }, phaseStart + 0.25);
+
+            if (stackAction) {
+              tl.set(stackAction, {
+                attr: {
+                  href: "#promo_shop_video",
+                  "aria-label": "Discover Tchai Kim"
+                }
+              }, phaseStart + 0.25);
+            }
           }
         });
       }
@@ -344,113 +501,10 @@
         if (hasCollageReveal) {
           collageStep.classList.remove("is_enhanced");
           gsap.set(collageStep, { clearProps: "scale,opacity" });
-          gsap.set([cards, cardItems, nameLeft, nameRight, leftLetters, rightLetters, stackCopyItems, stackCountItems], { clearProps: "all" });
+          gsap.set([cards, cardItems, nameLeft, nameRight, leftLetters, rightLetters, stackCopyItems, stackCountItems, stackTitleItems, bespokeCopyItems, readyCopyItems], { clearProps: "all" });
         }
       });
     })();
-
-    /* ---------------------------------------------------------
-       kyj_brand_story — 1장 → 3장으로 갈라짐 → 모이며 확대 → 페이드아웃
-       (시안 주석 그대로: 확대-> 페이드아웃 -> 아래 영상으로 이어짐)
-       --------------------------------------------------------- */
-    Array.prototype.slice.call(document.querySelectorAll(".kyj_sequence")).forEach(function (section) {
-      var solo = section.querySelector(".kyj_story_solo");
-      var card1 = section.querySelector(".kyj_story_1");
-      var card2 = section.querySelector(".kyj_story_2");
-      var card3 = section.querySelector(".kyj_story_3");
-
-      if (!solo || !card1 || !card2 || !card3) {
-        return;
-      }
-
-      section.classList.add("is_enhanced");
-
-      /* pin:true가 걸리면 GSAP이 이 section을 pin-spacer로 감싸면서 DOM 형제 관계가
-         바뀌므로(section.nextElementSibling이 더 이상 다음 섹션을 가리키지 않게 됨),
-         핀이 생기기 "전"인 지금 미리 다음 섹션(bespoke/shop)의 영상을 찾아둡니다. */
-      var nextMedia = section.nextElementSibling ? section.nextElementSibling.querySelector(".promo_media") : null;
-
-      /* 3장 모두 처음엔 솔로 컷과 같은 정중앙(xPercent -50)에 겹쳐서 시작하고,
-         스크롤하면 img1-1/img1-3만 양옆으로 벌어집니다("가운데에서 양쪽으로") —
-         img1-2는 솔로 컷 자리 그대로 유지됩니다. xPercent -50은 세 장 모두 처음
-         한 번만 고정으로 걸어 중앙 정렬 기준으로 삼고, 실제 벌어지는 움직임은
-         별도의 x(px) 값으로만 애니메이션합니다 — xPercent를 tween 대상으로 두면
-         GSAP이 요소별 폭 기준을 잘못 캐싱하는 경우가 있어(카드1/3만 어긋나는 버그
-         확인됨) 더 확실한 px 오프셋 방식으로 바꿨습니다.
-
-         카드 사이 간격은 피그마 실측(node 1712:4386) 그대로 60px(1920 기준)입니다.
-         중심 간 거리(spreadPx) = 카드 폭 + 간격이어야 그 간격이 정확히 나오는데,
-         여기서 실제로 렌더링되는 카드 폭(min(380px, 46vw), 피그마 원본 337px보다 큼)을
-         쓰지 않고 피그마의 중심 간 거리(397px)만 그대로 비율 환산하면 카드가 더 커진
-         만큼 간격이 줄어들거나 겹칩니다 — 그래서 "실제 카드 폭 + 화면 비율로 환산한
-         60px 간격"으로 다시 계산합니다. */
-      var stage = section.querySelector(".kyj_sequence_stage");
-      var stageWidth = (stage ? stage.getBoundingClientRect().width : 0) || window.innerWidth;
-      /* getBoundingClientRect()는 안 됩니다 — .kyj_story_card는 JS 실행 전 초기 페인트용
-         CSS 폴백으로 이미 transform: scale(0.85)가 걸려 있어서, 그 스케일이 적용된
-         "그려진" 폭(예: 380*0.85=323)을 재게 됩니다. getComputedStyle().width는 transform과
-         무관한 실제 레이아웃 폭(380)이라 이걸 써야 간격 계산이 정확합니다. */
-      var cardWidth = parseFloat(getComputedStyle(card1).width) || 380;
-      var FIGMA_GAP_PX_AT_1920 = 60;
-      var gapPx = (FIGMA_GAP_PX_AT_1920 / 1920) * stageWidth;
-      var spreadPx = cardWidth + gapPx;
-
-      /* CSS 폴백(.kyj_sequence.is_enhanced .kyj_story_solo/1/2/3)에 이미
-         transform: translate(...)가 걸려 있습니다. GSAP은 xPercent/yPercent를
-         "얹을" 때 그 기존 transform을 그대로 기준값(x/y)으로 흡수해버려서,
-         거기에 새 xPercent/yPercent가 또 더해져 세로 위치가 카드 높이의
-         -100%(의도한 -50%의 2배)만큼 밀리는 문제가 있었습니다 — clearProps로
-         지우기만 하면 CSS 규칙이 다시 살아나 똑같이 반복되므로, x/y/xPercent/
-         yPercent/scale/rotation을 전부 0(또는 1)으로 명시해 인라인으로 완전히
-         눌러버린 뒤에야 원하는 값을 새로 얹습니다. */
-      gsap.set([solo, card1, card2, card3], { x: 0, y: 0, xPercent: 0, yPercent: 0, scale: 1, rotation: 0 });
-      gsap.set(solo, { xPercent: -50, yPercent: -50, opacity: 1 });
-      gsap.set([card1, card2, card3], { xPercent: -50, yPercent: -50, x: 0, scale: 0.85, opacity: 0 });
-
-      var tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: section,
-          start: "top top",
-          end: "+=" + window.innerHeight * 2,
-          pin: true,
-          scrub: 1,
-          invalidateOnRefresh: true,
-          fastScrollEnd: true
-        }
-      });
-
-      tl.to(solo, { opacity: 0, duration: 1 }, 0.4)
-        .to(card1, { x: -spreadPx, scale: 1, opacity: 1, duration: 1 }, 0.4)
-        .to(card2, { scale: 1, opacity: 1, duration: 1 }, 0.4)
-        .to(card3, { x: spreadPx, scale: 1, opacity: 1, duration: 1 }, 0.4)
-        .to([card1, card2, card3], { x: 0, scale: 1.5, opacity: 0, duration: 1 }, 1.8);
-
-      triggers.push(tl.scrollTrigger);
-      resets.push(function () {
-        section.classList.remove("is_enhanced");
-        gsap.set([solo, card1, card2, card3], { clearProps: "all" });
-      });
-
-      /* 페이드아웃이 끝나는 지점(핀이 풀리는 순간) 바로 다음 섹션(bespoke/shop)의
-         영상이 곧바로 뚝 끊겨 나타나지 않도록, 스크롤로 화면에 들어오면서 서서히
-         커지며 나타나게 해 "이어지는" 느낌을 이어줍니다. */
-      if (nextMedia) {
-        gsap.set(nextMedia, { opacity: 0, scale: 1.06 });
-        var entranceTl = gsap.timeline({
-          scrollTrigger: {
-            trigger: nextMedia,
-            start: "top bottom",
-            end: "top 65%",
-            scrub: 1
-          }
-        });
-        entranceTl.to(nextMedia, { opacity: 1, scale: 1, duration: 1 });
-        triggers.push(entranceTl.scrollTrigger);
-        resets.push(function () {
-          gsap.set(nextMedia, { clearProps: "all" });
-        });
-      }
-    });
 
     return function cleanup() {
       triggers.forEach(function (trigger) {

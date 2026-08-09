@@ -144,35 +144,44 @@
 
       <!-- 중앙 카드 덱 카피 — 네 카드가 한 덱으로 모인 뒤 나타납니다. -->
       <div class="brand_stack_copy">
-        <p class="brand_stack_intro" data-copy-slot="intro">HANBOK BEGINS WITH A LINE—<br>QUIET, GENEROUS, AND ALIVE.</p>
-        <p class="brand_stack_statement" data-copy-slot="statement">TWO EXPRESSIONS OF ONE AESTHETIC,<br>SHAPED FOR THE WAY WE LIVE NOW.</p>
-        <p class="brand_stack_title" data-copy-slot="title">(I) BETWEEN THEN AND NOW</p>
-        <p class="brand_stack_description" data-copy-slot="description">We keep the memory of tradition, then let color, proportion, and movement speak in the present.</p>
-        <p class="brand_stack_count" data-copy-slot="count" aria-label="Card 1 of 4">
-          <span class="brand_stack_count_item is_active">1/4</span>
-          <span class="brand_stack_count_item">2/4</span>
-          <span class="brand_stack_count_item">3/4</span>
-          <span class="brand_stack_count_item">4/4</span>
+        <p class="brand_stack_intro" data-copy-slot="intro">
+          <span class="brand_stack_text_item is_active" data-copy-variant="bespoke">ONE GARMENT, CUT AND FINISHED<br>FOR ONE PERSON.</span>
+          <span class="brand_stack_text_item" data-copy-variant="ready">HANBOK, LIGHTENED FOR<br>THE RHYTHM OF EVERY DAY.</span>
         </p>
-        <div class="brand_stack_action" data-copy-slot="action">DISCOVER THE TWO LINES</div>
+        <p class="brand_stack_statement" data-copy-slot="statement">
+          <span class="brand_stack_text_item is_active" data-copy-variant="bespoke">TCHAI KIM YOUNGJIN SHAPES THE LANGUAGE OF HANBOK<br>THROUGH BESPOKE CRAFT.</span>
+          <span class="brand_stack_text_item" data-copy-variant="ready">TCHAI KIM CARRIES TRADITION INTO THE PRESENT<br>THROUGH COLOR, PROPORTION, AND EASE.</span>
+        </p>
+        <p class="brand_stack_title" data-copy-slot="title">
+          <span class="brand_stack_title_item is_active">Tchai<br>Kim Youngjin</span>
+          <!-- 3/4·4/4에서 보여줄 두 번째 제목을 아래 span 안에 입력합니다. -->
+          <span class="brand_stack_title_item">Tchai Kim</span>
+        </p>
+        <p class="brand_stack_description" data-copy-slot="description">
+          <span class="brand_stack_text_item is_active" data-copy-variant="bespoke">From the first conversation to the final fitting, every line follows the wearer.</span>
+          <span class="brand_stack_text_item" data-copy-variant="ready">Familiar forms are reworked into pieces made to move through contemporary life.</span>
+        </p>
+        <p class="brand_stack_count" data-copy-slot="count" aria-label="Card 1 of 4">
+          <span class="brand_stack_count_current" aria-hidden="true">
+            <span class="brand_stack_count_item is_active">1</span>
+            <span class="brand_stack_count_item">2</span>
+            <span class="brand_stack_count_item">3</span>
+            <span class="brand_stack_count_item">4</span>
+          </span>
+          <span class="brand_stack_count_total" aria-hidden="true">/4</span>
+        </p>
+        <a class="brand_stack_action" data-copy-slot="action" href="#promo_bespoke_video" aria-label="Discover Tchai Kim Youngjin">
+          <span class="brand_stack_text_item is_active" data-copy-variant="bespoke">DISCOVER TCHAI KIM YOUNGJIN</span>
+          <span class="brand_stack_text_item" data-copy-variant="ready">DISCOVER TCHAI KIM</span>
+        </a>
       </div>
     </section>
   </div>
 
-  <!-- kyj_brand_story — 1장 → 3장 → 확대 → 페이드아웃(js/main.js) -->
-  <section class="kyj_sequence" aria-label="A Tchai Kim Youngjin story in three details">
-    <div class="kyj_sequence_stage">
-      <figure class="kyj_story_card kyj_story_solo"><img src="assets/main/kyj_brand_story/img1-2.png" alt="A close detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-      <figure class="kyj_story_card kyj_story_1"><img src="assets/main/kyj_brand_story/img1-1.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-      <figure class="kyj_story_card kyj_story_2"><img src="assets/main/kyj_brand_story/img1-2.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-      <figure class="kyj_story_card kyj_story_3"><img src="assets/main/kyj_brand_story/img1-3.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-    </div>
-  </section>
-
   <!-- bespoke -->
   <section class="promo_wrap promo_bespoke_wrap" aria-labelledby="promo_bespoke_title">
     <div class="promo_media">
-      <video class="promo_media_video" src="assets/main/bespoke/bespokevod.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+      <video class="promo_media_video" id="promo_bespoke_video" src="assets/main/bespoke/bespokevod.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
     </div>
     <div class="common_container">
       <div class="promo promo_bespoke">
@@ -192,50 +201,10 @@
     </div>
   </section>
 
-  <!-- 롤링 텍스트 -->
-  <section class="marquee" aria-label="Tchai Kim and Tchai Kim Youngjin">
-    <div class="marquee_track">
-      <p class="marquee_row">
-        <span class="marquee_word">Tchai Kim</span>
-        <span class="marquee_dot" aria-hidden="true"></span>
-        <span class="marquee_word">Tchai Kim Youngjin</span>
-        <span class="marquee_dot" aria-hidden="true"></span>
-        <span class="marquee_word">Tchai Kim</span>
-        <span class="marquee_dot" aria-hidden="true"></span>
-        <span class="marquee_word">Tchai Kim Youngjin</span>
-        <span class="marquee_dot" aria-hidden="true"></span>
-        <span class="marquee_word">Tchai Kim</span>
-        <span class="marquee_dot" aria-hidden="true"></span>
-      </p>
-      <p class="marquee_row" aria-hidden="true">
-        <span class="marquee_word">Tchai Kim</span>
-        <span class="marquee_dot"></span>
-        <span class="marquee_word">Tchai Kim Youngjin</span>
-        <span class="marquee_dot"></span>
-        <span class="marquee_word">Tchai Kim</span>
-        <span class="marquee_dot"></span>
-        <span class="marquee_word">Tchai Kim Youngjin</span>
-        <span class="marquee_dot"></span>
-        <span class="marquee_word">Tchai Kim</span>
-        <span class="marquee_dot"></span>
-      </p>
-    </div>
-  </section>
-
-  <!-- kyj_brand_story (repeat) — 1장 → 3장 → 확대 → 페이드아웃(js/main.js) -->
-  <section class="kyj_sequence" aria-label="A Tchai Kim Youngjin story in three details">
-    <div class="kyj_sequence_stage">
-      <figure class="kyj_story_card kyj_story_solo"><img src="assets/main/kyj_brand_story/img2-2.png" alt="A close detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-      <figure class="kyj_story_card kyj_story_1"><img src="assets/main/kyj_brand_story/img2-1.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-      <figure class="kyj_story_card kyj_story_2"><img src="assets/main/kyj_brand_story/img2-2.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-      <figure class="kyj_story_card kyj_story_3"><img src="assets/main/kyj_brand_story/img2-3.png" alt="A detail of a Tchai Kim Youngjin bespoke hanbok"></figure>
-    </div>
-  </section>
-
   <!-- shop -->
   <section class="shop" aria-labelledby="promo_shop_title">
     <div class="promo_media">
-      <video class="promo_media_video" src="assets/main/shop/shopbanner.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+      <video class="promo_media_video" id="promo_shop_video" src="assets/main/shop/shopbanner.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
     </div>
     <div class="common_container">
       <div class="promo promo_shop">
@@ -253,13 +222,24 @@
         </div>
       </div>
 
-      <ul class="shop_products">
-        <li class="shop_product is_dim"><img src="assets/main/shop/shop_look1.png" alt="A Tchai Kim look, faded"></li>
-        <li class="shop_product"><img src="assets/main/shop/shop_look2.png" alt="A blue silk ruffled vest dress"></li>
-        <li class="shop_product"><img src="assets/main/shop/shop_look3.png" alt="A taupe long coat"></li>
-        <li class="shop_product"><img src="assets/main/shop/shop_look4.png" alt="A pair of olive green wide trousers"></li>
-        <li class="shop_product"><img src="assets/main/shop/shop_look5.png" alt="A white eyelet cotton dress"></li>
-      </ul>
+      <div class="shop_products_viewport">
+        <div class="shop_products_track">
+          <ul class="shop_products">
+            <li class="shop_product is_dim"><img src="assets/main/shop/shop_look1.png" alt="A Tchai Kim look, faded"></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look2.png" alt="A blue silk ruffled vest dress"></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look3.png" alt="A taupe long coat"></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look4.png" alt="A pair of olive green wide trousers"></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look5.png" alt="A white eyelet cotton dress"></li>
+          </ul>
+          <ul class="shop_products" aria-hidden="true">
+            <li class="shop_product is_dim"><img src="assets/main/shop/shop_look1.png" alt=""></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look2.png" alt=""></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look3.png" alt=""></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look4.png" alt=""></li>
+            <li class="shop_product"><img src="assets/main/shop/shop_look5.png" alt=""></li>
+          </ul>
+        </div>
+      </div>
     </div>
   </section>
 
