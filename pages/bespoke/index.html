@@ -90,43 +90,115 @@
     </blockquote>
   </section>
 
-  <!-- process -->
+  <!-- process
+       felix-nieto.com/about의 `.values_wrap` 행을 참고했다 — 행에 마우스를
+       올리면 색이 **아래에서 위로** 차오르고(.process_step_fill), 그 행이
+       열리면서 사진과 설명이 나온다.
+       한 번에 한 행만 열린다. 다른 행으로 옮기면 앞 행이 닫히면서 열리므로
+       섹션 높이가 변하지 않는다 — hover로 페이지가 들썩이지 않게 하는 조건이다.
+       JS가 없으면 마크업의 is_active 그대로 01 Consultation이 열려 있다.
+
+       사진 5장에 loading="lazy"를 걸지 않는다. 닫힌 행은 높이 0으로 접혀
+       있어서 지연로딩이 계속 미뤄지고, 그러면 처음 마우스를 올리는 순간
+       빈 칸이 보인다. 이 5장은 이번 변경 전에도 전부 즉시 받던 파일이다. -->
   <section class="process" aria-label="Bespoke process, five steps">
     <ol class="process_list">
       <li class="process_step is_active" data-step="consultation">
-        <p class="process_step_num">01</p>
-        <h3 class="process_step_title">Consultation</h3>
-        <p class="process_step_desc">We talk through your taste, your lifestyle, and the moment you'll wear this piece for.</p>
+        <span class="process_step_fill" aria-hidden="true"></span>
+        <h3 class="process_step_heading">
+          <button class="process_step_head" type="button" aria-expanded="true" aria-controls="process_panel_consultation">
+            <span class="process_step_num">01</span>
+            <span class="process_step_title">Consultation</span>
+          </button>
+        </h3>
+        <div class="process_step_panel" id="process_panel_consultation">
+          <div class="process_step_panel_clip">
+            <div class="process_step_panel_inner">
+              <div class="process_step_media">
+                <img src="assets/main/consultation.png" alt="A consultation between a tailor and a client at the atelier" decoding="async">
+              </div>
+              <p class="process_step_desc">We begin with a conversation — your taste, your proportions, and the occasion the piece is meant for. Nothing is measured yet. What we settle here is what the garment needs to be before a single line is drawn.</p>
+            </div>
+          </div>
+        </div>
       </li>
       <li class="process_step" data-step="design_selection">
-        <p class="process_step_num">02</p>
-        <h3 class="process_step_title">Design selection</h3>
-        <p class="process_step_desc">Silhouette and detail take shape together, into a pattern that exists nowhere else.</p>
+        <span class="process_step_fill" aria-hidden="true"></span>
+        <h3 class="process_step_heading">
+          <button class="process_step_head" type="button" aria-expanded="false" aria-controls="process_panel_design_selection">
+            <span class="process_step_num">02</span>
+            <span class="process_step_title">Design selection</span>
+          </button>
+        </h3>
+        <div class="process_step_panel" id="process_panel_design_selection">
+          <div class="process_step_panel_clip">
+            <div class="process_step_panel_inner">
+              <div class="process_step_media">
+                <img src="assets/main/design_selection.png" alt="Fabric swatches and sketches laid out for design selection" decoding="async">
+              </div>
+              <p class="process_step_desc">Silhouette, collar line, sleeve and hem are decided together against sketches and pieces from the archive. What leaves this meeting is a pattern drafted for your body alone, kept on file for anything we make for you afterwards.</p>
+            </div>
+          </div>
+        </div>
       </li>
       <li class="process_step" data-step="fabric_measurement">
-        <p class="process_step_num">03</p>
-        <h3 class="process_step_title">Fabric &amp; measurement</h3>
-        <p class="process_step_desc">Starting from six signature fabrics, you choose by hand and we record your measurements.</p>
+        <span class="process_step_fill" aria-hidden="true"></span>
+        <h3 class="process_step_heading">
+          <button class="process_step_head" type="button" aria-expanded="false" aria-controls="process_panel_fabric_measurement">
+            <span class="process_step_num">03</span>
+            <span class="process_step_title">Fabric &amp; measurement</span>
+          </button>
+        </h3>
+        <div class="process_step_panel" id="process_panel_fabric_measurement">
+          <div class="process_step_panel_clip">
+            <div class="process_step_panel_inner">
+              <div class="process_step_media">
+                <img src="assets/main/fabric_measurement.png" alt="A tailor taking measurements against folded fabric" decoding="async">
+              </div>
+              <p class="process_step_desc">Six signature fabrics are laid out in daylight so you can choose by touch as much as by colour. Once the cloth is set, we take the full set of measurements and record them against your pattern.</p>
+            </div>
+          </div>
+        </div>
       </li>
       <li class="process_step" data-step="tailoring">
-        <p class="process_step_num">04</p>
-        <h3 class="process_step_title">Tailoring</h3>
-        <p class="process_step_desc">In the atelier, each piece takes form through hand-stitching and careful cutting.</p>
+        <span class="process_step_fill" aria-hidden="true"></span>
+        <h3 class="process_step_heading">
+          <button class="process_step_head" type="button" aria-expanded="false" aria-controls="process_panel_tailoring">
+            <span class="process_step_num">04</span>
+            <span class="process_step_title">Tailoring</span>
+          </button>
+        </h3>
+        <div class="process_step_panel" id="process_panel_tailoring">
+          <div class="process_step_panel_clip">
+            <div class="process_step_panel_inner">
+              <div class="process_step_media">
+                <img src="assets/main/tailoring.png" alt="Hands hand-stitching a garment in progress" decoding="async">
+              </div>
+              <p class="process_step_desc">Cutting begins in the atelier and the piece is built up by hand over the following weeks. Seams, lining and finishing are worked in small batches, so one pair of hands stays with your garment from first stitch to last.</p>
+            </div>
+          </div>
+        </div>
       </li>
       <li class="process_step" data-step="completion">
-        <p class="process_step_num">05</p>
-        <h3 class="process_step_title">Completion</h3>
-        <p class="process_step_desc">After a final fitting and any last adjustment, the piece becomes entirely yours.</p>
+        <span class="process_step_fill" aria-hidden="true"></span>
+        <h3 class="process_step_heading">
+          <button class="process_step_head" type="button" aria-expanded="false" aria-controls="process_panel_completion">
+            <span class="process_step_num">05</span>
+            <span class="process_step_title">Completion</span>
+          </button>
+        </h3>
+        <div class="process_step_panel" id="process_panel_completion">
+          <div class="process_step_panel_clip">
+            <div class="process_step_panel_inner">
+              <div class="process_step_media">
+                <img src="assets/main/completion.png" alt="A finished bespoke garment at final fitting" decoding="async">
+              </div>
+              <p class="process_step_desc">A final fitting checks the fall of the skirt and the set of the shoulder, and any last adjustment is made on the spot. The piece is then pressed, wrapped, and handed over as entirely yours.</p>
+            </div>
+          </div>
+        </div>
       </li>
     </ol>
-
-    <div class="process_image" id="process_image">
-      <img id="process_image_consultation" class="process_image_img is_visible" src="assets/main/consultation.png" alt="A consultation between a tailor and a client at the atelier">
-      <img id="process_image_design_selection" class="process_image_img" src="assets/main/design_selection.png" alt="Fabric swatches and sketches laid out for design selection">
-      <img id="process_image_fabric_measurement" class="process_image_img" src="assets/main/fabric_measurement.png" alt="A tailor taking measurements against folded fabric">
-      <img id="process_image_tailoring" class="process_image_img" src="assets/main/tailoring.png" alt="Hands hand-stitching a garment in progress">
-      <img id="process_image_completion" class="process_image_img" src="assets/main/completion.png" alt="A finished bespoke garment at final fitting">
-    </div>
   </section>
 
   <!-- materials

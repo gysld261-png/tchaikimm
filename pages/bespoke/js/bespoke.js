@@ -2,260 +2,147 @@
   "use strict";
 
   /* ---------------------------------------------------------
-     process — 스크롤에 따라 활성 단계가 바뀌고 오른쪽 이미지가 전환된다
-     (시안 주석: "왼쪽 프로세스 과정 설명글은 스크롤 시 나타난다.
-                  오른쪽은 이미지 변경(예시 이미지)")
+     process — 행에 마우스를 올리면 색이 차오르고 사진과 설명이 열린다
 
-     레퍼런스는 thecube.dk의 Services다. 그 섹션은 한쪽에 고정된 미디어
-     한 장을 두고, 텍스트 블록이 화면을 하나씩 넘겨받으며 지나간다.
-     (실측: 항목마다 화면 2장 높이 + 안쪽 콘텐츠 sticky, 미디어는 섹션 전체
-     길이에 걸친 sticky 한 장)
+     레퍼런스는 felix-nieto.com/about의 `.values_wrap`이다. 실측한 행 구조:
+       .values_cms_item { border-top: 1px solid; position: relative }
+       .values_cms_bg   { position: absolute; inset: auto 0 0;
+                          width: 100%; height: 0% -> 100%; z-index: 0 }
+     색이 **행 아래쪽에 붙어 위로 차오른다.** CSS가 그 부분을 전부 맡고,
+     이 스크립트는 어느 행이 열려 있는지(class 하나)만 정한다.
 
-     이 섹션은 이미 같은 구성이다 — 왼쪽 5단계 목록 + 오른쪽 sticky 이미지.
-     그래서 레이아웃·타이포·여백·이미지는 그대로 두고 **넘어가는 방식**만
-     바꿨다. 다만 레퍼런스처럼 항목마다 화면을 하나씩 주는 구조는 쓸 수 없다.
-     목록 5개가 한 화면에 다 보이는 시안이라, 항목을 세로로 흩으면 시안이
-     무너진다. 대신 섹션을 화면 가운데에 붙잡아 두고(pin) 그 안에서
-     진행도를 5구간으로 나눈다 — 보이는 그림은 시안 그대로이고, 한 단계씩
-     머무는 시간만 생긴다.
+     **한 번에 한 행만 열린다.** 닫기가 없다 — 다른 행으로 옮기면 앞 행이
+     닫히면서 그 행이 열리므로 목록 높이가 변하지 않는다. hover만으로
+     페이지가 들썩이면 아래 섹션이 따라 움직여 쓸 수 없기 때문이다.
 
-     세 갈래로 동작한다.
-     A. pin — 데스크톱이고 콘텐츠가 화면에 다 들어갈 때. 단계마다 머문다.
-     B. scrub(핀 없음) — 2단 레이아웃이지만 화면이 낮아 pin하면 목록 아래가
-        잘리는 경우. 상태 전환은 같고 섹션이 지나가는 동안 진행된다.
-     C. IntersectionObserver — 모바일·모션 감소 설정·GSAP 없음.
-        스크롤을 가로채지 않고 단계가 화면 가운데에 오면 활성화만 바꾼다.
+     hover(데스크톱) / 클릭(터치) / 포커스(키보드) 세 경로가 같은 함수를
+     부른다. 마우스가 목록을 벗어나도 마지막 행이 그대로 열려 있다
+     (레퍼런스와 같고, 닫으면 높이가 줄어 아래가 올라온다).
 
-     A·B는 인라인 스타일로 매 프레임 값을 쓰고, C는 class만 쓴다.
-     그래서 조건이 어긋나 A·B가 해제될 때 인라인을 반드시 손으로 지운다
-     (GSAP은 자기가 만든 트윈만 되돌리고, onUpdate 안에서 부른 gsap.set은
-     context에 기록되지 않는다).
+     이전 버전의 GSAP pin 스크롤은 제거했다. 사진이 행 안으로 들어오면서
+     오른쪽 sticky 사진 칸이 없어졌고, 두 방식이 같은 class(is_active)를
+     두고 다투기 때문이다.
+
+     JS가 없으면 마크업의 is_active 그대로 01 Consultation이 열려 있다.
      --------------------------------------------------------- */
 
-  /* 조절값 — 숫자만 바꾸면 된다 */
-  var PROCESS_STEP_SCROLL = 0.72; /* 단계 하나에 배정하는 스크롤 길이(화면 높이 배수).
-     5단계 × 0.72 = 화면 3.6장. 1080 화면에서 한 단계당 약 780px이다.
-     레퍼런스는 항목당 화면 2장인데, 그쪽은 항목이 4개이고 화면 전체를 쓴다.
-     여기는 목록이 한눈에 다 보여 그만큼 오래 붙잡으면 지루해진다. */
-  var PROCESS_SCRUB = 0.6; /* 스크롤을 따라오는 지연(초). 전환의 여운 */
-  var PROCESS_INACTIVE_OPACITY = 0.4; /* 비활성 단계의 불투명도. css 기본값과 같아야 한다 */
-  var PROCESS_INACTIVE_SHIFT = 8; /* 비활성 단계가 물러나는 거리(px). css 기본값과 같아야 한다 */
-  var PROCESS_IMAGE_SCALE = 1.06; /* 들어오는 사진의 시작 배율. css 기본값과 같아야 한다 */
-  /* 화면 높이 조건이 필요하다. 1280px 폭에서 목록이 995px이라 900px 화면에
-     pin하면 05번이 잘린다(실측). 1060px부터는 1840+ 레이아웃(960px)도,
-     1280~1839 레이아웃(995px)도 여유 있게 들어간다. */
-  var PROCESS_PIN_GATE =
-    "(min-width: 1280px) and (min-height: 1060px) and (prefers-reduced-motion: no-preference)";
-  var PROCESS_SCRUB_GATE =
-    "(min-width: 1280px) and (max-height: 1059px) and (prefers-reduced-motion: no-preference)";
+  function initProcessSteps() {
+    var section = document.querySelector(".process");
 
-  var processSection = document.querySelector(".process");
-  var processSteps = Array.prototype.slice.call(document.querySelectorAll(".process_step"));
-  var processObserver = null;
-
-  /* 사진은 순서가 아니라 단계 이름으로 짝짓는다(`process_image_<data-step>`).
-     마크업에서 순서가 바뀌어도 짝이 어긋나지 않는다. 이름이 안 맞으면
-     같은 순번의 사진으로 떨어진다. */
-  var processImagePool = Array.prototype.slice.call(
-    document.querySelectorAll(".process_image_img")
-  );
-  var processImages = processSteps.map(function (step, i) {
-    return document.getElementById("process_image_" + step.dataset.step) || processImagePool[i];
-  });
-
-  function setActiveStepIndex(index) {
-    processSteps.forEach(function (step, i) {
-      step.classList.toggle("is_active", i === index);
-      step.classList.toggle("is_passed", i < index);
-    });
-
-    processImagePool.forEach(function (image) {
-      image.classList.toggle("is_visible", image === processImages[index]);
-    });
-  }
-
-  /* 0과 1 사이에서 양 끝이 완만한 곡선. 이웃한 두 단계의 값을 더하면 정확히
-     1이 되므로(smoothstep(t) + smoothstep(1-t) === 1) 사진 두 장이 겹쳐
-     흐려지는 구간 없이 자연스럽게 교차한다. */
-  function processEase(t) {
-    return t * t * (3 - 2 * t);
-  }
-
-  function processWeight(position, index) {
-    var distance = Math.abs(position - index);
-
-    if (distance >= 1) {
-      return 0;
+    if (!section) {
+      return;
     }
 
-    return processEase(1 - distance);
-  }
+    var steps = Array.prototype.slice.call(section.querySelectorAll(".process_step"));
 
-  function clamp01(value) {
-    return value < 0 ? 0 : value > 1 ? 1 : value;
-  }
+    if (!steps.length) {
+      return;
+    }
 
-  /* 진행도(0~1) 하나로 단계·사진·진행선을 모두 그린다.
-     · 활성 위치는 0 → steps-1로 편다. 시작하면 01번이, 끝나면 05번이 온전히 켜진다.
-     · 진행선은 0 → steps로 편다. 끝나면 다섯 줄이 모두 그어져 있다. */
-  function applyProcessProgress(progress) {
-    var count = processSteps.length;
-    var activePosition = progress * (count - 1);
-    var fillPosition = progress * count;
+    var activeStep = steps.filter(function (step) {
+      return step.classList.contains("is_active");
+    })[0] || steps[0];
 
-    processSteps.forEach(function (step, i) {
-      var weight = processWeight(activePosition, i);
-
-      step.style.opacity = String(
-        PROCESS_INACTIVE_OPACITY + (1 - PROCESS_INACTIVE_OPACITY) * weight
-      );
-      step.style.transform =
-        "translate3d(" + ((1 - weight) * PROCESS_INACTIVE_SHIFT).toFixed(2) + "px, 0, 0)";
-      step.style.setProperty("--process_step_fill", clamp01(fillPosition - i).toFixed(4));
-    });
-
-    processImages.forEach(function (image, i) {
-      if (!image) {
+    function setActiveStep(step) {
+      if (!step || step === activeStep) {
         return;
       }
 
-      var weight = processWeight(activePosition, i);
+      activeStep = step;
 
-      image.style.opacity = String(weight);
-      image.style.transform =
-        "scale(" + (1 + (1 - weight) * (PROCESS_IMAGE_SCALE - 1)).toFixed(4) + ")";
-    });
+      steps.forEach(function (item) {
+        var isMatch = item === step;
+        var head = item.querySelector(".process_step_head");
 
-    setActiveStepIndex(Math.min(count - 1, Math.max(0, Math.round(activePosition))));
-  }
+        item.classList.toggle("is_active", isMatch);
 
-  function clearProcessInlineStyles() {
-    processSteps.forEach(function (step) {
-      step.style.removeProperty("opacity");
-      step.style.removeProperty("transform");
-      step.style.removeProperty("--process_step_fill");
-    });
-
-    processImagePool.forEach(function (image) {
-      image.style.removeProperty("opacity");
-      image.style.removeProperty("transform");
-    });
-  }
-
-  function startProcessObserver() {
-    if (processObserver || !("IntersectionObserver" in window)) {
-      return;
+        if (head) {
+          head.setAttribute("aria-expanded", isMatch ? "true" : "false");
+        }
+      });
     }
 
-    processObserver = new IntersectionObserver(
-      function (entries) {
-        entries.forEach(function (entry) {
-          if (entry.isIntersecting) {
-            setActiveStepIndex(processSteps.indexOf(entry.target));
-          }
-        });
-      },
-      { rootMargin: "-45% 0px -45% 0px", threshold: 0 }
-    );
+    function stepFrom(target) {
+      if (!target || !target.closest) {
+        return null;
+      }
 
-    processSteps.forEach(function (step) {
-      processObserver.observe(step);
-    });
-  }
+      var step = target.closest(".process_step");
 
-  function stopProcessObserver() {
-    if (!processObserver) {
-      return;
+      return step && section.contains(step) ? step : null;
     }
 
-    processObserver.disconnect();
-    processObserver = null;
-  }
+    /* 열린 칸의 높이를 다섯 개 중 가장 큰 것으로 맞춘다.
 
-  /* 진행도를 담는 대리 객체를 scrub으로 트윈한다. scrub이 스크롤을 조금
-     늦게 따라오므로 단계가 딱 끊기지 않고 밀려오듯 넘어간다. */
-  function createProcessScrollTween(gsap, section, triggerOptions) {
-    var proxy = { value: 0 };
+       데스크톱에서는 사진(280px)이 설명(3줄 78px)보다 커서 다섯 칸이 이미
+       320px로 같다 — 여기서는 아무 일도 하지 않는다.
+       좁은 화면에서는 사진 아래로 설명이 쌓이는데 줄 수가 6줄과 7줄로
+       갈려서 407 / 380px으로 벌어진다(360px 실측). 그대로 두면 행을 옮길
+       때마다 아래 섹션이 27px씩 밀린다.
 
-    return gsap.to(proxy, {
-      value: 1,
-      ease: "none",
-      onUpdate: function () {
-        applyProcessProgress(proxy.value);
-      },
-      scrollTrigger: Object.assign(
-        {
-          trigger: section,
-          scrub: PROCESS_SCRUB,
-          invalidateOnRefresh: true,
-          onRefresh: function () {
-            applyProcessProgress(proxy.value);
-          }
-        },
-        triggerOptions
-      )
-    });
-  }
+       CSS에 값을 박지 않는 이유: 필요한 높이가 폭과 글꼴에 따라 달라진다. */
+    var panels = steps
+      .map(function (step) {
+        return step.querySelector(".process_step_panel_inner");
+      })
+      .filter(Boolean);
 
-  function initProcessMotion() {
-    if (!processSection || !processSteps.length || !processImagePool.length) {
-      return;
-    }
+    var reservedWidth = 0;
 
-    /* 기본 경로 C. 아래 matchMedia가 조건을 만족하면 잠시 멈춘다. */
-    startProcessObserver();
+    function reservePanelHeight() {
+      if (!panels.length) {
+        return;
+      }
 
-    if (!window.gsap || !window.ScrollTrigger) {
-      return;
-    }
+      var tallest = 0;
 
-    var gsap = window.gsap;
-    gsap.registerPlugin(window.ScrollTrigger);
-
-    function enterScrubMode() {
-      stopProcessObserver();
-      processSection.classList.add("is_scrub_ready");
-
-      return function () {
-        processSection.classList.remove("is_scrub_ready");
-        clearProcessInlineStyles();
-        startProcessObserver();
-      };
-    }
-
-    var processMedia = gsap.matchMedia();
-
-    /* A. 섹션을 화면 가운데에 붙잡고 그 안에서 5단계를 지난다.
-          `center center`라 1504px 섹션이 1080px 화면 가운데에 놓이고,
-          잘리는 것은 위아래 padding(272px)뿐이라 목록과 사진은 온전히 보인다.
-          여기서 늘어나는 문서 높이는 아래 end 값 그대로다(1080 기준 3888px). */
-    processMedia.add(PROCESS_PIN_GATE, function () {
-      var cleanup = enterScrubMode();
-
-      createProcessScrollTween(gsap, processSection, {
-        start: "center center",
-        end: "+=" + Math.round(processSteps.length * PROCESS_STEP_SCROLL * 100) + "%",
-        pin: true,
-        pinSpacing: true,
-        anticipatePin: 1
+      panels.forEach(function (panel) {
+        panel.style.minHeight = "";
+        tallest = Math.max(tallest, panel.offsetHeight);
       });
 
-      return cleanup;
-    });
-
-    /* B. pin 없이 섹션이 지나가는 동안 같은 전환을 돌린다.
-          스크롤을 가로채지 않으므로 낮은 화면에서도 목록이 잘리지 않는다. */
-    processMedia.add(PROCESS_SCRUB_GATE, function () {
-      var cleanup = enterScrubMode();
-
-      createProcessScrollTween(gsap, processSection, {
-        start: "top 70%",
-        end: "bottom 30%"
+      panels.forEach(function (panel) {
+        panel.style.minHeight = tallest + "px";
       });
 
-      return cleanup;
+      reservedWidth = section.clientWidth;
+    }
+
+    reservePanelHeight();
+
+    /* 웹폰트가 적용되면 줄 수가 달라지므로 다시 잰다. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(reservePanelHeight);
+    }
+
+    /* 폭이 실제로 달라졌을 때만 다시 잰다(무한 루프 방지). */
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(function () {
+        if (section.clientWidth !== reservedWidth) {
+          reservePanelHeight();
+        }
+      }).observe(section);
+    } else {
+      window.addEventListener("resize", reservePanelHeight);
+    }
+
+    /* mouseenter는 버블링하지 않으므로 mouseover로 위임한다. 행 안쪽 요소를
+       지날 때마다 다시 들어오지만 같은 행이면 setActiveStep이 바로 빠진다. */
+    section.addEventListener("mouseover", function (event) {
+      setActiveStep(stepFrom(event.target));
+    });
+
+    /* 키보드 Tab. 포커스가 들어오면 그 행이 열린다. */
+    section.addEventListener("focusin", function (event) {
+      setActiveStep(stepFrom(event.target));
+    });
+
+    /* 터치에는 hover가 없어 이 경로가 유일하다. */
+    section.addEventListener("click", function (event) {
+      setActiveStep(stepFrom(event.target));
     });
   }
+
 
   /* ---------------------------------------------------------
      philosophy — 등장(fade + slide up)과 배경 패럴랙스
@@ -824,7 +711,7 @@
     }
   }
 
-  initProcessMotion();
+  initProcessSteps();
   initMaterialsSelector();
   initPhilosophyMotion();
   initAtelierZoom();

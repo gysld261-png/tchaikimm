@@ -406,21 +406,27 @@
 }
 
 /* =========================================================
-   process — 5단계, 스크롤에 따라 오른쪽 이미지가 바뀐다 (시안 주석 반영)
+   process — 5단계. 행에 마우스를 올리면 색이 차오르고 사진과 설명이 열린다.
 
-   스크롤 인터랙션은 thecube.dk의 Services를 참고했다. 그 섹션은
-   "한쪽에 붙어 있는 미디어 + 차례로 자리를 넘겨받는 텍스트"인데,
-   이 process 섹션이 이미 같은 구성(왼쪽 5단계 목록 + 오른쪽 sticky 이미지)이라
-   **레이아웃은 한 줄도 바꾸지 않고** 단계가 넘어가는 방식만 다시 만들었다.
-   레퍼런스는 CSS sticky 스택이지만 여기서는 페이지가 이미 쓰고 있는
-   GSAP ScrollTrigger pin을 쓴다 — 목록 5개가 한 화면에 다 보이는 구성이라
-   레퍼런스처럼 항목마다 화면을 하나씩 차지하게 만들 수 없기 때문이다.
+   felix-nieto.com/about의 `.values_wrap`을 참고했다. 그쪽 행 구조를 실측하면:
+     .values_cms_item { border-top: 1px solid; position: relative }
+     .values_cms_bg   { position: absolute; inset: auto 0 0;
+                        width: 100%; height: 0% → 100%; z-index: 0 }
+     번호·제목 { z-index: 1 }
+   즉 **색이 행 아래쪽에 붙어 위로 차오른다.** 그대로 옮기되 높이 대신
+   `transform: scaleY()`를 쓴다 — 같은 그림이면서 합성만 하므로 매 프레임
+   레이아웃을 다시 잡지 않는다.
 
-   시각 상태는 두 갈래로 나뉜다.
-   · 아래 기본 규칙 = class(.is_active / .is_passed / .is_visible)만으로
-     완성되는 상태. JS·GSAP이 없거나 모션 감소 설정이면 이것만 쓴다.
-   · `.is_scrub_ready`가 붙으면 JS가 스크롤 진행도에 맞춰 인라인 값을
-     매 프레임 덮어쓰므로 transition을 끈다(끄지 않으면 뭉개져 따라온다).
+   레퍼런스와 다르게 한 것:
+   · 레퍼런스는 번호 + 제목뿐이고 열리지 않는다. 여기서는 그 행이 열리면서
+     그 단계의 사진과 설명이 나온다(요청).
+   · 레퍼런스의 brand 색(#96c4c8)은 밝아서 검은 글씨가 그대로 읽히지만,
+     이 사이트의 포인트 색(--color_point #1f433f)은 어둡다. 색이 덮은 행의
+     글자는 --color_text_inverse로 뒤집어야 읽힌다.
+
+   **한 번에 한 행만 열린다.** 다른 행으로 옮기면 앞 행이 닫히면서 열리므로
+   목록 전체 높이가 변하지 않는다 — hover만으로 페이지가 들썩이면 아래 섹션이
+   따라 움직여서 쓸 수 없다. 그래서 열린 칸의 높이를 사진 상자로 고정한다.
    ========================================================= */
 
 .process {
@@ -428,81 +434,83 @@
   flex-direction: column;
   gap: 40px;
 
-  /* 이미지 크로스페이드는 글자보다 길게 간다. 모션 감소 설정에서는
+  /* 색이 차오르는 시간과 행이 열리는 시간. 모션 감소 설정에서는
      --duration_base가 0.01ms이므로 그 값을 그대로 따라간다. */
-  --process_fade: 0.9s;
+  --process_fill_duration: 0.55s;
+  --process_open_duration: 0.6s;
   --process_ease: cubic-bezier(0.33, 1, 0.68, 1);
+  /* 사진 상자 높이 = 열린 칸의 높이. 여기만 바꾸면 전체가 따라간다. */
+  --process_media_height: 240px;
+  --process_row_padding: 32px;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .process {
-    --process_fade: var(--duration_base);
+    --process_fill_duration: var(--duration_base);
+    --process_open_duration: var(--duration_base);
   }
 }
 
 .process_list {
   display: flex;
   flex-direction: column;
-  gap: 40px;
 }
 
+/* 행 사이는 gap이 아니라 선으로 나뉜다(레퍼런스와 같다).
+   gap을 쓰면 색이 차오를 때 행 사이가 끊겨 보인다. */
 .process_step {
-  position: relative; /* 아래 진행선(::after)의 기준. 흐름에는 영향이 없다 */
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-bottom: 24px;
+  position: relative;
+  border-top: 1px solid var(--color_border_default);
+}
+
+.process_step:last-child {
   border-bottom: 1px solid var(--color_border_default);
-
-  /* 진행선이 차오른 정도(0~1). JS가 스크롤에 맞춰 인라인으로 덮어쓴다. */
-  --process_step_fill: 0;
-
-  opacity: 0.4;
-  /* 아직 지나지 않은 단계는 살짝 안쪽으로 물러나 있다.
-     transform이라 reflow가 없고 시안의 글 시작점은 활성 단계가 지킨다. */
-  transform: translate3d(8px, 0, 0);
-  transition:
-    opacity var(--duration_base) var(--easing_base),
-    transform var(--duration_base) var(--easing_base);
 }
 
-.process_step.is_passed {
-  --process_step_fill: 1;
-}
-
-.process_step.is_active {
-  --process_step_fill: 1;
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-}
-
-/* 진행선 — 이미 있는 border-bottom 위에 딱 겹쳐서 왼쪽부터 그어진다.
-   시안에 없는 장식을 새로 얹는 대신 원래 있던 선을 그대로 쓴다. */
-.process_step::after {
-  content: "";
+/* 차오르는 색 — 아래쪽에 붙어 있다가 위로 자란다.
+   `inset: 0` + `transform-origin: bottom`이라 행이 열려 커져도 항상 꽉 찬다. */
+.process_step_fill {
   position: absolute;
-  right: 0;
-  bottom: -1px;
-  left: 0;
-  height: 1px;
+  inset: 0;
+  z-index: 0;
   background-color: var(--color_point);
-  transform: scaleX(var(--process_step_fill, 0));
-  transform-origin: left center;
-  transition: transform var(--duration_base) var(--easing_base);
+  transform: scaleY(0);
+  transform-origin: bottom center;
+  transition: transform var(--process_fill_duration) var(--process_ease);
   pointer-events: none;
 }
 
+.process_step.is_active .process_step_fill {
+  transform: scaleY(1);
+}
+
+.process_step_heading {
+  margin: 0;
+  font: inherit;
+}
+
+/* 행 전체가 누를 수 있는 영역이다. 레퍼런스는 div에 hover만 걸어 키보드로
+   열 수 없는데, 여기서는 button + aria-expanded로 아코디언을 만든다.
+   reset.css가 button의 색·글꼴·여백을 상속으로 되돌려 둔다. */
+.process_step_head {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 40px;
+  width: 100%;
+  padding: var(--process_row_padding) 24px;
+  text-align: left;
+  transition: color var(--process_fill_duration) var(--process_ease);
+}
+
 .process_step_num {
+  flex: 0 0 auto;
+  min-width: 56px;
   color: var(--color_text_muted);
   font-family: var(--font_ui);
   font-size: var(--fs_ui_16);
-  transition: color var(--duration_base) var(--easing_base);
-}
-
-/* 색만으로 현재 단계를 알리지 않는다 — 불투명도, 들여쓰기, 진행선이 함께 바뀐다. */
-.process_step.is_active .process_step_num,
-.process_step.is_passed .process_step_num {
-  color: var(--color_point);
+  transition: color var(--process_fill_duration) var(--process_ease);
 }
 
 .process_step_title {
@@ -510,71 +518,118 @@
   font-family: var(--font_display);
   font-size: var(--fs_display_24);
   line-height: 1.25;
+  transition: color var(--process_fill_duration) var(--process_ease);
 }
 
-.process_step_desc {
-  color: var(--color_text_secondary);
-  font-family: var(--font_ui);
-  font-size: var(--fs_ui_16);
+/* 색이 덮은 행은 글자를 뒤집는다. 번호는 흰색을 조금 눌러서
+   제목과의 위계를 비활성 상태(muted vs text)와 같게 유지한다. */
+.process_step.is_active .process_step_num {
+  color: rgb(255 253 249 / 0.65);
 }
 
-.process_image {
+.process_step.is_active .process_step_title {
+  color: var(--color_text_inverse);
+}
+
+/* 열림 — `grid-template-rows: 0fr → 1fr`이라 높이를 JS로 재지 않아도
+   부드럽게 열린다(shop_detail 사이즈 가이드와 같은 방식). */
+.process_step_panel {
   position: relative;
-  width: 100%;
-  aspect-ratio: 853 / 960;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--process_open_duration) var(--process_ease);
+}
+
+.process_step.is_active .process_step_panel {
+  grid-template-rows: 1fr;
+}
+
+/* `min-height: 0` + `overflow: hidden`이 0fr 접힘의 전제다. 둘 중 하나라도
+   빠지면 칸이 내용 높이만큼 벌어진 채 닫히지 않는다.
+
+   ★ 이 요소에는 padding을 주면 안 된다. `min-height: 0`은 **내용 상자**만
+   0으로 줄여 주고 padding은 그대로 남아서, 닫힌 행이 그만큼(40px) 벌어진다.
+   실제로 그렇게 났다 — 닫힌 행이 111이 아니라 151px이었다.
+   그래서 여백은 한 겹 안쪽(.process_step_panel_inner)이 갖는다. */
+.process_step_panel_clip {
+  min-height: 0;
   overflow: hidden;
 }
 
-.process_image_img {
-  position: absolute;
-  inset: 0;
+.process_step_panel_inner {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  padding: 0 24px var(--process_row_padding);
+}
+
+.process_step_media {
+  flex: 0 0 360px;
+  height: var(--process_media_height);
+  overflow: hidden;
+}
+
+.process_step_media img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* 설명은 열린 행 안에만 있으므로 색이 덮인 상태를 기준으로 쓴다. */
+.process_step_desc {
+  flex: 1 1 auto;
+  max-width: 620px;
+  color: var(--color_text_inverse);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_16);
+  line-height: 1.63;
+}
+
+/* 내용은 색이 차오른 뒤에 뜬다 — 두 동작이 겹치면 어수선해진다. */
+.process_step_media,
+.process_step_desc {
   opacity: 0;
-  /* 들어오는 사진은 조금 큰 상태에서 제자리로 내려앉는다.
-     .process_image의 overflow: hidden이 넘치는 부분을 잘라내므로
-     아무리 키워도 레이아웃에는 영향이 없다. */
-  transform: scale(1.06);
+  transform: translate3d(0, 12px, 0);
   transition:
-    opacity var(--process_fade) var(--process_ease),
-    transform var(--process_fade) var(--process_ease);
+    opacity var(--process_open_duration) var(--process_ease),
+    transform var(--process_open_duration) var(--process_ease);
 }
 
-.process_image_img.is_visible {
+.process_step.is_active .process_step_media,
+.process_step.is_active .process_step_desc {
   opacity: 1;
-  transform: scale(1);
+  transform: translate3d(0, 0, 0);
+  transition-delay: 0.12s;
 }
 
-/* 스크롤 구동 중에는 JS가 매 프레임 인라인 값을 쓴다.
-   여기에 transition이 남아 있으면 값이 뒤늦게 따라와 뭉개진다.
-   자식 요소(.process_step_num의 color)는 transition이 상속되지 않으므로
-   그대로 살아 있다 — 숫자 색만 부드럽게 바뀐다. */
-.process.is_scrub_ready .process_step,
-.process.is_scrub_ready .process_step::after,
-.process.is_scrub_ready .process_image_img {
-  transition: none;
-}
-
-@media (min-width: 1280px) {
+@media (max-width: 767px) {
   .process {
-    flex-direction: row;
-    align-items: flex-start;
-    gap: 80px;
+    --process_media_height: 180px;
+    --process_row_padding: 24px;
   }
 
-  .process_list {
-    flex: 0 0 45%;
+  .process_step_head {
+    gap: 20px;
+    padding-inline: 16px;
   }
 
-  .process_step {
-    padding-top: 16px;
+  .process_step_num {
+    min-width: 40px;
   }
 
-  .process_image {
-    position: sticky;
-    top: 120px;
-    flex: 1 1 auto;
+  /* 좁은 화면에서는 사진 위, 설명 아래로 쌓는다.
+     그러면 열린 칸 높이가 사진 하나로 고정되지 않으므로, 설명 줄 수가
+     달라도 흔들리지 않도록 사진을 가로로 꽉 채운다. */
+  .process_step_panel_inner {
+    flex-direction: column;
+    gap: 20px;
+    padding-inline: 16px;
+  }
+
+  .process_step_media {
+    flex: 0 0 auto;
+    width: 100%;
   }
 }
 
@@ -1154,35 +1209,38 @@
     margin-top: 41px;
   }
 
-  /* --- process: 1505 -----------------------------------------------------
-     단계 하나 24+21+30+21+24+39 + 아래선 1px = 160, 목록 5×160 + 4×40 = 960,
-     섹션 272 + 960 + 272 = 1504.
-     padding-bottom이 40이 아니라 39인 것은 `border-bottom: 1px`이 높이에 더해지기 때문이다.
-     목록 727px은 임의값이 아니다 — 03번 설명이 시안에서 정확히 727px 한 줄이다.
-     720px로 두면 폰트 로딩에 따라 두 줄로 넘어가 단계 높이가 무너진다. */
+  /* --- process ------------------------------------------------------------
+     **이 섹션은 더 이상 시안 2단(목록 727 | 사진 873) 배치가 아니다.**
+     felix-nieto의 행 목록으로 바꾸면서 오른쪽 사진 칸을 없앴고, 사진은
+     열린 행 안으로 들어갔다(사용자 결정). 위아래 여백만 시안값을 지킨다.
+     시안 높이 1504는 목록 960 기준이었는데 지금은 행 5개라 더 낮다. */
   .main .process {
-    gap: 100px;
     padding-top: 272px;
     padding-bottom: 272px;
   }
 
-  .process_list {
-    flex: 0 1 727px;
+  /* 1700 컨테이너에서는 행이 넓어지므로 번호 칸과 안쪽 여백을 함께 키운다. */
+  .process {
+    --process_media_height: 280px;
+    --process_row_padding: 40px;
   }
 
-  .process_step {
-    gap: 21px;
-    padding-top: 0;
-    padding-bottom: 39px;
+  .process_step_head {
+    gap: 56px;
+    padding-inline: 32px;
   }
 
-  /* basis를 0으로 둬야 한다. 기본값 `flex: 1 1 auto`는 이미지의 고유 폭을
-     basis로 주장해서, 줄어들 수 있는 목록(0 1 727px)을 479px까지 밀어냈다.
-     basis 0이면 목록이 727을 지키고 이미지가 남은 873px을 가져간다. */
-  .process_image {
-    flex: 1 1 0;
-    height: 960px;
-    aspect-ratio: auto;
+  .process_step_num {
+    min-width: 64px;
+  }
+
+  .process_step_panel_inner {
+    gap: 56px;
+    padding-inline: 32px;
+  }
+
+  .process_step_media {
+    flex: 0 0 420px;
   }
 
   /* --- materials(fabric_section): 1408 -----------------------------------
