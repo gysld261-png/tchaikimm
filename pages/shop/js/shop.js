@@ -27,15 +27,20 @@ var heroGallery = document.getElementById("hero_gallery");
 var canvas = document.getElementById("hero_gallery_canvas");
 var navLinks = Array.prototype.slice.call(document.querySelectorAll(".hero_nav_link"));
 
+/* ★ 원본 PNG(장당 8~12MB, 3200~3700px 폭)가 아니라 가로 1400px JPEG를 씁니다.
+   앞 카드는 화면에 약 545 × 793px로 그려지므로, 레티나(2배)와 호버 확대(1.12배)를
+   합쳐도 필요한 건 가로 1221px입니다. 원본은 3배 과했고 4장 합계가 41.3MB라
+   Shop에 들어올 때 히어로가 뜨기까지 그만큼을 기다려야 했습니다.
+   원본 PNG는 같은 폴더에 그대로 있습니다 — 카드를 더 키우면 다시 내보내면 됩니다. */
 var IMAGE_URLS = [
-  "assets/images/gallery_image1.png",
-  "assets/images/gallery_image2.png",
-  "assets/images/gallery_image3.png",
-  "assets/images/gallery_image4.png",
-  "assets/images/gallery_image1.png",
-  "assets/images/gallery_image2.png",
-  "assets/images/gallery_image3.png",
-  "assets/images/gallery_image4.png"
+  "assets/images/gallery_image1.jpg",
+  "assets/images/gallery_image2.jpg",
+  "assets/images/gallery_image3.jpg",
+  "assets/images/gallery_image4.jpg",
+  "assets/images/gallery_image1.jpg",
+  "assets/images/gallery_image2.jpg",
+  "assets/images/gallery_image3.jpg",
+  "assets/images/gallery_image4.jpg"
 ];
 
 var CARD_COUNT = IMAGE_URLS.length;
@@ -749,47 +754,5 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
     /* 키보드로 탭 이동할 때도 따라오게 합니다. 없으면 focus 링만 옮겨다니고
        크기는 그대로라 지금 어디에 있는지 알아보기 어렵습니다. */
     card.addEventListener("focus", handleSelect);
-  });
-})();
-
-/* motif_detail — 왼쪽 설명 블록이 오른쪽 영상을 따라 아래로 내려옵니다.
-   영상 위 끝에서 시작해 영상 아래 끝에서 멈추므로, 그 아래 관련 상품 영역까지
-   넘어가지 않습니다. scrub으로 스크롤 위치에 묶어둬서 되감으면 같이 올라옵니다
-   (Figma 주석: "스크롤시 오른쪽 영상을 따라서 밑으로 내려옴"). */
-(function initMotifReferenceScroll() {
-  "use strict";
-
-  var hero = document.querySelector(".motif_hero");
-  var reference = document.getElementById("motif_reference");
-  var video = document.querySelector(".motif_video");
-
-  if (!hero || !reference || !video || typeof window.gsap === "undefined" || !window.ScrollTrigger) {
-    return;
-  }
-
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    return;
-  }
-
-  var gsap = window.gsap;
-  var ScrollTrigger = window.ScrollTrigger;
-  gsap.registerPlugin(ScrollTrigger);
-
-  gsap.to(reference, {
-    /* 영상 높이에서 글 블록 높이를 뺀 만큼 = 영상 위 끝에서 아래 끝까지.
-       함수로 두면 창 크기가 바뀔 때 invalidateOnRefresh가 다시 계산합니다. */
-    y: function () {
-      return video.offsetHeight - reference.offsetHeight;
-    },
-    ease: "none",
-    scrollTrigger: {
-      trigger: hero,
-      /* 영상 위 끝이 화면 위에 닿을 때 시작해서, 영상 아래 끝이 화면 아래에
-         닿을 때 끝납니다. 이 구간이 곧 "영상이 화면을 지나가는 동안"입니다. */
-      start: "top top",
-      end: "bottom bottom",
-      scrub: 1,
-      invalidateOnRefresh: true
-    }
   });
 })();

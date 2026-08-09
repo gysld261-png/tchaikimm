@@ -1613,6 +1613,12 @@
   .garment_story_scroll {
     zoom: calc(1 / var(--shop_view_scale));
   }
+
+  /* Shop 콘텐츠에만 적용한 발표용 축소가 공통 푸터까지 작게 만들지 않도록
+     푸터 슬롯은 다른 페이지와 같은 1920px 기준 크기로 되돌립니다. */
+  .common_footer_slot {
+    zoom: calc(1 / var(--shop_view_scale));
+  }
 }
 
 /* =========================================================
