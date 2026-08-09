@@ -174,7 +174,7 @@
       );
   })();
 
-  gsap.matchMedia().add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", function () {
+  gsap.matchMedia().add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", function () {
     var triggers = [];
     var resets = [];
 
@@ -202,7 +202,9 @@
       var bespokeCopyItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll('[data-copy-variant="bespoke"]')) : [];
       var readyCopyItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll('[data-copy-variant="ready"]')) : [];
       var hasCollageReveal = collageStep && cards && nameLeft && nameRight;
-      var isDesktop = window.innerWidth >= 1280;
+      /* 카드 덱 애니메이션 자체가 1024px부터 실행되므로, 같은 구간에서는
+         두 브랜드명도 실제 렌더링 폭을 기준으로 좌우 화면 밖까지 보냅니다. */
+      var isDesktop = window.innerWidth >= 1024;
       var revealOrder = [1, 2, 0, 3];
       var viewportCenterX = window.innerWidth / 2;
       var cardNaturalCenterX = cardItems.map(function (card) {
