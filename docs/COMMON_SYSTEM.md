@@ -146,8 +146,30 @@ Tuning constants sit together above `updateHeaderOnScroll()`:
 
 Measured cost is about 0.09 ms per frame (roughly 0.5% of a 60fps budget).
 
-Load Lenis, GSAP, and ScrollTrigger before `common.js`. The shared scroll values are
-`lerp: 0.06` and `wheelMultiplier: 0.75`; change them in `initSmoothScroll()` only.
+Load Lenis, GSAP, and ScrollTrigger before `common.js`.
+
+### 스크롤 감각 조정 (Lenis)
+
+**`common/js/common.js` 맨 위 상수 세 개만 고칩니다.** 페이지 CSS나 페이지 JS에
+복사하지 마세요 — 여기를 고치면 전 페이지가 함께 바뀝니다. 각 상수 위에 값 범위와
+느낌을 주석으로 적어 두었습니다.
+
+| 상수 | 현재 | 의미 |
+|---|---|---|
+| `SCROLL_LERP` | `0.035` | 얼마나 늦게 따라오는가. **낮을수록 부드러움**(0.02 아주 미끄러움 / 0.1 Lenis 기본) |
+| `SCROLL_WHEEL` | `0.7` | 휠 한 칸의 이동 거리 배수. 낮을수록 묵직 (1 = 브라우저 기본) |
+| `SCROLL_TOUCH` | `1.6` | 터치 이동 배수. `syncTouch`를 켜지 않는 한 거의 영향 없음 |
+
+값을 찾을 때는 브라우저 콘솔에서 바로 시험해 볼 수 있습니다:
+
+```js
+window.tchaikimmLenis.options.lerp = 0.02;
+```
+
+새로고침하면 파일의 상수 값으로 돌아갑니다. 마음에 드는 값을 찾은 뒤 파일을 고치세요.
+
+`prefers-reduced-motion: reduce`이거나 Lenis·GSAP이 없으면 초기화하지 않고 브라우저
+기본 스크롤을 씁니다.
 
 Page-specific motion remains in each page script. For example, the Shop 3D hero,
 Garment Story, category selector, and Motif interactions stay in `pages/shop/js/shop.js`.
