@@ -121,10 +121,21 @@
 
       var collageStep = pin.querySelector(".brand_collage");
       var cards = collageStep ? collageStep.querySelector(".brand_collage_cards") : null;
+      var cardItems = cards ? Array.prototype.slice.call(cards.querySelectorAll(".brand_collage_card")) : [];
       var nameLeft = collageStep ? collageStep.querySelector(".brand_collage_name_left") : null;
       var nameRight = collageStep ? collageStep.querySelector(".brand_collage_name_right") : null;
       var hasCollageReveal = collageStep && cards && nameLeft && nameRight;
       var isDesktop = window.innerWidth >= 1280;
+      var revealOrder = [1, 2, 0, 3];
+      var viewportCenterX = window.innerWidth / 2;
+      var cardNaturalCenterX = cardItems.map(function (card) {
+        var cardBox = card.getBoundingClientRect();
+        return cardBox.left + cardBox.width / 2;
+      });
+      var nameLeftBox = nameLeft ? nameLeft.getBoundingClientRect() : null;
+      var nameRightBox = nameRight ? nameRight.getBoundingClientRect() : null;
+      var nameLeftExitX = nameLeftBox ? -nameLeftBox.right - 40 : 0;
+      var nameRightExitX = nameRightBox ? window.innerWidth - nameRightBox.left + 40 : 0;
 
       var splitTextIntoLetters = function (element) {
         var text = element.textContent;
@@ -152,7 +163,14 @@
       if (hasCollageReveal) {
         collageStep.classList.add("is_enhanced");
         gsap.set(collageStep, { opacity: 1, scale: 1 });
-        gsap.set(cards, { opacity: 0, scale: 0.92 });
+        gsap.set(cards, { opacity: 1, scale: 1 });
+        cardItems.forEach(function (card) {
+          gsap.set(card, {
+            y: window.innerHeight * 0.02,
+            scale: 0.5,
+            opacity: 0
+          });
+        });
         gsap.set([nameLeft, nameRight], { opacity: 1, scale: 1.06 });
         gsap.set(leftLetters, {
           opacity: 0,
@@ -180,7 +198,7 @@
         scrollTrigger: {
           trigger: pin,
           start: "top top",
-          end: "+=" + window.innerHeight * 3.2,
+          end: "+=" + window.innerHeight * 5.4,
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,
@@ -211,11 +229,49 @@
         addLetterReveal(leftLetters, 2);
         addLetterReveal(rightLetters, 5);
 
-        tl.to([nameLeft, nameRight], { scale: 1, duration: 0.9, ease: "power2.out" }, 0)
-          .to(nameLeft, isDesktop ? { xPercent: -115, duration: 1.7, ease: "none" } : { y: -70, duration: 1.7, ease: "none" }, 0.78)
-          .to(nameRight, isDesktop ? { xPercent: 58, duration: 1.7, ease: "none" } : { y: 70, duration: 1.7, ease: "none" }, 0.78)
-          .to(cards, { opacity: 1, scale: 1, duration: 1.5, ease: "power1.out" }, 0.96)
-          .to(collageStep, { opacity: 0, scale: 0.92, duration: 0.7, ease: "power1.in" }, 2.45);
+        tl.to([nameLeft, nameRight], { scale: 1, duration: 0.9, ease: "power2.out" }, 0);
+
+        /* 사진은 각자의 가로 위치를 유지한 채 레퍼런스 순서인 2 → 3 → 1 → 4로
+           하나씩 확대되며 다가옵니다. */
+        revealOrder.forEach(function (cardIndex, orderIndex) {
+          var card = cardItems[cardIndex];
+          var cardStart = 0.88 + orderIndex * 0.2;
+
+          /* 레퍼런스의 실제 수식:
+             opacity = progress * 2, scale = .5 + progress / 2,
+             translateY = 2vh - progress * 4vh. 회전과 개별 easing은 없습니다. */
+          tl.to(card, { opacity: 1, duration: 0.4, ease: "none" }, cardStart)
+            .to(card, {
+              scale: 1,
+              y: window.innerHeight * -0.02,
+              duration: 0.8,
+              ease: "none"
+            }, cardStart);
+        });
+
+        /* 두 이름은 일부가 남지 않도록 실제 렌더링 폭을 기준으로 화면 밖까지 보냅니다. */
+        tl.to(nameLeft, isDesktop ? { x: nameLeftExitX, duration: 1.15, ease: "none" } : { y: -70, duration: 1.15, ease: "none" }, 1.82)
+          .to(nameRight, isDesktop ? { x: nameRightExitX, duration: 1.15, ease: "none" } : { y: 70, duration: 1.15, ease: "none" }, 1.82);
+
+        /* 레퍼런스의 다음 장면: 가로 한 줄이 중앙 카드 덱으로 모입니다.
+           세 번째 카드를 기준(order 0)으로 인접 카드는 7/8, 가장 먼 카드는 6/8,
+           세로 간격은 12vh이며 전체 기본 배율은 2배입니다. */
+        cardItems.forEach(function (card, index) {
+          var sequenceOrder = index - 2;
+          var stackScale = 2 * (1 - Math.abs(sequenceOrder) / 8);
+
+          /* z-index는 보간하면 겹치는 도중 앞뒤 순서가 프레임마다 바뀌어 깜빡입니다.
+             집결 직전에 한 번만 확정하고 transform만 애니메이션합니다. */
+          tl.set(card, { zIndex: 20 - Math.abs(sequenceOrder) }, 3.14);
+          tl.to(card, {
+            x: viewportCenterX - cardNaturalCenterX[index],
+            y: sequenceOrder * window.innerHeight * 0.12,
+            scale: stackScale,
+            force3D: true,
+            duration: 1.25,
+            ease: "power2.inOut"
+          }, 3.15);
+        });
       }
 
       triggers.push(tl.scrollTrigger);
@@ -224,7 +280,7 @@
         if (hasCollageReveal) {
           collageStep.classList.remove("is_enhanced");
           gsap.set(collageStep, { clearProps: "scale,opacity" });
-          gsap.set([cards, nameLeft, nameRight, leftLetters, rightLetters], { clearProps: "all" });
+          gsap.set([cards, cardItems, nameLeft, nameRight, leftLetters, rightLetters], { clearProps: "all" });
         }
       });
     })();

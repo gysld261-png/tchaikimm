@@ -273,14 +273,22 @@
    js/main.js가 .is_pinned를 붙이면 한 화면에 고정된 채 글자만 바뀝니다.
    ========================================================= */
 
+.brand_word_pin {
+  /* Figma 2068:7415 — detail 다음 장면을 따뜻하게 구분하고, 아래로 갈수록
+     페이지 기본 크림색으로 자연스럽게 이어지는 수직 그라디언트입니다. */
+  background-image: linear-gradient(
+    to bottom,
+    var(--color_surface_subtle, #f5efe4) 0%,
+    var(--color_bg, #fffdf9) 100%
+  );
+}
+
 .brand_word_pin.is_pinned {
   position: relative;
   height: 100vh;
   min-height: 600px;
   overflow: hidden;
-  /* 고정(pin)되는 동안 배경이 비어 있으면 뒤에 있는 다른 섹션이 그대로
-     비쳐서 글자와 겹쳐 보입니다. 시안에서도 이 구간은 크림 배경이라
-     페이지 기본 배경색으로 확실히 덮어둡니다. */
+  /* 그라디언트 아래의 기본색도 명시해 로딩 중 배경이 비치지 않게 합니다. */
   background-color: var(--color_bg);
 }
 
@@ -363,48 +371,37 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: clamp(12px, 3vw, 52px);
+  gap: 20px;
   width: 100%;
 }
 
 .brand_collage_card {
   flex: 0 0 auto;
+  position: relative;
   width: 20%;
-  max-width: 285px;
+  max-width: 287px;
+  aspect-ratio: 180 / 242.61;
+  overflow: hidden;
+  backface-visibility: hidden;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
 }
 
 .brand_collage_card.is_size_sm {
-  width: 16%;
-  max-width: 232px;
+  width: 20%;
+  max-width: 287px;
 }
 
 .brand_collage_card.is_dim {
-  opacity: 0.2;
+  opacity: 1;
 }
 
 .brand_collage_card img {
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: cover;
-}
-
-.brand_collage_btn {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.brand_collage_link {
-  color: #636363;
-  font-family: var(--font_body);
-  font-size: var(--fs_body_24);
-  line-height: 1.58;
-}
-
-.brand_collage_link_right {
-  text-align: right;
+  backface-visibility: hidden;
 }
 
 .brand_collage_name {
@@ -421,7 +418,7 @@
   transform: translate(-50%, -50%);
   color: var(--color_text);
   font-family: var(--font_display);
-  font-size: clamp(28px, 6vw, 74px);
+  font-size: clamp(28px, 6vw, 96px);
   font-weight: 600;
   line-height: 1.13;
   letter-spacing: -0.02em;
@@ -467,6 +464,11 @@
     justify-content: center;
     gap: clamp(60px, 6vw, 120px);
     white-space: nowrap;
+  }
+
+  .brand_collage_card,
+  .brand_collage_card.is_size_sm {
+    width: min(14.0625vw, 287px);
   }
 }
 
