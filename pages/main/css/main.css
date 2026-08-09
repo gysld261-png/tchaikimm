@@ -1835,3 +1835,211 @@
     width: 84px;
   }
 }
+
+/* =========================================================
+   intro (scroll) — 두루마기 영상
+
+   원래 pages/brand/의 마지막 섹션이었는데 메인 인트로로 옮겼습니다.
+   brand.css에서 그대로 가져온 것이라 브레이크포인트가 이 파일의 다른
+   규칙(1279 / 1023 / 767)과 다릅니다 — 원래대로 1279 / 768 / 390입니다.
+   보이는 모습을 brand에서와 똑같이 유지하려고 일부러 바꾸지 않았습니다.
+   ========================================================= */
+
+.scroll {
+  position: relative;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-block: 100px;
+
+  /*
+   * 배경 없음.
+   * main의 배경이 계속 이어집니다.
+   */
+  background: transparent;
+
+  overflow-x: clip;
+}
+
+.scroll_stage {
+  position: relative;
+  width: 100%;
+  max-width: 1920px;
+  aspect-ratio: 1840 / 1124;
+  margin-inline: auto;
+  overflow: hidden;
+}
+
+.scroll_video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+
+.scroll_overlay {
+  position: absolute;
+  top: 47.5%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  text-align: center;
+  color: var(--color_text);
+}
+
+.scroll_overlay_eyebrow {
+  max-width: 200px;
+  font-family: var(--font_body);
+  font-weight: 600;
+  font-size: 11px;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+  text-transform: uppercase;
+}
+
+.scroll_overlay_book {
+  display: block;
+  width: 80px;
+  height: 80px;
+  transition:
+    transform var(--duration_base, 0.4s)
+    ease;
+}
+
+.scroll_overlay_book:hover,
+.scroll_overlay_book:focus-visible {
+  transform: scale(1.06);
+}
+
+.scroll_overlay_book img {
+  width: 100%;
+  height: 100%;
+  animation:
+    scroll_overlay_book_spin
+    10s
+    linear
+    infinite;
+}
+
+@keyframes scroll_overlay_book_spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.scroll_overlay_social {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.scroll_overlay_social a {
+  display: flex;
+  transition:
+    opacity var(--duration_fast)
+    var(--easing_base);
+}
+
+.scroll_overlay_social a:hover,
+.scroll_overlay_social a:focus-visible {
+  opacity: 0.6;
+}
+
+.scroll_overlay_social img {
+  width: 24px;
+  height: 24px;
+}
+
+@media (max-width: 1279px) {
+  /* ---- scroll ------------------------------------------------------------
+     .scroll_stage는 이미 aspect-ratio 기반 유동 폭이라 폭 자체는 손댈
+     필요가 없습니다. 위아래 여백만 줄입니다. 비율은 768/390에서
+     따로 조정합니다(아래 참고 — 1279에서는 아직 높이가 넉넉해 그대로 둡니다). */
+  .scroll {
+    padding-block: 72px;
+  }
+}
+
+@media (max-width: 768px) {
+  /* ---- scroll ---------------------------------------------------------------
+     768에서는 원래 비율(1840:1124)로도 높이가 469px라 아직 괜찮지만,
+     문구·버튼·아이콘이 여백 없이 딱 맞는 정도라 4:3으로 살짝 세워
+     여유를 둡니다(높이 576px). */
+  .scroll {
+    padding-block: 56px;
+  }
+
+  .scroll_stage {
+    aspect-ratio: 4 / 3;
+  }
+
+  .scroll_overlay_book {
+    width: 72px;
+    height: 72px;
+  }
+
+  .scroll_overlay_eyebrow {
+    font-size: 10px;
+  }
+}
+
+@media (max-width: 390px) {
+  /* ---- scroll ----------------------------------------------------------------------
+     원래 비율(1840:1124)이면 390px에서 높이가 238px로 눌려 문구·버튼·
+     아이콘이 좁게 붙어 보입니다. 세로 4:5로 세워 높이를 487px까지
+     확보합니다 — 영상 좌우가 더 잘리는 대가는 있지만, 폭이 좁은 화면일수록
+     "짧고 넓은 띠"보다 "세로로 긴 화면"이 자연스럽습니다. */
+  .scroll {
+    padding-block: 48px;
+  }
+
+  .scroll_stage {
+    aspect-ratio: 4 / 5;
+  }
+
+  .scroll_overlay {
+    gap: 18px;
+  }
+
+  .scroll_overlay_eyebrow {
+    max-width: 160px;
+  }
+
+  .scroll_overlay_book {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scroll_overlay_book img {
+    animation: none;
+  }
+}
+
+/* 인트로가 화면 맨 위를 덮고 있는 동안에는 헤더를 감춥니다.
+
+   ★ 공통의 .header.is_hidden을 쓰면 안 됩니다. 그 클래스는 common.js의
+     updateHeaderOnScroll()이 스크롤마다 직접 관리하고, scrollY <= 16이면
+     매 프레임 강제로 떼어냅니다. 인트로는 스크롤 0에서 시작하므로 정면으로
+     충돌합니다. body에 거는 별도 클래스라야 서로 건드리지 않습니다.
+
+   transform을 쓰는 이유: layout.css의 .header가 이미 transform을 transition
+   대상으로 갖고 있어(will-change도 걸려 있음) 새 transition 없이 위로
+   미끄러져 사라지고, 인트로가 끝나면 다시 내려옵니다.
+
+   skip link(.skip_link)는 헤더 슬롯 바깥에 있어 영향받지 않습니다 —
+   헤더가 숨겨져도 키보드로 콘텐츠 건너뛰기가 그대로 동작합니다. */
+body.is_intro_active .header {
+  transform: translateY(-100%);
+}

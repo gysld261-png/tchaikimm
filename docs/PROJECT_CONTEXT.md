@@ -1,6 +1,79 @@
 # Tchai Kim 현재 상태
 
 
+## 두루마기 영상 섹션을 brand → main 인트로로 이동 (2026-08-09)
+
+`pages/brand/`의 마지막 섹션(`.scroll`, 두루마기 영상 스크럽)을 **메인 페이지의 첫
+섹션**으로 옮겼습니다. brand에서는 빠졌습니다. 인트로 구간에서는 헤더를 감춥니다.
+
+- `pages/brand/` index.html · brand.css · brand.js — 섹션·규칙·스크립트 제거
+- `pages/main/` index.html · main.css · main.js — 동일 내용 추가
+- 에셋 4개 `git mv`: `intro.mp4` → `pages/main/assets/main/intro/`,
+  `brand_btn_book.png` → 같은 폴더, `Instagram.svg` · `Facebook.svg` →
+  `pages/main/assets/icons/`
+
+`.scroll*` 클래스가 main.css·공통 CSS·main.js 어디에도 없어 이름 충돌은 없었습니다.
+에셋 4개도 brand에서 이 섹션에서만 쓰였습니다(그래서 복사가 아니라 이동).
+
+### ★ 인트로에서 헤더를 감출 때 `.header.is_hidden`을 쓰면 안 됩니다
+
+`layout.css`에 이미 있는 클래스지만 **`common.js`의 `updateHeaderOnScroll()`이
+스크롤마다 소유합니다** — `currentScrollY <= 16`이면 **매 프레임 강제로 제거**합니다.
+인트로는 스크롤 0에서 시작하므로 정면충돌입니다.
+
+`<body>`에 거는 별도 클래스 `is_intro_active`를 씁니다. `common.js`는 `.header`
+자신의 클래스만 건드리므로 서로 간섭하지 않습니다. 값은 `.header`의 기존 transition
+대상인 `transform: translateY(-100%)`이라 새 transition 없이 미끄러집니다.
+
+- 토글은 `main.js` 인트로 IIFE 안에 있고 **`initScrollVideo()` 밖**입니다.
+  그 함수는 GSAP이 없으면 통째로 return하고 스크럽도 1280px 이상에서만 켜지는데,
+  헤더 숨김은 **모든 폭·모션 감소 설정에서** 동작해야 합니다.
+- 판정식은 `rect.top <= 1 && rect.bottom > 0` — 인트로가 화면 맨 위를 덮는 동안만.
+  pin 구간에서는 섹션이 top 0에 고정돼 계속 참이고, pin이 없는 좁은 화면에서도
+  섹션이 지나가면 꺼집니다.
+- `.skip_link`는 헤더 슬롯 **바깥**(`index.html:23`)이라 영향받지 않습니다.
+
+### ★ 영상 seek에는 HTTP Range 지원 서버가 필요합니다
+
+`python3 -m http.server`는 Range를 지원하지 않아 **`video.seekable`이 `[0, 0]`이 되고
+스크럽이 전혀 동작하지 않습니다.** 이번에 실제로 겪었고, 코드 문제로 오인하기 쉽습니다.
+세션 스크래치패드의 `serve_range.py`를 만들어 썼습니다(**5641 포트** — 5631은 다른
+세션의 서버가 점유 중이었습니다). **다른 세션에서는 다시 만들어야 합니다.**
+
+`.gitignore`에 `*.mp4`가 있어 `intro.mp4`는 `git add -f`가 필요했습니다.
+
+### 알아둘 동작 (버그 아님)
+
+인트로가 끝난 뒤 **아래로 계속 스크롤하면 헤더가 바로 나타나지 않습니다.**
+`common.js`의 기존 자동 숨김(아래로 감춤 / 위로 표시)이 이어받기 때문이며 다른
+페이지와 동일합니다. 위로 조금 스크롤하면 나타납니다.
+
+### 검증 (Chromium, localhost:5641)
+
+| 확인 | 결과 |
+|---|---|
+| `<main>` 첫 자식 | `pin-spacer` → 그 안이 `.scroll` (hero보다 앞) |
+| 스크럽 (진행률 0 / .225 / .45 / .675 / .9) | `currentTime` 0 / 1.01 / 2.02 / 3.03 / 4.04 — **기대값과 완전 일치** |
+| 오버레이 | 3.03초에서 0.03 → 4.04초에서 1 (디자이너 주석 "3초부터 4초에 완전히") |
+| 헤더 숨김 (트랜지션 끈 상태) | class ON `translateY(-66px)` = 헤더 높이의 -100% / OFF `none` |
+| 판정식 7개 지점 | 섹션이 완전히 지나간 지점에서만 `false`, 나머지 전부 `true` |
+| 390 / 768 / 1265 | 세 폭 모두 인트로 위 헤더 숨김. pin은 1265에서만 생성(0 / 0 / 1) |
+| 반응형 규칙 | 390 → `4/5`·padding 48, 768 → `4/3`·padding 56 (brand와 동일) |
+| 폴백 (pin 없는 폭) | 영상 `loop` 유지, 오버레이 opacity 1 |
+| brand 페이지 | `.scroll` 0개, 깨진 이미지 0, 실패 요청 0, 가로 스크롤 0, 콘솔 오류 0 |
+| CSS 중괄호 | main 305/305, brand 181/181 · `node --check` 통과 |
+
+### 확인하지 못한 부분
+
+- **헤더가 실제로 미끄러져 사라지는 모습은 보지 못했습니다.** 이 세션의 미리보기
+  패널은 `document.hidden`이라 **스크롤 이벤트도 rAF도 전혀 발생하지 않습니다**
+  (프로브로 둘 다 0건 확인). 그래서 스크롤에 따라 class가 붙었다 떨어지는 것을
+  실시간으로 볼 수 없어, 판정식과 CSS를 각각 따로 검증했습니다.
+  같은 이유로 트랜지션이 t=0에 멈춰 있어 computed transform이 시작값으로 읽힙니다 —
+  위 표의 헤더 숨김 수치는 트랜지션을 끄고 잰 목표값입니다.
+- 실제 휠 스크롤 감각, 터치 기기 동작.
+
+
 ## Shop 히어로 — 사진 4장 41.3MB → 1.62MB (2026-08-09)
 
 "메인에서 Shop 누르면 히어로가 느리다"는 문제입니다. **아래 「Shop 첫 로딩
