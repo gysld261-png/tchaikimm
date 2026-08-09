@@ -875,3 +875,110 @@
     finePointer.addListener(syncPointerMode);
   }
 })();
+
+/* =========================================================
+   collection — 중앙 뒤에서 좌우 앞으로 흐르는 무한 반복
+   ========================================================= */
+(function () {
+  "use strict";
+
+  var CARD_INTERVAL = 1550;
+  var MAX_VISIBLE_CARDS = 7;
+
+  var row = document.querySelector(".collection_row");
+  if (!row) {
+    return;
+  }
+
+  var sourceItems = Array.prototype.slice.call(row.querySelectorAll(".collection_item"));
+  if (sourceItems.length < 2) {
+    return;
+  }
+
+  /* 모션 감소 설정이면 시안의 가로 나열을 그대로 둡니다 */
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    return;
+  }
+
+  var leftItems = sourceItems;
+  /* 좌우가 같은 깊이로 전진하되 같은 사진이 마주 보지 않도록
+     오른쪽 스트림의 이미지 순서만 두 칸 돌립니다. */
+  var rightItems = sourceItems.map(function (element, index) {
+    var source = sourceItems[(index + 2) % sourceItems.length];
+    var clone = source.cloneNode(true);
+    clone.classList.add("is_loop_clone");
+    clone.setAttribute("aria-hidden", "true");
+    row.appendChild(clone);
+    return clone;
+  });
+  row.classList.add("is_perspective_ready");
+
+  var frameId = null;
+  var startTime = performance.now();
+  var isInView = false;
+  var visibleCardCount = Math.min(MAX_VISIBLE_CARDS, sourceItems.length);
+
+  function setCardPosition(element, progress, direction) {
+    /* progress가 일정한 속도로 x와 scale에 반영되므로 다섯 장 사이의
+       거리와 크기 변화가 매 단계 일정하게 유지됩니다. */
+    var travel = window.innerWidth * 0.64;
+    var x = direction * travel * progress;
+    var scale = 0.22 + progress * 1.28;
+    var rotateY = direction * (8 - progress * 5);
+    var opacity = Math.min(progress / 0.06, (1 - progress) / 0.14, 1);
+
+    element.style.zIndex = String(Math.round(progress * 100));
+    element.style.opacity = String(Math.max(0, opacity));
+    element.style.transform = "translate3d(calc(-50% + " + x.toFixed(2) + "px), -50%, 0) rotateY(" + rotateY.toFixed(2) + "deg) scale(" + scale.toFixed(4) + ")";
+  }
+
+  function render(time) {
+    var phase = (time - startTime) / CARD_INTERVAL;
+
+    sourceItems.forEach(function (element, index) {
+      var position = (phase - index + sourceItems.length) % sourceItems.length;
+
+      if (position >= visibleCardCount) {
+        element.style.opacity = "0";
+        rightItems[index].style.opacity = "0";
+        return;
+      }
+
+      var progress = position / visibleCardCount;
+      setCardPosition(element, progress, -1);
+      setCardPosition(rightItems[index], progress, 1);
+    });
+
+    if (isInView && !document.hidden) {
+      frameId = window.requestAnimationFrame(render);
+    }
+  }
+
+  /* 섹션이 처음 화면에 닿는 한 프레임에도 카드가 중앙에 겹치지 않도록
+     재생 전 초기 위치를 미리 계산합니다. */
+  render(startTime);
+
+  function syncPlayState() {
+    if (isInView && !document.hidden) {
+      if (frameId === null) {
+        frameId = window.requestAnimationFrame(render);
+      }
+    } else if (frameId !== null) {
+      window.cancelAnimationFrame(frameId);
+      frameId = null;
+    }
+  }
+
+  /* 화면 밖이거나 다른 탭에 가 있으면 돌리지 않습니다 */
+  if (typeof window.IntersectionObserver === "function") {
+    new window.IntersectionObserver(function (entries) {
+      isInView = entries[0].isIntersecting;
+      syncPlayState();
+    }).observe(row);
+  } else {
+    isInView = true;
+    syncPlayState();
+  }
+
+  document.addEventListener("visibilitychange", syncPlayState);
+})();

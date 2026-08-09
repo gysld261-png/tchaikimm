@@ -1,6 +1,17 @@
 @charset "utf-8";
 
 /* =========================================================
+   main 페이지 전용 토큰
+   --color_bg_alt는 공통 tokens.css에 없고 shop.css의 :root에만
+   있던 값입니다. main은 shop.css를 불러오지 않으므로 같은 값을
+   여기에 정의합니다.
+   ========================================================= */
+
+:root {
+  --color_bg_alt: #f7f7f7;
+}
+
+/* =========================================================
    hero — bespoke / shop 2분할
    ========================================================= */
 
@@ -1157,6 +1168,7 @@
   overflow: hidden;
   padding: 120px 0;
   text-align: center;
+  background-color: var(--color_bg_alt);
 }
 
 .collection_container {
@@ -1203,6 +1215,64 @@
   display: block;
   width: 100%;
   height: auto;
+}
+
+/* ---------------------------------------------------------
+   collection perspective loop — 중앙 뒤에서 좌우 앞으로
+   --------------------------------------------------------- */
+
+.collection_row.is_perspective_ready {
+  --collection_card_width: clamp(150px, 16vw, 300px);
+  --collection_card_height: calc(var(--collection_card_width) * 4 / 3);
+
+  position: relative;
+  display: block;
+  width: 100vw;
+  height: clamp(440px, 47vw, 760px);
+  margin-inline: calc(50% - 50vw);
+  padding: 0;
+  overflow: hidden;
+  perspective: 900px;
+  perspective-origin: 50% 52%;
+}
+
+/* 레퍼런스의 중앙 소실점: 가장 작은 카드가 검정 프레임 안에서 시작합니다 */
+.collection_row.is_perspective_ready::before {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(280px, 26vw, 500px);
+  aspect-ratio: 4 / 1;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 2px;
+  background: var(--color_text);
+  content: "";
+  transform: translate(-50%, -50%);
+  z-index: 0;
+}
+
+.collection_row.is_perspective_ready .collection_item {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--collection_card_width);
+  height: var(--collection_card_height);
+  margin: 0;
+  overflow: hidden;
+  border-radius: 2px;
+  backface-visibility: hidden;
+  transform-origin: 50% 50%;
+  will-change: transform, opacity;
+}
+
+.collection_row.is_perspective_ready .collection_item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.collection_row.is_perspective_ready .collection_item.is_loop_clone {
+  pointer-events: none;
 }
 
 .collection_bottom {
