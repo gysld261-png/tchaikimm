@@ -124,6 +124,10 @@
       var cardItems = cards ? Array.prototype.slice.call(cards.querySelectorAll(".brand_collage_card")) : [];
       var nameLeft = collageStep ? collageStep.querySelector(".brand_collage_name_left") : null;
       var nameRight = collageStep ? collageStep.querySelector(".brand_collage_name_right") : null;
+      var stackCopy = collageStep ? collageStep.querySelector(".brand_stack_copy") : null;
+      var stackCopyItems = stackCopy ? Array.prototype.slice.call(stackCopy.querySelectorAll("[data-copy-slot]")) : [];
+      var stackCount = stackCopy ? stackCopy.querySelector(".brand_stack_count") : null;
+      var stackCountItems = stackCount ? Array.prototype.slice.call(stackCount.querySelectorAll(".brand_stack_count_item")) : [];
       var hasCollageReveal = collageStep && cards && nameLeft && nameRight;
       var isDesktop = window.innerWidth >= 1280;
       var revealOrder = [1, 2, 0, 3];
@@ -172,6 +176,11 @@
           });
         });
         gsap.set([nameLeft, nameRight], { opacity: 1, scale: 1.06 });
+        gsap.set(stackCopyItems, { opacity: 0, y: 18 });
+        if (stackCountItems.length) {
+          gsap.set(stackCountItems, { opacity: 0, y: 12 });
+          gsap.set(stackCountItems[0], { opacity: 1, y: 0 });
+        }
         gsap.set(leftLetters, {
           opacity: 0,
           xPercent: -25,
@@ -198,7 +207,7 @@
         scrollTrigger: {
           trigger: pin,
           start: "top top",
-          end: "+=" + window.innerHeight * 5.4,
+          end: "+=" + window.innerHeight * 10,
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,
@@ -272,6 +281,61 @@
             ease: "power2.inOut"
           }, 3.15);
         });
+
+        /* 주변 카피는 카드가 중앙 덱을 거의 완성한 뒤에만 순차적으로 나타납니다. */
+        if (stackCopyItems.length) {
+          tl.to(stackCopyItems, {
+            opacity: 1,
+            y: 0,
+            duration: 0.55,
+            stagger: 0.06,
+            ease: "power2.out"
+          }, 4.02);
+        }
+
+        /* 첫 장(가운데 세 번째 카드)을 시작으로, 스크롤 한 구간마다 다음 카드가
+           덱의 전면으로 올라옵니다. 이전 카드는 위로 빠지며 다음 카드의 내용을
+           완전히 보여주고, 우측 카운터도 같은 타이밍에 교체됩니다. */
+        [3, 0, 1].forEach(function (nextCardIndex, stepIndex) {
+          var previousCardIndex = [2, 3, 0][stepIndex];
+          var phaseStart = 5.15 + stepIndex * 1.15;
+          var nextCard = cardItems[nextCardIndex];
+          var previousCard = cardItems[previousCardIndex];
+
+          tl.set(nextCard, { zIndex: 22 + stepIndex }, phaseStart)
+            .to(previousCard, {
+              y: window.innerHeight * -0.34,
+              scale: 1.82,
+              opacity: 0,
+              duration: 0.8,
+              ease: "power2.inOut"
+            }, phaseStart)
+            .to(nextCard, {
+              y: 0,
+              scale: 2,
+              opacity: 1,
+              duration: 0.8,
+              ease: "power2.inOut"
+            }, phaseStart);
+
+          if (stackCountItems.length === 4) {
+            tl.to(stackCountItems[stepIndex], {
+              opacity: 0,
+              y: -12,
+              duration: 0.3,
+              ease: "power2.in"
+            }, phaseStart)
+              .to(stackCountItems[stepIndex + 1], {
+                opacity: 1,
+                y: 0,
+                duration: 0.3,
+                ease: "power2.out"
+              }, phaseStart + 0.25)
+              .set(stackCount, {
+                attr: { "aria-label": "Card " + (stepIndex + 2) + " of 4" }
+              }, phaseStart + 0.25);
+          }
+        });
       }
 
       triggers.push(tl.scrollTrigger);
@@ -280,7 +344,7 @@
         if (hasCollageReveal) {
           collageStep.classList.remove("is_enhanced");
           gsap.set(collageStep, { clearProps: "scale,opacity" });
-          gsap.set([cards, cardItems, nameLeft, nameRight, leftLetters, rightLetters], { clearProps: "all" });
+          gsap.set([cards, cardItems, nameLeft, nameRight, leftLetters, rightLetters, stackCopyItems, stackCountItems], { clearProps: "all" });
         }
       });
     })();

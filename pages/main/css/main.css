@@ -446,6 +446,95 @@
   will-change: transform, opacity, filter;
 }
 
+/* 중앙 카드 덱 카피 — 레퍼런스의 6개 텍스트 위계를 카드 주변에 배치합니다. */
+.brand_stack_copy {
+  position: absolute;
+  z-index: 21;
+  inset: 0;
+  color: var(--color_text);
+  font-family: var(--font_body);
+  pointer-events: none;
+}
+
+.brand_stack_copy [data-copy-slot]:empty {
+  display: none;
+}
+
+.brand_stack_intro,
+.brand_stack_statement {
+  position: absolute;
+  top: 15%;
+  max-width: 28%;
+  font-size: clamp(14px, 1.25vw, 24px);
+  line-height: 1.25;
+}
+
+.brand_stack_intro {
+  left: 2%;
+}
+
+.brand_stack_statement {
+  top: 36%;
+  right: 2%;
+  text-align: right;
+}
+
+.brand_stack_title {
+  position: absolute;
+  z-index: 1;
+  top: 43%;
+  left: 27%;
+  width: 46%;
+  padding: 0 16px 8px;
+  border-bottom: 1px solid rgba(10, 10, 10, 0.18);
+  font-family: var(--font_display);
+  font-size: clamp(24px, 2.5vw, 48px);
+  line-height: 1;
+}
+
+.brand_stack_description {
+  position: absolute;
+  bottom: 18%;
+  left: 10%;
+  max-width: 20%;
+  font-size: clamp(13px, 1vw, 20px);
+  line-height: 1.25;
+}
+
+.brand_stack_count {
+  position: absolute;
+  top: 50%;
+  left: 68%;
+  width: 2.5em;
+  height: 1em;
+  font-family: var(--font_display);
+  font-size: clamp(24px, 2.2vw, 42px);
+  line-height: 1;
+}
+
+.brand_stack_count_item {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.brand_stack_count_item.is_active {
+  opacity: 1;
+}
+
+.brand_stack_action {
+  position: absolute;
+  right: 18%;
+  bottom: 8%;
+  width: min(248px, 18vw);
+  min-height: 64px;
+  padding: 16px;
+  border-radius: 8px;
+  background-color: #fff;
+  font-size: 14px;
+  line-height: 1.2;
+}
+
 .brand_collage_lg .brand_collage_card {
   max-width: 337px;
 }
