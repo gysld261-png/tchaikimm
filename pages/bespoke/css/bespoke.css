@@ -407,12 +407,37 @@
 
 /* =========================================================
    process — 5단계, 스크롤에 따라 오른쪽 이미지가 바뀐다 (시안 주석 반영)
+
+   스크롤 인터랙션은 thecube.dk의 Services를 참고했다. 그 섹션은
+   "한쪽에 붙어 있는 미디어 + 차례로 자리를 넘겨받는 텍스트"인데,
+   이 process 섹션이 이미 같은 구성(왼쪽 5단계 목록 + 오른쪽 sticky 이미지)이라
+   **레이아웃은 한 줄도 바꾸지 않고** 단계가 넘어가는 방식만 다시 만들었다.
+   레퍼런스는 CSS sticky 스택이지만 여기서는 페이지가 이미 쓰고 있는
+   GSAP ScrollTrigger pin을 쓴다 — 목록 5개가 한 화면에 다 보이는 구성이라
+   레퍼런스처럼 항목마다 화면을 하나씩 차지하게 만들 수 없기 때문이다.
+
+   시각 상태는 두 갈래로 나뉜다.
+   · 아래 기본 규칙 = class(.is_active / .is_passed / .is_visible)만으로
+     완성되는 상태. JS·GSAP이 없거나 모션 감소 설정이면 이것만 쓴다.
+   · `.is_scrub_ready`가 붙으면 JS가 스크롤 진행도에 맞춰 인라인 값을
+     매 프레임 덮어쓰므로 transition을 끈다(끄지 않으면 뭉개져 따라온다).
    ========================================================= */
 
 .process {
   display: flex;
   flex-direction: column;
   gap: 40px;
+
+  /* 이미지 크로스페이드는 글자보다 길게 간다. 모션 감소 설정에서는
+     --duration_base가 0.01ms이므로 그 값을 그대로 따라간다. */
+  --process_fade: 0.9s;
+  --process_ease: cubic-bezier(0.33, 1, 0.68, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .process {
+    --process_fade: var(--duration_base);
+  }
 }
 
 .process_list {
@@ -422,23 +447,62 @@
 }
 
 .process_step {
+  position: relative; /* 아래 진행선(::after)의 기준. 흐름에는 영향이 없다 */
   display: flex;
   flex-direction: column;
   gap: 12px;
   padding-bottom: 24px;
   border-bottom: 1px solid var(--color_border_default);
-  opacity: 0.5;
-  transition: opacity var(--duration_base) var(--easing_base);
+
+  /* 진행선이 차오른 정도(0~1). JS가 스크롤에 맞춰 인라인으로 덮어쓴다. */
+  --process_step_fill: 0;
+
+  opacity: 0.4;
+  /* 아직 지나지 않은 단계는 살짝 안쪽으로 물러나 있다.
+     transform이라 reflow가 없고 시안의 글 시작점은 활성 단계가 지킨다. */
+  transform: translate3d(8px, 0, 0);
+  transition:
+    opacity var(--duration_base) var(--easing_base),
+    transform var(--duration_base) var(--easing_base);
+}
+
+.process_step.is_passed {
+  --process_step_fill: 1;
 }
 
 .process_step.is_active {
+  --process_step_fill: 1;
   opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* 진행선 — 이미 있는 border-bottom 위에 딱 겹쳐서 왼쪽부터 그어진다.
+   시안에 없는 장식을 새로 얹는 대신 원래 있던 선을 그대로 쓴다. */
+.process_step::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 1px;
+  background-color: var(--color_point);
+  transform: scaleX(var(--process_step_fill, 0));
+  transform-origin: left center;
+  transition: transform var(--duration_base) var(--easing_base);
+  pointer-events: none;
 }
 
 .process_step_num {
   color: var(--color_text_muted);
   font-family: var(--font_ui);
   font-size: var(--fs_ui_16);
+  transition: color var(--duration_base) var(--easing_base);
+}
+
+/* 색만으로 현재 단계를 알리지 않는다 — 불투명도, 들여쓰기, 진행선이 함께 바뀐다. */
+.process_step.is_active .process_step_num,
+.process_step.is_passed .process_step_num {
+  color: var(--color_point);
 }
 
 .process_step_title {
@@ -468,11 +532,28 @@
   height: 100%;
   object-fit: cover;
   opacity: 0;
-  transition: opacity var(--duration_base) var(--easing_base);
+  /* 들어오는 사진은 조금 큰 상태에서 제자리로 내려앉는다.
+     .process_image의 overflow: hidden이 넘치는 부분을 잘라내므로
+     아무리 키워도 레이아웃에는 영향이 없다. */
+  transform: scale(1.06);
+  transition:
+    opacity var(--process_fade) var(--process_ease),
+    transform var(--process_fade) var(--process_ease);
 }
 
 .process_image_img.is_visible {
   opacity: 1;
+  transform: scale(1);
+}
+
+/* 스크롤 구동 중에는 JS가 매 프레임 인라인 값을 쓴다.
+   여기에 transition이 남아 있으면 값이 뒤늦게 따라와 뭉개진다.
+   자식 요소(.process_step_num의 color)는 transition이 상속되지 않으므로
+   그대로 살아 있다 — 숫자 색만 부드럽게 바뀐다. */
+.process.is_scrub_ready .process_step,
+.process.is_scrub_ready .process_step::after,
+.process.is_scrub_ready .process_image_img {
+  transition: none;
 }
 
 @media (min-width: 1280px) {

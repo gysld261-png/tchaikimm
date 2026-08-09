@@ -5,30 +5,153 @@
      process — 스크롤에 따라 활성 단계가 바뀌고 오른쪽 이미지가 전환된다
      (시안 주석: "왼쪽 프로세스 과정 설명글은 스크롤 시 나타난다.
                   오른쪽은 이미지 변경(예시 이미지)")
-     JS가 동작하지 않으면 HTML의 기본 is_active(01 Consultation)와
-     is_visible(consultation 이미지) 그대로 보인다.
+
+     레퍼런스는 thecube.dk의 Services다. 그 섹션은 한쪽에 고정된 미디어
+     한 장을 두고, 텍스트 블록이 화면을 하나씩 넘겨받으며 지나간다.
+     (실측: 항목마다 화면 2장 높이 + 안쪽 콘텐츠 sticky, 미디어는 섹션 전체
+     길이에 걸친 sticky 한 장)
+
+     이 섹션은 이미 같은 구성이다 — 왼쪽 5단계 목록 + 오른쪽 sticky 이미지.
+     그래서 레이아웃·타이포·여백·이미지는 그대로 두고 **넘어가는 방식**만
+     바꿨다. 다만 레퍼런스처럼 항목마다 화면을 하나씩 주는 구조는 쓸 수 없다.
+     목록 5개가 한 화면에 다 보이는 시안이라, 항목을 세로로 흩으면 시안이
+     무너진다. 대신 섹션을 화면 가운데에 붙잡아 두고(pin) 그 안에서
+     진행도를 5구간으로 나눈다 — 보이는 그림은 시안 그대로이고, 한 단계씩
+     머무는 시간만 생긴다.
+
+     세 갈래로 동작한다.
+     A. pin — 데스크톱이고 콘텐츠가 화면에 다 들어갈 때. 단계마다 머문다.
+     B. scrub(핀 없음) — 2단 레이아웃이지만 화면이 낮아 pin하면 목록 아래가
+        잘리는 경우. 상태 전환은 같고 섹션이 지나가는 동안 진행된다.
+     C. IntersectionObserver — 모바일·모션 감소 설정·GSAP 없음.
+        스크롤을 가로채지 않고 단계가 화면 가운데에 오면 활성화만 바꾼다.
+
+     A·B는 인라인 스타일로 매 프레임 값을 쓰고, C는 class만 쓴다.
+     그래서 조건이 어긋나 A·B가 해제될 때 인라인을 반드시 손으로 지운다
+     (GSAP은 자기가 만든 트윈만 되돌리고, onUpdate 안에서 부른 gsap.set은
+     context에 기록되지 않는다).
      --------------------------------------------------------- */
 
-  var processSteps = document.querySelectorAll(".process_step");
-  var processImages = document.querySelectorAll(".process_image_img");
+  /* 조절값 — 숫자만 바꾸면 된다 */
+  var PROCESS_STEP_SCROLL = 0.72; /* 단계 하나에 배정하는 스크롤 길이(화면 높이 배수).
+     5단계 × 0.72 = 화면 3.6장. 1080 화면에서 한 단계당 약 780px이다.
+     레퍼런스는 항목당 화면 2장인데, 그쪽은 항목이 4개이고 화면 전체를 쓴다.
+     여기는 목록이 한눈에 다 보여 그만큼 오래 붙잡으면 지루해진다. */
+  var PROCESS_SCRUB = 0.6; /* 스크롤을 따라오는 지연(초). 전환의 여운 */
+  var PROCESS_INACTIVE_OPACITY = 0.4; /* 비활성 단계의 불투명도. css 기본값과 같아야 한다 */
+  var PROCESS_INACTIVE_SHIFT = 8; /* 비활성 단계가 물러나는 거리(px). css 기본값과 같아야 한다 */
+  var PROCESS_IMAGE_SCALE = 1.06; /* 들어오는 사진의 시작 배율. css 기본값과 같아야 한다 */
+  /* 화면 높이 조건이 필요하다. 1280px 폭에서 목록이 995px이라 900px 화면에
+     pin하면 05번이 잘린다(실측). 1060px부터는 1840+ 레이아웃(960px)도,
+     1280~1839 레이아웃(995px)도 여유 있게 들어간다. */
+  var PROCESS_PIN_GATE =
+    "(min-width: 1280px) and (min-height: 1060px) and (prefers-reduced-motion: no-preference)";
+  var PROCESS_SCRUB_GATE =
+    "(min-width: 1280px) and (max-height: 1059px) and (prefers-reduced-motion: no-preference)";
 
-  function setActiveStep(stepName) {
-    processSteps.forEach(function (step) {
-      step.classList.toggle("is_active", step.dataset.step === stepName);
+  var processSection = document.querySelector(".process");
+  var processSteps = Array.prototype.slice.call(document.querySelectorAll(".process_step"));
+  var processObserver = null;
+
+  /* 사진은 순서가 아니라 단계 이름으로 짝짓는다(`process_image_<data-step>`).
+     마크업에서 순서가 바뀌어도 짝이 어긋나지 않는다. 이름이 안 맞으면
+     같은 순번의 사진으로 떨어진다. */
+  var processImagePool = Array.prototype.slice.call(
+    document.querySelectorAll(".process_image_img")
+  );
+  var processImages = processSteps.map(function (step, i) {
+    return document.getElementById("process_image_" + step.dataset.step) || processImagePool[i];
+  });
+
+  function setActiveStepIndex(index) {
+    processSteps.forEach(function (step, i) {
+      step.classList.toggle("is_active", i === index);
+      step.classList.toggle("is_passed", i < index);
     });
 
-    processImages.forEach(function (image) {
-      var isMatch = image.id === "process_image_" + stepName;
-      image.classList.toggle("is_visible", isMatch);
+    processImagePool.forEach(function (image) {
+      image.classList.toggle("is_visible", image === processImages[index]);
     });
   }
 
-  if (processSteps.length && processImages.length && "IntersectionObserver" in window) {
-    var stepObserver = new IntersectionObserver(
+  /* 0과 1 사이에서 양 끝이 완만한 곡선. 이웃한 두 단계의 값을 더하면 정확히
+     1이 되므로(smoothstep(t) + smoothstep(1-t) === 1) 사진 두 장이 겹쳐
+     흐려지는 구간 없이 자연스럽게 교차한다. */
+  function processEase(t) {
+    return t * t * (3 - 2 * t);
+  }
+
+  function processWeight(position, index) {
+    var distance = Math.abs(position - index);
+
+    if (distance >= 1) {
+      return 0;
+    }
+
+    return processEase(1 - distance);
+  }
+
+  function clamp01(value) {
+    return value < 0 ? 0 : value > 1 ? 1 : value;
+  }
+
+  /* 진행도(0~1) 하나로 단계·사진·진행선을 모두 그린다.
+     · 활성 위치는 0 → steps-1로 편다. 시작하면 01번이, 끝나면 05번이 온전히 켜진다.
+     · 진행선은 0 → steps로 편다. 끝나면 다섯 줄이 모두 그어져 있다. */
+  function applyProcessProgress(progress) {
+    var count = processSteps.length;
+    var activePosition = progress * (count - 1);
+    var fillPosition = progress * count;
+
+    processSteps.forEach(function (step, i) {
+      var weight = processWeight(activePosition, i);
+
+      step.style.opacity = String(
+        PROCESS_INACTIVE_OPACITY + (1 - PROCESS_INACTIVE_OPACITY) * weight
+      );
+      step.style.transform =
+        "translate3d(" + ((1 - weight) * PROCESS_INACTIVE_SHIFT).toFixed(2) + "px, 0, 0)";
+      step.style.setProperty("--process_step_fill", clamp01(fillPosition - i).toFixed(4));
+    });
+
+    processImages.forEach(function (image, i) {
+      if (!image) {
+        return;
+      }
+
+      var weight = processWeight(activePosition, i);
+
+      image.style.opacity = String(weight);
+      image.style.transform =
+        "scale(" + (1 + (1 - weight) * (PROCESS_IMAGE_SCALE - 1)).toFixed(4) + ")";
+    });
+
+    setActiveStepIndex(Math.min(count - 1, Math.max(0, Math.round(activePosition))));
+  }
+
+  function clearProcessInlineStyles() {
+    processSteps.forEach(function (step) {
+      step.style.removeProperty("opacity");
+      step.style.removeProperty("transform");
+      step.style.removeProperty("--process_step_fill");
+    });
+
+    processImagePool.forEach(function (image) {
+      image.style.removeProperty("opacity");
+      image.style.removeProperty("transform");
+    });
+  }
+
+  function startProcessObserver() {
+    if (processObserver || !("IntersectionObserver" in window)) {
+      return;
+    }
+
+    processObserver = new IntersectionObserver(
       function (entries) {
         entries.forEach(function (entry) {
           if (entry.isIntersecting) {
-            setActiveStep(entry.target.dataset.step);
+            setActiveStepIndex(processSteps.indexOf(entry.target));
           }
         });
       },
@@ -36,7 +159,101 @@
     );
 
     processSteps.forEach(function (step) {
-      stepObserver.observe(step);
+      processObserver.observe(step);
+    });
+  }
+
+  function stopProcessObserver() {
+    if (!processObserver) {
+      return;
+    }
+
+    processObserver.disconnect();
+    processObserver = null;
+  }
+
+  /* 진행도를 담는 대리 객체를 scrub으로 트윈한다. scrub이 스크롤을 조금
+     늦게 따라오므로 단계가 딱 끊기지 않고 밀려오듯 넘어간다. */
+  function createProcessScrollTween(gsap, section, triggerOptions) {
+    var proxy = { value: 0 };
+
+    return gsap.to(proxy, {
+      value: 1,
+      ease: "none",
+      onUpdate: function () {
+        applyProcessProgress(proxy.value);
+      },
+      scrollTrigger: Object.assign(
+        {
+          trigger: section,
+          scrub: PROCESS_SCRUB,
+          invalidateOnRefresh: true,
+          onRefresh: function () {
+            applyProcessProgress(proxy.value);
+          }
+        },
+        triggerOptions
+      )
+    });
+  }
+
+  function initProcessMotion() {
+    if (!processSection || !processSteps.length || !processImagePool.length) {
+      return;
+    }
+
+    /* 기본 경로 C. 아래 matchMedia가 조건을 만족하면 잠시 멈춘다. */
+    startProcessObserver();
+
+    if (!window.gsap || !window.ScrollTrigger) {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    function enterScrubMode() {
+      stopProcessObserver();
+      processSection.classList.add("is_scrub_ready");
+
+      return function () {
+        processSection.classList.remove("is_scrub_ready");
+        clearProcessInlineStyles();
+        startProcessObserver();
+      };
+    }
+
+    var processMedia = gsap.matchMedia();
+
+    /* A. 섹션을 화면 가운데에 붙잡고 그 안에서 5단계를 지난다.
+          `center center`라 1504px 섹션이 1080px 화면 가운데에 놓이고,
+          잘리는 것은 위아래 padding(272px)뿐이라 목록과 사진은 온전히 보인다.
+          여기서 늘어나는 문서 높이는 아래 end 값 그대로다(1080 기준 3888px). */
+    processMedia.add(PROCESS_PIN_GATE, function () {
+      var cleanup = enterScrubMode();
+
+      createProcessScrollTween(gsap, processSection, {
+        start: "center center",
+        end: "+=" + Math.round(processSteps.length * PROCESS_STEP_SCROLL * 100) + "%",
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1
+      });
+
+      return cleanup;
+    });
+
+    /* B. pin 없이 섹션이 지나가는 동안 같은 전환을 돌린다.
+          스크롤을 가로채지 않으므로 낮은 화면에서도 목록이 잘리지 않는다. */
+    processMedia.add(PROCESS_SCRUB_GATE, function () {
+      var cleanup = enterScrubMode();
+
+      createProcessScrollTween(gsap, processSection, {
+        start: "top 70%",
+        end: "bottom 30%"
+      });
+
+      return cleanup;
     });
   }
 
@@ -397,6 +614,7 @@
     });
   }
 
+  initProcessMotion();
   initPhilosophyMotion();
   initAtelierZoom();
 
