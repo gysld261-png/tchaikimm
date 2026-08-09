@@ -614,7 +614,218 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     materials — 원단을 고르면 큰 사진과 설명이 바뀐다
+
+     레퍼런스는 eternalblue.co.nz의 `.ingredient-slider__grid`다.
+     구조를 실측해 보니 이 섹션과 거의 같은 배치였다 —
+     [큰 사진 | 머리글 + 썸네일 줄 + (이름 목록 | 설명)].
+
+     그쪽 동작을 그대로 옮겼다.
+     · **마우스를 올리면(hover) 바뀐다.** 클릭이 아니다. 벗어나도 되돌아가지
+       않고 마지막에 지난 원단이 그대로 남는다(레퍼런스 확인).
+     · 큰 사진은 **크로스페이드가 아니다.** 한 장을 0.4초에 걸쳐 흐리게
+       만든 뒤 src를 갈아 끼우고 다시 나타낸다(`.is-fading { opacity: 0 }`).
+     · 설명은 전환 없이 즉시 바뀐다(레퍼런스에 transition이 없다).
+
+     레퍼런스는 `<div>`에 `cursor: pointer`만 걸었지만 여기서는 `<button>`을
+     쓴다. 키보드로도 고를 수 있어야 하고, 이 저장소 규칙이기도 하다.
+     `reset.css`가 button의 색·글꼴·여백을 상속으로 되돌려 두어서 글자
+     크기와 색은 이전 마크업과 똑같이 나온다.
+
+     JS가 없으면 마크업의 `is_active`(=[1] Silk) 그대로 보인다.
+     --------------------------------------------------------- */
+
+  function initMaterialsSelector() {
+    var section = document.querySelector(".materials");
+
+    if (!section) {
+      return;
+    }
+
+    var textureImage = section.querySelector(".materials_texture_img");
+    var swatches = Array.prototype.slice.call(section.querySelectorAll(".materials_swatch"));
+    var listItems = Array.prototype.slice.call(section.querySelectorAll(".materials_list_item"));
+    var captionBox = section.querySelector(".materials_caption");
+    var captionItems = Array.prototype.slice.call(
+      section.querySelectorAll(".materials_caption_item")
+    );
+
+    if (!textureImage || !swatches.length || !listItems.length || !captionItems.length) {
+      return;
+    }
+
+    var activeFabric = null;
+    var textureToken = 0;
+
+    function fabricOf(element) {
+      var button = element.querySelector("[data-fabric]");
+
+      return button ? button.dataset.fabric : null;
+    }
+
+    /* 레퍼런스와 같은 "흐렸다가 갈아 끼우기". 전환 시간은 CSS에서 읽는다 —
+       모션 감소 설정이면 --materials_fade가 0.01ms라 기다리지 않고 바뀐다. */
+    function swapTexture(source, alt) {
+      if (!source || textureImage.getAttribute("src") === source) {
+        return;
+      }
+
+      var duration = parseFloat(getComputedStyle(textureImage).transitionDuration) * 1000;
+      var token = ++textureToken;
+
+      textureImage.classList.add("is_fading");
+
+      window.setTimeout(function () {
+        /* 흐려지는 동안 더 최근 요청이 들어왔으면 이 차례는 버린다.
+           그쪽 타이머가 마지막 원단으로 마무리한다. */
+        if (token !== textureToken) {
+          return;
+        }
+
+        textureImage.src = source;
+        textureImage.alt = alt;
+        textureImage.classList.remove("is_fading");
+      }, duration > 0 ? duration : 0);
+    }
+
+    function setActiveFabric(fabric) {
+      if (!fabric || fabric === activeFabric) {
+        return;
+      }
+
+      activeFabric = fabric;
+
+      swatches.forEach(function (swatch) {
+        var isMatch = fabricOf(swatch) === fabric;
+        var button = swatch.querySelector(".materials_swatch_button");
+
+        swatch.classList.toggle("is_active", isMatch);
+
+        if (button) {
+          button.setAttribute("aria-pressed", isMatch ? "true" : "false");
+        }
+      });
+
+      listItems.forEach(function (item) {
+        var isMatch = fabricOf(item) === fabric;
+        var button = item.querySelector(".materials_list_button");
+
+        item.classList.toggle("is_active", isMatch);
+
+        if (button) {
+          button.setAttribute("aria-pressed", isMatch ? "true" : "false");
+        }
+      });
+
+      captionItems.forEach(function (item) {
+        item.classList.toggle("is_active", item.dataset.fabric === fabric);
+      });
+
+      var swatchImage = section.querySelector(
+        '.materials_swatch_button[data-fabric="' + fabric + '"] .materials_swatch_img img'
+      );
+
+      if (swatchImage) {
+        /* 큰 사진의 대체 텍스트는 스와치의 것을 고쳐 쓴다. 이름 목록에서
+           만들면 "Seasonal Fabric fabric ..."처럼 겹치는 경우가 생긴다. */
+        var textureAlt = (swatchImage.getAttribute("alt") || "").replace(
+          /\s*swatch$/,
+          " shown close up"
+        );
+
+        swapTexture(swatchImage.getAttribute("src"), textureAlt);
+      }
+    }
+
+    /* 설명 여섯 개의 줄 수가 서로 달라서, 자리를 미리 잡아 두지 않으면
+       원단을 옮길 때마다 섹션 높이가 들썩인다. 가장 큰 것을 재서 고정한다
+       (shop_detail 아코디언과 같은 방식이라 폭이 달라져도 값이 맞는다). */
+    var reservedWidth = 0;
+
+    function reserveCaptionHeight() {
+      if (!captionBox) {
+        return;
+      }
+
+      captionBox.style.minHeight = "";
+
+      var tallest = 0;
+
+      captionItems.forEach(function (item) {
+        var wasActive = item.classList.contains("is_active");
+
+        if (!wasActive) {
+          item.classList.add("is_active");
+        }
+
+        tallest = Math.max(tallest, item.offsetHeight);
+
+        if (!wasActive) {
+          item.classList.remove("is_active");
+        }
+      });
+
+      captionBox.style.minHeight = tallest + "px";
+      reservedWidth = captionBox.clientWidth;
+    }
+
+    /* hover는 버블링하지 않으므로 mouseover로 위임한다. 버튼 안쪽 요소를
+       지날 때마다 다시 들어오지만 setActiveFabric이 같은 값이면 바로 빠진다. */
+    section.addEventListener("mouseover", function (event) {
+      var button = event.target.closest ? event.target.closest("[data-fabric]") : null;
+
+      if (button && section.contains(button)) {
+        setActiveFabric(button.dataset.fabric);
+      }
+    });
+
+    /* 키보드(Tab)와 터치(클릭) 경로. 터치에는 hover가 없어 이쪽이 유일하다. */
+    section.addEventListener("focusin", function (event) {
+      var button = event.target.closest ? event.target.closest("[data-fabric]") : null;
+
+      if (button) {
+        setActiveFabric(button.dataset.fabric);
+      }
+    });
+
+    section.addEventListener("click", function (event) {
+      var button = event.target.closest ? event.target.closest("[data-fabric]") : null;
+
+      if (button) {
+        setActiveFabric(button.dataset.fabric);
+      }
+    });
+
+    /* 마크업이 이미 켜 둔 원단을 시작값으로 삼는다. 여기서 setActiveFabric을
+       부르지 않는 이유: 부르면 같은 사진으로 한 번 페이드가 돌아 깜빡인다. */
+    var initialItem = listItems.filter(function (item) {
+      return item.classList.contains("is_active");
+    })[0];
+
+    activeFabric = fabricOf(initialItem || listItems[0]);
+
+    reserveCaptionHeight();
+
+    /* 웹폰트가 적용되면 줄 수가 달라지므로 다시 잰다. */
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(reserveCaptionHeight);
+    }
+
+    /* 폭이 실제로 달라졌을 때만 다시 잰다(무한 루프 방지). */
+    if ("ResizeObserver" in window) {
+      new ResizeObserver(function () {
+        if (captionBox.clientWidth !== reservedWidth) {
+          reserveCaptionHeight();
+        }
+      }).observe(captionBox);
+    } else {
+      window.addEventListener("resize", reserveCaptionHeight);
+    }
+  }
+
   initProcessMotion();
+  initMaterialsSelector();
   initPhilosophyMotion();
   initAtelierZoom();
 

@@ -582,12 +582,39 @@
    materials
    ========================================================= */
 
-/* 시안 구조: 제목이 위에 통째로 걸리고, 그 아래에 [텍스처 이미지 | 스와치+목록+캡션] 2열이 온다. */
+/* 시안 구조: 제목이 위에 통째로 걸리고, 그 아래에 [텍스처 이미지 | 스와치+목록+캡션] 2열이 온다.
+
+   인터랙션은 eternalblue.co.nz의 `.ingredient-slider__grid`를 따랐다.
+   그쪽 구조를 실측해 보니 이 섹션과 배치가 거의 같았다 —
+   [큰 사진 | 머리글 + 썸네일 줄 + (이름 목록 | 설명)]. 그래서 레이아웃을
+   새로 짜지 않고 상태 규칙만 얹었다.
+
+   레퍼런스에서 가져온 값:
+   · 썸네일  `opacity: .5` → `.active { opacity: 1 }`, `transition: .4s ease-in-out`
+   · 이름 행 `opacity: .5` → `.active { opacity: 1 }`, `transition: opacity .3s ease`
+   · 큰 사진 `transition: opacity .4s ease`, `.is-fading { opacity: 0 }`
+     (페이드 아웃 → src 교체 → 페이드 인. 크로스페이드가 아니다)
+   · 이름 행의 화살표는 활성 행에만 보인다
+
+   **이름 행만 불투명도 대신 기존 색 전환을 유지한다.** 시안이 이미
+   muted → text 색 변화를 쓰고 있어서, 폰트 색을 그대로 두라는 요구에 맞춘다.
+   전환 시간만 레퍼런스(.3s)를 따라간다.
+   ========================================================= */
 
 .materials {
   display: flex;
   flex-direction: column;
   gap: 40px;
+
+  /* 모션 감소 설정에서는 --duration_base가 0.01ms라 사실상 즉시 바뀐다.
+     JS도 같은 조건을 보고 페이드 대기 시간을 0으로 만든다. */
+  --materials_fade: 0.4s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .materials {
+    --materials_fade: var(--duration_base);
+  }
 }
 
 .materials_title {
@@ -612,10 +639,18 @@
   overflow: hidden;
 }
 
+/* 레퍼런스와 같은 방식: 크로스페이드가 아니라 **한 장을 흐렸다가 갈아 끼운다**.
+   JS가 is_fading을 붙여 0으로 만들고, 전환이 끝나면 src를 바꾼 뒤 뗀다. */
 .materials_texture img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: 1;
+  transition: opacity var(--materials_fade) ease;
+}
+
+.materials_texture img.is_fading {
+  opacity: 0;
 }
 
 .materials_content {
@@ -624,16 +659,38 @@
   gap: 40px;
 }
 
+/* 레퍼런스의 `.ingredient-slider__static-content`.
+   본문 톤은 캡션과 같게 두되 폭만 조금 넓게 잡는다. */
+.materials_intro {
+  max-width: 604px;
+  color: var(--color_text_secondary);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_16);
+  line-height: 1.63;
+}
+
 .materials_swatches {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
 }
 
-.materials_swatch {
+/* 스와치는 이제 누를 수 있다. button 자체가 원래 li가 하던 세로 배치를 맡는다
+   (reset.css가 button의 색·글꼴·여백을 이미 상속으로 되돌려 둔다). */
+.materials_swatch_button {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  width: 100%;
+  text-align: left;
+  opacity: 0.5;
+  transition: opacity var(--materials_fade) ease-in-out;
+}
+
+.materials_swatch.is_active .materials_swatch_button,
+.materials_swatch_button:hover,
+.materials_swatch_button:focus-visible {
+  opacity: 1;
 }
 
 .materials_swatch_index {
@@ -677,15 +734,61 @@
   color: var(--color_text);
 }
 
-.materials_caption {
+/* 레퍼런스의 `li { display:flex; gap:16px; align-items:center }` +
+   `li span { min-width: 24px }` — 번호 칸을 고정해 이름 시작점을 맞춘다. */
+.materials_list_button {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  text-align: left;
+  color: inherit;
+  transition: color var(--duration_fast) ease;
+}
+
+.materials_list_index {
+  min-width: 24px;
+}
+
+/* 화살표는 활성 행에만 보인다(레퍼런스는 아이콘 두 벌을 갈아 끼우는데,
+   저장소에 있는 화살표가 한 종류라 나타났다 사라지는 쪽으로 옮겼다).
+   색을 바꿀 수 없는 img라 파일 색(#0a0a0a)이 활성 글자색과 같은 것을
+   전제로 쓴다 — `--color_text`와 같은 값이다. */
+.materials_list_arrow {
+  width: 18px;
+  height: 18px;
+  opacity: 0;
+  transform: translate3d(-6px, 0, 0);
+  transition:
+    opacity var(--duration_fast) ease,
+    transform var(--duration_fast) ease;
+}
+
+.materials_list_item.is_active .materials_list_arrow {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+.materials_caption {
   max-width: 500px;
   color: var(--color_text_secondary);
   font-family: var(--font_ui);
   font-size: var(--fs_ui_16);
   line-height: 1.63;
+}
+
+/* 설명 6개가 마크업에 그대로 있고 활성인 것만 보인다.
+   JS가 없어도 [1] Silk 하나가 보이므로 지금과 같은 화면이 된다.
+   높이는 JS가 가장 큰 것으로 미리 잡아 둔다 — 안 그러면 원단을 옮길 때마다
+   줄 수가 달라져 섹션이 들썩인다. */
+.materials_caption_item {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.materials_caption_item.is_active {
+  display: flex;
 }
 
 @media (min-width: 768px) {
@@ -700,8 +803,13 @@
     gap: 80px;
   }
 
+  /* `align-self`가 없으면 flex 기본값 stretch가 이 상자를 오른쪽 열 높이에
+     맞춰 늘여서, 위의 `aspect-ratio: 466/678`(시안값)이 무시된다.
+     머리글이 들어와 오른쪽이 755px이 되면서 실제로 그렇게 됐다 —
+     사진 원본이 180×200뿐이라 더 늘리면 그만큼 더 잘리고 흐려진다. */
   .materials_texture {
     flex: 0 0 466px;
+    align-self: flex-start;
   }
 
   .materials_content {
@@ -714,14 +822,23 @@
 
   .materials_detail {
     flex-direction: row;
-    gap: 100px;
+    flex-wrap: wrap;
+    gap: 40px 100px;
   }
 
   .materials_list {
     flex: 0 0 auto;
   }
 
+  /* 설명이 360px보다 좁아지면 아래 줄로 내려간다.
+     1280px 화면에서 오른쪽 열이 606px뿐이라 목록(375) + gap(100)을 빼면
+     설명이 **131px**까지 눌렸다(실측). 45단어짜리 설명이 그 폭에서는
+     읽히지 않는다. 레퍼런스도 좁은 폭에서는 이름 목록과 설명을 세로로
+     쌓는다(`grid-template-columns: 1fr`). 고정 브레이크포인트 대신
+     flex-basis로 두어 어느 폭에서든 알아서 내려간다.
+     1840+ 블록에서는 오른쪽 열이 1180px이라 절대 내려가지 않는다. */
   .materials_caption {
+    flex: 1 1 360px;
     padding-top: 2px;
   }
 }

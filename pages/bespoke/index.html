@@ -112,56 +112,134 @@
     </div>
   </section>
 
-  <!-- materials -->
+  <!-- materials
+       구성은 eternalblue.co.nz의 `.ingredient-slider__grid`를 따랐다 —
+       [큰 사진] | [머리글 + 썸네일 줄 + (이름 목록 | 설명)].
+       스와치나 이름에 마우스를 올리면 큰 사진과 설명이 그 원단으로 바뀐다.
+       JS가 없으면 아래 마크업의 is_active 그대로 [1] Silk가 보인다. -->
   <section class="materials">
     <h2 class="materials_title">Six fabrics to begin with</h2>
 
     <div class="materials_body">
       <div class="materials_texture">
-        <img src="assets/main/silk.png" alt="" aria-hidden="true">
+        <img class="materials_texture_img" src="assets/main/silk.png" alt="Silk fabric shown close up">
       </div>
 
       <div class="materials_content">
+        <!-- 레퍼런스의 `.ingredient-slider__static-content` 자리.
+             빼려면 이 한 줄만 지우면 된다(다른 곳에서 참조하지 않는다). -->
+        <p class="materials_intro">Each piece begins with a single bolt of cloth. These six are the fabrics we keep on hand through the year, chosen for how they hold a line, catch the light, and settle against the body.</p>
+
         <ul class="materials_swatches">
-          <li class="materials_swatch">
-            <span class="materials_swatch_index">[1]</span>
-            <span class="materials_swatch_img"><img src="assets/main/silk.png" alt="Silk fabric swatch"></span>
+          <li class="materials_swatch is_active">
+            <button class="materials_swatch_button" type="button" data-fabric="silk" aria-pressed="true">
+              <span class="materials_swatch_index">[1]</span>
+              <span class="materials_swatch_img"><img src="assets/main/silk.png" alt="Silk fabric swatch"></span>
+            </button>
           </li>
           <li class="materials_swatch">
-            <span class="materials_swatch_index">[2]</span>
-            <span class="materials_swatch_img"><img src="assets/main/cotton.png" alt="Cotton fabric swatch"></span>
+            <button class="materials_swatch_button" type="button" data-fabric="cotton" aria-pressed="false">
+              <span class="materials_swatch_index">[2]</span>
+              <span class="materials_swatch_img"><img src="assets/main/cotton.png" alt="Cotton fabric swatch"></span>
+            </button>
           </li>
           <li class="materials_swatch">
-            <span class="materials_swatch_index">[3]</span>
-            <span class="materials_swatch_img"><img src="assets/main/linen.png" alt="Linen fabric swatch"></span>
+            <button class="materials_swatch_button" type="button" data-fabric="linen" aria-pressed="false">
+              <span class="materials_swatch_index">[3]</span>
+              <span class="materials_swatch_img"><img src="assets/main/linen.png" alt="Linen fabric swatch"></span>
+            </button>
           </li>
           <li class="materials_swatch">
-            <span class="materials_swatch_index">[4]</span>
-            <span class="materials_swatch_img"><img src="assets/main/ramie_mosi.png" alt="Ramie (Mosi) fabric swatch"></span>
+            <button class="materials_swatch_button" type="button" data-fabric="ramie" aria-pressed="false">
+              <span class="materials_swatch_index">[4]</span>
+              <span class="materials_swatch_img"><img src="assets/main/ramie_mosi.png" alt="Ramie (Mosi) fabric swatch"></span>
+            </button>
           </li>
           <li class="materials_swatch">
-            <span class="materials_swatch_index">[5]</span>
-            <span class="materials_swatch_img"><img src="assets/main/sesonal_fabric.png" alt="Seasonal fabric swatch"></span>
+            <button class="materials_swatch_button" type="button" data-fabric="seasonal" aria-pressed="false">
+              <span class="materials_swatch_index">[5]</span>
+              <span class="materials_swatch_img"><img src="assets/main/sesonal_fabric.png" alt="Seasonal fabric swatch"></span>
+            </button>
           </li>
           <li class="materials_swatch">
-            <span class="materials_swatch_index">[6]</span>
-            <span class="materials_swatch_img"><img src="assets/main/traditional_silk_sangju_myungjoo.png" alt="Traditional Silk (Sangju Myungjoo) fabric swatch"></span>
+            <button class="materials_swatch_button" type="button" data-fabric="myungjoo" aria-pressed="false">
+              <span class="materials_swatch_index">[6]</span>
+              <span class="materials_swatch_img"><img src="assets/main/traditional_silk_sangju_myungjoo.png" alt="Traditional Silk (Sangju Myungjoo) fabric swatch"></span>
+            </button>
           </li>
         </ul>
 
         <div class="materials_detail">
           <ul class="materials_list">
-            <li class="materials_list_item is_active">[1] Silk</li>
-            <li class="materials_list_item">[2] Cotton</li>
-            <li class="materials_list_item">[3] Linen</li>
-            <li class="materials_list_item">[4] Ramie (Mosi)</li>
-            <li class="materials_list_item">[5] Seasonal Fabric</li>
-            <li class="materials_list_item">[6] Traditional Silk(Sangju Myungjoo)</li>
+            <li class="materials_list_item is_active">
+              <button class="materials_list_button" type="button" data-fabric="silk" aria-pressed="true">
+                <span class="materials_list_index">[1]</span>
+                <span class="materials_list_name">Silk</span>
+                <img class="materials_list_arrow" src="assets/icons/arrow_right.svg" alt="" width="18" height="18" aria-hidden="true">
+              </button>
+            </li>
+            <li class="materials_list_item">
+              <button class="materials_list_button" type="button" data-fabric="cotton" aria-pressed="false">
+                <span class="materials_list_index">[2]</span>
+                <span class="materials_list_name">Cotton</span>
+                <img class="materials_list_arrow" src="assets/icons/arrow_right.svg" alt="" width="18" height="18" aria-hidden="true">
+              </button>
+            </li>
+            <li class="materials_list_item">
+              <button class="materials_list_button" type="button" data-fabric="linen" aria-pressed="false">
+                <span class="materials_list_index">[3]</span>
+                <span class="materials_list_name">Linen</span>
+                <img class="materials_list_arrow" src="assets/icons/arrow_right.svg" alt="" width="18" height="18" aria-hidden="true">
+              </button>
+            </li>
+            <li class="materials_list_item">
+              <button class="materials_list_button" type="button" data-fabric="ramie" aria-pressed="false">
+                <span class="materials_list_index">[4]</span>
+                <span class="materials_list_name">Ramie (Mosi)</span>
+                <img class="materials_list_arrow" src="assets/icons/arrow_right.svg" alt="" width="18" height="18" aria-hidden="true">
+              </button>
+            </li>
+            <li class="materials_list_item">
+              <button class="materials_list_button" type="button" data-fabric="seasonal" aria-pressed="false">
+                <span class="materials_list_index">[5]</span>
+                <span class="materials_list_name">Seasonal Fabric</span>
+                <img class="materials_list_arrow" src="assets/icons/arrow_right.svg" alt="" width="18" height="18" aria-hidden="true">
+              </button>
+            </li>
+            <li class="materials_list_item">
+              <button class="materials_list_button" type="button" data-fabric="myungjoo" aria-pressed="false">
+                <span class="materials_list_index">[6]</span>
+                <span class="materials_list_name">Traditional Silk(Sangju Myungjoo)</span>
+                <img class="materials_list_arrow" src="assets/icons/arrow_right.svg" alt="" width="18" height="18" aria-hidden="true">
+              </button>
+            </li>
           </ul>
 
           <div class="materials_caption">
-            <p class="materials_caption_lead">Refined — Elegant — Timeless</p>
-            <p class="materials_caption_desc">A luxurious fabric with a soft texture and graceful drape.</p>
+            <div class="materials_caption_item is_active" data-fabric="silk">
+              <p class="materials_caption_lead">Refined — Elegant — Timeless</p>
+              <p class="materials_caption_desc">A luxurious fabric with a soft texture and graceful drape. Woven from continuous filament, it catches light along every fold and settles close to the body — which is why it carries the deep, even colour a formal jeogori asks for.</p>
+            </div>
+            <div class="materials_caption_item" data-fabric="cotton">
+              <p class="materials_caption_lead">Honest — Breathable — Everyday</p>
+              <p class="materials_caption_desc">A plain-woven cloth that softens with every wearing. It holds a crisp line at the collar and cuff while staying cool against the skin, which makes it the fabric we reach for when a piece is meant to be worn often rather than kept.</p>
+            </div>
+            <div class="materials_caption_item" data-fabric="linen">
+              <p class="materials_caption_lead">Cool — Structured — Unhurried</p>
+              <p class="materials_caption_desc">Spun from flax, linen keeps an architecture of its own. The weave stands slightly away from the body so air moves through it, and the creases it gathers through a day belong to the material rather than counting as a flaw.</p>
+            </div>
+            <div class="materials_caption_item" data-fabric="ramie">
+              <p class="materials_caption_lead">Crisp — Translucent — Summer</p>
+              <p class="materials_caption_desc">A ramie cloth woven finely enough that light passes through it. Cool and almost weightless, mosi has dressed Korean summers for centuries; it keeps a sharp, sculptural silhouette in still air and grows more supple with every wash.</p>
+            </div>
+            <div class="materials_caption_item" data-fabric="seasonal">
+              <p class="materials_caption_lead">Limited — Textural — Of the moment</p>
+              <p class="materials_caption_desc">A short run of cloth chosen for one season only. Weight, weave and colour shift with what the mills release that year, so these bolts are offered while they last and each one gives the same pattern a different hand and fall.</p>
+            </div>
+            <div class="materials_caption_item" data-fabric="myungjoo">
+              <p class="materials_caption_lead">Heritage — Lustrous — Handwoven</p>
+              <p class="materials_caption_desc">Myungjoo silk woven in Sangju, where the craft has been kept for generations. Reeled from domestic cocoons on narrow looms, it carries a quiet, uneven lustre that mill-made satin cannot reproduce, and it deepens rather than fades with age.</p>
+            </div>
           </div>
         </div>
       </div>
