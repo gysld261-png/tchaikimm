@@ -545,15 +545,24 @@
     var SMOOTH_LERP = 0.012;
     var SETTLE_THRESHOLD = 0.0008;
     var FADE_DURATION = 0.9;
+    var HERO_HOVER_MEDIA = "(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)";
+    var canUseHoverVideo = window.matchMedia(HERO_HOVER_MEDIA).matches;
 
     panels.forEach(function (panel) {
       var video = panel.querySelector(".hero_panel_video");
       if (video) {
         video.muted = true;
+
+        /* 히어로 영상은 두 파일을 합쳐 약 1.9MB입니다. 호버 가능한 화면에서는
+           첫 호버 전에 받아 두고, 모바일에서는 쓰지 않는 영상을 내려받지 않습니다. */
+        if (canUseHoverVideo) {
+          video.preload = "auto";
+          video.load();
+        }
       }
     });
 
-    gsap.matchMedia().add("(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)", function () {
+    gsap.matchMedia().add(HERO_HOVER_MEDIA, function () {
       var activePanel = null;
       var targetRatio = NEUTRAL_RATIO;
       var currentRatio = NEUTRAL_RATIO;
@@ -623,20 +632,39 @@
         var body = panel.querySelector(".hero_panel_body");
 
         gsap.to(body, { opacity: hasActivePanel && !isActive ? 0 : 1, duration: FADE_DURATION, ease: "power2.out" });
-        gsap.to(img, { opacity: isActive ? 0 : 0.9, duration: FADE_DURATION, ease: "power2.out" });
 
         if (!video) {
+          gsap.to(img, { opacity: isActive ? 0 : 0.9, duration: FADE_DURATION, ease: "power2.out" });
           return;
         }
 
-        gsap.to(video, { opacity: isActive ? 1 : 0, duration: FADE_DURATION, ease: "power2.out" });
-
         if (isActive) {
+          function revealVideo() {
+            /* 영상을 기다리는 사이 다른 패널로 이동했다면 뒤늦게 나타내지 않습니다. */
+            if (activePanel !== panel) {
+              return;
+            }
+
+            gsap.to(img, { opacity: 0, duration: FADE_DURATION, ease: "power2.out" });
+            gsap.to(video, { opacity: 1, duration: FADE_DURATION, ease: "power2.out" });
+          }
+
+          if (video.readyState >= 3) {
+            revealVideo();
+          } else {
+            /* 준비 전에는 기존 사진을 유지해 빈 영상 프레임이 드러나지 않게 합니다. */
+            gsap.to(img, { opacity: 0.9, duration: FADE_DURATION, ease: "power2.out" });
+            gsap.set(video, { opacity: 0 });
+            video.addEventListener("canplay", revealVideo, { once: true });
+          }
+
           var playPromise = video.play();
           if (playPromise && typeof playPromise.catch === "function") {
             playPromise.catch(function () {});
           }
         } else {
+          gsap.to(img, { opacity: 0.9, duration: FADE_DURATION, ease: "power2.out" });
+          gsap.to(video, { opacity: 0, duration: FADE_DURATION, ease: "power2.out" });
           video.pause();
           try {
             video.currentTime = 0;
