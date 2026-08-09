@@ -32,7 +32,10 @@
    3. tchaikim(5장면) — 장면 전환은 탭 클릭으로만 이뤄집니다(initTchaikimTabs).
       스크롤로 이 섹션을 지나갈 때는 아무것도 움직이지 않고 화면이 그대로
       TCHAIKIM_PAUSE_LENGTH만큼 잠깐 멈췄다가 아래로 이어집니다
-      (initTchaikimPause, 순수 pin — 스크럽·트윈 없음). initHorizontalSection/
+      (initTchaikimPause, 순수 pin — 스크럽·트윈 없음). 멈추는 지점은 섹션
+      맨 위가 아니라 TCHAIKIM_PAUSE_START_OFFSET만큼 더 스크롤한 뒤
+      — 탭+콘텐츠가 실제로 뷰포트 안에 다 보이는 지점입니다(섹션 위쪽의
+      600px 여백만 보이는 채로 멈추지 않도록). initHorizontalSection/
       initHorizontal은 트랙을 가로로 미는 코드가 남아 있지만 init()에서
       부르지 않아 실행되지 않습니다 — 스크롤에 맞춰 장면이 가로로
       넘어가는 동작은 "화면이 옮겨다닌다"는 피드백으로 원치 않는 것으로
@@ -40,6 +43,8 @@
 
    4. atelier 사진 7장 — 왼쪽으로 계속 흐르는 무한 마퀴(CSS 애니메이션 +
       JS의 사진 복제/폭 측정). 속도는 ATELIER_SPEED 하나로 조절합니다.
+      커서로 눌러서 좌우로 당기면 그만큼 따라 움직이고, 놓으면 그
+      자리에서 자동 흐름이 이어집니다.
 
    5. heritage — 화면을 붙잡아 둔 채(pin) 제목이 커지며 사라지고, 왼쪽
       사진 세 장이 순서대로 겹쳐 들어옵니다. 오른쪽 고정 텍스트는 첫
@@ -75,8 +80,15 @@
   /* ★ 화면을 붙잡아 두는(pin) 길이 — heritage/scroll 섹션과 같은 방식입니다.
      페이지를 열었을 때는 처음 상태(닫힌 문)가 고정된 채 그대로 보이고,
      사용자가 이 길이만큼 스크롤해야 문이 다 열리고 글·무드 단어까지
-     등장합니다. 늘리면 스크롤을 더 많이 해야 끝까지 진행됩니다. */
-  var MOOD_PIN_LENGTH = "+=200%";
+     등장합니다. 늘리면 스크롤을 더 많이 해야 끝까지 진행됩니다.
+
+     ★ mood_right가 text/room과 겹치지 않도록 뒤로 미루면서(아래
+     wordPanel 타임라인 참고) 전체 타임라인 길이가 7.3 → 8.9(단위)로
+     늘었습니다. 이 값도 같은 비율(×8.9/7.3)로 200% → 244%로 올려서,
+     문 열림·페이드·멈춤 같은 앞 구간들이 늘어난 길이 때문에 전체
+     스크롤 중 상대적으로 더 빨리 지나가 버리지 않도록(예전과 같은
+     스크롤 감각) 맞췄습니다. */
+  var MOOD_PIN_LENGTH = "+=244%";
 
   /* ★ 이 너비 미만에서는 pin+scrub 인트로를 켜지 않습니다(heritage/scroll과
      같은 기준, 1280). 1024/768/390 반응형 레이아웃은 문이 이미 다 열린
@@ -129,18 +141,42 @@
      바꿨습니다. 최종 자리(2분할, #3b3c32 배경 + 카드 3개)는 CSS 값
      그대로라 바뀌지 않습니다 — 등장 방향만 바뀌었습니다.
 
-     ★ 배경 사진(.mood_room)도 "왼쪽(창문) 부분이 텍스트와 같이 왼쪽으로
-     밀려서 마지막 화면처럼 나와야 한다"는 요청으로, ③(슬라이드) 구간에서
-     텍스트와 정확히 같은 거리·시간·이징으로 함께 움직입니다. 그 전(문이
-     열리는 동안 · ①② 구간)에는 REVEAL_ROOM_SLIDE만큼 오른쪽으로 밀린
-     자리에 멈춰 있다가, 슬라이드가 끝나면 원래 자리(CSS에 정의된, 지금까지
-     검증해 온 창문 위치)로 정확히 돌아옵니다 — 문이 열리는 동안 사진이
-     움직이지 않는다는 규칙은 ①②까지는 그대로 지켜지고, ③에서만 텍스트와
-     함께 움직입니다. */
-  var REVEAL_TEXT_SLIDE = 700;             /* 글이 오른쪽에서 들어오는 거리(px, 멈춤② 자리) */
+     ★ 배경 사진(.mood_room)도 "완성된 모습(사진+글)이 통째로 왼쪽으로
+     이동하고 그 자리를 mood_right가 채우며 들어와야 한다"는 요청으로,
+     ③(슬라이드) 구간에서 텍스트와 같은 시간·이징(REVEAL_TEXT_SLIDE_DURATION,
+     slideStart 공유)은 물론 **같은 거리**(REVEAL_ROOM_SLIDE = REVEAL_TEXT_SLIDE)
+     로도 함께 움직입니다 — 거리까지 같아야 사진 위에 놓인 글의 관계가
+     이동 중에도 흐트러지지 않고 "하나로 붙어서" 이동하는 것처럼
+     보입니다. 그 전(문이 열리는 동안 · ①② 구간)에는 REVEAL_ROOM_SLIDE만큼
+     오른쪽으로 밀린 자리에 멈춰 있다가, 슬라이드가 끝나면 원래 자리
+     (CSS에 정의된 위치 — 이제는 창문이 화면 밖으로 밀려나 안 보이는
+     자리)로 정확히 돌아옵니다.
+
+     ★ REVEAL_TEXT_SLIDE는 Figma mood_inner2(node 1962:6949, "문이 다 열린
+     직후" 화면) 실측으로 계산했습니다 — 창문 오른쪽 프레임 ~ 무대 오른쪽
+     끝 사이 벽면의 가운데에 타이틀이 오도록 화면 좌표 약 1224px을
+     목표로 잡고, CSS left(72px, mood_copy_title 참고)를 뺀 값입니다.
+
+     ★ REVEAL_ROOM_SLIDE는 REVEAL_TEXT_SLIDE와 **항상 같은 값이어야
+     합니다.** "문이 다 열린 완성된 모습(사진+글)이 통째로 왼쪽으로
+     이동하고, 그 자리를 mood_right가 채우며 들어와야 한다"는 요청 —
+     사진과 글이 서로 다른 거리로 움직이면 마치 글만 따로 미끄러지는
+     것처럼 보여서 "하나로 붙어서 이동"하는 느낌이 깨집니다. 한때
+     사진을 덜 자르려고 이동 거리를 따로 줄인 적이 있었는데(585),
+     그러면 이 "함께 이동" 요구를 못 지켜서 다시 합쳤습니다 — 대신
+     늘어난 이동 거리(1152px)를 gap 없이 소화하려고 .mood_room의 배율을
+     1.32배 → 1.65배로 다시 올렸습니다(그 CSS 주석 참고). 최종 정지
+     상태에서 창문이 아예 안 보이게 되는 건 부작용이 아니라 Figma
+     최종 화면(mood_inner3)과 일치하는 의도된 결과입니다. */
+  var REVEAL_TEXT_SLIDE = 1152;            /* 글이 오른쪽에서 들어오는 거리(px, 멈춤② 자리) — 문이 다 열렸을 때
+                                               사진의 열린 벽면(창문 오른쪽 ~ 무대 오른쪽 끝) 가운데에 오도록
+                                               Figma mood_inner2 실측 기준으로 계산한 값 */
   var REVEAL_TEXT_SETTLE = 50;             /* ① 페이드인 동안 안착하는 추가 거리(px) */
   var REVEAL_WORD_SLIDE = 250;             /* 무드 단어가 오른쪽에서 들어오는 거리(px) */
-  var REVEAL_ROOM_SLIDE = 700;             /* 배경 사진이 ③ 구간에서 텍스트와 같이 밀리는 거리(px) */
+  var REVEAL_ROOM_SLIDE = 1152;            /* 배경 사진이 ③ 구간에서 텍스트와 같이 밀리는 거리(px) — 항상
+                                               REVEAL_TEXT_SLIDE와 같은 값이어야 "완성된 모습이 통째로 이동"하는
+                                               느낌이 유지됩니다. .mood_room CSS 배율(1.65배)이 이 거리를 gap
+                                               없이 소화할 수 있는 값으로 맞춰져 있습니다. */
   var REVEAL_TEXT_FADE_DURATION = 0.9;     /* ① 안착하며 페이드인 */
   var REVEAL_TEXT_HOLD_DURATION = 1;       /* ② 오른쪽에서 멈춰 있는 시간(전체 사진 + 텍스트만 보임) */
   var REVEAL_TEXT_SLIDE_DURATION = 1.6;    /* ③ 왼쪽으로 슬라이드 — "천천히 들어와야해" 요청으로 0.9 → 1.6 */
@@ -162,6 +198,18 @@
      내려가는 여유 구간입니다. 뷰포트 높이 대비 %로, 늘리면 더 오래
      멈춰 있습니다. */
   var TCHAIKIM_PAUSE_LENGTH = "+=50%";
+
+  /* ★ "멈추는 지점이 섹션의 컨텐츠(탭+영상/글)가 보이는 부분에서
+     걸려야 한다"는 지적으로 추가했습니다. 원래 start가 "top top"
+     (섹션 맨 위가 뷰포트 위에 닿자마자 멈춤)이었는데, `.tchaikim_track`
+     위쪽에 600px짜리 여백(padding-top)이 있어서 멈추는 순간 화면
+     위쪽 40%가량이 빈 여백이고 정작 콘텐츠(`.tchaikim_con`, 520px 높이)
+     아래쪽 약 40%는 아직 뷰포트 밖이라 안 보였습니다(1920×1080 기준
+     실측). 이 값(402px)만큼 더 스크롤한 뒤에 멈추도록 시작 지점을
+     늦춰서, 멈추는 순간 탭+콘텐츠 전체(683px)가 뷰포트 안에 위아래
+     여백이 똑같이 남도록(198px씩) 가운데 놓이게 계산했습니다. 레이아웃이
+     바뀌면(탭 높이, 미디어 크기 등) 이 값도 다시 재야 합니다. */
+  var TCHAIKIM_PAUSE_START_OFFSET = 402;
 
   /* ---- atelier 무한 마퀴 -------------------------------------------------
      ★ 속도를 바꾸고 싶으면 이 숫자만 고치면 됩니다. 사진 띠가 1초에 흐르는
@@ -357,12 +405,21 @@
             ease: "power1.out"
           }, slideStart);
 
+          /* ★ "왼쪽으로 이동할 때 mood_right 레이어와 겹치지 않도록" 요청으로
+             text/room과 동시에 시작하지 않고, 그 슬라이드가 완전히 끝난
+             뒤(slideStart + REVEAL_TEXT_SLIDE_DURATION)에야 시작하도록
+             미뤘습니다. text(.mood_copy)는 멈춤② 자리(화면 좌표 약 1224px)
+             에서 시작해 mood_right의 네이티브 자리(768~1920px)를 한참
+             가로질러 지나가므로, 동시에 진행하면 옅어지는 mood_right
+             배경과 아직 지나가는 중인 사진·글이 잠깐 같은 화면 영역에서
+             겹쳐 보였습니다. 이제 사진·글이 완전히 자리를 잡은 뒤에만
+             mood_right가 나타나 겹치는 구간이 없습니다. */
           timeline.to(wordPanel, {
             opacity: 1,
             x: 0,
             duration: REVEAL_TEXT_DURATION,
             ease: "power1.out"
-          }, slideStart);
+          }, slideStart + REVEAL_TEXT_SLIDE_DURATION);
         }
 
         /* 사진이 아직 안 왔는데 문이 열리면 빈 칸이 드러납니다. */
@@ -463,7 +520,7 @@
       function () {
         var trigger = window.ScrollTrigger.create({
           trigger: section,
-          start: "top top",
+          start: "top+=" + TCHAIKIM_PAUSE_START_OFFSET + " top",
           end: TCHAIKIM_PAUSE_LENGTH,
           pin: true
         });
@@ -802,7 +859,10 @@
      ★ 사진을 늘리거나 줄이면(HTML의 .atelier_photo 개수 변경) 이 함수는
        손댈 필요 없이 자동으로 새 폭에 맞춰집니다.
      ★ prefers-reduced-motion에서는 아예 실행하지 않습니다 — CSS 기본값인
-       "가운데 정렬 + 좌우 크롭" 정지 화면(시안 그대로)이 보입니다. */
+       "가운데 정렬 + 좌우 크롭" 정지 화면(시안 그대로)이 보입니다.
+     ★ 마우스/터치로 눌러서 좌우로 당기면(pointerdown/move/up) 그만큼
+       띠가 따라 움직이고, 손을 떼면 그 자리에서 자동 흐름이 다시
+       이어집니다 — 자세한 구현은 아래 드래그 블록 주석 참고. */
   function initAtelierMarquee() {
     var row = document.querySelector(".atelier_row");
 
@@ -848,6 +908,136 @@
     while (row.scrollWidth < window.innerWidth + period) {
       appendOneSet();
     }
+
+    /* ★ "커서로 당겨도 돌아가도록" 요청으로 드래그를 추가했습니다.
+       CSS 애니메이션(atelier_marquee)은 그대로 두고, 드래그하는 동안만
+       잠깐 꺼서(is_dragging → animation:none) transform을 손으로 쓰고,
+       손을 떼면 방금 멈춘 자리에서 이어지도록 음수 animation-delay를
+       계산해서 애니메이션을 다시 켭니다 — GSAP 없이도 동작하는
+       CSS 트릭입니다(이 함수는 원래 GSAP에 의존하지 않습니다).
+
+       transform 값은 항상 (-period, 0] 범위로 감아 둡니다 — 사진을
+       한 벌만큼씩 이어붙여 뒀으니 이 범위 안에서는 어느 지점이든
+       이음매 없이 자연스럽게 보입니다. 그래서 아무리 세게/오래
+       당겨도(왼쪽이든 오른쪽이든) 끊기지 않습니다. */
+    var duration = period / ATELIER_SPEED;
+    var isDragging = false;
+    var pointerStartX = 0;
+    var xAtDragStart = 0;
+
+    function wrapX(x) {
+      var wrapped = x % period;
+      if (wrapped > 0) {
+        wrapped -= period;
+      }
+      return wrapped;
+    }
+
+    function readCurrentX() {
+      var matrix = getComputedStyle(row).transform;
+
+      if (!matrix || matrix === "none") {
+        return 0;
+      }
+
+      /* matrix3d(...)의 13번째 값 또는 matrix(...)의 5번째 값이 x입니다.
+         "3d"는 있을 수도 없을 수도 있는 그룹이라 (3d)?로 묶어야 합니다 —
+         matrix3d? 로 쓰면 "3"과 optional "d"가 따로 떨어져 실제로는
+         matrix(...) 형태와 절대 매치되지 않는 버그가 있었습니다. */
+      var values = matrix.match(/matrix(3d)?\(([^)]+)\)/);
+
+      if (!values) {
+        return 0;
+      }
+
+      var parts = values[2].split(",").map(parseFloat);
+      return values[1] ? parts[12] : parts[4];
+    }
+
+    /* ★ "뚝뚝 끊긴다"는 지적으로 rAF 배칭을 추가했습니다. pointermove는
+       입력 장치에 따라 화면 주사율보다 훨씬 자주(때로는 초당 수백 번)
+       발생하는데, 이벤트가 올 때마다 매번 곧바로 transform을 새로
+       썼더니 브라우저가 필요 이상으로 스타일을 다시 계산하면서 오히려
+       뚝뚝 끊겨 보였습니다. 이제 pointermove는 "다음에 그려야 할 값"만
+       적어 두고, 실제로 화면에 반영하는 건 requestAnimationFrame이
+       한 프레임에 한 번만 하도록 묶었습니다 — 포인터가 아무리 자주
+       움직여도 그리기는 화면 주사율만큼만 일어납니다. */
+    var pendingX = null;
+    var rafId = null;
+
+    function flushPendingX() {
+      rafId = null;
+
+      if (pendingX !== null) {
+        row.style.transform = "translate3d(" + pendingX + "px, 0, 0)";
+      }
+    }
+
+    function scheduleX(x) {
+      pendingX = x;
+
+      if (rafId === null) {
+        rafId = requestAnimationFrame(flushPendingX);
+      }
+    }
+
+    function handlePointerDown(event) {
+      if (event.button !== undefined && event.button !== 0) {
+        return;
+      }
+
+      isDragging = true;
+      xAtDragStart = wrapX(readCurrentX());
+      pointerStartX = event.clientX;
+      row.classList.add("is_dragging");
+      row.style.transform = "translate3d(" + xAtDragStart + "px, 0, 0)";
+
+      if (row.setPointerCapture) {
+        row.setPointerCapture(event.pointerId);
+      }
+    }
+
+    function handlePointerMove(event) {
+      if (!isDragging) {
+        return;
+      }
+
+      var delta = event.clientX - pointerStartX;
+      scheduleX(wrapX(xAtDragStart + delta));
+    }
+
+    function handlePointerUp() {
+      if (!isDragging) {
+        return;
+      }
+
+      isDragging = false;
+
+      /* 아직 화면에 반영되지 않은(다음 프레임을 기다리던) 값이 있으면
+         지금 즉시 확정합니다 — 그래야 아래에서 읽는 위치가 손을 뗀
+         순간의 실제 마지막 위치와 정확히 일치합니다. */
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        flushPendingX();
+      }
+
+      /* ★ is_dragging를 떼면 CSS 애니메이션(animation: none)이 곧바로
+         다시 살아나 transform을 가져가 버립니다 — 그러면 readCurrentX()가
+         방금 끌어다 둔 위치가 아니라 애니메이션 자신의 값을 읽게 됩니다.
+         그래서 class를 떼기 전에 먼저 현재 위치를 읽어야 합니다. */
+      var currentX = wrapX(readCurrentX());
+      var elapsedSeconds = (-currentX / period) * duration;
+
+      pendingX = null;
+      row.classList.remove("is_dragging");
+      row.style.transform = "";
+      row.style.animationDelay = "-" + elapsedSeconds + "s";
+    }
+
+    row.addEventListener("pointerdown", handlePointerDown);
+    row.addEventListener("pointermove", handlePointerMove);
+    row.addEventListener("pointerup", handlePointerUp);
+    row.addEventListener("pointercancel", handlePointerUp);
   }
 
   function initTchaikimTabs() {

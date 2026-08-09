@@ -63,10 +63,24 @@ mood
 
 .mood_room {
   position: absolute;
-  top: -216px;
-  left: -686px;
-  width: 2688px;
-  height: 1512px;
+  /* ★ "완성된 모습(사진+글)이 통째로 왼쪽으로 이동하고, 그 자리를
+     mood_right가 채우며 들어와야 한다"는 요청으로 사진의 이동 거리를
+     텍스트(REVEAL_TEXT_SLIDE)와 똑같이 맞췄습니다 — 사진과 글이 서로
+     다른 속도로 움직이면 "같이 붙어서 이동"하는 느낌이 깨지기
+     때문입니다. 이동 거리가 1152px로 늘어난 만큼 배율도 1.32배 →
+     1.65배로 다시 올려야 gap 없이 슬라이드됩니다(세로 크롭은 변당
+     175px → 354px로 늘었습니다 — 창문 세로 폭(약 215~860px, 원본
+     1084px 기준)은 여전히 다 들어옵니다).
+
+     ★ 최종 정지 상태(③ 끝, x:0)에서는 이 배율 덕분에 창문이 아예 화면
+     밖으로 밀려나 안 보입니다 — Figma 최종 화면(mood_inner3)에도 창문이
+     없는 벽만 있어서 의도한 결과입니다. 배율/이동 거리를 바꾸려면
+     js/brand.js의 REVEAL_ROOM_SLIDE·REVEAL_TEXT_SLIDE도 같이 다시
+     계산해야 합니다(그 주석 참고, 항상 서로 같은 값이어야 합니다). */
+  top: -354px;
+  left: -1235px;
+  width: 3168px;
+  height: 1789px;
   max-width: none;
   object-fit: cover;
   pointer-events: none;
@@ -94,12 +108,22 @@ mood
   width: 768px;
   height: 644px;
   color: var(--color_text);
+  /* mood_right(2분할 초록 패널)이 슬라이드해 들어오는 동안 이 박스와
+     잠깐 겹칩니다(설계상 — 아래 mood_copy_title 주석 참고). z-index를
+     올려 그 구간에서도 글이 항상 위에 그려지고 패널에 가려지지
+     않도록 합니다. */
+  z-index: 2;
 }
 
 .mood_copy_title {
   position: absolute;
   top: 0;
-  left: 400px;
+  /* ★ Figma mood_inner2/mood_inner3(node 1962:6949 / 1962:6954) 실측으로
+     다시 잡았습니다. 이전엔 본문을 타이틀 아래에 세로로 쌓았는데,
+     실제 시안은 타이틀(왼쪽 블록) 옆에 본문이 나란히 오는 좌우 배치라
+     완전히 다시 재야 했습니다 — 자세한 계산은 js/brand.js의
+     REVEAL_TEXT_SLIDE 주석 참고. */
+  left: 72px;
   font-family: var(--font_display);
   font-weight: 600;
   font-size: 64px;
@@ -110,8 +134,11 @@ mood
 
 .mood_copy_body {
   position: absolute;
-  top: 265px;
-  left: 400px;
+  /* ★ 타이틀 아래가 아니라 타이틀 옆(오른쪽)에 옵니다 — Figma 실측으로
+     타이틀 left(72px) 기준 오른쪽으로 약 300px, 위로는 타이틀의 두 번째
+     줄("into") 높이쯤에서 시작합니다. */
+  top: 145px;
+  left: 372px;
   font-family: var(--font_body);
   font-weight: 400;
   font-size: 24px;
@@ -492,9 +519,25 @@ atelier
   width: max-content;
   margin-left: 0;
   will-change: transform;
+  cursor: grab;
+  touch-action: pan-y;
   animation:
     atelier_marquee var(--atelier_duration, 40s)
     linear infinite;
+}
+
+/* 커서로 당기는 동안 — JS(initAtelierMarquee)가 붙였다 뗍니다.
+   애니메이션을 잠깐 끄고 transform을 직접 쓰는 동안 이미지 드래그·
+   텍스트 선택이 끼어들지 않도록 막습니다. */
+.atelier_row.is_dragging {
+  cursor: grabbing;
+  animation: none;
+  user-select: none;
+}
+
+.atelier_row.is_dragging .atelier_photo img {
+  -webkit-user-drag: none;
+  pointer-events: none;
 }
 
 @keyframes atelier_marquee {
@@ -1013,6 +1056,24 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
 
   .heritage_stage {
     height: auto;
+  }
+
+  /* ★ .heritage_photos는 원래 .heritage.is_pinned일 때만(1280px 이상,
+     JS가 붙이는 class) width:400px를 받습니다 — 1280 미만에서는 이
+     class가 절대 안 붙으므로 폭이 없는 채로 남습니다. 부모
+     (.heritage_split)의 align-items:center가 기본 stretch를 막아서,
+     폭 없는 flex 컨테이너 안에서는 .heritage_figure의 퍼센트 폭(390px
+     이하 구간, 아래 참고)이 기준으로 삼을 폭이 없어 붕괴합니다
+     (실측: 20×36px까지 찌그러짐). .heritage_photos 자신뿐 아니라 그
+     안의 .heritage_stage(사진 하나를 감싸는 상자)도 같은 이유로
+     한 단계 더 붕괴하고 있어서(align-items:center가 여기서도 다시
+     막음) 두 단계 모두 폭을 줘야 합니다. */
+  .heritage_photos {
+    width: 100%;
+  }
+
+  .heritage_photos .heritage_stage {
+    width: 100%;
   }
 
   .heritage_headline {
