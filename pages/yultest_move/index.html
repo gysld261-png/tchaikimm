@@ -78,7 +78,9 @@
          alt="A man in a hanbok coat walking past a large ink landscape painting in a gallery">
   </section>
 
-  <!-- detail — collar/sleeve/body/skirt를 사진 한 장 위 4개 호버 영역으로 통합 -->
+  <!-- detail — 사진 위에서 돋보기가 커서를 따라다니며 원본을 계속 확대해 보여주고,
+       collar/sleeve/body/skirt 영역을 지날 때 그 부위 설명이 나타납니다.
+       돋보기는 js/main.js가 만들고, 부위 설명은 .is_active로 켜집니다. -->
   <section class="detail" aria-labelledby="detail_title">
     <header class="detail_head common_container">
       <h2 class="detail_title" id="detail_title">Traditional motifs,<br>reimagined</h2>
@@ -98,28 +100,28 @@
         <p class="detail_part_lead">Balanced Proportions</p>
         <p class="detail_part_desc">Refined to frame the silhouette with quiet elegance.</p>
       </div>
-      <span class="detail_zoom" data-part="collar"><img src="assets/main/detail/collar/zoom.png" alt="A close-up of the collar"></span>
 
       <div class="detail_text" data-part="sleeve">
         <h3 class="detail_part_title">Sleeve</h3>
         <p class="detail_part_lead">Soft Curves</p>
         <p class="detail_part_desc">Inspired by the traditional baerae, redesigned for natural movement.</p>
       </div>
-      <span class="detail_zoom" data-part="sleeve"><img src="assets/main/detail/sleeve/zoom.png" alt="A close-up of the sleeve"></span>
 
       <div class="detail_text" data-part="body">
         <h3 class="detail_part_title">Body</h3>
         <p class="detail_part_lead">Contemporary Structure</p>
         <p class="detail_part_desc">A modern silhouette rooted in traditional form.</p>
       </div>
-      <span class="detail_zoom" data-part="body"><img src="assets/main/detail/body/zoom.png" alt="A close-up of the body"></span>
 
       <div class="detail_text" data-part="skirt">
         <h3 class="detail_part_title">Skirt</h3>
         <p class="detail_part_lead">Flowing Volume</p>
         <p class="detail_part_desc">Lightweight volume designed to move effortlessly.</p>
       </div>
-      <span class="detail_zoom" data-part="skirt"><img src="assets/main/detail/skirt/zoom.png" alt="A close-up of the skirt"></span>
+
+      <!-- 커서를 따라다니는 돋보기. 배경 이미지는 js/main.js가 .detail_img의 src로
+           채웁니다(원본 경로를 한 곳에서만 관리하기 위함). -->
+      <div class="detail_lens" aria-hidden="true"></div>
     </div>
   </section>
 

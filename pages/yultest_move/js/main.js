@@ -591,3 +591,178 @@
     });
   })();
 })();
+
+/* =========================================================
+   detail — 사진 위 돋보기 + 부위 설명
+
+   이전에는 부위별로 미리 잘라 둔 확대컷 4장을 CSS의 :hover ~ 형제 선택자로
+   각자 자리에 띄웠습니다. 지금은 돋보기 하나가 커서를 따라다니며 원본 사진을
+   실시간으로 확대하고, collar/sleeve/body/skirt 영역을 지날 때 그 부위 설명이
+   함께 나타납니다.
+
+   ★ 배율의 상한은 에셋이 정합니다. img.png는 4380 × 1905인데 화면에는 1460px로
+     그려지므로 원본이 정확히 3배입니다. DETAIL_LENS_ZOOM을 3보다 크게 올리면
+     없는 픽셀을 늘리는 것이라 흐려집니다.
+
+   ★ 이 블록은 GSAP을 쓰지 않으므로 위쪽 IIFE(GSAP이 없으면 통째로 return) 밖에
+     있어야 합니다. 안에 넣으면 CDN이 막힌 환경에서 돋보기까지 같이 죽습니다.
+   ========================================================= */
+(function () {
+  "use strict";
+
+  /* 조절값 — 숫자만 바꾸면 됩니다 */
+  var DETAIL_LENS_ZOOM = 2.5; /* 확대 배율. 3까지가 원본 해상도 안쪽입니다 */
+
+  var stage = document.querySelector(".detail_stage");
+  var lens = stage && stage.querySelector(".detail_lens");
+  var image = stage && stage.querySelector(".detail_img");
+  var texts = stage ? stage.querySelectorAll(".detail_text") : [];
+
+  if (!stage || !lens || !image || !texts.length) {
+    return;
+  }
+
+  /* 손가락으로는 "지나간다"는 동작이 없어 돋보기가 성립하지 않습니다.
+     터치 기기에서는 아무것도 걸지 않고 기존 정적 레이아웃 그대로 둡니다. */
+  var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+  var isBound = false;
+  var frameId = 0;
+  var pendingEvent = null;
+  var activePart = "";
+
+  /* 원본 경로는 마크업 한 곳(.detail_img)에만 두고 여기서 읽어옵니다 */
+  function applyLensImage() {
+    lens.style.backgroundImage = 'url("' + image.currentSrc + '")';
+  }
+
+  function clamp(value, min, max) {
+    if (max < min) {
+      return min;
+    }
+    return Math.min(Math.max(value, min), max);
+  }
+
+  /* 커서 밑에 어느 부위가 있는지 — elementFromPoint를 쓰면 겹친 영역의 우선순위가
+     이전 :hover 방식과 정확히 같아집니다(위에 쌓인 것이 이깁니다).
+     .detail_lens와 .detail_text는 pointer-events: none이라 잡히지 않습니다. */
+  function findPart(clientX, clientY) {
+    var target = document.elementFromPoint(clientX, clientY);
+    var hotspot = target && target.closest ? target.closest(".detail_hotspot") : null;
+    return hotspot ? hotspot.getAttribute("data-part") : "";
+  }
+
+  function setActivePart(part) {
+    if (part === activePart) {
+      return;
+    }
+    activePart = part;
+
+    Array.prototype.forEach.call(texts, function (text) {
+      text.classList.toggle("is_active", text.getAttribute("data-part") === part);
+    });
+  }
+
+  function render() {
+    frameId = 0;
+
+    var event = pendingEvent;
+    if (!event) {
+      return;
+    }
+
+    var stageRect = stage.getBoundingClientRect();
+    var lensRect = lens.getBoundingClientRect();
+
+    var pointerX = event.clientX - stageRect.left;
+    var pointerY = event.clientY - stageRect.top;
+
+    /* 돋보기 중심을 커서에 맞춥니다. translate(-50%, -50%)는 CSS가 갖고 있습니다 */
+    lens.style.left = pointerX + "px";
+    lens.style.top = pointerY + "px";
+
+    var zoomedWidth = stageRect.width * DETAIL_LENS_ZOOM;
+    var zoomedHeight = stageRect.height * DETAIL_LENS_ZOOM;
+
+    /* 확대된 사진에서 잘라 보여줄 위치. 가장자리에서 배경이 비지 않도록 가둡니다 —
+       가두지 않으면 사진 밖 빈 영역이 돋보기 안에 초승달 모양으로 남습니다. */
+    var backgroundX = clamp(
+      pointerX * DETAIL_LENS_ZOOM - lensRect.width / 2,
+      0,
+      Math.max(0, zoomedWidth - lensRect.width)
+    );
+    var backgroundY = clamp(
+      pointerY * DETAIL_LENS_ZOOM - lensRect.height / 2,
+      0,
+      Math.max(0, zoomedHeight - lensRect.height)
+    );
+
+    lens.style.backgroundSize = zoomedWidth + "px " + zoomedHeight + "px";
+    lens.style.backgroundPosition = -backgroundX + "px " + -backgroundY + "px";
+
+    setActivePart(findPart(event.clientX, event.clientY));
+  }
+
+  function handlePointerMove(event) {
+    pendingEvent = event;
+    if (!frameId) {
+      frameId = window.requestAnimationFrame(render);
+    }
+  }
+
+  function handlePointerEnter(event) {
+    applyLensImage();
+    stage.classList.add("is_lens_active");
+    lens.classList.add("is_active");
+    handlePointerMove(event);
+  }
+
+  function handlePointerLeave() {
+    if (frameId) {
+      window.cancelAnimationFrame(frameId);
+      frameId = 0;
+    }
+    pendingEvent = null;
+    stage.classList.remove("is_lens_active");
+    lens.classList.remove("is_active");
+    setActivePart("");
+  }
+
+  function bind() {
+    if (isBound) {
+      return;
+    }
+    isBound = true;
+    stage.addEventListener("pointerenter", handlePointerEnter);
+    stage.addEventListener("pointermove", handlePointerMove);
+    stage.addEventListener("pointerleave", handlePointerLeave);
+  }
+
+  function unbind() {
+    if (!isBound) {
+      return;
+    }
+    isBound = false;
+    stage.removeEventListener("pointerenter", handlePointerEnter);
+    stage.removeEventListener("pointermove", handlePointerMove);
+    stage.removeEventListener("pointerleave", handlePointerLeave);
+    handlePointerLeave();
+  }
+
+  function syncPointerMode() {
+    if (finePointer.matches) {
+      bind();
+    } else {
+      unbind();
+    }
+  }
+
+  syncPointerMode();
+
+  /* 마우스를 꽂거나 뽑았을 때, 태블릿에서 키보드를 붙였을 때 다시 판정합니다 */
+  if (typeof finePointer.addEventListener === "function") {
+    finePointer.addEventListener("change", syncPointerMode);
+  } else if (typeof finePointer.addListener === "function") {
+    finePointer.addListener(syncPointerMode);
+  }
+})();
