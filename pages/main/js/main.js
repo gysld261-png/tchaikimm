@@ -433,7 +433,7 @@
 
     var EXPANDED_RATIO = 0.7;
     var NEUTRAL_RATIO = 0.5;
-    var SMOOTH_LERP = 0.028;
+    var SMOOTH_LERP = 0.012;
     var SETTLE_THRESHOLD = 0.0008;
     var FADE_DURATION = 0.9;
 
