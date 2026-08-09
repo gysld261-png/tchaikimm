@@ -550,11 +550,22 @@
         });
       }
 
+      /* ★ 경계는 "화면 절반"이 아니라 "지금 그려져 있는 패널의 실제 경계"입니다.
+
+         예전에는 hero 폭의 50%를 기준으로 좌/우를 판정했습니다. 그런데 패널은
+         호버하면 70% / 30%로 넓어졌다 좁아집니다. 오른쪽 패널이 활성이면 그
+         패널은 화면의 30% 지점부터 시작하는데, 그 안의 버튼은 왼쪽 끝에서
+         80px 자리에 있어 화면 전체로 보면 아직 50%보다 왼쪽입니다.
+         그래서 버튼을 누르러 마우스를 가져가는 순간 판정이 반대쪽으로 뒤집혀
+         반대편 영상이 켜졌습니다.
+
+         panelA의 오른쪽 변을 경계로 쓰면 두 패널이 맞닿은 실제 선이 기준이
+         되고, 덤으로 "한 번 넓어진 패널은 그 패널 밖으로 나가야 바뀌는"
+         이력(hysteresis)이 생겨 경계 근처에서 깜빡이지도 않습니다.
+         (A가 활성이면 경계가 70%로 멀어지고, B가 활성이면 30%로 멀어집니다) */
       function handleHeroPointerMove(event) {
-        var rect = hero.getBoundingClientRect();
-        var x = event.clientX - rect.left;
-        var half = x < rect.width / 2 ? panelA : panelB;
-        applyActivePanel(half);
+        var boundary = panelA.getBoundingClientRect().right;
+        applyActivePanel(event.clientX < boundary ? panelA : panelB);
       }
 
       function handleHeroPointerLeave() {
