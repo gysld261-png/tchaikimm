@@ -150,20 +150,26 @@ Load Lenis, GSAP, and ScrollTrigger before `common.js`.
 
 ### 스크롤 감각 조정 (Lenis)
 
-**`common/js/common.js` 맨 위 상수 세 개만 고칩니다.** 페이지 CSS나 페이지 JS에
+**`common/js/common.js` 맨 위 상수만 고칩니다.** 페이지 CSS나 페이지 JS에
 복사하지 마세요 — 여기를 고치면 전 페이지가 함께 바뀝니다. 각 상수 위에 값 범위와
 느낌을 주석으로 적어 두었습니다.
 
 | 상수 | 현재 | 의미 |
 |---|---|---|
-| `SCROLL_LERP` | `0.035` | 얼마나 늦게 따라오는가. **낮을수록 부드러움**(0.02 아주 미끄러움 / 0.1 Lenis 기본) |
-| `SCROLL_WHEEL` | `0.7` | 휠 한 칸의 이동 거리 배수. 낮을수록 묵직 (1 = 브라우저 기본) |
+| `SCROLL_DURATION` | `1.5` | 목표까지 도착하는 시간(초). **길수록 묵직**(1.2 Lenis 데모 기본 / 2.0 아주 무거움) |
+| `SCROLL_EASING` | expo out | 그 시간 동안의 속도 곡선. **"묵직함"의 정체는 시간보다 이 곡선입니다** |
+| `SCROLL_WHEEL` | `0.65` | 휠 한 칸의 이동 거리 배수. 낮을수록 묵직 (1 = 브라우저 기본) |
 | `SCROLL_TOUCH` | `1.6` | 터치 이동 배수. `syncTouch`를 켜지 않는 한 거의 영향 없음 |
+
+**★ `lerp`와 `duration`은 함께 쓸 수 없습니다.** 둘 다 넘기면 Lenis가 `lerp`를
+우선해서 `duration`/`easing`이 무시됩니다. 지금은 `duration` 방식이라 생성자에
+`lerp`가 없습니다 — `lerp` 방식으로 되돌리려면 `SCROLL_DURATION`/`SCROLL_EASING`을
+빼고 `lerp: 0.035` 정도를 넣으면 됩니다.
 
 값을 찾을 때는 브라우저 콘솔에서 바로 시험해 볼 수 있습니다:
 
 ```js
-window.tchaikimmLenis.options.lerp = 0.02;
+window.tchaikimmLenis.options.duration = 2;
 ```
 
 새로고침하면 파일의 상수 값으로 돌아갑니다. 마음에 드는 값을 찾은 뒤 파일을 고치세요.
