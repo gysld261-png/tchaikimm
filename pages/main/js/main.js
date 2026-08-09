@@ -110,11 +110,8 @@
     var resets = [];
 
     /* ---------------------------------------------------------
-       brand_01~05 — 한 화면에 고정한 채 글자가 차례로 바뀌다가
-       마지막 단계(brand_collage)에서 사진이 서서히 나타나고
-       이름 두 줄이 벌어지며 갈라집니다. 05 뒤에 이어지는 정적 brand_06은
-       이 시퀀스가 끝난 뒤 이미 다 드러난 상태로 보여주는 것이라
-       별도 인터랙션 없이 시안 그대로 둡니다.
+       브랜드 분기 — 두 이름이 중앙에서 나타난 뒤 좌우로 벌어지고,
+       그 사이로 이미지 네 장이 서서히 드러납니다.
        --------------------------------------------------------- */
     (function setupBrandWordPin() {
       var pin = document.getElementById("brand_word_pin");
@@ -122,132 +119,68 @@
         return;
       }
 
-      var steps = Array.prototype.slice.call(pin.children);
-      if (steps.length < 2) {
-        return;
-      }
-
-      /* 마지막 단계(brand_collage)는 brand_04+05+06을 한 섹션 안에서 이어 만듭니다.
-         사용자가 준 참고 사진 3장(흐름) 기준으로 다시 맞춘 순서:
-         1) brand_03 크로스페이드와 같은 시점 — "TCHAI Kim"(왼쪽)과 "TCHAI Kim Young Jin"
-            (오른쪽, "Young Jin"만 보이고 "TCHAI Kim " 접두어는 작게 접혀 있음)이 큰 글자
-            (brand_03과 같은 크기)로, 화면 중앙 가까이 서로 가깝게 붙어서 나타남.
-         2) 그 자리에 멈춘 채로, "Young Jin" 옆에 접혀 있던 "TCHAI Kim " 접두어가 (뒤에서
-            나오듯) 오른쪽 끝을 기준으로 작은 크기에서 "Young Jin"과 같은 크기로 자라나
-            "TCHAI Kim Young Jin"을 완성함.
-         3) 완성된 두 텍스트가 함께 작아지며(scale) brand_05의 최종 위치(왼쪽 18.7%,
-            오른쪽 71.5%)로 벌어지고, 그 사이로 사진 4장이 서서히 나타남.
-         피그마 정적 프레임(1712:4341 brand_05)에는 1)/2)의 "가깝게 붙은 큰 글자" 중간
-         상태가 별도로 정의돼 있지 않아서, 중앙(50%)과 brand_05 최종 위치의 중간 지점으로
-         추정해 잡았습니다 — 참고 사진과 다르면 옵셋 값(CLOSE_LEFT_FRACTION 등)만 조정하면
-         됩니다. */
       var collageStep = pin.querySelector(".brand_collage");
       var cards = collageStep ? collageStep.querySelector(".brand_collage_cards") : null;
       var nameLeft = collageStep ? collageStep.querySelector(".brand_collage_name_left") : null;
       var nameRight = collageStep ? collageStep.querySelector(".brand_collage_name_right") : null;
-      var prefix = collageStep ? collageStep.querySelector(".brand_collage_name_prefix") : null;
-      var suffix = collageStep ? collageStep.querySelector(".brand_collage_name_suffix") : null;
-      var hasCollageReveal = collageStep && cards && nameLeft && nameRight && prefix && suffix;
+      var hasCollageReveal = collageStep && cards && nameLeft && nameRight;
       var isDesktop = window.innerWidth >= 1280;
 
-      /* brand_word 마지막 패널("TCHAI Kim Young Jin", brand_03)의 실제 font-size — 1)단계
-         목표 배율(bigScale = 큰 글자 ÷ 작은 글자)을 구하는 기준입니다. clamp() 반응형 값이라
-         런타임에 측정합니다. */
-      var lastWordText = hasCollageReveal ? steps[steps.length - 2].querySelector(".brand_word_text") : null;
+      var splitTextIntoLetters = function (element) {
+        var text = element.textContent;
+        var fragment = document.createDocumentFragment();
 
-      /* 접두어가 "작게 접혀 있다가 자라나는" 시작 배율. */
-      var PREFIX_START_SCALE = 0.4;
-      /* "가깝게 붙은" 두 블록 사이에 남겨둘 최소 여백 — nameBox 너비 대비 비율. */
-      var CLOSE_GAP_RATIO = 0.028;
-      /* 두 블록(간격 포함)이 nameBox 안에서 차지할 최대 비율 — 나머지는 좌우 여백. */
-      var CLOSE_BLOCK_RATIO = 0.82;
+        element.setAttribute("aria-label", text);
+        Array.prototype.forEach.call(text, function (character) {
+          var letter = document.createElement("span");
+          letter.className = "brand_collage_letter";
+          letter.setAttribute("aria-hidden", "true");
+          letter.textContent = character === " " ? "\u00a0" : character;
+          fragment.appendChild(letter);
+        });
+
+        element.textContent = "";
+        element.appendChild(fragment);
+        return Array.prototype.slice.call(element.children);
+      };
+
+      var leftLetters = hasCollageReveal ? splitTextIntoLetters(nameLeft) : [];
+      var rightLetters = hasCollageReveal ? splitTextIntoLetters(nameRight) : [];
 
       pin.classList.add("is_pinned");
-      gsap.set(steps, { opacity: 0 });
-      gsap.set(steps[0], { opacity: 1 });
 
       if (hasCollageReveal) {
         collageStep.classList.add("is_enhanced");
-        gsap.set(cards, { opacity: 0, scale: 0.94 });
-        /* 접두어는 오른쪽 끝(Young Jin에 붙는 지점)을 기준으로 자라나야 "뒤에서 나와
-           옆에 붙는" 느낌이 나므로, 중심이 아니라 오른쪽 기준으로 스케일합니다. */
-        gsap.set(prefix, { transformOrigin: "100% 50%" });
-
-        /* 실제 렌더링된 레이아웃(반응형 gap·폰트 포함)을 측정해서 1)단계 위치를 역산합니다
-           — 하드코딩된 px 대신이라 어떤 너비에서도 정확합니다. 커스텀 폰트가 늦게 로드되면
-           (FOUT) 대체 폰트 기준으로 잰 값이 어긋나 "삐뚤어져 보이는" 원인이 되므로, 폰트
-           로딩이 끝난 뒤 한 번 더 다시 잽니다. */
-        var applyCollageStart = function () {
-          if (!isDesktop) {
-            gsap.set(nameLeft, { y: 40 });
-            gsap.set(nameRight, { y: -40 });
-            gsap.set(prefix, { scale: PREFIX_START_SCALE });
-            return;
-          }
-
-          gsap.set([nameLeft, nameRight], { clearProps: "transform" });
-          gsap.set(prefix, { scale: 1 });
-
-          var wordFontSize = parseFloat(getComputedStyle(lastWordText).fontSize) || 1;
-          var collageFontSize = parseFloat(getComputedStyle(nameRight).fontSize) || wordFontSize;
-          var bigScale = wordFontSize / collageFontSize;
-
-          var nameBox = collageStep.querySelector(".brand_collage_name").getBoundingClientRect();
-
-          /* nameRight는 접두어("TCHAI Kim ")가 다 자란 뒤(prefix scale 1)를 기준으로
-             폭을 잽니다 — 접두어의 자체 scale은 레이아웃 폭에 영향을 주지 않는(순수 페인트용)
-             transform이라, 지금 값을 재도 항상 "다 자란 뒤"의 실제 폭과 같습니다. */
-          var leftBox = nameLeft.getBoundingClientRect();
-          var rightBox = nameRight.getBoundingClientRect();
-
-          /* "TCHAI Kim"과 "TCHAI Kim Young Jin"을 겹치지 않게 나란히 붙이려면, 브랜드_03과
-             똑같이 큰 글자(bigScale)로는 둘을 합친 폭이 화면보다 넓어질 수 있습니다 —
-             그래서 "겹치지 않는 선에서 최대한 큰" 배율을 폭으로 역산합니다(최대 bigScale,
-             최소 1.15배로 눈에 띄게 줄어드는 느낌은 유지). */
-          var gapPx = nameBox.width * CLOSE_GAP_RATIO;
-          var availableWidth = nameBox.width * CLOSE_BLOCK_RATIO;
-          var fitScale = (availableWidth - gapPx) / (leftBox.width + rightBox.width);
-          var closeScale = Math.max(1.15, Math.min(bigScale, fitScale));
-
-          var totalWidth = leftBox.width * closeScale + gapPx + rightBox.width * closeScale;
-          var blockLeftEdge = nameBox.left + (nameBox.width - totalWidth) / 2;
-          var leftTargetCenterX = blockLeftEdge + (leftBox.width * closeScale) / 2;
-          var rightBoxTargetLeftEdge = blockLeftEdge + leftBox.width * closeScale + gapPx;
-          var rightTargetCenterX = rightBoxTargetLeftEdge + (rightBox.width * closeScale) / 2;
-
-          var leftCenterNatural = leftBox.left + leftBox.width / 2;
-          var rightCenterNatural = rightBox.left + rightBox.width / 2;
-
-          gsap.set(nameLeft, {
-            scale: closeScale,
-            x: leftTargetCenterX - leftCenterNatural
-          });
-          gsap.set(nameRight, {
-            scale: closeScale,
-            x: rightTargetCenterX - rightCenterNatural
-          });
-          gsap.set(prefix, { scale: PREFIX_START_SCALE });
-        };
-
-        applyCollageStart();
-        if (document.fonts && document.fonts.ready) {
-          document.fonts.ready.then(function () {
-            applyCollageStart();
-            ScrollTrigger.refresh();
-          });
-        }
+        gsap.set(collageStep, { opacity: 1, scale: 1 });
+        gsap.set(cards, { opacity: 0, scale: 0.92 });
+        gsap.set([nameLeft, nameRight], { opacity: 1, scale: 1.06 });
+        gsap.set(leftLetters, {
+          opacity: 0,
+          xPercent: -25,
+          yPercent: 100,
+          scale: 2,
+          skewX: 15,
+          skewY: 30,
+          filter: "blur(0.05em)",
+          transformOrigin: "50% 100%"
+        });
+        gsap.set(rightLetters, {
+          opacity: 0,
+          xPercent: 25,
+          yPercent: -100,
+          scale: 2,
+          skewX: 15,
+          skewY: 30,
+          filter: "blur(0.05em)",
+          transformOrigin: "50% 0%"
+        });
       }
-
-      /* brand_collage가 끝난 뒤 아래 정적 brand_06으로 자연스럽게 이어지도록,
-         핀이 풀리기 직전에 한 구간(scrollLength)을 더 두고 콜라주 전체를
-         서서히 작아지며 옅어지게 합니다 — "다음 섹션과 연결"되는 느낌을 줍니다. */
-      var scrollLength = hasCollageReveal ? steps.length + 1 : steps.length;
 
       var tl = gsap.timeline({
         scrollTrigger: {
           trigger: pin,
           start: "top top",
-          end: "+=" + window.innerHeight * scrollLength,
+          end: "+=" + window.innerHeight * 3.2,
           pin: true,
           scrub: 1,
           invalidateOnRefresh: true,
@@ -255,43 +188,43 @@
         }
       });
 
-      /* brand_01→02→03→(1단계 모습의) brand_collage까지, 같은 자리·같은 글자 크기의
-         중앙 정렬 텍스트가 이어지는 구간이라 전부 동일한 방식(오버랩 없는 opacity
-         크로스페이드)으로 충분히 자연스럽게 이어집니다. */
-      steps.forEach(function (step, i) {
-        if (i === 0) {
-          return;
-        }
-        tl.to(steps[i - 1], { opacity: 0, duration: 0.6 }, i - 1)
-          .to(step, { opacity: 1, duration: 0.6 }, i - 1);
-      });
-
       if (hasCollageReveal) {
-        /* 2) brand_03→brand_collage 크로스페이드와 같은 시점에 시작 — 가깝게 붙은 큰 글자
-           상태 그대로, "Young Jin" 옆에서 접두어 "TCHAI Kim "이 자라나 문구를 완성합니다. */
-        var growStart = steps.length - 2;
-        tl.to(prefix, { scale: 1, duration: 1 }, growStart);
+        var addLetterReveal = function (letters, seed) {
+          letters.forEach(function (letter, index) {
+            /* 레퍼런스처럼 글자 순서가 아니라 0~10 사이의 불규칙한 값으로 진입 시점을
+               흩뜨립니다. Math.random() 대신 고정식이라 refresh 때 모양이 바뀌지 않습니다. */
+            var randomOrder = (index * 7 + seed * 3 + index * index) % 11;
+            tl.to(letter, {
+              opacity: 1,
+              xPercent: 0,
+              yPercent: 0,
+              scale: 1,
+              skewX: 0,
+              skewY: 0,
+              filter: "blur(0em)",
+              duration: 0.72,
+              ease: "power3.out"
+            }, randomOrder * 0.045);
+          });
+        };
 
-        /* 3) 접두어가 다 자란 직후(약간 겹치게) — 완성된 두 텍스트가 함께 작아지며
-           brand_05 최종 위치로 벌어지고, 그 사이로 사진 4장이 서서히 나타납니다. */
-        var spreadStart = growStart + 0.9;
-        tl.to(cards, { opacity: 1, scale: 1, duration: 1.1 }, spreadStart)
-          .to(nameLeft, isDesktop ? { x: 0, scale: 1, duration: 1.1 } : { y: 0, duration: 1.1 }, spreadStart)
-          .to(nameRight, isDesktop ? { x: 0, scale: 1, duration: 1.1 } : { y: 0, duration: 1.1 }, spreadStart);
+        addLetterReveal(leftLetters, 2);
+        addLetterReveal(rightLetters, 5);
 
-        /* 다 나타난 뒤(steps.length) 이어서 한 구간 더 — 전체가 서서히 작아지며
-           옅어지고, 바로 아래 정적 brand_06(같은 사진, 더 큰 사이즈)으로 넘어갑니다. */
-        tl.to(collageStep, { scale: 0.82, opacity: 0, duration: 1, ease: "power1.in" }, steps.length);
+        tl.to([nameLeft, nameRight], { scale: 1, duration: 0.9, ease: "power2.out" }, 0)
+          .to(nameLeft, isDesktop ? { xPercent: -115, duration: 1.7, ease: "none" } : { y: -70, duration: 1.7, ease: "none" }, 0.78)
+          .to(nameRight, isDesktop ? { xPercent: 58, duration: 1.7, ease: "none" } : { y: 70, duration: 1.7, ease: "none" }, 0.78)
+          .to(cards, { opacity: 1, scale: 1, duration: 1.5, ease: "power1.out" }, 0.96)
+          .to(collageStep, { opacity: 0, scale: 0.92, duration: 0.7, ease: "power1.in" }, 2.45);
       }
 
       triggers.push(tl.scrollTrigger);
       resets.push(function () {
         pin.classList.remove("is_pinned");
-        gsap.set(steps, { clearProps: "opacity" });
         if (hasCollageReveal) {
           collageStep.classList.remove("is_enhanced");
           gsap.set(collageStep, { clearProps: "scale,opacity" });
-          gsap.set([cards, nameLeft, nameRight, prefix], { clearProps: "all" });
+          gsap.set([cards, nameLeft, nameRight, leftLetters, rightLetters], { clearProps: "all" });
         }
       });
     })();

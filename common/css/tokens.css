@@ -30,7 +30,7 @@
 
   --font_display: "Trirong", "Times New Roman", serif;
   --font_body: "Montserrat", "Pretendard Variable", sans-serif;
-  --font_ui: "Pretendard Variable", "Pretendard", system-ui, sans-serif;
+  --font_ui: "Montserrat", "Pretendard Variable", sans-serif;
 
   --fs_display_64: clamp(36px, 4.5vw, 64px);
   --fs_display_48: clamp(28px, 3.5vw, 48px);

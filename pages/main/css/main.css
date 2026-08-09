@@ -430,19 +430,23 @@
   pointer-events: none;
 }
 
-/* brand_collage 진입 시점(brand_04 상태)에는 이름 두 줄이 이미 갈라진 큰 글자로 시작하고,
-   스크롤이 진행되며(brand_05) 작아지고(scale) 더 벌어지고(x), "Young Jin" 앞의 숨은
-   "TCHAI Kim " 접두어가 나타납니다 — 시작/끝 옵셋은 실제 레이아웃을 측정해 js/main.js가
-   계산하므로 여기서는 값을 하드코딩하지 않습니다. */
+/* JS 향상 상태에서는 이름과 사진의 시작값을 숨겨 두고, 스크롤 진행률에 따라
+   js/main.js가 opacity와 transform을 직접 갱신합니다. */
 .brand_collage.is_enhanced .brand_collage_cards {
   opacity: 0;
-  transform: scale(0.94);
+  transform: scale(0.92);
 }
 
-.brand_collage.is_enhanced .brand_collage_name span {
+.brand_collage.is_enhanced .brand_collage_name_left,
+.brand_collage.is_enhanced .brand_collage_name_right {
   /* transform은 js/main.js의 GSAP 타임라인이 매 스크롤 프레임마다 직접 씁니다.
      여기서 CSS transition을 같이 걸면 GSAP 값과 서로 쫓아가며 밀리는 문제가 생겨 뺐습니다. */
   display: inline-block;
+}
+
+.brand_collage_letter {
+  display: inline-block;
+  will-change: transform, opacity, filter;
 }
 
 .brand_collage_lg .brand_collage_card {
@@ -461,7 +465,7 @@
   .brand_collage_name {
     flex-direction: row;
     justify-content: center;
-    gap: clamp(60px, 21.98vw, 422px);
+    gap: clamp(60px, 6vw, 120px);
     white-space: nowrap;
   }
 }

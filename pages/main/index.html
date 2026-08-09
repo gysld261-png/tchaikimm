@@ -125,28 +125,10 @@
     </div>
   </section>
 
-  <!-- brand_01~05 — 스크롤에 따라 글자가 바뀌다가 마지막에 콜라주로 이어지는 하나의 시퀀스
-       (js/main.js에서 GSAP로 고정+크로스페이드). brand_05는 brand_06과 같은 사진을 씁니다 —
-       여기서는 서서히 나타나고, 아래 정적 brand_06에서 완전히 보입니다. -->
+  <!-- 브랜드 분기 — 스크롤에 따라 두 이름이 중앙에서 나타난 뒤 좌우로 벌어지고,
+       그 사이로 두 브랜드의 이미지가 서서히 드러납니다(js/main.js의 GSAP pin+scrub). -->
   <div class="brand_word_pin" id="brand_word_pin">
-    <section class="brand_word is_active" data-step="0">
-      <p class="brand_word_text">TCHAI</p>
-    </section>
-
-    <section class="brand_word" data-step="1">
-      <p class="brand_word_text">TCHAI Kim</p>
-    </section>
-
-    <section class="brand_word" data-step="2">
-      <p class="brand_word_text">TCHAI Kim Young Jin</p>
-    </section>
-
-    <!-- brand_04 + brand_05 + brand_06(등장부) 통합: 피그마 원본처럼 brand_03(중앙 큰 글자)이
-         끝나며 이 섹션이 페이드인될 때는 "TCHAI Kim"(왼쪽) / "Young Jin"(오른쪽)이 이미 갈라진
-         큰 글자(brand_04) 상태로 시작합니다. 이어서 글자가 작아지고(scale) 더 벌어지며(x),
-         "Young Jin" 앞에 숨어 있던 "TCHAI Kim " 접두어가 함께 나타나 "TCHAI Kim Young Jin"이
-         되고(brand_05), 그와 동시에 사진 4장이 서서히 나타납니다 — 전부 js/main.js가 계산. -->
-    <section class="brand_collage" data-step="3">
+    <section class="brand_collage">
       <div class="brand_collage_cards">
         <ul class="brand_collage_row">
           <li class="brand_collage_card is_size_sm is_dim"><img src="assets/main/brand/brand_06/img4.png" alt=""></li>
@@ -160,8 +142,8 @@
         </div>
       </div>
       <p class="brand_collage_name">
-        <span class="brand_collage_name_left">TCHAI Kim</span>
-        <span class="brand_collage_name_right"><span class="brand_collage_name_prefix">TCHAI Kim </span><span class="brand_collage_name_suffix">Young Jin</span></span>
+        <span class="brand_collage_name_left">TCHAI</span>
+        <span class="brand_collage_name_right">KIM YOUNGJIN</span>
       </p>
     </section>
   </div>
