@@ -5,7 +5,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Tchai Kim</title>
-  <meta name="description" content="Where tradition finds freedom. Enter the Tchai Kim website.">
+  <meta name="description" content="Where tradition finds freedom. Enter the Tchai Kim website.">  <link rel="icon" type="image/svg+xml" href="../../favicon/favicon.svg">
+  <link rel="icon" href="../../favicon/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="../../favicon/favicon-32.png">
+  <link rel="apple-touch-icon" href="../../favicon/apple-touch-icon.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,6 +19,19 @@
   <link rel="stylesheet" href="../../common/css/reset.css">
   <link rel="stylesheet" href="../../common/css/common.css">
   <link rel="stylesheet" href="css/intro.css">
+
+  <!-- 인트로는 영상이 재생되는 약 4초 동안 네트워크가 거의 놀고 있습니다.
+       그 사이에 메인의 첫 화면 파일을 미리 받아 두면, START를 눌렀을 때
+       히어로가 이미 캐시에 있어 기다림이 사라집니다.
+
+       ★ preload가 아니라 prefetch입니다. prefetch는 "다음에 이동할 페이지용"
+         이라 우선순위가 가장 낮아서, 지금 화면에 필요한 intro.mp4의 다운로드를
+         밀어내지 않습니다. preload로 쓰면 인트로 영상과 경쟁합니다. -->
+  <link rel="prefetch" href="../main/assets/main/hero/bespoke.jpg" as="image">
+  <link rel="prefetch" href="../main/assets/main/hero/hero_shop.jpg" as="image">
+  <link rel="prefetch" href="../main/css/main.css" as="style">
+  <link rel="prefetch" href="../main/js/main.js" as="script">
+  <link rel="prefetch" href="../main/index.html" as="document">
 </head>
 
 <!-- 인트로는 독립된 진입 화면입니다.
