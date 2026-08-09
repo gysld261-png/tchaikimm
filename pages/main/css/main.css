@@ -1172,13 +1172,19 @@
 }
 
 .collection_container {
+  /* 컬렉션 세로 간격 — 필요한 값만 각각 수정하면 됩니다 */
+  --collection_gap_title_links: 60px;
+  --collection_gap_links_stage: 0;
+  --collection_gap_stage_bottom: 60px;
+
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 60px;
+  gap: 0;
 }
 
 .collection_title {
+  margin-bottom: var(--collection_gap_title_links);
   color: #1e1e1e;
   font-family: var(--font_display);
   font-size: var(--fs_display_48);
@@ -1194,6 +1200,7 @@
   gap: clamp(10px, 3vw, 40px);
   width: 100%;
   min-width: 0;
+  margin-bottom: var(--collection_gap_stage_bottom);
 }
 
 .collection_item {
@@ -1224,6 +1231,8 @@
 .collection_row.is_perspective_ready {
   --collection_card_width: clamp(150px, 16vw, 300px);
   --collection_card_height: calc(var(--collection_card_width) * 4 / 3);
+  /* 숫자가 작을수록 검정 프레임과 사진 전체가 링크 쪽으로 올라갑니다 */
+  --collection_stage_center_y: 42%;
 
   position: relative;
   display: block;
@@ -1233,27 +1242,38 @@
   padding: 0;
   overflow: hidden;
   perspective: 900px;
-  perspective-origin: 50% 52%;
+  perspective-origin: 50% var(--collection_stage_center_y);
+  transform-style: preserve-3d;
 }
 
-/* 레퍼런스의 중앙 소실점: 가장 작은 카드가 검정 프레임 안에서 시작합니다 */
+/* 레퍼런스의 중앙 검정 프레임 — 사진은 이 안에서 시작해 좌우로 나갑니다 */
 .collection_row.is_perspective_ready::before {
   position: absolute;
-  top: 50%;
+  top: var(--collection_stage_center_y);
   left: 50%;
-  width: clamp(280px, 26vw, 500px);
-  aspect-ratio: 4 / 1;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  width: clamp(280px, 22vw, 440px);
+  aspect-ratio: 3.2 / 1;
   border-radius: 2px;
   background: var(--color_text);
   content: "";
-  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%) scaleX(0.35);
+  transform-origin: 50% 50%;
+  transition:
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 250ms ease;
   z-index: 0;
+}
+
+.collection_row.is_perspective_ready.is_loop_active::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scaleX(1);
 }
 
 .collection_row.is_perspective_ready .collection_item {
   position: absolute;
-  top: 50%;
+  top: var(--collection_stage_center_y);
   left: 50%;
   width: var(--collection_card_width);
   height: var(--collection_card_height);
@@ -1261,6 +1281,7 @@
   overflow: hidden;
   border-radius: 2px;
   backface-visibility: hidden;
+  transform-style: preserve-3d;
   transform-origin: 50% 50%;
   will-change: transform, opacity;
 }
@@ -1297,6 +1318,7 @@
   align-items: center;
   justify-content: center;
   gap: 40px 150px;
+  margin-bottom: var(--collection_gap_links_stage);
 }
 
 .collection_link {
@@ -1717,7 +1739,9 @@
   }
 
   .collection_container {
-    gap: 40px;
+    --collection_gap_title_links: 40px;
+    --collection_gap_links_stage: 40px;
+    --collection_gap_stage_bottom: 40px;
   }
 
   .collection_row {
