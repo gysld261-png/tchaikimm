@@ -202,7 +202,9 @@
   }
 
   /* 이벤트 위임이라 common.js가 나중에 주입하는 헤더·푸터 링크도 잡힙니다. */
-  document.addEventListener("click", handleDocumentClick);
+  /* capture 단계에서 먼저 받아 헤더 메뉴 등 다른 클릭 핸들러가 버블링을
+     중단하더라도 Shop 전환을 놓치지 않습니다. */
+  document.addEventListener("click", handleDocumentClick, true);
 
   revealShopPage();
 })();

@@ -723,6 +723,16 @@
           event.clientY - pointerEntryY
         );
 
+        /* 제목·설명·CTA는 읽고 클릭하는 고정 UI 영역입니다. 이 안에서 마우스를
+           움직이는 것은 패널 탐색 의도가 아니므로 폭·영상 전환을 건드리지 않습니다.
+           본문을 빠져나간 뒤에는 다시 18px 이상 움직여야 패널 호버가 시작됩니다. */
+        if (event.target.closest(".hero_panel_body")) {
+          pointerEntryX = event.clientX;
+          pointerEntryY = event.clientY;
+          hasIntentionalPointerMove = false;
+          return;
+        }
+
         if (!isHeroMostlyVisible(rect)) {
           applyActivePanel(null);
           return;
