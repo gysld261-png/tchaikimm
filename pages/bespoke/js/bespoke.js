@@ -2,28 +2,26 @@
   "use strict";
 
   /* ---------------------------------------------------------
-     process — 행에 마우스를 올리면 색이 차오르고 사진과 설명이 열린다
+     process — 아래 번호 목록에 마우스를 올리면 위 사진과 글이 바뀐다
 
-     레퍼런스는 felix-nieto.com/about의 `.values_wrap`이다. 실측한 행 구조:
-       .values_cms_item { border-top: 1px solid; position: relative }
-       .values_cms_bg   { position: absolute; inset: auto 0 0;
-                          width: 100%; height: 0% -> 100%; z-index: 0 }
-     색이 **행 아래쪽에 붙어 위로 차오른다.** CSS가 그 부분을 전부 맡고,
-     이 스크립트는 어느 행이 열려 있는지(class 하나)만 정한다.
+     레퍼런스는 j-cat.co.jp의 Project Story 섹션이다. 실측한 구성:
+     콘텐츠 폭 1080 안에서 사진이 723 x 506(폭의 67%), 번호(Vol. 01)와 글은
+     그 옆에 작게 붙고, 슬라이드를 넘기면 사진이 바뀐다.
+     즉 **사진이 주인공이고 글이 딸린다.**
 
-     **한 번에 한 행만 열린다.** 닫기가 없다 — 다른 행으로 옮기면 앞 행이
-     닫히면서 그 행이 열리므로 목록 높이가 변하지 않는다. hover만으로
-     페이지가 들썩이면 아래 섹션이 따라 움직여 쓸 수 없기 때문이다.
+     이전 아코디언 방식(felix-nieto 참고)은 사진이 행 안에 들어가 작을
+     수밖에 없었다. 그 관계를 뒤집어, 사진을 무대로 올리고 목록은 인덱스로
+     내렸다. 색이 차오르는 행 연출은 그대로 남겼다.
 
      hover(데스크톱) / 클릭(터치) / 포커스(키보드) 세 경로가 같은 함수를
-     부른다. 마우스가 목록을 벗어나도 마지막 행이 그대로 열려 있다
-     (레퍼런스와 같고, 닫으면 높이가 줄어 아래가 올라온다).
+     부른다. 목록을 벗어나도 마지막 단계가 그대로 남는다.
 
-     이전 버전의 GSAP pin 스크롤은 제거했다. 사진이 행 안으로 들어오면서
-     오른쪽 sticky 사진 칸이 없어졌고, 두 방식이 같은 class(is_active)를
-     두고 다투기 때문이다.
+     **높이를 JS로 재지 않는다.** 사진 상자가 고정 크기이고, 글 다섯 벌은
+     CSS grid 한 칸에 겹쳐 두어 가장 긴 글이 높이를 정한다. 그래서 단계를
+     옮겨도 무대 높이가 변하지 않는다(이전 버전은 여기서 min-height를
+     계산해야 했다).
 
-     JS가 없으면 마크업의 is_active 그대로 01 Consultation이 열려 있다.
+     JS가 없으면 마크업의 is_active / is_visible 그대로 01 Consultation이 보인다.
      --------------------------------------------------------- */
 
   function initProcessSteps() {
@@ -34,31 +32,47 @@
     }
 
     var steps = Array.prototype.slice.call(section.querySelectorAll(".process_step"));
+    var stageImages = Array.prototype.slice.call(section.querySelectorAll(".process_stage_img"));
+    var stageItems = Array.prototype.slice.call(section.querySelectorAll(".process_stage_item"));
 
     if (!steps.length) {
       return;
     }
 
-    var activeStep = steps.filter(function (step) {
+    var activeKey = null;
+
+    var initialStep = steps.filter(function (step) {
       return step.classList.contains("is_active");
     })[0] || steps[0];
 
-    function setActiveStep(step) {
-      if (!step || step === activeStep) {
+    activeKey = initialStep.dataset.step;
+
+    function setActiveKey(key) {
+      if (!key || key === activeKey) {
         return;
       }
 
-      activeStep = step;
+      activeKey = key;
 
-      steps.forEach(function (item) {
-        var isMatch = item === step;
-        var head = item.querySelector(".process_step_head");
+      steps.forEach(function (step) {
+        var isMatch = step.dataset.step === key;
+        var head = step.querySelector(".process_step_head");
 
-        item.classList.toggle("is_active", isMatch);
+        step.classList.toggle("is_active", isMatch);
 
         if (head) {
-          head.setAttribute("aria-expanded", isMatch ? "true" : "false");
+          head.setAttribute("aria-pressed", isMatch ? "true" : "false");
         }
+      });
+
+      /* 사진은 이름으로 짝짓는다(`process_stage_<data-step>`).
+         마크업 순서가 바뀌어도 어긋나지 않는다. */
+      stageImages.forEach(function (image) {
+        image.classList.toggle("is_visible", image.id === "process_stage_" + key);
+      });
+
+      stageItems.forEach(function (item) {
+        item.classList.toggle("is_active", item.dataset.step === key);
       });
     }
 
@@ -72,76 +86,25 @@
       return step && section.contains(step) ? step : null;
     }
 
-    /* 열린 칸의 높이를 다섯 개 중 가장 큰 것으로 맞춘다.
+    function handlePointer(event) {
+      var step = stepFrom(event.target);
 
-       데스크톱에서는 사진(280px)이 설명(3줄 78px)보다 커서 다섯 칸이 이미
-       320px로 같다 — 여기서는 아무 일도 하지 않는다.
-       좁은 화면에서는 사진 아래로 설명이 쌓이는데 줄 수가 6줄과 7줄로
-       갈려서 407 / 380px으로 벌어진다(360px 실측). 그대로 두면 행을 옮길
-       때마다 아래 섹션이 27px씩 밀린다.
-
-       CSS에 값을 박지 않는 이유: 필요한 높이가 폭과 글꼴에 따라 달라진다. */
-    var panels = steps
-      .map(function (step) {
-        return step.querySelector(".process_step_panel_inner");
-      })
-      .filter(Boolean);
-
-    var reservedWidth = 0;
-
-    function reservePanelHeight() {
-      if (!panels.length) {
-        return;
+      if (step) {
+        setActiveKey(step.dataset.step);
       }
-
-      var tallest = 0;
-
-      panels.forEach(function (panel) {
-        panel.style.minHeight = "";
-        tallest = Math.max(tallest, panel.offsetHeight);
-      });
-
-      panels.forEach(function (panel) {
-        panel.style.minHeight = tallest + "px";
-      });
-
-      reservedWidth = section.clientWidth;
-    }
-
-    reservePanelHeight();
-
-    /* 웹폰트가 적용되면 줄 수가 달라지므로 다시 잰다. */
-    if (document.fonts && document.fonts.ready) {
-      document.fonts.ready.then(reservePanelHeight);
-    }
-
-    /* 폭이 실제로 달라졌을 때만 다시 잰다(무한 루프 방지). */
-    if ("ResizeObserver" in window) {
-      new ResizeObserver(function () {
-        if (section.clientWidth !== reservedWidth) {
-          reservePanelHeight();
-        }
-      }).observe(section);
-    } else {
-      window.addEventListener("resize", reservePanelHeight);
     }
 
     /* mouseenter는 버블링하지 않으므로 mouseover로 위임한다. 행 안쪽 요소를
-       지날 때마다 다시 들어오지만 같은 행이면 setActiveStep이 바로 빠진다. */
-    section.addEventListener("mouseover", function (event) {
-      setActiveStep(stepFrom(event.target));
-    });
+       지날 때마다 다시 들어오지만 같은 단계면 setActiveKey가 바로 빠진다. */
+    section.addEventListener("mouseover", handlePointer);
 
-    /* 키보드 Tab. 포커스가 들어오면 그 행이 열린다. */
-    section.addEventListener("focusin", function (event) {
-      setActiveStep(stepFrom(event.target));
-    });
+    /* 키보드 Tab. 포커스가 들어오면 그 단계로 바뀐다. */
+    section.addEventListener("focusin", handlePointer);
 
     /* 터치에는 hover가 없어 이 경로가 유일하다. */
-    section.addEventListener("click", function (event) {
-      setActiveStep(stepFrom(event.target));
-    });
+    section.addEventListener("click", handlePointer);
   }
+
 
 
   /* ---------------------------------------------------------

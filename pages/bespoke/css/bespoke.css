@@ -406,58 +406,165 @@
 }
 
 /* =========================================================
-   process — 5단계. 행에 마우스를 올리면 색이 차오르고 사진과 설명이 열린다.
+   process — 큰 사진 한 장 + 아래 번호 목록
 
-   felix-nieto.com/about의 `.values_wrap`을 참고했다. 그쪽 행 구조를 실측하면:
-     .values_cms_item { border-top: 1px solid; position: relative }
-     .values_cms_bg   { position: absolute; inset: auto 0 0;
-                        width: 100%; height: 0% → 100%; z-index: 0 }
-     번호·제목 { z-index: 1 }
-   즉 **색이 행 아래쪽에 붙어 위로 차오른다.** 그대로 옮기되 높이 대신
-   `transform: scaleY()`를 쓴다 — 같은 그림이면서 합성만 하므로 매 프레임
-   레이아웃을 다시 잡지 않는다.
+   j-cat.co.jp의 Project Story 섹션을 참고했다. 실측한 구성:
+     · 콘텐츠 폭 1080 안에서 사진이 **723 x 506** — 폭의 67%를 사진이 먹는다
+     · 번호(Vol. 01)와 글은 사진 옆·아래에 작게 붙는다(제목 57px, 본문 13px)
+     · 슬라이드를 넘기면 사진이 바뀐다
+   즉 **사진이 주인공이고 글이 딸린다.** 이전 아코디언 방식은 사진이 행 안에
+   들어가 작을 수밖에 없었는데, 그 관계를 뒤집었다.
 
-   레퍼런스와 다르게 한 것:
-   · 레퍼런스는 번호 + 제목뿐이고 열리지 않는다. 여기서는 그 행이 열리면서
-     그 단계의 사진과 설명이 나온다(요청).
-   · 레퍼런스의 brand 색(#96c4c8)은 밝아서 검은 글씨가 그대로 읽히지만,
-     이 사이트의 포인트 색(--color_point #1f433f)은 어둡다. 색이 덮은 행의
-     글자는 --color_text_inverse로 뒤집어야 읽힌다.
+   배치: **왼쪽에 01~05 번호 목록 + 현재 단계 글, 오른쪽에 큰 사진.**
 
-   **한 번에 한 행만 열린다.** 다른 행으로 옮기면 앞 행이 닫히면서 열리므로
-   목록 전체 높이가 변하지 않는다 — hover만으로 페이지가 들썩이면 아래 섹션이
-   따라 움직여서 쓸 수 없다. 그래서 열린 칸의 높이를 사진 상자로 고정한다.
+   ★ 사진을 원본 크기까지 쓴다.
+   에셋은 785 x 928(consultation만 853 x 960)이다. 1840+에서 **780px**으로
+   그리면 원본(785)에 딱 붙어 확대가 없다 — 이 파일들이 가장 크고 선명하게
+   보이는 한계다. **여기서 더 올리면 원본을 늘리는 것이라 오히려 뭉개진다.**
+   세로 900은 비율 0.867로 원본 0.846과 거의 같아 잘라내는 부분이 거의 없다.
+   가로로 크롭하면(16:9 등) 인물 머리가 잘리고 "만들어 넣은 컷" 느낌이 나서
+   원본 세로 비율을 지켰다.
    ========================================================= */
 
 .process {
+  --process_fill_duration: 0.55s;
+  --process_fade_duration: 0.7s;
+  --process_ease: cubic-bezier(0.33, 1, 0.68, 1);
+
+  /* 번호 목록 행에 차오르는 색. 포인트 색을 크림 배경 위에 옅게 깐 것이라
+     같은 계열이면서 글자는 검은색 그대로 읽힌다.
+     **0.4를 넘기면 제목 대비가 떨어지므로 글자색도 같이 봐야 한다.** */
+  --process_fill_color: rgb(31 67 63 / 0.16);
+
+  --process_media_width: 600px;
+  --process_media_height: 556px;
+  --process_row_padding: 18px;
+  --process_pad_inline: 20px;
+  --process_num_width: 52px;
+  --process_head_gap: 32px;
+}
+
+/* 좁은 화면에서는 사진 → 번호 목록 → 글 순서로 쌓인다(DOM 순서 그대로).
+   넓은 화면에서만 두 열로 나뉘고, order가 사진을 오른쪽으로 보낸다. */
+.process_layout {
   display: flex;
   flex-direction: column;
   gap: 40px;
+}
 
-  /* 색이 차오르는 시간과 행이 열리는 시간. 모션 감소 설정에서는
-     --duration_base가 0.01ms이므로 그 값을 그대로 따라간다. */
-  --process_fill_duration: 0.55s;
-  --process_open_duration: 0.6s;
-  --process_ease: cubic-bezier(0.33, 1, 0.68, 1);
-  /* 사진 상자 높이 = 열린 칸의 높이. 여기만 바꾸면 전체가 따라간다. */
-  --process_media_height: 240px;
-  --process_row_padding: 32px;
+.process_aside {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  min-width: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .process {
     --process_fill_duration: var(--duration_base);
-    --process_open_duration: var(--duration_base);
+    --process_fade_duration: var(--duration_base);
   }
 }
 
+/* --- 사진 무대 -------------------------------------------------------- */
+
+/* 사진 다섯 장을 겹쳐 두고 크로스페이드한다. 상자가 고정 크기라
+   어느 단계로 옮겨도 레이아웃이 움직이지 않는다. */
+.process_stage_media {
+  position: relative;
+  width: 100%;
+  max-width: var(--process_media_width);
+  height: var(--process_media_height);
+  overflow: hidden;
+}
+
+.process_stage_img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  /* 들어오는 사진이 아주 조금 큰 상태에서 내려앉는다. 상자에 잘리므로
+     레이아웃에는 영향이 없다. 1.03을 넘기면 원본보다 확대돼 흐려진다. */
+  transform: scale(1.03);
+  transition:
+    opacity var(--process_fade_duration) var(--process_ease),
+    transform var(--process_fade_duration) var(--process_ease);
+}
+
+.process_stage_img.is_visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* 글 다섯 벌을 같은 자리에 겹쳐 두고 활성인 것만 보인다.
+   grid 한 칸에 전부 얹어서 가장 긴 글이 높이를 정하므로, 단계를 옮겨도
+   무대 높이가 변하지 않는다(JS로 높이를 재지 않아도 된다). */
+.process_stage_body {
+  display: grid;
+}
+
+.process_stage_item {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 560px;
+  opacity: 0;
+  transform: translate3d(0, 10px, 0);
+  visibility: hidden;
+  transition:
+    opacity var(--process_fade_duration) var(--process_ease),
+    transform var(--process_fade_duration) var(--process_ease),
+    visibility 0s linear var(--process_fade_duration);
+}
+
+.process_stage_item.is_active {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  visibility: visible;
+  transition-delay: 0.08s, 0.08s, 0s;
+}
+
+/* j-cat의 "Vol. 01"에 해당한다. 총 개수를 옅게 붙여 어디쯤인지 알려 준다. */
+.process_stage_count {
+  color: var(--color_point);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.process_stage_count_total {
+  color: var(--color_text_muted);
+}
+
+.process_stage_title {
+  color: var(--color_text);
+  font-family: var(--font_display);
+  font-size: var(--fs_display_32);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: var(--ls_tight_sm);
+}
+
+.process_stage_desc {
+  color: var(--color_text_secondary);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  line-height: var(--lh_body_20);
+}
+
+/* --- 번호 목록 -------------------------------------------------------- */
+
+/* 행 사이는 gap이 아니라 선으로 나뉜다. gap을 쓰면 색이 차오를 때
+   행 사이가 끊겨 보인다. */
 .process_list {
   display: flex;
   flex-direction: column;
 }
 
-/* 행 사이는 gap이 아니라 선으로 나뉜다(레퍼런스와 같다).
-   gap을 쓰면 색이 차오를 때 행 사이가 끊겨 보인다. */
 .process_step {
   position: relative;
   border-top: 1px solid var(--color_border_default);
@@ -467,13 +574,11 @@
   border-bottom: 1px solid var(--color_border_default);
 }
 
-/* 차오르는 색 — 아래쪽에 붙어 있다가 위로 자란다.
-   `inset: 0` + `transform-origin: bottom`이라 행이 열려 커져도 항상 꽉 찬다. */
 .process_step_fill {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background-color: var(--color_point);
+  background-color: var(--process_fill_color);
   transform: scaleY(0);
   transform-origin: bottom center;
   transition: transform var(--process_fill_duration) var(--process_ease);
@@ -484,152 +589,86 @@
   transform: scaleY(1);
 }
 
-.process_step_heading {
-  margin: 0;
-  font: inherit;
-}
-
-/* 행 전체가 누를 수 있는 영역이다. 레퍼런스는 div에 hover만 걸어 키보드로
-   열 수 없는데, 여기서는 button + aria-expanded로 아코디언을 만든다.
-   reset.css가 button의 색·글꼴·여백을 상속으로 되돌려 둔다. */
+/* 행 전체가 누를 수 있는 영역이다. reset.css가 button의 색·글꼴·여백을
+   상속으로 되돌려 두어서 글자 크기와 색은 마크업 그대로 나온다. */
 .process_step_head {
   position: relative;
   z-index: 1;
   display: flex;
   align-items: baseline;
-  gap: 40px;
+  gap: var(--process_head_gap);
   width: 100%;
-  padding: var(--process_row_padding) 24px;
+  padding: var(--process_row_padding) var(--process_pad_inline);
   text-align: left;
-  transition: color var(--process_fill_duration) var(--process_ease);
 }
 
 .process_step_num {
   flex: 0 0 auto;
-  min-width: 56px;
+  min-width: var(--process_num_width);
   color: var(--color_text_muted);
   font-family: var(--font_ui);
   font-size: var(--fs_ui_16);
   transition: color var(--process_fill_duration) var(--process_ease);
 }
 
+/* 목록은 인덱스라 제목을 본문 크기로 둔다 — 큰 제목은 위 무대에 있다. */
 .process_step_title {
   color: var(--color_text);
-  font-family: var(--font_display);
-  font-size: var(--fs_display_24);
-  line-height: 1.25;
-  transition: color var(--process_fill_duration) var(--process_ease);
+  font-family: var(--font_body);
+  font-size: var(--fs_body_20);
+  line-height: var(--lh_body_20);
 }
 
-/* 색이 덮은 행은 글자를 뒤집는다. 번호는 흰색을 조금 눌러서
-   제목과의 위계를 비활성 상태(muted vs text)와 같게 유지한다. */
+/* 색이 옅어서 글자를 뒤집지 않는다. 번호만 포인트 색으로 올라온다. */
 .process_step.is_active .process_step_num {
-  color: rgb(255 253 249 / 0.65);
+  color: var(--color_point);
 }
 
-.process_step.is_active .process_step_title {
-  color: var(--color_text_inverse);
-}
+/* --- 넓은 화면: 번호 목록 왼쪽 / 큰 사진 오른쪽 ------------------------- */
 
-/* 열림 — `grid-template-rows: 0fr → 1fr`이라 높이를 JS로 재지 않아도
-   부드럽게 열린다(shop_detail 사이즈 가이드와 같은 방식). */
-.process_step_panel {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows var(--process_open_duration) var(--process_ease);
-}
+@media (min-width: 1024px) {
+  .process_layout {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 80px;
+  }
 
-.process_step.is_active .process_step_panel {
-  grid-template-rows: 1fr;
-}
+  /* 사진은 DOM에서 먼저 오지만(좁은 화면에서 맨 위여야 한다) 여기서는
+     오른쪽으로 보낸다. 번호가 왼쪽에 온다. */
+  .process_stage_media {
+    order: 1;
+    flex: 0 0 var(--process_media_width);
+  }
 
-/* `min-height: 0` + `overflow: hidden`이 0fr 접힘의 전제다. 둘 중 하나라도
-   빠지면 칸이 내용 높이만큼 벌어진 채 닫히지 않는다.
-
-   ★ 이 요소에는 padding을 주면 안 된다. `min-height: 0`은 **내용 상자**만
-   0으로 줄여 주고 padding은 그대로 남아서, 닫힌 행이 그만큼(40px) 벌어진다.
-   실제로 그렇게 났다 — 닫힌 행이 111이 아니라 151px이었다.
-   그래서 여백은 한 겹 안쪽(.process_step_panel_inner)이 갖는다. */
-.process_step_panel_clip {
-  min-height: 0;
-  overflow: hidden;
-}
-
-.process_step_panel_inner {
-  display: flex;
-  gap: 40px;
-  align-items: flex-start;
-  padding: 0 24px var(--process_row_padding);
-}
-
-.process_step_media {
-  flex: 0 0 360px;
-  height: var(--process_media_height);
-  overflow: hidden;
-}
-
-.process_step_media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 설명은 열린 행 안에만 있으므로 색이 덮인 상태를 기준으로 쓴다. */
-.process_step_desc {
-  flex: 1 1 auto;
-  max-width: 620px;
-  color: var(--color_text_inverse);
-  font-family: var(--font_ui);
-  font-size: var(--fs_ui_16);
-  line-height: 1.63;
-}
-
-/* 내용은 색이 차오른 뒤에 뜬다 — 두 동작이 겹치면 어수선해진다. */
-.process_step_media,
-.process_step_desc {
-  opacity: 0;
-  transform: translate3d(0, 12px, 0);
-  transition:
-    opacity var(--process_open_duration) var(--process_ease),
-    transform var(--process_open_duration) var(--process_ease);
-}
-
-.process_step.is_active .process_step_media,
-.process_step.is_active .process_step_desc {
-  opacity: 1;
-  transform: translate3d(0, 0, 0);
-  transition-delay: 0.12s;
+  .process_aside {
+    flex: 1 1 auto;
+  }
 }
 
 @media (max-width: 767px) {
   .process {
-    --process_media_height: 180px;
-    --process_row_padding: 24px;
+    --process_row_padding: 14px;
+    --process_pad_inline: 12px;
+    --process_num_width: 36px;
+    --process_head_gap: 16px;
   }
 
-  .process_step_head {
-    gap: 20px;
-    padding-inline: 16px;
+  .process_layout,
+  .process_aside {
+    gap: 32px;
   }
 
-  .process_step_num {
-    min-width: 40px;
+  /* 좁은 화면에서는 폭에 맞추고 비율만 지킨다. 고정 높이를 두면
+     사진이 좌우로 잘린다. */
+  .process_stage_media {
+    max-width: none;
+    height: auto;
+    aspect-ratio: 785 / 928;
   }
 
-  /* 좁은 화면에서는 사진 위, 설명 아래로 쌓는다.
-     그러면 열린 칸 높이가 사진 하나로 고정되지 않으므로, 설명 줄 수가
-     달라도 흔들리지 않도록 사진을 가로로 꽉 채운다. */
-  .process_step_panel_inner {
-    flex-direction: column;
-    gap: 20px;
-    padding-inline: 16px;
-  }
-
-  .process_step_media {
-    flex: 0 0 auto;
-    width: 100%;
+  .process_stage_desc {
+    font-size: var(--fs_ui_16);
+    line-height: 1.63;
   }
 }
 
@@ -1211,36 +1250,34 @@
 
   /* --- process ------------------------------------------------------------
      **이 섹션은 더 이상 시안 2단(목록 727 | 사진 873) 배치가 아니다.**
-     felix-nieto의 행 목록으로 바꾸면서 오른쪽 사진 칸을 없앴고, 사진은
-     열린 행 안으로 들어갔다(사용자 결정). 위아래 여백만 시안값을 지킨다.
-     시안 높이 1504는 목록 960 기준이었는데 지금은 행 5개라 더 낮다. */
+     j-cat의 Project Story처럼 큰 사진 한 장 + 아래 번호 목록으로 바꿨다
+     (사용자 결정). 위아래 여백만 시안값을 지킨다. */
   .main .process {
     padding-top: 272px;
     padding-bottom: 272px;
   }
 
-  /* 1700 컨테이너에서는 행이 넓어지므로 번호 칸과 안쪽 여백을 함께 키운다. */
+  /* ★ 780 x 900이 이 사진들의 상한이다.
+     에셋이 785 x 928(consultation만 853 x 960)이라 780px이 원본에 딱 붙는
+     크기다. **여기서 더 올리면 원본을 늘리는 것이라 오히려 뭉개진다** —
+     더 크게 보이려면 파일을 다시 내보내야 한다(1560 x 1800 이상 권장).
+     900 / 780 = 1.154로 원본 비율(928/785 = 1.182)과 거의 같아 크롭도 거의 없다.
+     왼쪽 열은 1700 - 780 - gap 100 = 820px을 쓴다. */
   .process {
-    --process_media_height: 280px;
-    --process_row_padding: 40px;
+    --process_media_width: 780px;
+    --process_media_height: 900px;
+    --process_row_padding: 22px;
+    --process_pad_inline: 28px;
+    --process_num_width: 64px;
+    --process_head_gap: 48px;
   }
 
-  .process_step_head {
-    gap: 56px;
-    padding-inline: 32px;
+  .process_layout {
+    gap: 100px;
   }
 
-  .process_step_num {
-    min-width: 64px;
-  }
-
-  .process_step_panel_inner {
-    gap: 56px;
-    padding-inline: 32px;
-  }
-
-  .process_step_media {
-    flex: 0 0 420px;
+  .process_aside {
+    gap: 64px;
   }
 
   /* --- materials(fabric_section): 1408 -----------------------------------
