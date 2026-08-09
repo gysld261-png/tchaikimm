@@ -68,15 +68,12 @@
    떠 있는 사진과 문장
    ========================================================= */
 
-/* 시안은 1182 → 4516.07(3335px)에 사진 일곱 장이 흩어진 구간이었습니다.
-   c~g 다섯 장이 가운데 캐러셀로 합쳐지면서 화면 한 장이면 충분해졌습니다.
-   pin이 걸리면 아래 .is_pinned가 정확히 창 높이로 맞춥니다. */
 .showcase {
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 100vh;
-  min-height: 820px;
+  /* 시안 1182 → 4516.07 */
+  height: 3335px;
   background-color: var(--color_bg);
 }
 
@@ -93,18 +90,15 @@
   left: 0;
   width: 102.0834%;
   max-width: none;
-  /* 시안은 738px 고정이었지만 섹션이 화면 한 장으로 줄어 비율로 잡습니다. */
-  height: var(--showcase_arc_h);
+  height: 738px;
 }
 
-/* 아치 아래부터 섹션 바닥까지 채웁니다. 시안의 2597px 고정 높이는
-   섹션이 3335px일 때의 값이라 더 이상 맞지 않습니다. */
 .showcase_gradient {
   position: absolute;
-  top: var(--showcase_arc_h);
-  bottom: 0;
+  top: 738px;
   left: 0;
   width: 100%;
+  height: 2597px;
   background-image: linear-gradient(
     0deg,
     #fffdf9 0%,
@@ -117,14 +111,7 @@
 }
 
 .showcase_frame {
-  --showcase_arc_h: 40%;
-
-  height: 100%;
-}
-
-/* 아치 높이는 배경(.showcase_bg)이 읽어야 해서 섹션에도 둡니다. */
-.showcase {
-  --showcase_arc_h: 40%;
+  height: 3335px;
 }
 
 /* JS가 pin 인터랙션을 켤 때만 붙습니다(js/col_chaikimyoungjin.js의 buildShowcaseTimeline).
@@ -201,6 +188,41 @@
   transform: rotate(13.07deg);
 }
 
+.showcase_photo_c {
+  top: 1250px;
+  left: 605px;
+  width: 710px;
+  height: 959px;
+}
+
+.showcase_photo_d {
+  top: 1513px;
+  left: 1398px;
+  width: 307px;
+  height: 315px;
+}
+
+.showcase_photo_e {
+  top: 1685px;
+  left: 138px;
+  width: 347px;
+  height: 468px;
+}
+
+.showcase_photo_f {
+  top: 2143px;
+  left: 1391px;
+  width: 309px;
+  height: 441px;
+}
+
+.showcase_photo_g {
+  top: 2340px;
+  left: 371px;
+  width: 348px;
+  height: 468px;
+}
+
 /* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다.
 
    세로 위치만 시안 값을 그대로 쓰지 않습니다. 시안의 712px는 화면 높이 1080을 전제한
@@ -209,30 +231,22 @@
    "Ordinary Fashion" 줄이 화면 밖으로 나갑니다.
    그래서 화면이 충분히 높으면 시안 값(712px)을 쓰고, 낮으면 세 줄 전체가 들어오도록
    위로 올립니다. 360px = 블록 높이 311 + 아래 여백 49입니다. */
-/* 시안은 세 줄이 계단처럼 어긋난 배치였지만, 가운데 캐러셀이 주인공이 되면서
-   문장을 화면 한가운데로 모았습니다(사용자 요청). */
 .showcase_quote {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: center;
-  width: max-content;
-  max-width: calc(100% - 160px);
-  height: auto;
+  top: min(712px, calc(100vh - 360px));
+  left: 760px;
+  width: 288.5px;
+  height: 311px;
   margin: 0;
-  transform: translate(-50%, -50%);
 }
 
 .showcase_quote_line {
-  position: static;
+  position: absolute;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: auto;
-  height: auto;
+  width: 288.5px;
+  height: 82px;
   color: var(--collection_quote);
   font-family: var(--font_display);
   font-size: 48px;
@@ -254,8 +268,20 @@
   display: inline-block;
 }
 
-/* 계단 좌표(top 0/117/229, left 0/266/0)는 위 flex 가운데 정렬로 대체했습니다.
-   되돌리려면 .showcase_quote를 absolute 좌표 배치로 돌리고 이 셋을 살리면 됩니다. */
+.showcase_quote_line1 {
+  top: 0;
+  left: 0;
+}
+
+.showcase_quote_line2 {
+  top: 117px;
+  left: 266px;
+}
+
+.showcase_quote_line3 {
+  top: 229px;
+  left: 0;
+}
 
 /* 스크롤 인터랙션 대상 — scrub 중 매 프레임 다시 그리므로 합성 레이어를 미리 잡아 둡니다.
    transform-style: preserve-3d는 3D 자식이 없어 쓰지 않았고, 대신 backface-visibility로
@@ -275,110 +301,6 @@
 /* 상단 두 장만 blur까지 움직입니다. */
 .showcase_photo_tilt {
   will-change: transform, opacity, filter;
-}
-
-/* =========================================================
-   showcase 캐러셀 — 시안 사진 c~g를 가운데 한 장씩 보여 줍니다.
-
-   인트로에서 좌우 두 장이 가운데로 모여 물러나면 이 캐러셀이 자리를 넘겨받습니다.
-   예전에는 다섯 장이 프레임 y 1250~2808에 흩어져 스크롤로 하나씩 떴는데,
-   가운데 한 장을 크게 보여 주는 쪽으로 바꾸면서 그 구간이 사라졌습니다.
-   ========================================================= */
-
-.showcase_carousel {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* 시안에서 가장 큰 사진(710 × 959)의 비율을 그대로 씁니다.
-   화면이 낮으면 높이에 맞춰 줄어들도록 두 축을 모두 제한합니다. */
-.showcase_carousel_viewport {
-  position: relative;
-  width: min(710px, calc(100vw - 160px));
-  height: min(959px, calc(100vh - 150px));
-  aspect-ratio: 710 / 959;
-}
-
-/* 다섯 장이 같은 자리에 겹쳐 있고 현재 한 장만 보입니다.
-   visibility까지 끄는 이유: opacity만 0으로 두면 보이지 않는 사진이
-   계속 클릭·탭 순서에 잡힙니다. */
-.showcase_slide {
-  position: absolute;
-  inset: 0;
-  width: auto;
-  height: auto;
-  padding: 0;
-  opacity: 0;
-  visibility: hidden;
-  transition:
-    opacity var(--duration_base) var(--easing_base),
-    transform var(--duration_base) var(--easing_base),
-    visibility 0s var(--duration_base);
-  transform: scale(1.04);
-}
-
-.showcase_slide.is_current {
-  opacity: 1;
-  visibility: visible;
-  transition:
-    opacity var(--duration_base) var(--easing_base),
-    transform var(--duration_base) var(--easing_base),
-    visibility 0s;
-  transform: scale(1);
-}
-
-.showcase_slide img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* 버튼은 사진 좌우 안쪽에 겹쳐 둡니다. 사진 바깥에 두면 화면이 좁아질 때
-   사진을 그만큼 더 줄여야 합니다. */
-.showcase_carousel_button {
-  position: absolute;
-  top: 50%;
-  z-index: 2;
-  display: flex;
-  width: 52px;
-  height: 52px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.55);
-  border-radius: 50%;
-  background-color: rgba(18, 18, 16, 0.42);
-  cursor: pointer;
-  transform: translateY(-50%);
-  transition:
-    background-color var(--duration_fast) var(--easing_base),
-    border-color var(--duration_fast) var(--easing_base);
-}
-
-.showcase_carousel_button:hover {
-  border-color: #ffffff;
-  background-color: rgba(18, 18, 16, 0.72);
-}
-
-.showcase_carousel_prev {
-  left: 18px;
-}
-
-.showcase_carousel_next {
-  right: 18px;
-}
-
-.showcase_carousel_icon {
-  width: 15px;
-  height: 12.5px;
-  /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
-  filter: brightness(0) invert(1);
-}
-
-/* 하나뿐인 svg를 좌우로 뒤집어 이전 화살표로 씁니다(bespoke의 chevron과 같은 방식). */
-.showcase_carousel_prev .showcase_carousel_icon {
-  transform: scaleX(-1);
 }
 
 /* =========================================================
@@ -572,18 +494,6 @@
   --archive_photo_width: 260px;
   --archive_photo_tilt: -7.8deg;
   --archive_photo_layer: 3;
-}
-
-/* 덱 래퍼. 데스크톱에서는 position: static이라 containing block이 되지 않고,
-   안쪽 figure들이 예전처럼 .archive_frame 기준 시안 좌표에 놓입니다.
-   좁은 화면에서만 아래 반응형 블록이 이 래퍼를 겹쳐 쌓는 덱으로 바꿉니다. */
-.archive_deck {
-  position: static;
-}
-
-/* 카운터는 덱(좁은 화면)에서만 씁니다. */
-.archive_deck_counter {
-  display: none;
 }
 
 /* =========================================================
@@ -833,6 +743,19 @@
 }
 
 /* =========================================================
+   캐러셀 래퍼 — 데스크톱에서는 쓰지 않습니다
+
+   1280px 이상은 디자인 문서 기준 "시안 좌표 그대로"라 사진 c~g가 위 규칙대로
+   흩어져 배치됩니다. 래퍼(.showcase_carousel / _viewport)는 위치 지정이 없는
+   평범한 div라 안쪽 figure의 absolute가 .showcase_frame 기준으로 그대로 풀립니다.
+   버튼만 감추면 됩니다.
+   ========================================================= */
+
+.showcase_carousel_button {
+  display: none;
+}
+
+/* =========================================================
    반응형 — 1279px 이하 (2026-08-09, 2차 개선)
 
    이 파일의 위쪽 규칙은 전부 1920 시안 캔버스를 기준으로 한 데스크톱 레이아웃이고,
@@ -1002,38 +925,86 @@
     font-size: clamp(23px, 6vw, 44px);
   }
 
-  /* ---------- 캐러셀 ----------
-     .showcase_photo의 흐름 배치가 슬라이드에도 걸리므로 되돌려 놓습니다.
-     슬라이드는 어느 폭에서든 뷰포트 안에 겹쳐 있어야 합니다. */
+  /* ---------- 캐러셀 (1279px 이하 전용) ----------
+
+     1280px 이상은 디자인 문서 기준 "시안 좌표 그대로"라 사진 c~g가 흩어진
+     배치를 쓰고, 스크롤에 맞춰 한 장씩 떠오릅니다(데스크톱 규칙은 파일 위쪽).
+     좁은 화면에서는 그 흩뿌림이 성립하지 않아 다섯 장을 한 자리에 겹쳐 놓고
+     <> 버튼으로 넘깁니다. */
+
   .showcase_carousel {
     position: static;
     width: 100%;
     align-self: center;
-    transform: none;
   }
 
+  /* 시안에서 가장 큰 사진(710 × 959)의 비율을 그대로 씁니다. */
   .showcase_carousel_viewport {
+    position: relative;
     width: 100%;
     max-width: 460px;
     height: auto;
+    aspect-ratio: 710 / 959;
     margin-inline: auto;
   }
 
+  /* 다섯 장이 같은 자리에 겹쳐 있고 현재 한 장만 보입니다.
+     visibility까지 끄는 이유: opacity만 0으로 두면 보이지 않는 사진이
+     계속 클릭·탭 순서에 잡힙니다. */
   .showcase_slide {
     position: absolute;
     inset: 0;
     width: auto;
     max-width: none;
     height: auto;
+    padding: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity var(--duration_base) var(--easing_base),
+      transform var(--duration_base) var(--easing_base),
+      visibility 0s var(--duration_base);
+    transform: scale(1.04);
+  }
+
+  .showcase_slide.is_current {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity var(--duration_base) var(--easing_base),
+      transform var(--duration_base) var(--easing_base),
+      visibility 0s;
+    transform: scale(1);
   }
 
   .showcase_slide img {
+    width: 100%;
     height: 100%;
+    aspect-ratio: auto;
+    object-fit: cover;
   }
 
+  /* 버튼은 사진 좌우 안쪽에 겹쳐 둡니다. 바깥에 두면 화면이 좁아질 때
+     사진을 그만큼 더 줄여야 합니다. */
   .showcase_carousel_button {
+    position: absolute;
+    top: 50%;
+    z-index: 2;
+    display: flex;
     width: 44px;
     height: 44px;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    border-radius: 50%;
+    background-color: rgba(18, 18, 16, 0.42);
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: background-color var(--duration_fast) var(--easing_base);
+  }
+
+  .showcase_carousel_button:hover {
+    background-color: rgba(18, 18, 16, 0.72);
   }
 
   .showcase_carousel_prev {
@@ -1042,6 +1013,18 @@
 
   .showcase_carousel_next {
     right: 12px;
+  }
+
+  .showcase_carousel_icon {
+    width: 15px;
+    height: 12.5px;
+    /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
+    filter: brightness(0) invert(1);
+  }
+
+  /* 하나뿐인 svg를 좌우로 뒤집어 이전 화살표로 씁니다. */
+  .showcase_carousel_prev .showcase_carousel_icon {
+    transform: scaleX(-1);
   }
 
   /* ---------- archive ----------

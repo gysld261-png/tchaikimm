@@ -16,12 +16,23 @@
      전체 속도가 같이 바뀌었습니다. 지금은 타임라인이 길이를 정합니다. */
   var SHOWCASE_PX_PER_UNIT = 380;
 
-  /* 캐러셀이 떠오르는 타임라인 길이와 시작 지점(pin 타임라인 기준).
-     좌우 두 장이 물러나는 동안 겹쳐 올라와 자리를 넘겨받습니다. */
-  var CAROUSEL_REVEAL = 0.9;
-  var CAROUSEL_START = 0.55;
-  var CAROUSEL_RISE = 46;
-  var CAROUSEL_SCALE = 0.9;
+  /* 갤러리 카드 한 장이 떠오르는 타임라인 길이. */
+  var GALLERY_REVEAL = 0.62;
+
+  /* 프레임이 안쪽에서 올라가는 속도(px / 타임라인 1단위).
+     SHOWCASE_PX_PER_UNIT으로 나눈 값이 곧 "평소 스크롤 대비 배속"입니다
+     (520 / 380 = 1.37배). 이 값은 pin 구간 내내 일정합니다.
+
+     ★ 구간마다 다르게 두면 안 됩니다. 예전에는 "이동 → 정지 → 이동"으로 나누고
+     이동만 880(2.32배)으로 몰아쳤는데, 속도가 0과 2.32 사이를 계단처럼 오가서
+     스크롤이 뚝뚝 끊겨 보였습니다(pin 2454px 중 1360px이 완전 정지였습니다).
+     끊김은 속도의 크기가 아니라 속도가 갑자기 바뀌는 데서 옵니다. */
+  var GALLERY_TRAVEL_SPEED = 520;
+
+  /* 카드가 제자리에 서는 지점 사이의 최소 간격(px).
+     시안 좌표상 d의 중심이 c보다 59px 위라, 이 값이 없으면 두 장이 같은 지점에서
+     동시에 떠 버립니다. 한 장씩 차례로 보이게 하는 값입니다. */
+  var GALLERY_MIN_GAP = 150;
 
   /* 좌우 카드가 날아 들어오기 시작하는 지점. pin 구간 밖이라 이 구간의 스크롤
      속도는 평소와 같은 1배입니다. 끝은 항상 "top top"(= pin 시작 지점)이라
@@ -29,11 +40,19 @@
      늦추고 싶으면 "top bottom-=200"처럼 줄이면 됩니다. */
   var INTRO_ENTER_START = "top bottom";
 
-  /* 캐러셀이 다 뜬 뒤 pin이 풀리기 전까지 머무는 길이.
-     여기서만 화면이 멈춥니다. 예전(갤러리 시절)에는 0.15로 짧게 뒀지만,
-     이제 이 구간이 <> 버튼을 눌러 사진을 넘겨 보는 시간입니다 —
-     짧으면 캐러셀이 뜨자마자 흘러가 버립니다. */
-  var SHOWCASE_TAIL_HOLD = 1;
+  /* 마지막 카드까지 끝나고 pin이 풀리기 전까지 머무는 길이.
+     이 구간만 속도가 0이라 길게 잡으면 끝에서 한 번 걸리는 느낌이 납니다. */
+  var SHOWCASE_TAIL_HOLD = 0.15;
+
+  /* 스크롤 진행도에 맞춰 프레임 안에서 차례로 등장하는 갤러리 카드입니다.
+     배열 순서가 곧 등장 순서입니다. */
+  var SHOWCASE_GALLERY = [
+    ".showcase_photo_c",
+    ".showcase_photo_d",
+    ".showcase_photo_e",
+    ".showcase_photo_f",
+    ".showcase_photo_g"
+  ];
 
   /* 상단 카드가 화면 바깥 어디에서 출발할지(px). 카드 폭보다 커야 완전히 가려집니다. */
   var ENTER_OFFSET = 560;
@@ -78,6 +97,10 @@
   var WORDS_START = 0;
   var EXIT_START = 0.15;
   var EXIT_DURATION = 1;
+
+  /* 하단 갤러리 카드가 떠오르는 기본 거리(px). 카드마다 STEP만큼 더해 패럴랙스를 만듭니다. */
+  var RISE_BASE = 110;
+  var RISE_STEP = 26;
 
   /* =========================================================
      archive 조절값
@@ -636,28 +659,73 @@
       );
   }
 
+  /* 카드가 "다 뜬 순간" 프레임이 놓여 있어야 할 위치입니다(프레임 상단 기준 px).
+     프레임은 멈추지 않고 계속 올라가므로, 이 값은 멈추는 자리가 아니라
+     등장이 끝나는 시점을 정하는 기준입니다.
+
+     기본값은 카드 중심이 화면 중심에 오는 지점이고, 거기에 두 가지를 겁니다.
+     1. 앞 카드보다 최소 GALLERY_MIN_GAP만큼 뒤 — 한 장씩 차례로 뜨게 합니다.
+     2. 그 지점에서 카드의 위끝과 아래끝이 모두 화면 안 — [아래끝 − 화면높이, 위끝]
+        범위를 벗어나면 다 뜬 순간에 잘립니다. 이 범위가 위쪽 잘림을 막는 안전장치입니다. */
+  function galleryRestOffsets(cards, viewHeight, travel) {
+    var previous = 0;
+
+    return cards.map(function (card) {
+      var top = card.offsetTop;
+      var bottom = top + card.offsetHeight;
+      var rest = top + card.offsetHeight / 2 - viewHeight / 2;
+
+      rest = Math.max(rest, previous + GALLERY_MIN_GAP);
+      /* 화면 안에 들어오는 범위로 자릅니다. 카드가 화면보다 크면 위끝을 우선합니다
+         (아래가 조금 넘치는 것보다 위가 잘리는 쪽이 눈에 띕니다). */
+      rest = Math.min(rest, top);
+      rest = Math.max(rest, Math.min(bottom - viewHeight, top));
+      rest = Math.min(Math.max(rest, 0), travel);
+
+      /* 위 자르기가 순서를 뒤집을 수 있어 마지막에 다시 단조 증가로 맞춥니다. */
+      rest = Math.max(rest, previous);
+      previous = rest;
+      return rest;
+    });
+  }
+
   /* showcase 전체를 하나의 pin 구간으로 만듭니다.
 
-     예전에는 사진 일곱 장이 프레임 3335px에 흩어져 있어, 화면 한 장(1080px)에
-     다 담기지 않아 프레임을 안쪽에서 밀어 올려야 했습니다.
-     c~g 다섯 장이 가운데 캐러셀로 합쳐지면서 그 이동이 통째로 사라졌습니다 —
-     이제 프레임은 화면과 같은 크기이고 움직이지 않습니다.
+     섹션은 3335px인데 화면은 1080px입니다. 그래서 예전처럼 섹션을 그대로 pin하면
+     위 1080px만 보이고 갤러리 다섯 장(프레임 좌표 y 1250~2808)은 pin이 끝날 때까지
+     한 번도 화면에 들어오지 못했습니다. pin이 풀린 뒤에야 등장이 시작되니
+     카드가 뜨는 동안 페이지가 계속 흘러 상단이 잘렸습니다.
 
-     pin 구간에서 일어나는 일은 세 가지입니다.
-     1. 문장이 한 단어씩 뜹니다(pin 밖 구간에서 좌우 두 장은 이미 앉아 있습니다)
-     2. 좌우 두 장이 가운데로 모이며 물러납니다
-     3. 그 위로 캐러셀이 떠오르며 자리를 넘겨받습니다
-     2와 3을 겹쳐 두어 화면이 비는 순간이 없습니다. */
+     여기서는 섹션을 화면 한 장 크기(`is_pinned`)로 줄여 창처럼 쓰고,
+     그 안에서 배경과 프레임을 스크롤 진행도에 맞춰 밀어 올립니다.
+     이동과 등장을 번갈아 두어, 카드가 뜨는 동안에는 프레임이 1px도 움직이지 않습니다.
+
+     시안 좌표·크기·간격은 하나도 바뀌지 않습니다. 프레임 안의 배치는 그대로이고
+     "언제 얼마나 올라가는가"만 스크롤이 정합니다. */
   function buildShowcaseTimeline(gsap, showcase, cards, words) {
     var frame = showcase.querySelector(".showcase_frame");
-    var carousel = showcase.querySelector(".showcase_carousel");
+    var backdrop = showcase.querySelector(".showcase_bg");
 
     if (!frame) {
       return;
     }
 
-    /* class가 섹션을 화면 한 장 크기로 줄입니다. */
+    var gallery = SHOWCASE_GALLERY
+      .map(function (selector) {
+        return showcase.querySelector(selector);
+      })
+      .filter(Boolean);
+
+    /* 배경(아치 + 그라디언트)과 프레임은 같은 만큼 움직여야 합니다.
+       프레임만 밀면 사진이 그라디언트 위를 미끄러져 시안의 색 배치가 어긋납니다. */
+    var stage = [backdrop, frame].filter(Boolean);
+
+    /* class가 섹션을 화면 한 장 크기로 줄입니다. 실제 창 높이는 그 뒤에 재야 맞습니다. */
     showcase.classList.add("is_pinned");
+
+    var viewHeight = showcase.offsetHeight;
+    var travel = Math.max(0, frame.offsetHeight - viewHeight);
+    var rests = galleryRestOffsets(gallery, viewHeight, travel);
 
     /* 좌우 카드 등장은 pin 밖(섹션이 올라오는 평범한 스크롤 구간)에서 끝납니다. */
     buildIntroEntrance(gsap, showcase, cards);
@@ -666,37 +734,49 @@
 
     addIntroBody(gsap, timeline, cards, words);
 
-    /* 문장은 캐러셀에 자리를 내주고 사라집니다. 둘 다 화면 한가운데라 겹칩니다. */
-    var quote = showcase.querySelector(".showcase_quote");
+    /* ★ 프레임은 pin의 첫 픽셀부터 흐릅니다. 예전에는 인트로가 다 끝날 때까지
+       기다렸는데(600px), 그 구간 내내 속도가 0이라 "스크롤이 멈췄다"고 느껴졌습니다. */
+    var travelStart = 0;
+    var travelLength = travel / GALLERY_TRAVEL_SPEED;
 
-    if (quote) {
+    /* ★ 프레임은 트윈 하나로 처음부터 끝까지 일정한 속도로 올라갑니다.
+       구간을 나눠 "이동 → 정지 → 이동"으로 만들면 스크롤 대비 속도가
+       0과 2.32배 사이를 계단처럼 오가서 뚝뚝 끊겨 보입니다(실제로 그랬습니다).
+       ease도 반드시 "none"입니다. 다른 이징을 주면 구간 안에서 속도가 변합니다. */
+    if (travel > 1) {
       timeline.fromTo(
-        quote,
-        { opacity: 1 },
-        { opacity: 0, ease: "power2.in", duration: CAROUSEL_REVEAL * 0.7 },
-        CAROUSEL_START
+        stage,
+        { y: 0 },
+        { y: -travel, ease: "none", duration: travelLength },
+        travelStart
       );
     }
 
-    if (carousel) {
+    /* 등장은 그 흐름 위에 얹힙니다. 프레임을 멈추지 않으므로 카드는 올라오는
+       도중에 떠오르고, 다 뜨는 순간 rest 위치에 정확히 놓입니다.
+       그 순간 카드가 화면 안에 있다는 것은 galleryRestOffsets가 보장합니다. */
+    gallery.forEach(function (card, index) {
+      var image = card.querySelector("img");
+
+      if (!image) {
+        return;
+      }
+
+      var restAt = travelStart + rests[index] / GALLERY_TRAVEL_SPEED;
+
       timeline.fromTo(
-        carousel,
-        { y: CAROUSEL_RISE, scale: CAROUSEL_SCALE, opacity: 0 },
-        {
-          y: 0,
-          scale: 1,
-          opacity: 1,
-          ease: "power3.out",
-          duration: CAROUSEL_REVEAL
-        },
-        CAROUSEL_START
+        image,
+        { y: RISE_BASE + index * RISE_STEP, opacity: 0 },
+        { y: 0, opacity: 1, ease: "power3.out", duration: GALLERY_REVEAL },
+        Math.max(restAt - GALLERY_REVEAL, 0)
       );
-    }
+    });
+
+    var cursor = travelStart + travelLength;
 
     /* 빈 트윈이 곧 "머무는 구간"입니다. scrub은 타임라인 길이를 스크롤 길이에
-       비례해 나누므로, 길이를 더한 만큼 화면이 멈춰 있습니다.
-       캐러셀을 눌러 볼 시간을 주려고 예전보다 넉넉하게 둡니다. */
-    timeline.to({}, { duration: SHOWCASE_TAIL_HOLD }, timeline.duration());
+       비례해 나누므로, 길이를 더한 만큼 화면이 멈춰 있습니다. */
+    timeline.to({}, { duration: SHOWCASE_TAIL_HOLD }, cursor);
 
     window.ScrollTrigger.create({
       animation: timeline,
@@ -711,9 +791,10 @@
     });
 
     /* 조건이 어긋나(창을 좁히거나 모션 감소로 바꾸면) matchMedia가 되돌릴 때
-       class를 지웁니다. 트윈이 남긴 인라인 값은 matchMedia가 알아서 되돌립니다. */
+       class와 인라인 transform을 함께 지웁니다. 그러면 3335px 원래 레이아웃입니다. */
     return function () {
       showcase.classList.remove("is_pinned");
+      gsap.set(stage, { clearProps: "transform" });
     };
   }
 
@@ -737,6 +818,25 @@
 
     if (slides.length < 2 || !previous || !next) {
       return;
+    }
+
+    /* ★ 캐러셀은 1279px 이하 전용입니다.
+       1280px 이상은 디자인 문서 기준 "시안 좌표 그대로"라 다섯 장이 흩어져
+       배치되고 스크롤로 하나씩 떠오릅니다. 그 폭에서는 is_current /
+       aria-hidden이 남아 있으면 안 됩니다 — 보이는 사진을 읽기 도구가
+       건너뛰게 됩니다. 그래서 조건이 어긋나면 표시를 걷어 냅니다. */
+    var narrow = window.matchMedia("(max-width: 1279px)");
+
+    function syncMode() {
+      if (narrow.matches) {
+        show(current);
+        return;
+      }
+
+      slides.forEach(function (slide) {
+        slide.classList.remove("is_current");
+        slide.removeAttribute("aria-hidden");
+      });
     }
 
     var current = Math.max(slides.findIndex(function (slide) {
@@ -782,6 +882,14 @@
         show(current + 1);
       }
     });
+
+    if (narrow.addEventListener) {
+      narrow.addEventListener("change", syncMode);
+    } else if (narrow.addListener) {
+      narrow.addListener(syncMode);
+    }
+
+    syncMode();
   }
 
   function initShowcaseScroll() {
@@ -829,7 +937,7 @@
   }
 
   /* 배치는 CSS 커스텀 속성으로만 넘깁니다. 실제로 어떤 속성에 쓰이는지는
-     collection.css의 .archive_photo 한 곳에 있습니다. */
+     col_chaikim.css의 .archive_photo 한 곳에 있습니다. */
   function applyLayout(figure, layout) {
     figure.style.setProperty("--archive_photo_left", layout.left + "px");
     figure.style.setProperty("--archive_photo_top", layout.top + "px");
@@ -838,14 +946,22 @@
     figure.style.setProperty("--archive_photo_layer", layout.layer);
   }
 
+  /* 연도마다 사진 수가 다릅니다(2019·2020은 5장, 2021은 4장).
+     남는 자리는 감춥니다. 그러지 않으면 이전 연도의 사진이 그 자리에 그대로 남습니다. */
   function applyYearPhotos(figures, year) {
     var photos = ARCHIVE_PHOTOS[year];
     var layouts = ARCHIVE_LAYOUTS[year];
 
     figures.forEach(function (figure, index) {
-      if (photos[index]) {
-        applyPhoto(figure, photos[index]);
+      var isEmpty = !photos[index];
+
+      figure.classList.toggle("is_empty", isEmpty);
+
+      if (isEmpty) {
+        return;
       }
+
+      applyPhoto(figure, photos[index]);
 
       if (layouts[index]) {
         applyLayout(figure, layouts[index]);
@@ -897,6 +1013,13 @@
     function vectorAt(index) {
       var photo = getPhotos()[index];
       var layout = getLayouts()[index];
+
+      /* 그 해에 사진이 없는 자리입니다(2021은 네 장). figure가 감춰져 있어
+         화면에는 영향이 없지만, 트윈 대상에는 남아 있으므로 값을 0으로 돌려줍니다. */
+      if (!photo || !layout) {
+        return { x: 0, y: 0, spin: 0 };
+      }
+
       /* 카드 중심을 알려면 높이가 필요합니다. img의 naturalHeight는 lazy 로딩이라
          첫 계산 시점에 0일 수 있으므로 데이터의 원본 크기로 비율을 냅니다. */
       var unit = enterDirection(layout, getFrameHeight(), photo.height / photo.width);
