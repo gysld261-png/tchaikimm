@@ -32,9 +32,30 @@
 <link rel="stylesheet" href="../../common/css/reset.css">
 <link rel="stylesheet" href="../../common/css/common.css">
 <link rel="stylesheet" href="../../common/css/layout.css">
+<link rel="stylesheet" href="../../common/css/shop_transition.css">
 <link rel="stylesheet" href="css/main.css">
 </head>
 <body data-page="main" data-header-variant="white">
+
+<div class="shop_transition" aria-hidden="true">
+  <div class="shop_transition_steps" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="shop_transition_inner" role="status" aria-live="polite">
+    <p class="shop_transition_kicker"><span>Ready-to-wear · Seoul</span></p>
+    <p class="shop_transition_phrase" aria-label="Where tradition finds freedom.">
+      <span class="shop_transition_line" aria-hidden="true">
+        <span class="shop_transition_word">Where</span>
+        <span class="shop_transition_word">tradition</span>
+      </span>
+      <span class="shop_transition_line" aria-hidden="true">
+        <span class="shop_transition_word">finds</span>
+        <span class="shop_transition_word">freedom.</span>
+      </span>
+    </p>
+  </div>
+</div>
 
 <a class="skip_link" href="#main_content">Skip to content</a>
 
@@ -62,7 +83,7 @@
       <div class="hero_panel_body">
         <h2 class="hero_panel_title">Tchai Kim</h2>
         <p class="hero_panel_desc">Everyday modern hanbok</p>
-        <a class="hero_panel_button" href="../shop/index.html">Shop ready-to-Wear</a>
+        <a class="hero_panel_button" href="../shop/index.html" data-shop-transition>Shop ready-to-Wear</a>
       </div>
     </article>
   </section>
@@ -236,7 +257,7 @@
             <p class="promo_lead">Hanbok, for everyday</p>
             <p class="promo_desc">A lookbook of cheollik dresses and vests made for daily wear.</p>
           </div>
-          <a class="promo_link" href="../shop/index.html">Visit Shop →</a>
+          <a class="promo_link" href="../shop/index.html" data-shop-transition>Visit Shop →</a>
         </div>
       </div>
 
@@ -316,6 +337,7 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="../../common/js/common.js"></script>
+<script src="../../common/js/shop_transition.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>

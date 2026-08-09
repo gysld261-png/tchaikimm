@@ -125,7 +125,7 @@
   }
 
   .hero_panel_body {
-    bottom: 70px;
+    bottom: 120px;
   }
 }
 
@@ -1129,7 +1129,7 @@
   margin-top: 98px;
 }
 
-/* product 마퀴 — 같은 5장 묶음을 두 벌 이어 끊김 없이 천천히 흘립니다 */
+/* product 마퀴 — 같은 5장 묶음을 두 벌 이어 끊김 없이 흘립니다. */
 .shop_products_viewport {
   overflow: hidden;
   width: 100vw;
@@ -1138,12 +1138,17 @@
 }
 
 .shop_products_track {
-  --shop_products_gap: 80px;
+  /* ★ 마퀴 속도 조절값입니다. 한 묶음이 지나가는 시간이라 숫자가 작을수록
+     빠릅니다. 현재 48s → 더 빠르게 하려면 36s 또는 32s 정도로 낮추세요. */
+  --shop_products_duration: 20s;
+  /* 1280px 이상 간격입니다. 아래 반응형 구간에서 48px → 36px → 24px로
+     다시 덮어쓰므로, 작은 미리보기 화면에서는 이 200px이 적용되지 않습니다. */
+  --shop_products_gap: 150px;
   display: flex;
   align-items: center;
   gap: var(--shop_products_gap);
   width: max-content;
-  animation: shop_products_scroll 48s linear infinite;
+  animation: shop_products_scroll var(--shop_products_duration) linear infinite;
   will-change: transform;
 }
 
@@ -1485,6 +1490,7 @@
   }
 
   .shop_products_track {
+    /* 1024~1279px에서 최종 적용 — 위의 데스크톱 간격을 덮어씁니다. */
     --shop_products_gap: 48px;
   }
 
@@ -1608,6 +1614,7 @@
   }
 
   .shop_products_track {
+    /* 1023px 이하에서 적용 — 1279px 규칙보다 아래라 이 값이 최종 승리합니다. */
     --shop_products_gap: 36px;
   }
 
@@ -1656,7 +1663,7 @@
   }
 
   .hero_panel_body {
-    bottom: 40px;
+    bottom: 120px;
   }
 
   .hero_panel_title {
@@ -1773,6 +1780,7 @@
   }
 
   .shop_products_track {
+    /* 모바일에서 적용되는 최종 간격입니다. */
     --shop_products_gap: 24px;
   }
 

@@ -524,7 +524,7 @@
      (터치 기기에는 호버 개념이 없어 gsap.matchMedia가 (hover: hover)로 제외합니다.)
 
      폭 전환은 GSAP tween 대신 매 프레임 목표값을 향해 조금씩 따라가는
-     lerp 방식입니다(common.js가 Lenis에 쓰는 lerp: 0.06과 같은 감각).
+     lerp 방식입니다.
      이렇게 하면 마우스가 두 패널 경계 근처에서 빠르게 오갈 때도 tween이
      끊기고 새로 시작하며 튀는 대신, 목표가 바뀌는 순간에도 진행 중이던
      움직임 위에서 자연스럽게 방향만 바뀝니다 — "덜그럭거림"의 원인이었습니다.
@@ -542,9 +542,16 @@
 
     var EXPANDED_RATIO = 0.7;
     var NEUTRAL_RATIO = 0.5;
-    var SMOOTH_LERP = 0.012;
+    /* ★ 패널이 사르륵 넓어지는 속도입니다. 숫자가 클수록 빠릅니다.
+       예전 0.012는 수초 동안 뒤늦게 쫓아왔고, 0.14는 너무 즉각적이었습니다.
+       0.045는 의도한 패널로 약 1.5초 동안 부드럽게 따라가는 중간값입니다.
+       화면 밖에서 멋대로 움직이는 문제는 아래 노출 감시가 별도로 막습니다. */
+    var SMOOTH_LERP = 0.03;
     var SETTLE_THRESHOLD = 0.0008;
-    var FADE_DURATION = 0.9;
+    var FADE_DURATION = 0.75;
+    var ACTIVATION_MOVEMENT_PX = 18;
+    var CENTER_DEAD_ZONE_RATIO = 0.08;
+    var MIN_VISIBLE_RATIO = 0.65;
     var HERO_HOVER_MEDIA = "(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)";
     var canUseHoverVideo = window.matchMedia(HERO_HOVER_MEDIA).matches;
 
@@ -567,6 +574,10 @@
       var targetRatio = NEUTRAL_RATIO;
       var currentRatio = NEUTRAL_RATIO;
       var isTicking = false;
+      var pointerEntryX = 0;
+      var pointerEntryY = 0;
+      var hasIntentionalPointerMove = false;
+      var heroVisibilityObserver = null;
 
       gsap.set([panelA, panelB], { width: "50%" });
 
@@ -687,24 +698,96 @@
         });
       }
 
+      function isHeroMostlyVisible(rect) {
+        var visibleHeight = Math.max(
+          0,
+          Math.min(rect.bottom, window.innerHeight) - Math.max(rect.top, 0)
+        );
+        var visibleBase = Math.min(rect.height, window.innerHeight);
+
+        return visibleBase > 0 && visibleHeight / visibleBase >= MIN_VISIBLE_RATIO;
+      }
+
+      function handleHeroPointerEnter(event) {
+        /* 페이지가 열리거나 스크롤되어 히어로가 정지한 포인터 밑으로 들어오는
+           것만으로는 반응하지 않습니다. 히어로 안에서 실제 이동이 있어야 합니다. */
+        pointerEntryX = event.clientX;
+        pointerEntryY = event.clientY;
+        hasIntentionalPointerMove = false;
+      }
+
       function handleHeroPointerMove(event) {
         var rect = hero.getBoundingClientRect();
-        var x = event.clientX - rect.left;
-        var half = x < rect.width / 2 ? panelA : panelB;
-        applyActivePanel(half);
+        var movedDistance = Math.hypot(
+          event.clientX - pointerEntryX,
+          event.clientY - pointerEntryY
+        );
+
+        if (!isHeroMostlyVisible(rect)) {
+          applyActivePanel(null);
+          return;
+        }
+
+        if (!hasIntentionalPointerMove) {
+          if (movedDistance < ACTIVATION_MOVEMENT_PX) {
+            return;
+          }
+          hasIntentionalPointerMove = true;
+        }
+
+        var xRatio = (event.clientX - rect.left) / rect.width;
+        var leftBoundary = 0.5 - CENTER_DEAD_ZONE_RATIO;
+        var rightBoundary = 0.5 + CENTER_DEAD_ZONE_RATIO;
+
+        if (xRatio < leftBoundary) {
+          applyActivePanel(panelA);
+        } else if (xRatio > rightBoundary) {
+          applyActivePanel(panelB);
+        } else {
+          /* 중앙 16%에서는 어느 쪽도 쫓아오지 않고 50:50으로 돌아갑니다. */
+          applyActivePanel(null);
+        }
       }
 
       function handleHeroPointerLeave() {
+        hasIntentionalPointerMove = false;
         applyActivePanel(null);
       }
 
-      hero.addEventListener("mousemove", handleHeroPointerMove);
-      hero.addEventListener("mouseleave", handleHeroPointerLeave);
+      function handleDocumentVisibilityChange() {
+        if (document.hidden) {
+          handleHeroPointerLeave();
+        }
+      }
+
+      /* 스크롤로 히어로가 정지한 포인터 아래에서 빠져나갈 때 브라우저가
+         pointerleave를 보내지 않는 경우가 있습니다. 노출 비율을 별도로 감시해
+         화면의 65% 아래로 내려가는 즉시 마지막 활성 패널을 해제합니다. */
+      if (typeof window.IntersectionObserver === "function") {
+        heroVisibilityObserver = new window.IntersectionObserver(function (entries) {
+          if (entries[0].intersectionRatio < MIN_VISIBLE_RATIO) {
+            handleHeroPointerLeave();
+          }
+        }, { threshold: [0, MIN_VISIBLE_RATIO, 1] });
+        heroVisibilityObserver.observe(hero);
+      }
+
+      hero.addEventListener("pointerenter", handleHeroPointerEnter);
+      hero.addEventListener("pointermove", handleHeroPointerMove);
+      hero.addEventListener("pointerleave", handleHeroPointerLeave);
+      window.addEventListener("blur", handleHeroPointerLeave);
+      document.addEventListener("visibilitychange", handleDocumentVisibilityChange);
 
       return function cleanup() {
-        hero.removeEventListener("mousemove", handleHeroPointerMove);
-        hero.removeEventListener("mouseleave", handleHeroPointerLeave);
+        hero.removeEventListener("pointerenter", handleHeroPointerEnter);
+        hero.removeEventListener("pointermove", handleHeroPointerMove);
+        hero.removeEventListener("pointerleave", handleHeroPointerLeave);
+        window.removeEventListener("blur", handleHeroPointerLeave);
+        document.removeEventListener("visibilitychange", handleDocumentVisibilityChange);
         window.removeEventListener("resize", applyFixedMediaSize);
+        if (heroVisibilityObserver) {
+          heroVisibilityObserver.disconnect();
+        }
         gsap.ticker.remove(updateRatio);
         activePanel = null;
 

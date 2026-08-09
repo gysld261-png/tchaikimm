@@ -36,7 +36,18 @@
   <link rel="stylesheet" href="../../common/css/reset.css">
   <link rel="stylesheet" href="../../common/css/common.css">
   <link rel="stylesheet" href="../../common/css/layout.css">
+  <link rel="stylesheet" href="../../common/css/shop_transition.css">
   <link rel="stylesheet" href="css/shop.css">
+
+  <script>
+    try {
+      if (window.sessionStorage.getItem("tchaikim_shop_transition") === "1") {
+        document.documentElement.classList.add("has_shop_transition_entry");
+      }
+    } catch (error) {
+      /* 저장소 접근이 막히면 일반 Shop 진입으로 계속합니다. */
+    }
+  </script>
 
   <script type="importmap">
 {
@@ -48,6 +59,26 @@
 </head>
 
 <body data-page="shop" data-header-variant="white">
+
+<div class="shop_transition" aria-hidden="true">
+  <div class="shop_transition_steps" aria-hidden="true">
+    <span></span><span></span><span></span><span></span>
+    <span></span><span></span><span></span><span></span>
+  </div>
+  <div class="shop_transition_inner" role="status" aria-live="polite">
+    <p class="shop_transition_kicker"><span>Ready-to-wear · Seoul</span></p>
+    <p class="shop_transition_phrase" aria-label="Where tradition finds freedom.">
+      <span class="shop_transition_line" aria-hidden="true">
+        <span class="shop_transition_word">Where</span>
+        <span class="shop_transition_word">tradition</span>
+      </span>
+      <span class="shop_transition_line" aria-hidden="true">
+        <span class="shop_transition_word">finds</span>
+        <span class="shop_transition_word">freedom.</span>
+      </span>
+    </p>
+  </div>
+</div>
 
 <div class="common_header_slot" data-component="../../common/components/header.html">
   <span class="a11y_hidden">Loading header</span>
@@ -866,6 +897,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
   <script src="../../common/js/common.js"></script>
+  <script src="../../common/js/shop_transition.js"></script>
   <script type="module" src="js/shop.js"></script>
 </body>
 
