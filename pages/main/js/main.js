@@ -882,10 +882,13 @@
 (function () {
   "use strict";
 
-  var CARD_INTERVAL = 780;
+  var CARD_INTERVAL = 620;
   var MAX_VISIBLE_CARDS = 9;
   var CARD_INTRO_DELAY = 850;
-  var INTRO_FADE_DURATION = 380;
+  var RIGHT_STREAM_OFFSET = 0.5;
+  /* 배열을 한 번 섞은 뒤 홀수·짝수 위치를 좌우로 나눕니다.
+     같은 이미지를 복제하지 않아 한 화면 안에서 중복되어 보이지 않습니다. */
+  var STREAM_ORDER = [0, 7, 4, 3, 8, 11, 2, 1, 10, 9, 6, 5];
 
   var row = document.querySelector(".collection_row");
   if (!row) {
@@ -902,31 +905,41 @@
     return;
   }
 
-  var leftItems = sourceItems;
-  /* 좌우가 같은 깊이로 전진하되 같은 사진이 마주 보지 않도록
-     오른쪽 스트림의 이미지 순서만 두 칸 돌립니다. */
-  var rightItems = sourceItems.map(function (element, index) {
-    var source = sourceItems[(index + 2) % sourceItems.length];
-    var clone = source.cloneNode(true);
-    clone.classList.add("is_loop_clone");
-    clone.setAttribute("aria-hidden", "true");
-    row.appendChild(clone);
-    return clone;
+  var orderedItems = STREAM_ORDER.filter(function (index) {
+    return index < sourceItems.length;
+  }).map(function (index) {
+    return sourceItems[index];
+  });
+
+  sourceItems.forEach(function (element) {
+    if (!orderedItems.includes(element)) {
+      orderedItems.push(element);
+    }
+  });
+
+  var leftItems = [];
+  var rightItems = [];
+
+  orderedItems.forEach(function (element, index) {
+    if (index % 2 === 0) {
+      leftItems.push(element);
+    } else {
+      rightItems.push(element);
+    }
   });
 
   row.classList.add("is_perspective_ready");
+  sourceItems.forEach(function (element) {
+    element.style.opacity = "0";
+  });
 
   var frameId = null;
-  var startTime = performance.now();
+  var startTime = null;
+  var pausedAt = null;
   var isInView = false;
   var hasStarted = false;
-  var visibleCardCount = Math.min(MAX_VISIBLE_CARDS, sourceItems.length);
 
-  function clamp(value, min, max) {
-    return Math.min(Math.max(value, min), max);
-  }
-
-  function setCardPosition(element, progress, direction, cardIntro) {
+  function setCardPosition(element, progress, direction) {
     /* x는 일정하게 이동하고 깊이만 smoothstep으로 변화시켜
        뒤에서 앞으로 부드럽게 다가오는 원근감을 만듭니다. */
     var depthProgress = progress * progress * (3 - 2 * progress);
@@ -935,30 +948,41 @@
     var z = -480 + depthProgress * 840;
     var scale = 0.5 + depthProgress * 0.62;
     var rotateY = direction * (14 - depthProgress * 9);
-    var opacity = Math.min(progress / 0.025, (1 - progress) / 0.14, 1) * cardIntro;
+    var opacity = Math.min(progress / 0.025, (1 - progress) / 0.14, 1);
 
     element.style.zIndex = String(Math.round(progress * 100));
     element.style.opacity = String(Math.max(0, opacity));
     element.style.transform = "translate3d(calc(-50% + " + x.toFixed(2) + "px), -50%, " + z.toFixed(2) + "px) rotateY(" + rotateY.toFixed(2) + "deg) scale(" + scale.toFixed(4) + ")";
   }
 
+  function renderStreamCard(element, index, phase, direction, streamLength) {
+    var age = phase - index;
+
+    /* 아직 발사 시간이 오지 않은 카드는 검정 프레임 뒤에 대기합니다 */
+    if (age < 0) {
+      element.style.opacity = "0";
+      return;
+    }
+
+    var visibleCardCount = Math.min(MAX_VISIBLE_CARDS, streamLength);
+    var position = age % streamLength;
+    if (position >= visibleCardCount) {
+      element.style.opacity = "0";
+      return;
+    }
+
+    setCardPosition(element, position / visibleCardCount, direction);
+  }
+
   function render(time) {
-    var phase = (time - startTime) / CARD_INTERVAL;
     var elapsed = time - startTime;
-    var cardIntro = clamp((elapsed - CARD_INTRO_DELAY) / INTRO_FADE_DURATION, 0, 1);
+    var phase = (elapsed - CARD_INTRO_DELAY) / CARD_INTERVAL;
 
-    sourceItems.forEach(function (element, index) {
-      var position = (phase - index + sourceItems.length) % sourceItems.length;
-
-      if (position >= visibleCardCount) {
-        element.style.opacity = "0";
-        rightItems[index].style.opacity = "0";
-        return;
-      }
-
-      var progress = position / visibleCardCount;
-      setCardPosition(element, progress, -1, cardIntro);
-      setCardPosition(rightItems[index], progress, 1, cardIntro);
+    leftItems.forEach(function (element, index) {
+      renderStreamCard(element, index, phase, -1, leftItems.length);
+    });
+    rightItems.forEach(function (element, index) {
+      renderStreamCard(element, index, phase - RIGHT_STREAM_OFFSET, 1, rightItems.length);
     });
 
     if (isInView && !document.hidden) {
@@ -966,35 +990,36 @@
     }
   }
 
-  /* 섹션이 처음 화면에 닿는 한 프레임에도 카드가 중앙에 겹치지 않도록
-     재생 전 초기 위치를 미리 계산합니다. */
-  render(startTime);
-
   function syncPlayState() {
-    if (isInView && !document.hidden) {
+    if (isInView && hasStarted && !document.hidden) {
+      if (pausedAt !== null) {
+        startTime += performance.now() - pausedAt;
+        pausedAt = null;
+      }
+
       if (frameId === null) {
         frameId = window.requestAnimationFrame(render);
       }
     } else if (frameId !== null) {
       window.cancelAnimationFrame(frameId);
       frameId = null;
+      pausedAt = performance.now();
     }
   }
 
   /* 화면 밖이거나 다른 탭에 가 있으면 돌리지 않습니다 */
   if (typeof window.IntersectionObserver === "function") {
     new window.IntersectionObserver(function (entries) {
-      isInView = entries[0].intersectionRatio >= 0.3;
+      isInView = entries[0].isIntersecting && entries[0].intersectionRatio >= 0.15;
 
       if (isInView && !hasStarted) {
         hasStarted = true;
         startTime = performance.now();
         row.classList.add("is_loop_active");
-        render(startTime);
       }
 
       syncPlayState();
-    }, { threshold: [0, 0.3] }).observe(row);
+    }, { threshold: [0, 0.15] }).observe(row);
   } else {
     isInView = true;
     hasStarted = true;

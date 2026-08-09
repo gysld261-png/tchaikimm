@@ -613,9 +613,11 @@
 }
 
 .brand_stack_action {
+  --brand_stack_action_bottom: 12%; /* 숫자가 클수록 버튼이 위로 올라갑니다 */
+
   position: absolute;
   right: 18%;
-  bottom: 8%;
+  bottom: var(--brand_stack_action_bottom);
   width: min(248px, 18vw);
   min-height: 64px;
   padding: 16px;
@@ -629,6 +631,7 @@
   isolation: isolate;
   pointer-events: auto;
   cursor: pointer;
+  animation: brand_stack_action_float 3.4s ease-in-out infinite;
   transition: color 0.9s cubic-bezier(0.35, 0.35, 0, 1);
 }
 
@@ -657,6 +660,7 @@
   height: 10px;
   border-radius: 50%;
   background-color: #151415;
+  animation: brand_stack_action_dot_slide 1.6s ease-in-out infinite;
   transition:
     background-color 0.9s cubic-bezier(0.35, 0.35, 0, 1),
     scale 0.9s cubic-bezier(0.35, 0.35, 0, 1);
@@ -665,6 +669,7 @@
 .brand_stack_action:hover,
 .brand_stack_action:focus-visible {
   color: #fff;
+  animation-play-state: paused;
 }
 
 .brand_stack_action:hover::before,
@@ -677,6 +682,27 @@
 .brand_stack_action:focus-visible::after {
   background-color: #fff;
   scale: 0.85;
+  animation-play-state: paused;
+}
+
+@keyframes brand_stack_action_float {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -6px;
+  }
+}
+
+@keyframes brand_stack_action_dot_slide {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: -5px 0;
+  }
 }
 
 .brand_stack_action:focus-visible {
@@ -698,6 +724,7 @@
   .brand_stack_action,
   .brand_stack_action::before,
   .brand_stack_action::after {
+    animation: none;
     transition-duration: 0.01ms;
   }
 }
