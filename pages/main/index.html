@@ -32,7 +32,7 @@
   <section class="hero" aria-label="Tchai Kim and Tchai Kim Youngjin">
     <article class="hero_panel hero_panel_bespoke">
       <img class="hero_panel_img" src="assets/main/hero/bespoke.png" alt="A model wearing a hand-painted bespoke hanbok beside a dark floral arrangement">
-      <video class="hero_panel_video" src="assets/main/bespoke/bespokevod.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+      <video class="hero_panel_video" src="assets/main/hero/bespoke.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
       <div class="hero_panel_body">
         <h2 class="hero_panel_title">Tchai Kim Youngjin</h2>
         <p class="hero_panel_desc">Haute couture and bespoke hanbok</p>
@@ -42,7 +42,7 @@
 
     <article class="hero_panel hero_panel_shop">
       <img class="hero_panel_img" src="assets/main/hero/hero_shop.png" alt="A model wearing an everyday modern hanbok in soft daylight">
-      <video class="hero_panel_video" src="assets/main/shop/shopbanner.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+      <video class="hero_panel_video" src="assets/main/hero/shop.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
       <div class="hero_panel_body">
         <h2 class="hero_panel_title">Tchai Kim</h2>
         <p class="hero_panel_desc">Everyday modern hanbok</p>
@@ -52,33 +52,35 @@
   </section>
 
   <!-- model -->
-  <section class="model" aria-label="Heritage Redefined, Effortlessly Worn">
+  <section class="model" aria-labelledby="model_title">
     <div class="common_container model_container">
-      <figure class="model_figure">
-        <img class="model_img" src="assets/main/cheolikmodel.png" alt="A model wearing a modern cheollik coat, arms at rest">
+      <figure class="model_figure" aria-hidden="true">
+        <video class="model_video" src="vid/model.mp4" poster="assets/main/cheolikmodel.png" muted playsinline preload="auto"></video>
       </figure>
       <div class="model_text">
-        <h2 class="model_title">Heritage Redefined,<br>Effortlessly Worn.</h2>
+        <h2 class="model_title" id="model_title">Heritage Redefined,<br>Effortlessly Worn.</h2>
         <p class="model_desc">From flat architectural forms to a living modern expression.</p>
       </div>
     </div>
   </section>
 
-  <!-- intro (brand_story text) -->
-  <section class="intro">
-    <div class="common_container intro_container">
-      <h2 class="intro_title">One house, two ways of wearing hanbok</h2>
-      <p class="intro_desc">Tchai Kim is ready-to-wear, Tchai Kim Youngjin is bespoke — two expressions of the same aesthetic</p>
+  <!-- brand_story -->
+  <section class="brand_story">
+    <div class="brand_story_textbox">
+      <h2 class="brand_story_title">One house,<br>two ways of wearing hanbok</h2>
+      <p class="brand_story_desc">Tchai Kim is ready-to-wear, Tchai Kim Youngjin is bespoke — two expressions of the same aesthetic</p>
+      <a class="brand_story_link" href="../brand/index.html">
+        Discover Our Story
+        <img class="brand_story_link_icon" src="assets/icons/arrow_right_white.svg" alt="">
+      </a>
     </div>
-  </section>
-
-  <!-- banner (brand_story img) -->
-  <section class="banner">
-    <img class="banner_img" src="assets/main/banner.png"
+    <img class="brand_story_banner" src="assets/main/banner.png"
          alt="A man in a hanbok coat walking past a large ink landscape painting in a gallery">
   </section>
 
-  <!-- detail — collar/sleeve/body/skirt를 사진 한 장 위 4개 호버 영역으로 통합 -->
+  <!-- detail — 사진 위에서 돋보기가 커서를 따라다니며 원본을 계속 확대해 보여주고,
+       collar/sleeve/body/skirt 영역을 지날 때 그 부위 설명이 나타납니다.
+       돋보기는 js/main.js가 만들고, 부위 설명은 .is_active로 켜집니다. -->
   <section class="detail" aria-labelledby="detail_title">
     <header class="detail_head common_container">
       <h2 class="detail_title" id="detail_title">Traditional motifs,<br>reimagined</h2>
@@ -98,28 +100,28 @@
         <p class="detail_part_lead">Balanced Proportions</p>
         <p class="detail_part_desc">Refined to frame the silhouette with quiet elegance.</p>
       </div>
-      <span class="detail_zoom" data-part="collar"><img src="assets/main/detail/collar/zoom.png" alt="A close-up of the collar"></span>
 
       <div class="detail_text" data-part="sleeve">
         <h3 class="detail_part_title">Sleeve</h3>
         <p class="detail_part_lead">Soft Curves</p>
         <p class="detail_part_desc">Inspired by the traditional baerae, redesigned for natural movement.</p>
       </div>
-      <span class="detail_zoom" data-part="sleeve"><img src="assets/main/detail/sleeve/zoom.png" alt="A close-up of the sleeve"></span>
 
       <div class="detail_text" data-part="body">
         <h3 class="detail_part_title">Body</h3>
         <p class="detail_part_lead">Contemporary Structure</p>
         <p class="detail_part_desc">A modern silhouette rooted in traditional form.</p>
       </div>
-      <span class="detail_zoom" data-part="body"><img src="assets/main/detail/body/zoom.png" alt="A close-up of the body"></span>
 
       <div class="detail_text" data-part="skirt">
         <h3 class="detail_part_title">Skirt</h3>
         <p class="detail_part_lead">Flowing Volume</p>
         <p class="detail_part_desc">Lightweight volume designed to move effortlessly.</p>
       </div>
-      <span class="detail_zoom" data-part="skirt"><img src="assets/main/detail/skirt/zoom.png" alt="A close-up of the skirt"></span>
+
+      <!-- 커서를 따라다니는 돋보기. 배경 이미지는 js/main.js가 .detail_img의 src로
+           채웁니다(원본 경로를 한 곳에서만 관리하기 위함). -->
+      <div class="detail_lens" aria-hidden="true"></div>
     </div>
   </section>
 

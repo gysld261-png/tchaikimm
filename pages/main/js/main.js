@@ -1,7 +1,6 @@
-/* 스크롤 인터랙션 — brand_01~04 고정+텍스트 전환, brand_05/06 스크롤 리빌,
-   kyj_brand_story 1장→3장→확대→페이드아웃.
-   768px 이상 + 모션 감소 설정이 아닐 때만 동작합니다(gsap.matchMedia).
-   그 외(모바일, JS 미동작, 모션 감소)에는 각 섹션의 기본 정적 레이아웃이 그대로 보입니다. */
+/* 스크롤 인터랙션 — model 영상 스크럽, brand_01~04 고정+텍스트 전환,
+   brand_05/06 스크롤 리빌, kyj_brand_story 1장→3장→확대→페이드아웃.
+   model은 모든 화면에서 동작하고 나머지 장면은 768px 이상에서만 동작합니다. */
 (function () {
   "use strict";
 
@@ -15,6 +14,96 @@
   var ScrollTrigger = window.ScrollTrigger;
 
   gsap.registerPlugin(ScrollTrigger);
+
+  /* 페이지 안 이미지·웹폰트가 스크립트 실행 이후에 늦게 로드되면(특히 큰 사진들,
+     Trirong/Montserrat 웹폰트 교체), 그 아래 섹션들의 실제 위치가 ScrollTrigger가
+     처음 계산해 둔 값보다 밀려서 pin 시작 지점이 어긋나는 문제가 있었습니다
+     (brand_word_pin이 실제보다 이른 스크롤 위치에서 고정되어 다른 섹션 위에
+     겹쳐 보임). window의 load 이벤트는 웹폰트 교체를 기다려주지 않으므로
+     document.fonts.ready까지 함께 기다렸다가 다시 계산해 이 오차를 없앱니다. */
+  window.addEventListener("load", function () {
+    ScrollTrigger.refresh();
+  });
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(function () {
+      ScrollTrigger.refresh();
+    });
+  }
+
+  /* ---------------------------------------------------------
+     model — 스크롤을 5초 영상의 90% 지점까지 연결합니다.
+     마지막 빈 프레임으로 넘어가지 않고 시안의 정면 자세에서 멈춥니다.
+     --------------------------------------------------------- */
+  (function setupModelScroll() {
+    var section = document.querySelector(".model");
+    var video = section ? section.querySelector(".model_video") : null;
+    var text = section ? section.querySelector(".model_text") : null;
+
+    if (!section || !video || !text) {
+      return;
+    }
+
+    video.pause();
+
+    function seekToRestPose() {
+      video.currentTime = video.duration * 0.9;
+    }
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      if (video.readyState >= 1) {
+        seekToRestPose();
+      } else {
+        video.addEventListener("loadedmetadata", seekToRestPose, { once: true });
+      }
+      return;
+    }
+
+    /* ★ 이 핀은 반드시 "동기적으로" 만들어야 합니다.
+       원래는 video.duration을 알아야 해서 loadedmetadata를 기다린 뒤에
+       만들었는데, 그러면 핀이 늦게 생기면서 pin-spacer(화면 높이 3배)가
+       뒤늦게 문서에 끼어들어 아래 섹션들이 그만큼 밀립니다. 그때는 이미
+       brand_word_pin의 트리거가 계산을 끝낸 뒤라 시작 지점이 화면 높이
+       3배만큼 이르게 굳어버렸고, 그 결과 brand_story(배너) 위에 "TCHAI"가
+       겹쳐 보였습니다. 영상이 캐시된 상태(readyState >= 1)에서는 동기적으로
+       만들어져 버그가 안 보이는 탓에 재현이 들쭉날쭉했습니다.
+       그래서 핀은 처음부터 만들고, duration이 필요한 재생 위치 계산만
+       매 프레임 그때의 값으로 미룹니다. */
+    var modelPlayhead = { progress: 0 };
+
+    var timeline = gsap.timeline({
+      scrollTrigger: {
+        trigger: section,
+        start: "top top",
+        end: function () {
+          return "+=" + window.innerHeight * 3;
+        },
+        pin: true,
+        scrub: 0.2,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        fastScrollEnd: true
+      }
+    });
+
+    timeline
+      .to(text, { autoAlpha: 0, y: -20, duration: 0.15, ease: "none" }, 0)
+      .to(
+        modelPlayhead,
+        {
+          progress: 1,
+          duration: 0.85,
+          ease: "none",
+          onUpdate: function () {
+            /* 메타데이터가 아직 안 왔으면 duration이 NaN이라 건너뜁니다. */
+            if (!video.duration) {
+              return;
+            }
+            video.currentTime = video.duration * 0.9 * modelPlayhead.progress;
+          }
+        },
+        0.15
+      );
+  })();
 
   gsap.matchMedia().add("(min-width: 768px) and (prefers-reduced-motion: no-preference)", function () {
     var triggers = [];
@@ -161,7 +250,8 @@
           end: "+=" + window.innerHeight * scrollLength,
           pin: true,
           scrub: 1,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 
@@ -271,7 +361,8 @@
           end: "+=" + window.innerHeight * 2,
           pin: true,
           scrub: 1,
-          invalidateOnRefresh: true
+          invalidateOnRefresh: true,
+          fastScrollEnd: true
         }
       });
 
@@ -499,4 +590,179 @@
       };
     });
   })();
+})();
+
+/* =========================================================
+   detail — 사진 위 돋보기 + 부위 설명
+
+   이전에는 부위별로 미리 잘라 둔 확대컷 4장을 CSS의 :hover ~ 형제 선택자로
+   각자 자리에 띄웠습니다. 지금은 돋보기 하나가 커서를 따라다니며 원본 사진을
+   실시간으로 확대하고, collar/sleeve/body/skirt 영역을 지날 때 그 부위 설명이
+   함께 나타납니다.
+
+   ★ 배율의 상한은 에셋이 정합니다. img.png는 4380 × 1905인데 화면에는 1460px로
+     그려지므로 원본이 정확히 3배입니다. DETAIL_LENS_ZOOM을 3보다 크게 올리면
+     없는 픽셀을 늘리는 것이라 흐려집니다.
+
+   ★ 이 블록은 GSAP을 쓰지 않으므로 위쪽 IIFE(GSAP이 없으면 통째로 return) 밖에
+     있어야 합니다. 안에 넣으면 CDN이 막힌 환경에서 돋보기까지 같이 죽습니다.
+   ========================================================= */
+(function () {
+  "use strict";
+
+  /* 조절값 — 숫자만 바꾸면 됩니다 */
+  var DETAIL_LENS_ZOOM = 2.5; /* 확대 배율. 3까지가 원본 해상도 안쪽입니다 */
+
+  var stage = document.querySelector(".detail_stage");
+  var lens = stage && stage.querySelector(".detail_lens");
+  var image = stage && stage.querySelector(".detail_img");
+  var texts = stage ? stage.querySelectorAll(".detail_text") : [];
+
+  if (!stage || !lens || !image || !texts.length) {
+    return;
+  }
+
+  /* 손가락으로는 "지나간다"는 동작이 없어 돋보기가 성립하지 않습니다.
+     터치 기기에서는 아무것도 걸지 않고 기존 정적 레이아웃 그대로 둡니다. */
+  var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+
+  var isBound = false;
+  var frameId = 0;
+  var pendingEvent = null;
+  var activePart = "";
+
+  /* 원본 경로는 마크업 한 곳(.detail_img)에만 두고 여기서 읽어옵니다 */
+  function applyLensImage() {
+    lens.style.backgroundImage = 'url("' + image.currentSrc + '")';
+  }
+
+  function clamp(value, min, max) {
+    if (max < min) {
+      return min;
+    }
+    return Math.min(Math.max(value, min), max);
+  }
+
+  /* 커서 밑에 어느 부위가 있는지 — elementFromPoint를 쓰면 겹친 영역의 우선순위가
+     이전 :hover 방식과 정확히 같아집니다(위에 쌓인 것이 이깁니다).
+     .detail_lens와 .detail_text는 pointer-events: none이라 잡히지 않습니다. */
+  function findPart(clientX, clientY) {
+    var target = document.elementFromPoint(clientX, clientY);
+    var hotspot = target && target.closest ? target.closest(".detail_hotspot") : null;
+    return hotspot ? hotspot.getAttribute("data-part") : "";
+  }
+
+  function setActivePart(part) {
+    if (part === activePart) {
+      return;
+    }
+    activePart = part;
+
+    Array.prototype.forEach.call(texts, function (text) {
+      text.classList.toggle("is_active", text.getAttribute("data-part") === part);
+    });
+  }
+
+  function render() {
+    frameId = 0;
+
+    var event = pendingEvent;
+    if (!event) {
+      return;
+    }
+
+    var stageRect = stage.getBoundingClientRect();
+    var lensRect = lens.getBoundingClientRect();
+
+    var pointerX = event.clientX - stageRect.left;
+    var pointerY = event.clientY - stageRect.top;
+
+    /* 돋보기 중심을 커서에 맞춥니다. translate(-50%, -50%)는 CSS가 갖고 있습니다 */
+    lens.style.left = pointerX + "px";
+    lens.style.top = pointerY + "px";
+
+    var zoomedWidth = stageRect.width * DETAIL_LENS_ZOOM;
+    var zoomedHeight = stageRect.height * DETAIL_LENS_ZOOM;
+
+    /* 확대된 사진에서 잘라 보여줄 위치. 가장자리에서 배경이 비지 않도록 가둡니다 —
+       가두지 않으면 사진 밖 빈 영역이 돋보기 안에 초승달 모양으로 남습니다. */
+    var backgroundX = clamp(
+      pointerX * DETAIL_LENS_ZOOM - lensRect.width / 2,
+      0,
+      Math.max(0, zoomedWidth - lensRect.width)
+    );
+    var backgroundY = clamp(
+      pointerY * DETAIL_LENS_ZOOM - lensRect.height / 2,
+      0,
+      Math.max(0, zoomedHeight - lensRect.height)
+    );
+
+    lens.style.backgroundSize = zoomedWidth + "px " + zoomedHeight + "px";
+    lens.style.backgroundPosition = -backgroundX + "px " + -backgroundY + "px";
+
+    setActivePart(findPart(event.clientX, event.clientY));
+  }
+
+  function handlePointerMove(event) {
+    pendingEvent = event;
+    if (!frameId) {
+      frameId = window.requestAnimationFrame(render);
+    }
+  }
+
+  function handlePointerEnter(event) {
+    applyLensImage();
+    stage.classList.add("is_lens_active");
+    lens.classList.add("is_active");
+    handlePointerMove(event);
+  }
+
+  function handlePointerLeave() {
+    if (frameId) {
+      window.cancelAnimationFrame(frameId);
+      frameId = 0;
+    }
+    pendingEvent = null;
+    stage.classList.remove("is_lens_active");
+    lens.classList.remove("is_active");
+    setActivePart("");
+  }
+
+  function bind() {
+    if (isBound) {
+      return;
+    }
+    isBound = true;
+    stage.addEventListener("pointerenter", handlePointerEnter);
+    stage.addEventListener("pointermove", handlePointerMove);
+    stage.addEventListener("pointerleave", handlePointerLeave);
+  }
+
+  function unbind() {
+    if (!isBound) {
+      return;
+    }
+    isBound = false;
+    stage.removeEventListener("pointerenter", handlePointerEnter);
+    stage.removeEventListener("pointermove", handlePointerMove);
+    stage.removeEventListener("pointerleave", handlePointerLeave);
+    handlePointerLeave();
+  }
+
+  function syncPointerMode() {
+    if (finePointer.matches) {
+      bind();
+    } else {
+      unbind();
+    }
+  }
+
+  syncPointerMode();
+
+  /* 마우스를 꽂거나 뽑았을 때, 태블릿에서 키보드를 붙였을 때 다시 판정합니다 */
+  if (typeof finePointer.addEventListener === "function") {
+    finePointer.addEventListener("change", syncPointerMode);
+  } else if (typeof finePointer.addListener === "function") {
+    finePointer.addListener(syncPointerMode);
+  }
 })();

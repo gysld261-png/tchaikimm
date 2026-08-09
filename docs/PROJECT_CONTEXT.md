@@ -1,6 +1,57 @@
 # Tchai Kim 현재 상태
 
 
+## 메인 페이지 폴더 이동 — `pages/yultest_move/` → `pages/main/` (2026-08-09)
+
+작업하던 메인 페이지를 배포 경로인 `pages/main/`으로 옮겼습니다. **옛 `pages/main/`
+내용은 버렸습니다**(git 이력에는 남아 있습니다).
+
+### 왜 안전했나 — 옮기기 전 확인한 것
+
+| 확인 | 결과 |
+|---|---|
+| `pages/main`에만 있던 파일 | **0개** — yultest_move가 완전한 상위집합이었습니다 |
+| yultest_move에만 있던 파일 | 5개 (`arrow_right_white.svg`, `hero/bespoke.mp4`, `hero/shop.mp4`, `vid/all.png`, `vid/model.mp4`) |
+| 섹션 차이 | 옛 main의 `intro`·`banner`가 `brand_story`로 **이미 통합돼 있었습니다**(커밋 `f52780a`) — 글·사진 동일, Brand 링크만 추가 |
+| `yultest_move`를 가리키는 링크 | **0건** — 지우면서 깨질 참조가 없었습니다 |
+| 폴더 깊이 | 둘 다 `pages/<이름>/` 한 단계 → `../../common/` 경로 그대로 유효 |
+| `<body data-page>` | 둘 다 이미 `main` |
+
+### ★ 이동 전에는 도달할 수 없는 페이지였습니다
+
+`common/components/header.html`(로고)과 `footer.html`(Home)이 **`../main/index.html`을
+가리킵니다.** 이동 전 yultest_move는 저장소 어디에서도 링크가 없는 고아 폴더였고,
+이동으로 그 두 링크가 자동으로 연결됐습니다.
+
+### ★ 영상 5개는 `git add -f`가 필요했습니다
+
+`.gitignore`에 `*.mp4`가 있어 **그냥 `git mv`만 하면 영상이 조용히 빠집니다.**
+`hero/bespoke.mp4`, `hero/shop.mp4`, `bespoke/bespokevod.mp4`, `shop/shopbanner.mp4`,
+`vid/model.mp4` 다섯 개입니다. 앞으로 이 폴더에 영상을 추가할 때도 같습니다.
+
+### 검증 (Playwright + Chromium, 1920 × 1080, localhost:5631)
+
+| 항목 | 결과 |
+|---|---|
+| 추적 파일 수 | 56개 = 디스크 56개 (누락 0) |
+| 에셋 참조 | 깨진 경로 **0건** |
+| 공통 시스템 경로 7개 | 전부 OK |
+| 헤더·푸터 주입 | 성공, 로고 `header_logo-02.svg` 로드 |
+| 메뉴 | BRAND / SHOP / BESPOKE / COLLECTION |
+| 히어로 영상 | `hero/bespoke.mp4` · `hero/shop.mp4` |
+| 깨진 이미지 | **0장** |
+| 로컬 실패 요청 · JS 오류 | **0건** |
+| 가로 스크롤 | 0px |
+| 돋보기 | 새 위치에서도 정상 동작 |
+| **다른 페이지 → 메인 이동** | shop에서 로고·Home 클릭 시 `/pages/main/index.html` 도달, 돋보기 있는 새 버전 확인 |
+
+### 남은 것
+
+- `docs/pages/main.md`는 **옛 `pages/main/` 시절의 작업 기록**입니다. 경로 표기는
+  그대로 맞지만 내용은 지금 페이지와 다릅니다.
+- `pages/yultest/`는 여전히 빈 껍데기이고 인바운드 링크가 0건입니다.
+
+
 ## yultest_move detail — 부위 호버에서 따라다니는 돋보기로 교체 (2026-08-09)
 
 부위 4곳에 마우스를 올려야만 확대컷이 뜨던 방식을, **사진 위 어디서나 돋보기가
