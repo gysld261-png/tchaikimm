@@ -1907,6 +1907,45 @@
   }
 
   /* =========================================================
+     히어로 상자를 영상 원본 비율에 맞춥니다
+
+     상자 비율과 영상 비율이 어긋나면 `object-fit`이 잘라내거나 띠를 만듭니다.
+     시안의 1920 × 1182 상자가 영상(1920 × 1080)과 달라서 위아래가 잘리고 있었습니다.
+
+     ★ 비율을 CSS에 적어 두지 않고 **실제 파일에서 읽습니다.** 그래서 영상을
+     다른 것으로 바꿔도(세로 영상이라도) 손댈 곳이 없습니다.
+     ========================================================= */
+
+  function initHeroFit() {
+    var hero = document.querySelector(".collection_hero");
+    var video = document.querySelector(".collection_hero_video");
+
+    if (!hero || !video) {
+      return;
+    }
+
+    function applyHeroRatio() {
+      var width = video.videoWidth;
+      var height = video.videoHeight;
+
+      /* 메타데이터가 아직 없으면 두 값이 0입니다. 이때는 손대지 않고
+         css 기본값(16/9)을 그대로 씁니다 — 0으로 나눠 상자를 무너뜨리지 않습니다. */
+      if (!width || !height) {
+        return;
+      }
+
+      hero.style.setProperty("--collection_hero_ratio", (width / height).toFixed(4));
+    }
+
+    applyHeroRatio();
+
+    /* loadedmetadata는 영상 파일이 바뀔 때마다(src 교체 · 다른 페이지) 다시 옵니다.
+       그래서 나중에 영상을 갈아 끼워도 비율이 자동으로 따라갑니다. */
+    video.addEventListener("loadedmetadata", applyHeroRatio);
+    video.addEventListener("loadeddata", applyHeroRatio);
+  }
+
+  /* =========================================================
      히어로 글자 색을 영상 밝기에 맞춥니다
 
      제목과 브랜드 탭이 영상 위에 얹혀 있어서, 그 자리에 밝은 장면이 지나가면
@@ -2002,10 +2041,17 @@
         return null;
       }
 
-      /* ★ object-fit: cover의 매핑을 되짚어야 합니다. 요소의 화면 좌표를 그대로
-         영상 좌표로 쓰면, cover가 잘라낸 몫만큼 어긋난 자리를 읽습니다
-         (세로로 긴 화면에서는 좌우가 크게 잘려 아예 다른 장면이 읽힙니다). */
-      var scale = Math.max(videoRect.width / sourceWidth, videoRect.height / sourceHeight);
+      /* ★ object-fit의 매핑을 되짚어야 합니다. 요소의 화면 좌표를 그대로 영상
+         좌표로 쓰면 잘리거나 남는 몫만큼 어긋난 자리를 읽습니다
+         (예전 cover 시절, 세로로 긴 화면에서 좌우가 크게 잘려 아예 다른 장면이 읽혔습니다).
+
+         ★ 배율 방향이 반대입니다 — cover는 max, contain은 min입니다.
+         css를 바꿨을 때 여기만 그대로 남아 조용히 틀리는 일이 없도록
+         숫자를 박지 않고 실제 적용된 object-fit을 읽습니다. */
+      var objectFit = window.getComputedStyle(video).objectFit;
+      var scale = objectFit === "cover"
+        ? Math.max(videoRect.width / sourceWidth, videoRect.height / sourceHeight)
+        : Math.min(videoRect.width / sourceWidth, videoRect.height / sourceHeight);
       var offsetX = (videoRect.width - sourceWidth * scale) / 2;
       var offsetY = (videoRect.height - sourceHeight * scale) / 2;
 
@@ -2097,5 +2143,8 @@
   initAsworn();
   initMobileReveal();
   initBrandTabs();
+  /* ★ 밝기 판정보다 먼저 불러야 합니다. 상자 비율이 정해진 뒤라야
+     initHeroContrast()가 영상의 올바른 자리를 읽습니다. */
+  initHeroFit();
   initHeroContrast();
 })();
