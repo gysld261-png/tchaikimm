@@ -1267,6 +1267,16 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     transform: none;
   }
 }
+
+/* 1920px 발표 화면에서는 공통 html zoom(0.75)이 Brand의 1920px 무대를
+   다시 1440px로 축소합니다. Brand 콘텐츠 영역에서만 역줌해 원래 설계 폭과
+   전체 화면 높이를 복원합니다. 헤더·푸터와 다른 페이지에는 적용되지 않습니다. */
+@media (min-width: 1850px) and (max-width: 1990px) {
+  body[data-page="brand"] .main {
+    zoom: calc(1 / var(--site_view_scale));
+  }
+}
+
 /* =========================================================
    MOOD RESPONSIVE
    Breakpoint — 1919.98px 하나뿐입니다
