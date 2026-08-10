@@ -413,6 +413,40 @@
   height: 468px;
 }
 
+
+/* 갤러리 사진 아래 짧은 설명.
+
+   ★ 사진 상자 `밖`(top: 100%)에 절대배치입니다. figure는 시안 좌표로 크기가
+   못박혀 있어서, 흐름 안에 넣으면 사진 높이를 밀어 구도가 어긋납니다.
+   .showcase_photo가 position: absolute라 여기의 기준 상자가 됩니다. */
+.showcase_caption {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 100%;
+  margin-top: 14px;
+  /* 사용자 결정: 두 페이지 다섯 장 모두 흰 글씨입니다.
+
+     ★ 아래쪽 두 장은 그라디언트가 크림에 가까워져 대비가 낮습니다(실측).
+
+     | 사진 | 그 자리 배경 | 흰 글씨 대비 |
+     |---|---|---|
+     | c | rgb(135,134,132) | 2.73 |
+     | d | rgb(102,102,101) | **5.64** |
+     | e | rgb(134,133,132) | 2.76 |
+     | f | rgb(177,175,173) | 1.64 |
+     | g | rgb(212,210,207) | 1.13 |
+
+     읽기 어려우면 색을 바꾸는 대신 **사진 위치(top)를 그라디언트 어두운 쪽으로
+     올리거나**, 이 값을 --color_text로 되돌리면 됩니다. */
+  color: var(--color_bg);
+  font-family: var(--font_body);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
 /* 세 줄이 계단처럼 어긋나 있어 시안 좌표대로 각각 배치합니다.
 
    세로 위치만 시안 값을 그대로 쓰지 않습니다. 시안의 712px는 화면 높이 1080을 전제한
@@ -1086,6 +1120,14 @@
     width: 100%;
     height: auto;
     object-fit: cover;
+  }
+
+  /* ★ 이 폭에서는 .showcase_photo가 position: static이라 절대배치 캡션이
+     기준 상자를 잃고 섹션 밖으로 튑니다. 흐름 배치로 되돌립니다. */
+  .showcase_caption {
+    position: static;
+    margin-top: 10px;
+    font-size: 12px;
   }
 
   .showcase_photo_tilt img {

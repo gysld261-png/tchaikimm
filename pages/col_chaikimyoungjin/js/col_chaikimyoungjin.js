@@ -708,10 +708,14 @@
         return;
       }
 
+      /* ★ 캡션도 함께 띄웁니다. img만 트윈하면 사진이 오기 전에 설명 글씨만
+         허공에 떠 있습니다(아치브 그림자와 같은 종류의 실수입니다). */
+      var parts = [image, card.querySelector(".showcase_caption")].filter(Boolean);
+
       var restAt = travelStart + rests[index] / GALLERY_TRAVEL_SPEED;
 
       timeline.fromTo(
-        image,
+        parts,
         { y: RISE_BASE + index * RISE_STEP, opacity: 0 },
         { y: 0, opacity: 1, ease: "power3.out", duration: GALLERY_REVEAL },
         Math.max(restAt - GALLERY_REVEAL, 0)
