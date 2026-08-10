@@ -246,11 +246,20 @@ kimyoungjin
   position: relative;
   width: 100%;
 
-  /*
-   * 개별 gradient 제거.
-   * .main의 전체 배경이 이어집니다.
-   */
-  background: transparent;
+  /* .main의 배경(전체 페이지 높이에 걸친 하나의 그라데이션, 0~100%)에
+     기대지 않고 이 섹션 자체의 색을 직접 지정합니다. mood·tchaikim·
+     heritage가 각자 다른 길이로 화면을 붙잡아 두는(pin) 스크롤
+     인터랙션이 있어서, 문서 전체 높이가 화면 폭마다(그리고 같은 폭
+     에서도 pin이 켜지는 1920px 경계를 넘나들 때마다) 크게 달라집니다
+     — .main의 그라데이션은 그 전체 높이에 대한 %이므로, kimyoungjin이
+     실제 화면 몇 %쯤에서 시작하는지가 흔들리고 그만큼 이 섹션 배경색도
+     따라 흔들렸습니다("반응형에서도 1920px 기준과 같은 배경 유지"
+     요청). 1920px·pin이 켜진 상태에서 이 섹션이 시작·끝나는 지점의
+     .main 그라데이션 색을 그대로 옮겨(시작 약 25.06% → #f1ece3,
+     끝 약 42.33% → #f7f7f7) 이 섹션 자신의 높이 기준 그라데이션으로
+     고정했습니다 — 문서 전체 높이가 어떻게 바뀌든 이 두 색과 섹션
+     내부에서의 위치 관계는 항상 그대로입니다. */
+  background: linear-gradient(to bottom, #f1ece3 0%, #f7f7f7 100%);
 
   overflow-x: clip;
 }
@@ -650,6 +659,15 @@ heritage
   gap: 60px;
 }
 
+/* 1280px 미만에서 사진 세 장이 겹쳐 크로스페이드되는 인터랙션의 래퍼입니다
+   (js/brand.js initHeritageResponsiveReveal 참고). 기본값은 display:contents라
+   레이아웃에 아무 영향이 없습니다 — 데스크톱(.is_pinned)과 JS가 없을 때의
+   정적 스택 레이아웃 둘 다 이 래퍼가 없는 것처럼 동작합니다. 아래
+   ".heritage.is_photo_swap_ready" 규칙에서만 실제 박스로 켜집니다. */
+.heritage_photos_frame {
+  display: contents;
+}
+
 .heritage_info {
   display: flex;
   flex-direction: column;
@@ -1005,6 +1023,44 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     margin-inline: auto;
   }
 
+  /* ★ "세 장이 나란히 하나씩 나타나는 게 아니라 한 자리에서 사진만
+     바뀌어야 한다"는 요청 — js/brand.js가 이 폭에서 인터랙션을 켤 때만
+     .heritage에 붙이는 class입니다. 위 기본 반응형 규칙(사진 세 장을
+     위아래로 쌓기)을 이 class로 덮어써, 사진 한 장 자리만 화면에
+     붙잡아 두고(position: sticky) 그 안에서 스크롤에 따라 사진이
+     겹쳐 바뀌는 레이아웃으로 바꿉니다. */
+  .heritage.is_photo_swap_ready .heritage_photos {
+    position: relative;
+    display: block;
+    width: 100%;
+    /* js/brand.js의 HERITAGE_SWAP_TRACK_VH와 같은 값이어야 합니다 —
+       사진을 넘기는 스크롤 구간의 실제 길이입니다. */
+    height: 250vh;
+  }
+
+  /* sticky는 뷰포트 기준 위치라, 공통 헤더(66px) 밑에 여백을 조금 더
+     둡니다. */
+  .heritage.is_photo_swap_ready .heritage_photos_frame {
+    display: block;
+    position: sticky;
+    top: 96px;
+    width: 320px;
+    aspect-ratio: 400 / 714;
+    margin-inline: auto;
+  }
+
+  .heritage.is_photo_swap_ready .heritage_photos_frame .heritage_stage {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+  }
+
+  .heritage.is_photo_swap_ready .heritage_figure {
+    width: 100%;
+    height: 100%;
+  }
 
 }
 
@@ -1211,53 +1267,46 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     transform: none;
   }
 }
-
-/* 공통 1920px zoom은 common/css/common.css에서 관리합니다.
-   Brand의 pin 섹션은 ScrollTrigger 계산에 공통 zoom이 한 번 더 반영되어
-   높이가 잘리거나 고정 순간 왼쪽으로 이동합니다. 섹션만 키우면 pin 여유 공간과
-   크기가 달라져 다음 섹션이 겹치므로, ScrollTrigger 바깥 공간까지 함께 복원합니다. */
-@media (min-width: 1850px) and (max-width: 1990px) {
-  .pin-spacer:has(> .mood),
-  .pin-spacer:has(> .tchaikim),
-  .pin-spacer:has(> .heritage) {
-    max-width: 100%;
-    zoom: calc(1 / var(--site_view_scale));
-  }
-
-  .pin-spacer > .mood,
-  .pin-spacer > .tchaikim,
-  .pin-spacer > .heritage {
-    /* ScrollTrigger가 pin 순간 2540px 인라인 폭을 넣으므로 이 두 속성만
-       1920px 화면 폭으로 덮어씁니다. 인라인 스타일보다 우선해야 해 !important가 필요합니다. */
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-}
-
 /* =========================================================
    MOOD RESPONSIVE
-   Breakpoints — 1919.98px / 767px / 390px
+   Breakpoint — 1919.98px 하나뿐입니다
 
    JS 인터랙션(문 열림 scrub)은 js/brand.js의 MOOD_MIN_WIDTH(1920)로
    "min-width: 1920px"일 때만 켜집니다. 이 블록은 정수 1919px이 아니라
    1919.98px을 상한으로 씁니다 — 화면 배율이 정수 배(100%/150%/200%)가
    아니면(예: Windows 175%) 실제 뷰포트 CSS px 폭이 소수로 떨어져,
    정수 innerWidth가 1919로 읽혀도 실제 media query 판정 폭은 1920에
-   더 가까운 값(예: 1919.4~1919.9px)일 수 있습니다. 상한을 정수 1919px로
-   두면 그 폭에서 max-width: 1919px에도 걸리지 않고 JS의
-   min-width: 1920px에도 걸리지 않는 좁은 틈이 생겨 mood가 정리되지
-   않습니다(위쪽 다른 섹션들이 JS 게이트 1280보다 1px 낮은 1279px을
-   상한으로 쓰는 것과 정반대 방향의 같은 문제). 반대로 정수 1920px로
-   두면 이번엔 실제 폭이 정확히 1920.0px일 때 이 블록과 JS가 동시에
-   켜져 서로 다른 레이아웃을 같은 요소에 강제해 뒤섞입니다(실측:
-   1920×1080에서 mood_word 등 14개 요소가 화면 밖으로 넘침). 1919.98px은
-   그 사이 좁은 안전지대입니다.
-   ========================================================= */
+   더 가까운 값(예: 1919.4~1919.9px)일 수 있습니다.
 
+   ★ 예전에는 이 아래로 767.98px/390.98px 두 단계를 더 두고 각 단계마다
+   padding·gap·font-size를 다른 고정 px로 다시 썼습니다. 창 폭을
+   천천히 줄이면 그 경계(767.98↔768, 390.98↔391)에서 값이 툭 튀어
+   "뚝뚝 끊기며 전환된다"는 지적을 받았습니다. 지금은 그 두 단계를
+   없애고 이 블록 하나만 남겨, 모든 값을 vw/clamp로 이어지게 했습니다
+   — 1920px에서 390px까지 창을 천천히 줄이면 글자 크기·좌표·카드
+   폭·여백이 전부 같은 속도로 매끄럽게 줄어들고, 어디에도 값이
+   튀는 경계가 없습니다.
 
-/* =========================================================
-   1919.98px 이하
-   TABLET
+   ★ 텍스트(mood_left)는 1920px 좌표를 px 그대로 축소하지 않고 vw로
+   옮겨 씁니다 — "1920px에서 본 위치와 같은 비율로 줄어들어야 한다"는
+   요청입니다. 1920px 캔버스 기준 값 ÷ 1920 × 100을 vw로 쓰면 화면
+   폭이 얼마든 1920px에서 본 것과 정확히 같은 비율(글자 크기·좌표·
+   사진 높이까지)로 줄어듭니다(계산은 각 규칙 옆 주석). 다만 순수
+   vw만 쓰면 390px에서 본문이 5px대까지 줄어들어 읽을 수 없어서,
+   최소 크기만 clamp()로 막아 두었습니다(제목 18px / 본문 11px) —
+   1920 비율은 화면이 그 아래로 좁아지기 전까지는 그대로 유지되고,
+   그 아래에서도 vw → 고정 최소값으로 값 자체는 clamp()가 연속적으로
+   이어줍니다(끊기지 않습니다).
+
+   ★ 무드 단어(mood_right)는 더 이상 사진 위에 겹치는 코너 카드가
+   아니라 사진·텍스트 아래로 내려간 별도 블록입니다("아래로 내려가게
+   해달라"는 요청). .mood_reveal을 세로 flex로 바꿔 mood_left(사진 위
+   텍스트) → mood_right(카드, 자기 배경 #3b3c32) 순서로 쌓습니다.
+   사진(.mood_room)은 이 세로 배치와 별개로 위쪽 자리에만 높이가
+   고정돼(아래 56.25vw 참고) mood_right 밑까지 늘어나지 않습니다.
+   mood_right는 더 이상 폭에 상한(max-width)을 두지 않습니다 — "화면이
+   좁아질수록 mood_right도 너비를 채워서 보여야 한다"는 요청으로,
+   화면 폭 그대로(100%) 채웁니다.
    ========================================================= */
 
 @media (max-width: 1919.98px) {
@@ -1274,30 +1323,28 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     margin-left: 0;
   }
 
-  /* min-height 650px는 문구 길이를 고려하지 않은 값이었습니다 — mood_copy
-     (제목 3줄 + 본문 8줄, max-width 380px 안에서 줄바꿈)가 1024px에서
-     실측 644px이라, 650px 무대에 세로 중앙정렬하면 카드 3장(오른쪽 아래
-     구석)과 그대로 겹칩니다. 텍스트 높이(패딩 포함 약 780px, 폰트마다
-     달라질 수 있어 여유를 둠) + 카드 높이(최대 240px) + 여백을 더해
-     1220px로 올렸습니다. */
   .mood_reveal {
     position: relative;
     top: auto;
     left: auto;
+    display: flex;
+    flex-direction: column;
     width: 100%;
     height: auto;
-    min-height: 1220px;
     transform: none;
     overflow: hidden;
   }
 
-  /* 배경 이미지 */
+  /* 사진 — 1080 ÷ 1920 × 100 = 56.25vw(= 1920:1080과 같은 16:9 비율).
+     세로 flex의 첫 자리(mood_left)와 같은 높이만큼만 차지하고 그 아래
+     mood_right로 이어집니다. */
   .mood_reveal .mood_room {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
 
     width: 100%;
-    height: 100%;
+    height: 56.25vw;
 
     max-width: none;
 
@@ -1307,114 +1354,95 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     z-index: 0;
   }
 
-  /* mood_left/mood_right가 이 안에서 position:absolute로 배치됩니다(아래
-     참고). mood_inner를 display:contents로 없애 두 자식이 mood_left/
-     mood_right의 기준(containing block)을 이 빈 래퍼가 아니라 실제 높이
-     (650px 이상)를 가진 mood_reveal로 삼도록 합니다 — 그대로 두면
-     mood_inner의 height:auto가 0으로 계산되어(자식이 전부 absolute라
-     안쪽 흐름 내용이 없음) mood_left의 height:100%가 엉뚱한 값으로
-     계산됩니다. */
   .mood_reveal .mood_inner {
     display: contents;
   }
 
-  /* 오른쪽 텍스트. align-items를 center가 아니라 flex-start로 둡니다 —
-     center로 두면 무대를 아무리 키워도 글이 항상 세로 한가운데로 쏠려
-     오른쪽 아래 구석의 카드 3장과 겹칠 여지가 남습니다. 위에서부터
-     쌓아야 카드 자리(하단 30px)와 확실히 떨어집니다. */
+  /* 사진 위 텍스트. flex-column의 첫 항목이라 자연히 맨 위(사진과 같은
+     자리)에서 시작합니다. min-height를 사진과 같은 56.25vw로 둬 글이
+     짧아도 mood_right가 사진 영역을 침범하지 않고 그 아래에서
+     시작합니다. */
   .mood_reveal .mood_left {
-    position: absolute;
-
-    top: 0;
-    right: 0;
-
-    width: 50%;
-    height: 100%;
-
-    display: flex;
-    align-items: flex-start;
-
-    padding: 50px;
-
-    box-sizing: border-box;
-
+    position: relative;
     z-index: 2;
+
+    width: 100%;
+    /* base(desktop) 규칙의 height: 1080px을 풀지 않으면 mood_right가
+       사진 바로 아래가 아니라 1080px 아래로 밀려납니다. */
+    height: auto;
+    min-height: 56.25vw;
   }
 
-  /* mood_copy/mood_copy_title/mood_copy_body는 base(desktop) 규칙에서
-     전부 position: absolute + top/left 고정값입니다(예: mood_copy_body는
-     mood_copy 기준 top:145px/left:372px). position을 풀지 않으면 이
-     absolute 좌표가 그대로 남아 글이 mood_left 상자 오른쪽 끝 구석으로
-     몰리고 폭도 그 좌표 때문에 찌그러집니다. */
+  /* mood_copy/mood_copy_title/mood_copy_body — 1920px 좌표를 그대로
+     ÷ 1920 × 100 = vw로 옮깁니다. mood_left(사진과 같은 폭) 기준
+     absolute라 desktop과 같은 자리(왼쪽 위)에 비율 그대로 놓입니다.
+     white-space는 처음부터 normal입니다 — 비율이 유지되는 동안은
+     줄바꿈이 필요 없고(1920에서 이미 <br>로 줄이 나뉘어 있음), 아래쪽
+     clamp() 최소값 구간에서만 필요할 때 자연스럽게 줄바꿈됩니다 —
+     별도 breakpoint 없이 이어집니다. */
   .mood_reveal .mood_copy {
-    position: relative;
-    top: auto;
+    position: absolute;
+    top: 11.3542vw;    /* 218px */
+    /* base(desktop) 규칙의 left: 0을 풀지 않으면 left/width/right가
+       모두 지정된 상태(over-constrained)가 되어 CSS 규칙상 right가
+       무시되고 계속 왼쪽에 붙습니다. */
     left: auto;
-    width: 100%;
+    right: 0;
+    width: 40vw;       /* 768px */
     height: auto;
-    max-width: 380px;
-    margin: 0;
   }
 
   .mood_reveal .mood_copy_title {
-    position: relative;
-    top: auto;
-    left: auto;
+    position: absolute;
+    top: 0;
+    left: 3.75vw;      /* 72px */
     margin: 0;
 
-    font-size: clamp(36px, 5vw, 52px);
-    line-height: 1.08;
-    /* base 규칙(desktop 전용 한 줄 레이아웃)의 white-space: nowrap을 풀지
-       않으면 좁은 mood_left 폭(50%)에서 글이 줄바꿈 없이 오른쪽으로
-       넘칩니다. */
+    font-size: clamp(18px, 3.3333vw, 64px);   /* 64px */
+    line-height: 1.13;
+    letter-spacing: -0.0667vw;                /* -1.28px */
     white-space: normal;
   }
 
   .mood_reveal .mood_copy_body {
-    position: relative;
-    top: auto;
-    left: auto;
-    margin-top: 30px;
-    white-space: normal;
+    position: absolute;
+    top: 7.5521vw;     /* 145px */
+    left: 19.375vw;    /* 372px */
+    margin-top: 0;
 
-    font-size: 14px;
-    line-height: 1.65;
+    font-size: clamp(11px, 1.25vw, 24px);     /* 24px */
+    line-height: 1.58;
+    white-space: normal;
   }
 
-  /* Unique / Modern / Elegant */
+  /* Unique / Modern / Elegant — flex-column의 두 번째 항목으로 사진·
+     텍스트 아래에 내려옵니다. 상한(max-width) 없이 화면 폭 그대로
+     채웁니다. padding·gap도 vw/clamp라 창 폭에 맞춰 매끄럽게 줄어들고,
+     767px·390px 같은 별도 경계에서 값이 튀지 않습니다. */
   .mood_reveal .mood_right {
-    position: absolute;
+    position: relative;
+    z-index: 1;
 
-    right: 30px;
-    bottom: 30px;
+    width: 100%;
+    height: auto;
 
     display: flex;
     flex-wrap: nowrap;
-    align-items: flex-start;
-    gap: 16px;
+    gap: clamp(8px, 1.5vw, 16px);
 
-    width: auto;
-    /* base 규칙(desktop)의 height: 1080px을 reset하지 않으면 이 flex 행의
-       기본 align-items: stretch가 카드 3장을 1080px까지 늘립니다. */
-    height: auto;
-    padding: 0;
-    justify-content: flex-start;
-
-    z-index: 3;
+    padding: clamp(20px, 4vw, 40px) clamp(16px, 5vw, 64px);
+    box-sizing: border-box;
   }
 
   /* 카드 3장(.mood_word_unique/modern/elegant)의 desktop 좌표(top:263px/
      639px/390px, left:130px/458px/748px)는 base 규칙(.mood_word)의
      position: absolute를 그대로 물려받습니다. 여기서 static으로 풀어야
-     .mood_right의 flex 행 위에 순서대로 놓입니다 — 안 풀면 카드가
-     desktop 좌표 그대로 mood_right 밖 far right로 흩어집니다. */
+     .mood_right의 flex 행 위에 순서대로 놓입니다. */
   .mood_reveal .mood_word {
     position: static;
-    /* 1024px에서 110px(9vw ≈ 92px < 최솟값이라 110 유지) — 넓어질수록 9vw로
-       커지다 1956px 이상에서 최댓값 176px에 닿습니다(이 블록 상한
-       1920px에서는 9vw ≈ 173px). 고정 110px로 두면 1920px 같은 넓은
-       태블릿 화면에서 카드가 사진 구석에 작게 몰려 보였습니다. */
-    width: clamp(110px, 9vw, 176px);
+    flex: 1;
+    width: auto;
+    min-width: 0;
   }
 
   .mood_reveal .mood_word_unique,
@@ -1422,11 +1450,12 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
   .mood_reveal .mood_word_elegant {
     top: auto;
     left: auto;
+    width: auto;
   }
 
   /* mood_word_media도 base 규칙에서 고정 px 크기(298×189 등)를 물려받아
-     카드 폭(110~176px)보다 넓어져 옆 카드와 겹쳤습니다. 카드 폭을 그대로
-     채우도록 비율만 유지합니다. */
+     카드 폭보다 넓어져 옆 카드와 겹쳤습니다. 카드 폭을 그대로 채우도록
+     비율만 유지합니다. */
   .mood_reveal .mood_word_media {
     width: 100%;
     height: auto;
@@ -1443,168 +1472,18 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
   .mood_reveal .mood_word_elegant .mood_word_media {
     aspect-ratio: 306 / 180;
   }
-}
 
-
-/* =========================================================
-   767px 이하
-   MOBILE
-
-   767px이 아니라 767.98px입니다 — 화면 배율이 정수 배가 아니면(예:
-   Windows 175%) 정수 innerWidth가 767로 읽혀도 실제 media query 판정
-   폭은 767보다 큰 소수(예: 767.4px)일 수 있어, 정수 767px로는 이
-   블록이 걸리지 않고 위 TABLET 블록만 적용된 채로 남습니다(실측:
-   767×1000에서 min-height가 TABLET 값 1220px 그대로, MOBILE 값 700px
-   미적용). 아래 390px도 같은 이유로 390.98px입니다.
-   ========================================================= */
-
-@media (max-width: 767.98px) {
-
-  /* 700px도 문구 길이를 확인하지 않은 값이었습니다 — 텍스트가 이 폭에서
-     전체 너비 상단에 오면서(글 상자 실측 약 471px = 패딩 55+30 + 본문
-     386px) 하단의 카드 3장(실측 약 299px)과 겹쳤습니다. 900px로 올려
-     간격을 확보합니다. */
-  .mood_reveal {
-    min-height: 900px;
-  }
-
-  .mood_reveal .mood_inner {
-    min-height: 700px;
-  }
-
-  /*
-   * 텍스트를 오른쪽 50%에서
-   * 이미지 전체 위쪽으로 전환
-   */
-  .mood_reveal .mood_left {
-    width: 100%;
-    height: auto;
-
-    top: 0;
-    right: 0;
-
-    display: block;
-
-    padding: 55px 24px 30px;
-
-    box-sizing: border-box;
-  }
-
-  .mood_reveal .mood_copy {
-    width: 100%;
-    max-width: 340px;
-
-    margin-left: auto;
-    margin-right: 0;
-  }
-
-  .mood_reveal .mood_copy_title {
-    font-size: clamp(34px, 9vw, 46px);
-    line-height: 1.08;
-  }
-
-  .mood_reveal .mood_copy_body {
-    margin-top: 24px;
-
-    font-size: 13px;
-    line-height: 1.65;
-  }
-
-  /*
-   * Mood Words
-   * 하단 가로 배치
-   */
-  .mood_reveal .mood_right {
-    left: 24px;
-    right: 24px;
-    bottom: 24px;
-
-    display: flex;
-    gap: 10px;
-  }
-
-  .mood_reveal .mood_word {
-    flex: 1;
-
-    width: auto;
-    min-width: 0;
-  }
-
-  .mood_reveal .mood_word_media {
-    width: 100%;
-    aspect-ratio: 1 / 1;
-
-    overflow: hidden;
-  }
-
-  .mood_reveal .mood_word_media img {
-    width: 100%;
-    height: 100%;
-
-    object-fit: cover;
-  }
-
+  /* 카드 제목·설명 — 예전에는 767.98px에서 고정 11px로 튀고, 설명은
+     아예 display:none으로 사라졌습니다(가장 눈에 띄는 "뚝뚝 끊김").
+     지금은 clamp()로 계속 줄어들기만 하고 사라지지 않습니다. */
   .mood_reveal .mood_word_title {
-    margin-top: 6px;
-
-    font-size: 11px;
-    line-height: 1.2;
+    margin-top: clamp(4px, 1vw, 12px);
+    font-size: clamp(10px, 1.25vw, 24px);
+    line-height: 1.25;
   }
 
   .mood_reveal .mood_word_desc {
-    display: none;
-  }
-}
-
-
-/* =========================================================
-   390px 이하
-   SMALL MOBILE
-   ========================================================= */
-
-@media (max-width: 390.98px) {
-
-  .mood_reveal {
-    min-height: 660px;
-  }
-
-  .mood_reveal .mood_inner {
-    min-height: 660px;
-  }
-
-  .mood_reveal .mood_left {
-    padding: 45px 20px 25px;
-  }
-
-  .mood_reveal .mood_copy {
-    max-width: 300px;
-  }
-
-  .mood_reveal .mood_copy_title {
-    font-size: 32px;
-    line-height: 1.08;
-  }
-
-  .mood_reveal .mood_copy_body {
-    margin-top: 20px;
-
-    font-size: 12px;
-    line-height: 1.6;
-  }
-
-  .mood_reveal .mood_right {
-    left: 20px;
-    right: 20px;
-    bottom: 20px;
-
-    gap: 8px;
-  }
-
-  .mood_reveal .mood_word_title {
-    font-size: 10px;
-  }
-
-  .mood_reveal .mood_word_desc {
-    display: none;
+    font-size: clamp(9px, 0.85vw, 16px);
+    line-height: 1.4;
   }
 }
