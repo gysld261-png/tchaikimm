@@ -33,11 +33,30 @@
         </div>
       </div>
 
-      <a class="header_cart" href="#">
+      <button class="header_cart" type="button" aria-haspopup="dialog" aria-controls="cart_drawer" aria-expanded="false">
         <img class="header_cart_icon" src="../../common/assets/icons/shopping_bag_white.svg" alt="" aria-hidden="true" width="21" height="18">
         <span class="header_cart_count" data-cart-count hidden aria-hidden="true">0</span>
         <span class="a11y_hidden">Shopping bag</span>
-      </a>
+      </button>
     </div>
   </div>
 </header>
+
+<dialog class="cart_drawer" id="cart_drawer" aria-labelledby="cart_drawer_title" aria-describedby="cart_drawer_description">
+  <div class="cart_drawer_panel">
+    <div class="cart_drawer_header">
+      <h2 class="cart_drawer_title" id="cart_drawer_title">Shopping Bag</h2>
+      <button class="cart_drawer_close" type="button" data-cart-drawer-close aria-label="Close shopping bag">
+        <span aria-hidden="true"></span>
+      </button>
+    </div>
+
+    <div class="cart_drawer_body">
+      <p class="cart_drawer_status" data-cart-drawer-status aria-live="polite">0 ITEMS</p>
+      <p class="cart_drawer_heading" data-cart-drawer-heading>Your bag is empty.</p>
+      <p class="cart_drawer_description" id="cart_drawer_description" data-cart-drawer-description>Discover pieces from the latest collection.</p>
+    </div>
+
+    <a class="cart_drawer_action" href="../shop/index.html" data-shop-transition>CONTINUE SHOPPING</a>
+  </div>
+</dialog>

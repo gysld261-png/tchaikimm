@@ -374,6 +374,11 @@
   var CART_SESSION_KEY = "tchaikim_cart_count";
   var headerCart = document.querySelector(".header_cart");
   var headerCartCount = document.querySelector("[data-cart-count]");
+  var cartDrawer = document.getElementById("cart_drawer");
+  var cartDrawerClose = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-close]");
+  var cartDrawerStatus = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-status]");
+  var cartDrawerHeading = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-heading]");
+  var cartDrawerDescription = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-description]");
   var cartCount = 0;
   var scrollHintTicking = false;
 
@@ -428,6 +433,66 @@
         "Shopping bag, " + cartCount + (cartCount === 1 ? " item" : " items")
       );
     }
+
+    if (cartDrawerStatus) {
+      cartDrawerStatus.textContent = cartCount + (cartCount === 1 ? " ITEM" : " ITEMS");
+    }
+
+    if (cartDrawerHeading && cartDrawerDescription) {
+      cartDrawerHeading.textContent = cartCount === 0
+        ? "Your bag is empty."
+        : cartCount + (cartCount === 1 ? " item in your bag." : " items in your bag.");
+      cartDrawerDescription.textContent = cartCount === 0
+        ? "Discover pieces from the latest collection."
+        : "Checkout is not available yet. You can continue exploring the collection.";
+    }
+  }
+
+  function setCartDrawerOpen(isOpen) {
+    if (!cartDrawer || !headerCart) {
+      return;
+    }
+
+    if (isOpen) {
+      setCurrencyOpen(false, false);
+      renderCartCount();
+
+      if (!cartDrawer.open) {
+        cartDrawer.showModal();
+      }
+
+      headerCart.setAttribute("aria-expanded", "true");
+      document.documentElement.classList.add("has_cart_drawer");
+
+      if (header) {
+        header.classList.remove("is_hidden");
+      }
+      if (window.tchaikimmLenis) {
+        window.tchaikimmLenis.stop();
+      }
+      return;
+    }
+
+    if (cartDrawer.open) {
+      cartDrawer.close();
+    }
+  }
+
+  function handleCartDrawerClick(event) {
+    if (event.target === cartDrawer) {
+      setCartDrawerOpen(false);
+    }
+  }
+
+  function handleCartDrawerClose() {
+    headerCart.setAttribute("aria-expanded", "false");
+    document.documentElement.classList.remove("has_cart_drawer");
+
+    if (window.tchaikimmLenis) {
+      window.tchaikimmLenis.start();
+    }
+
+    headerCart.focus();
   }
 
   function setCartCount(nextCount) {
@@ -472,6 +537,17 @@
       renderCartCount();
     }
   });
+
+  if (headerCart && cartDrawer && cartDrawerClose) {
+    headerCart.addEventListener("click", function () {
+      setCartDrawerOpen(true);
+    });
+    cartDrawerClose.addEventListener("click", function () {
+      setCartDrawerOpen(false);
+    });
+    cartDrawer.addEventListener("click", handleCartDrawerClick);
+    cartDrawer.addEventListener("close", handleCartDrawerClose);
+  }
 
   // 헤더가 fixed라 아래로 지나가는 배경이 밝은지 어두운지에 따라 글씨가 안 보일 수 있습니다.
   // 헤더가 덮고 있는 지점의 배경색을 읽어 밝기로 흑/백 변형을 고릅니다.
@@ -820,7 +896,10 @@
       return;
     }
 
-    if (currency && currency.classList.contains("is_open")) {
+    if (cartDrawer && cartDrawer.open) {
+      event.preventDefault();
+      setCartDrawerOpen(false);
+    } else if (currency && currency.classList.contains("is_open")) {
       setCurrencyOpen(false, false);
       currencyTrigger.focus();
     } else if (headerInner && headerInner.classList.contains("is_open")) {
@@ -860,7 +939,7 @@
     });
   }
 
-  if ((headerToggle && headerInner) || (currency && currencyTrigger)) {
+  if ((headerToggle && headerInner) || (currency && currencyTrigger) || cartDrawer) {
     document.addEventListener("keydown", handleDocumentKeydown);
     document.addEventListener("click", handleDocumentClick);
   }

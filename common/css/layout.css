@@ -315,6 +315,161 @@
   color: var(--header_text_color);
 }
 
+/* 장바구니 페이지가 없는 현재 단계에서는 클릭을 막아 두지 않고,
+   공통 빈 상태 패널을 열어 다음 행동을 안내합니다. */
+html.has_cart_drawer {
+  overflow: hidden;
+}
+
+.cart_drawer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  width: 100vw;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+  color: var(--color_text);
+}
+
+.cart_drawer[open] {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cart_drawer::backdrop {
+  background-color: rgba(10, 10, 10, 0.42);
+  animation: cart_drawer_backdrop_in var(--duration_base) var(--easing_base) both;
+}
+
+.cart_drawer_panel {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 500px);
+  height: 100%;
+  padding: 0 clamp(24px, 4vw, 48px) clamp(28px, 5vh, 48px);
+  background-color: var(--color_bg);
+  box-shadow: -20px 0 50px rgba(10, 10, 10, 0.12);
+  animation: cart_drawer_panel_in var(--duration_base) var(--easing_base) both;
+}
+
+.cart_drawer_header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--header_height);
+  border-bottom: 1px solid rgba(10, 10, 10, 0.2);
+}
+
+.cart_drawer_title {
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_16);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.cart_drawer_close {
+  position: relative;
+  width: 40px;
+  height: 40px;
+}
+
+.cart_drawer_close span::before,
+.cart_drawer_close span::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 22px;
+  height: 1px;
+  background-color: currentColor;
+  content: "";
+}
+
+.cart_drawer_close span::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.cart_drawer_close span::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.cart_drawer_body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 0;
+  text-align: center;
+}
+
+.cart_drawer_status {
+  margin-bottom: 24px;
+  color: var(--color_text_muted);
+  font-family: var(--font_ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+}
+
+.cart_drawer_heading {
+  font-family: var(--font_display);
+  font-size: var(--fs_display_32);
+  font-weight: 600;
+  line-height: var(--lh_display_32);
+  letter-spacing: var(--ls_tight_sm);
+}
+
+.cart_drawer_description {
+  max-width: 320px;
+  margin-top: 14px;
+  color: var(--color_text_secondary);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_14);
+  line-height: 1.7;
+}
+
+.cart_drawer_action {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  min-height: 54px;
+  border: 1px solid var(--color_point);
+  border-radius: var(--radius_button);
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  transition: background-color var(--duration_fast) var(--easing_base),
+              border-color var(--duration_fast) var(--easing_base);
+}
+
+.cart_drawer_action:hover,
+.cart_drawer_action:focus-visible {
+  border-color: #16332f;
+  background-color: #16332f;
+}
+
+@keyframes cart_drawer_backdrop_in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cart_drawer_panel_in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 .header_cart_count {
   position: absolute;
   top: -5px;
@@ -493,6 +648,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .cart_drawer::backdrop,
+  .cart_drawer_panel,
   .header_currency_menu,
   .header_currency_option,
   .header_currency_icon,
