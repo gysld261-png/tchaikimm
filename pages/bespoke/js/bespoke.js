@@ -132,7 +132,8 @@
   var PHILOSOPHY_PARALLAX_SHIFT = 110; /* 배경이 위아래로 움직이는 거리(px)
      주의: 이 값을 올리면 css의 --philosophy_parallax_overscan도 같이 올려야
      한다. overscan은 이 값 + 배경 등장 이동(자기 높이의 2.5%)보다 커야 한다. */
-  /* 퇴장 — 아래 wordmark로 넘겨주는 구간이다.
+  /* 퇴장 — 아래 atelier로 넘겨주는 구간이다.
+     (2026-08-10 전에는 사이에 wordmark 무대가 있었고 그쪽으로 넘겼다.)
      **끝(20%)을 더 일찍 잡으면 안 된다.** 글이 화면 위쪽에 아직 남아 있는 채로
      사라져 버려서, 겹치는 순간 없이 뚝 끊긴다. */
   var PHILOSOPHY_EXIT_SHIFT = 90; /* 글 상자가 위로 빠지는 거리(px) */
@@ -216,8 +217,9 @@
       );
 
       /* 3) 퇴장 — 섹션이 화면을 빠져나가는 동안 글 상자가 위로 사라진다.
-            아래 wordmark가 화면 밑에서 올라오는 구간과 **겹친다.**
-            그래서 두 콘텐츠가 잠깐 같이 보이고, philosophy → wordmark가
+            아래 atelier가 화면 밑에서 올라오는 구간과 **겹친다**
+            (퇴장 끝 `bottom 20%` > atelier 등장 시작 `top 40%`).
+            그래서 두 콘텐츠가 잠깐 같이 보이고, philosophy → atelier가
             끊긴 두 섹션이 아니라 한 흐름으로 읽힌다.
 
             ★ 대상이 자식(title/desc)이 아니라 글 상자(.philosophy_body)다.
@@ -748,109 +750,237 @@
   }
 
   /* ---------------------------------------------------------
-     wordmark — philosophy를 지나면 거대한 "TCHAI" 워터마크가 떠오르고,
-     그다음 atelier로 넘어간다.
+     hero — 카피 → 화면 폭을 채운 영상 → 스크롤하면 영상이 빠르게 사라지고
+     그 위로 아이보리 배너(= philosophy 섹션)가 올라온다. (2026-08-10)
 
-     philosophy·atelier와 같이 GSAP + ScrollTrigger다. 다만 이쪽은 스크롤
-     위치에 1:1로 묶인 `scrub`이라 위로 되감으면 글자도 같이 내려간다.
+     ★ **이 함수가 하는 일은 영상 페이드 하나뿐이다.**
+     배너가 올라오는 것은 JS가 아니라 CSS가 만든다 — 영상 무대가 sticky이고
+     philosophy에 음수 margin-top이 걸려 있어서, philosophy가 **그냥 스크롤로**
+     고정된 영상 위를 덮으며 올라온다. 자세한 구조는 css의
+     `--bespoke_hero_run` / `--bespoke_hero_lift` 주석에 있다.
 
-     섹션은 시안 높이(986px) 그대로이고 sticky도 pin도 쓰지 않는다.
-     **이 섹션에 긴 스크롤 구간을 주면 안 된다** — 글자 한 줄뿐이라
-     아무 일도 일어나지 않는 빈 스크롤만 길어진다.
-     (사진이 화면을 채우다 줄어드는 버전에서는 220svh를 썼지만,
-      사진을 빼기로 하면서 같이 걷어냈다.)
+     그래서 배너 위치를 JS로 건드리면 안 된다. philosophy에 transform을 걸면
+     레이아웃은 그대로인데 그림만 움직여서 **아래 atelier와 어긋난다.**
 
-     JS나 GSAP이 없거나 모션 감소 설정이면 아무것도 하지 않는다.
-     그때는 css의 기본 규칙대로 워터마크가 그냥 보인다.
+     무대 고정은 CSS sticky다(ScrollTrigger `pin` 아님). pin을 쓰면 pin-spacer가
+     문서 맨 위에 끼어들어 아래 모든 섹션의 좌표가 밀린다.
+
+     ★ 게이트가 **폭이 아니라 화면 비율**을 본다(2026-08-10).
+     세로로 긴 화면에서는 css가 영상 상자를 16:9로 되돌린다 — 자막이 좌우로
+     잘리지 않게 하기 위해서다(css 쪽 주석 참고). 그때 상자는 한 화면 높이가
+     아니므로 sticky 무대가 성립하지 않는다(무대 아래에 빈 자리가 생긴다).
+     그래서 그 구간에서는 이 연출을 통째로 끄고 카피 → 영상 → philosophy가
+     평범하게 이어지게 둔다.
+
+     ★ 경계값이 css의 `max-aspect-ratio: 1332/1000`과 **겹치지 않아야 한다.**
+     둘 다 `4/3`으로 두면 정확히 1024 × 768 같은 화면에서 css는 16:9 상자를,
+     js는 sticky 무대를 만들어 서로 어긋난다.
+
+     JS나 GSAP이 없거나 모션 감소 설정이면 class가 붙지 않고, 세 덩이가 그냥
+     세로로 이어진 채 평범하게 스크롤된다.
      --------------------------------------------------------- */
 
-  /* 조절값 — 숫자만 바꾸면 된다 */
-  var WORDMARK_RISE = 48; /* 글자가 아래에서 올라오는 거리(px) */
-  /* 자간을 좁힌 상태에서 시작해 제자리로 펴진다. editorial 느낌의 핵심이다.
-     ★ **양수(넓게)에서 시작하면 안 된다.** 1920에서 글자 폭이 이미 1759px라
-     자간을 벌리면 화면(1920)을 넘어 무대 밖으로 잘린다. 좁혔다 펴야 안전하다. */
-  var WORDMARK_TRACK_FROM = "-0.045em";
+  /* 조절값 — 숫자 두 벌이다. 전환 **길이**는 css의 `--bespoke_hero_run`이 정하고,
+     아래 값들은 그 안에서(진행도 0~1) 두 박자가 언제 일어나는지를 정한다.
 
-  /* 등장(0~0.5) → 유지(0.5~1) 두 박자다.
+     ┌ 0.00 ───────── 영상 그대로 (첫 스크롤엔 변화 없음)
+     ├ 0.16 ───────── 영상이 가운데로 빨려 들어가기 시작
+     ├ 0.30 ───────── philosophy 원이 같은 중심에서 열리기 시작 (겹친다)
+     ├ 0.60 ───────── 영상 완전히 소멸
+     └ 0.86 ───────── philosophy 전체 표시
+  */
 
-     ★ **퇴장 페이드를 두지 않는다.** sticky 무대는 구조상 마지막 100svh가
-     "무대가 위로 밀려 나가는" 구간인데, 그 전에 글자를 지워 버리면
-     **빈 크림색 화면이 한 화면 내내 지나간다**(실측 1080px). 글자를 켜 둔 채
-     무대째 밀려 나가야 아래 atelier가 올라오는 것과 이어진다.
+  /* ★★ 원의 반지름 단위가 **71%**인 이유. 두 가지가 걸려 있다.
 
-     ★ 시작을 "top top"이 아니라 "top 65%"로 잡는다. 섹션이 화면 밑에서
-     올라오는 동안 이미 글자가 떠오르기 시작해야, 위 philosophy가 사라지는
-     구간과 겹쳐서 한 흐름으로 읽힌다. "top top"이면 philosophy가 다 사라진
-     뒤에야 시작해 두 섹션 사이가 끊긴다(실측 216px 공백). */
-  var WORDMARK_REVEAL_END = 0.5;
-  var WORDMARK_START = "top 65%";
-  /* 아래 `ATELIER_STORY_GATE`와 같은 조건이다 — 이 무대는 그 스토리의 한 박자라
-     둘의 켜짐 조건이 어긋나면 안 된다. 1280 미만에서는 섹션이 시안 높이로 남는다. */
-  var WORDMARK_GATE = "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
+     ① `circle(r% ...)`의 `%`는 요소 폭·높이가 아니라 `√(w²+h²)/√2` 기준이다.
+        사각형을 빈틈없이 덮으려면 **70.71%(=√2/2) 이상**이어야 한다.
+        100%로 두면 필요보다 41% 크게 잡혀 초반 축소가 화면에 보이지 않는다.
 
-  function initWordmarkScroll() {
-    var section = document.querySelector(".wordmark");
+     ② 71%는 그 최솟값 **바로 위**다(여유 약 4px). 이 값이 곧 "언제 다 덮이는가"를
+        정한다 — 75%로 뒀더니 원이 **진행도 0.58에서 이미 화면을 다 덮어**,
+        남은 42%(389px)가 아무 일도 안 일어나는 죽은 스크롤이 됐다(실측).
+        71%면 트윈이 끝나는 순간이 곧 다 덮이는 순간이라 죽은 구간이 없다. */
+  var HERO_CIRCLE_FULL = "71%";
+
+  /* 영상 — 가운데로 빨려 들어간다. `scale`과 `clip-path`가 함께 작용해서
+     실제 축소 속도는 둘의 곱이다(clip은 요소 좌표계에 걸리고 그 결과에 transform이
+     적용된다). 그래서 scale은 0.55 정도로 충분하다 — 더 줄이면 과장돼 보인다. */
+  var HERO_SHRINK_START = 0.15;
+  var HERO_SHRINK_END = 0.72;
+  var HERO_SHRINK_SCALE = 0.55;
+  /* ★ `power2.in`이 아니라 `power3.in`이다. 두 단계 더 뒤로 실린 곡선이라
+     초반에는 화면을 거의 그대로 채우고 있다가 끝에서 급격히 빨려 든다.
+     `power2.in`으로 뒀을 때는 중간에 영상이 너무 일찍 작아져서 원이 아직
+     그만큼 자라지 못한 구간에 **빈 화면이 20%** 생겼다(실측). */
+  var HERO_SHRINK_EASE = "power3.in";
+  /* 마지막에만 옅어진다. 점이 툭 끊기지 않고 스러지게 하는 용도다. */
+  var HERO_VIDEO_FADE_START = 0.56;
+
+  /* philosophy 원형 reveal — 영상이 **다 사라지기 전에** 시작한다(사용자 승인 안 B).
+     ★ 이 겹침이 빈 화면을 막는다. 영상이 줄어들면 그 자리를 대신할 것이 크림
+     배경뿐이라, 순서대로 두면(영상 소멸 → 그 다음 원 시작) 화면의 90%가 빈
+     크림이 되는 구간이 생긴다. 원이 영상을 안쪽부터 먹어 들어가게 겹쳐서
+     그 구간을 없앴다. `HERO_REVEAL_START`를 0.6 뒤로 미루면 그 빈 화면이
+     그대로 돌아온다. */
+  var HERO_REVEAL_START = 0.24;
+  /* ★ 1.0이다. 원이 다 자라는 순간이 곧 전환이 끝나는 순간이어야 죽은 구간이
+     안 생긴다(위 `HERO_CIRCLE_FULL` 주석 참고). */
+  var HERO_REVEAL_END = 1;
+  var HERO_REVEAL_EASE = "power2.out"; /* 초반에 빠르게 열려 크림을 덜 보여 준다 */
+
+  /* 이 진행도를 넘으면 영상의 `data-header-theme`을 검정으로 돌린다.
+
+     ★ 이제는 안전망에 가깝다. **`clip-path`로 잘려 나간 영역은 히트 테스트에서도
+     빠지므로**, 영상 원이 헤더 띠보다 작아지는 순간 `elementsFromPoint`가 영상을
+     아예 잡지 못하고 헤더가 자동으로 검정이 된다(common.js의 판정 경로).
+     그 전까지는 원이 커서 영상이 진하므로 흰색이 맞다. */
+  var HERO_HEADER_SWITCH = 0.5;
+
+  var HERO_GATE =
+    "(min-aspect-ratio: 1333/1000) and (prefers-reduced-motion: no-preference)";
+
+  function initHeroTransition() {
+    var section = document.querySelector(".bespoke_hero");
 
     if (!section) {
       return;
     }
 
-    var text = section.querySelector(".wordmark_text");
+    var stage = section.querySelector(".bespoke_hero_stage");
+    var video = section.querySelector(".bespoke_hero_video");
+    /* 배너는 새 요소가 아니라 **다음 섹션 자신**이다(사용자 결정).
+       인접 형제로 집는다 — css의 `+ .philosophy` 규칙과 같은 관계다. */
+    var banner = section.nextElementSibling;
 
-    if (!text || !window.gsap || !window.ScrollTrigger) {
+    if (!stage || !video || !banner || !banner.classList.contains("philosophy") ||
+        !window.gsap || !window.ScrollTrigger) {
       return;
     }
 
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
-    /* ★ 게이트에 **폭 조건이 필요하다**(2026-08-10 추가).
-       이 무대는 philosophy → atelier를 잇는 데스크톱 스토리의 한 박자인데,
-       그 스토리(`initAtelierStory`)는 1280px 이상에서만 돈다. 폭 조건이
-       없던 동안 **모바일에서도 240svh(360×800에서 1600px = 두 화면)**를
-       열어 두고, 그 두 화면에서 일어나는 일은 "TCHAI" 한 단어가 떠오르는
-       것뿐이었다. 손가락으로 두 번 넘겨야 다음 내용이 나온다.
-
-       이제 1280 미만에서는 class가 붙지 않아 섹션이 시안 높이
-       (`min-height: min(51.35vw, 986px)` = 360에서 185px)로 남는다.
-       글자는 CSS 기본 상태 그대로 보인다. */
-    gsap.matchMedia().add(WORDMARK_GATE, function () {
+    gsap.matchMedia().add(HERO_GATE, function () {
       /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것이 이 class다.
          트리거를 만들기 전에 붙여야 섹션 높이를 제대로 잰다. */
-      section.classList.add("is_motion_ready");
+      section.classList.add("is_hero_ready");
 
+      /* ★★ philosophy를 끌어올려 두면(아래 ② 참고) **그 상태로 다른 트리거가
+         길이를 잰다.** philosophy에는 자기 트리거가 넷(등장 둘 · 패럴랙스 · 퇴장)
+         있는데, 전부 864px씩 어긋나 화면 밖에서 재생돼 버렸다(실측:
+         `philosophy_body`가 76→1342. 정상은 890 언저리에서 시작한다).
+
+         ScrollTrigger는 길이를 재기 직전에 `refreshInit`을 쏜다. 그때만 잠깐
+         transform을 0으로 되돌려 두면 모두가 **원래 레이아웃 위치**를 잰다.
+         재기가 끝나면 scrub이 현재 스크롤 위치의 값을 다시 씌운다. */
+      function clearBannerShift() {
+        gsap.set(banner, { y: 0 });
+      }
+
+      window.ScrollTrigger.addEventListener("refreshInit", clearBannerShift);
+
+      /* ★ 시작은 **무대** 윗변, 끝은 **섹션** 아랫변이다.
+         − 시작: 섹션 윗변으로 잡으면 카피를 읽는 동안 이미 페이드가 진행된다.
+           무대 윗변이 화면 top에 닿는 순간 = 영상이 화면을 꽉 채우는 순간이다.
+         − 끝: `endTrigger`로 섹션 아랫변을 쓰면 **sticky가 풀리는 지점과 자동으로
+           같아진다.** 예전처럼 `"+=100%"` 같은 숫자로 적으면 css의 run 값과
+           한 쌍이 되어, 한쪽만 고쳤을 때 조용히 어긋난다(실제로 겪었다). */
       var timeline = gsap.timeline({
         scrollTrigger: {
-          trigger: section,
-          start: WORDMARK_START,
+          trigger: stage,
+          start: "top top",
+          endTrigger: section,
           end: "bottom bottom",
-          scrub: 1
+          scrub: 0.3,
+          /* 위 `y` 함수값을 창 크기가 바뀔 때 다시 읽게 한다. */
+          invalidateOnRefresh: true,
+          onUpdate: function (self) {
+            video.setAttribute(
+              "data-header-theme",
+              self.progress < HERO_HEADER_SWITCH ? "white" : "black"
+            );
+          }
         }
       });
 
-      /* 1박자 — 떠오른다.
-         끝 불투명도는 1이고, 시안의 7%는 css가 글자 **색**에 담고 있다.
-         (요소 opacity에 7%를 걸면 이 트윈과 서로 덮어쓴다.) */
+      /* ── ① 영상: 가운데로 빨려 들어간다 ─────────────────────────────── */
       timeline.fromTo(
-        text,
-        { opacity: 0, y: WORDMARK_RISE, scale: 0.97, letterSpacing: WORDMARK_TRACK_FROM },
+        video,
+        { clipPath: "circle(" + HERO_CIRCLE_FULL + " at 50% 50%)", scale: 1 },
         {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          letterSpacing: "0em",
-          duration: WORDMARK_REVEAL_END,
-          ease: "power2.out"
+          clipPath: "circle(0% at 50% 50%)",
+          scale: HERO_SHRINK_SCALE,
+          ease: HERO_SHRINK_EASE,
+          duration: HERO_SHRINK_END - HERO_SHRINK_START
         },
+        HERO_SHRINK_START
+      );
+
+      timeline.to(
+        video,
+        {
+          opacity: 0,
+          ease: "none",
+          duration: HERO_SHRINK_END - HERO_VIDEO_FADE_START
+        },
+        HERO_VIDEO_FADE_START
+      );
+
+      /* ── ② philosophy: 화면에 붙여 둔다 ───────────────────────────────
+         ★★ 이것이 **두 원의 중심을 일치시키는 장치**다.
+
+         philosophy는 음수 margin 덕분에 전환 구간에 겹쳐 있지만, 그대로 두면
+         스크롤을 따라 `run`px만큼 **올라간다.** 그러면 `circle(... at 50% 50%)`의
+         기준점(요소 중심)이 매 프레임 움직여서, 영상이 사라진 화면 중심과 어긋난다.
+
+         `y`를 `−run → 0`으로 **선형(ease:"none")** 이동시키면 자연 스크롤을 정확히
+         상쇄해 전환 내내 화면 top 0에 붙어 있다. philosophy 높이가 정확히
+         100svh라 이때 **요소 상자 = 뷰포트 상자**이고, `at 50% 50%`가 곧 화면
+         중심 = 영상이 사라진 그 점이 된다. 끝에서 y=0이라 잔여 오프셋이 없어
+         아래 atelier와도 어긋나지 않는다.
+
+         ★ 값이 함수인 이유: `y`는 **CSS px**이고 스크롤은 화면 px이라 zoom 구간
+         (0.75)에서 둘이 다르다. `무대 높이 − 영상 높이`가 정확히 활주로 길이이고
+         둘 다 계산된 CSS px이라 그대로 뺀다. 이러면 css에서 `--bespoke_hero_run`을
+         바꿔도 js를 고칠 필요가 없다.
+         `invalidateOnRefresh`가 창 크기 변경 때 다시 읽는다. */
+      timeline.fromTo(
+        banner,
+        {
+          y: function () {
+            var view = window.getComputedStyle;
+
+            return -(
+              parseFloat(view(stage).height) - parseFloat(view(video).height)
+            );
+          }
+        },
+        { y: 0, ease: "none", duration: 1 },
         0
       );
 
-      /* 2박자 — 그대로 둔다. 화면을 차지하는 순간이다.
-         빈 트윈이지만 타임라인 길이를 1로 맞추는 역할을 한다. */
-      timeline.to({}, { duration: 1 - WORDMARK_REVEAL_END }, WORDMARK_REVEAL_END);
+      /* ── ③ philosophy: 같은 중심에서 원이 열린다 ───────────────────── */
+      timeline.fromTo(
+        banner,
+        { clipPath: "circle(0% at 50% 50%)" },
+        {
+          clipPath: "circle(" + HERO_CIRCLE_FULL + " at 50% 50%)",
+          ease: HERO_REVEAL_EASE,
+          duration: HERO_REVEAL_END - HERO_REVEAL_START
+        },
+        HERO_REVEAL_START
+      );
 
+      /* 타임라인 길이를 정확히 1로 고정한다. 위 구간 상수가 곧 진행도가 된다. */
+      timeline.to({}, { duration: 1 }, 0);
+
+      /* ★ GSAP은 자기가 넣은 인라인 스타일만 되돌린다. class와 위 onUpdate가
+         쓴 속성은 우리 것이라 직접 되돌린다 — 안 되돌리면 모션 감소로 바꿨을 때
+         헤더가 검정으로 굳은 채 남는다. */
       return function () {
-        section.classList.remove("is_motion_ready");
+        window.ScrollTrigger.removeEventListener("refreshInit", clearBannerShift);
+        section.classList.remove("is_hero_ready");
+        video.setAttribute("data-header-theme", "white");
       };
     });
   }
@@ -887,10 +1017,11 @@
   var ATELIER_STORY_HEAD_END = 0.62;
   var ATELIER_STORY_TEXT_START = 0.52;
   var ATELIER_STORY_TEXT_END = 0.88;
-  /* ★ "top top"이 아니다. 위 wordmark 무대가 밀려 나가는 동안 이 섹션이 아래에서
-     올라오는데, 사진이 무대 한가운데 있어서 **화면에 실제로 보이기 시작하는
-     시점**이 섹션 윗변이 화면 40%에 닿을 무렵이다. 그때부터 페이드를 시작해야
-     빈 구간 없이 이어진다. "top top"으로 두면 그 앞 400px가 빈 화면이 된다. */
+  /* ★ "top top"이 아니다. 위 philosophy가 화면을 빠져나가는 동안 이 섹션이
+     아래에서 올라오는데, 사진이 무대 한가운데 있어서 **화면에 실제로 보이기
+     시작하는 시점**이 섹션 윗변이 화면 40%에 닿을 무렵이다. 그때부터 페이드를
+     시작해야 빈 구간 없이 이어진다. "top top"으로 두면 그 앞 400px가 빈 화면이 된다.
+     (2026-08-10 wordmark 제거 전에는 그 무대가 밀려 나가는 구간과 겹쳤다.) */
   var ATELIER_STORY_START = "top 40%";
 
   function initAtelierStory() {
@@ -1084,9 +1215,12 @@
   initProcessSteps();
   initBeginCards();
   initMaterialsSelector();
+  /* ★ philosophy 트리거를 **먼저** 만든다. 히어로가 philosophy에 transform을
+     걸기 때문에, 순서를 뒤집으면 첫 측정이 어긋난 상태에서 이뤄진다.
+     (그 뒤의 refresh는 `refreshInit` 훅이 막아 준다 — 이건 첫 측정용이다.) */
   initPhilosophyMotion();
+  initHeroTransition();
   initAtelierZoom();
-  initWordmarkScroll();
   initAtelierStory();
 
   /* 글 나누기는 **웹폰트가 적용된 뒤**에 해야 한다. 시스템 폰트로 재면 줄 폭이
