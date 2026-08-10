@@ -57,23 +57,15 @@
   /* 상단 카드가 화면 바깥 어디에서 출발할지(px). 카드 폭보다 커야 완전히 가려집니다. */
   var ENTER_OFFSET = 560;
 
-  /* 마지막에 화면 중앙까지 가는 비율. 1이면 두 장의 중심이 정확히 겹칩니다. */
-  var CONVERGE_RATIO = 0.78;
-
-  /* 물러날 때 커지는 배율과 3D 회전각. */
-  var EXIT_SCALE = 1.9;
-  var EXIT_TURN = 24;
-
   /* 들어올 때 3D 회전각과 원근 거리. 값이 작을수록 원근이 강해집니다. */
   var ENTER_TURN = 42;
   var PERSPECTIVE = 900;
 
-  /* 시안 기울기. 들어올 때는 이 값의 ENTER_TILT_RATIO배에서 시작하고,
-     물러날 때는 EXIT_TILT_RATIO배까지 수평에 가깝게 펴집니다. */
+  /* 시안 기울기. 들어올 때는 이 값의 ENTER_TILT_RATIO배에서 시작해 이 값으로 앉고,
+     그 뒤로는 바뀌지 않습니다(퇴장 연출을 없앴습니다). */
   var TILT_A = -15.55;
   var TILT_B = 13.07;
   var ENTER_TILT_RATIO = 2.2;
-  var EXIT_TILT_RATIO = 0.13;
 
   /* 단어 연출. STAGGER가 클수록 "한 단어씩" 끊어져 올라오는 느낌이 또렷해집니다.
 
@@ -87,16 +79,13 @@
   var WORD_DURATION = 0.4;
   var WORD_STAGGER = 0.12;
 
-  /* CARD_B_DELAY는 등장 타임라인(pin 밖) 기준,
-     WORDS_START / EXIT_START는 pin 타임라인 기준입니다.
+  /* CARD_B_DELAY는 등장 타임라인(pin 밖) 기준, WORDS_START는 pin 타임라인 기준입니다.
 
-     pin이 시작되는 순간 좌우 카드는 이미 제자리에 앉아 있습니다. 그래서 문장과
-     퇴장이 pin의 맨 앞에서 바로 시작합니다. 여기서 지체하면 그만큼
+     pin이 시작되는 순간 좌우 카드는 이미 제자리에 앉아 있습니다. 그래서 문장이
+     pin의 맨 앞에서 바로 시작합니다. 여기서 지체하면 그만큼
      "화면이 멈춘 채 기다리는" 구간이 됩니다. */
   var CARD_B_DELAY = 0.08;
   var WORDS_START = 0;
-  var EXIT_START = 0.15;
-  var EXIT_DURATION = 1;
 
   /* 하단 갤러리 카드가 떠오르는 기본 거리(px). 카드마다 STEP만큼 더해 패럴랙스를 만듭니다. */
   var RISE_BASE = 110;
@@ -483,13 +472,6 @@
     return words;
   }
 
-  /* 카드 중심에서 캔버스 중앙까지의 거리 중 CONVERGE_RATIO 만큼을 이동량으로 씁니다.
-     offsetLeft는 .showcase_frame(position: relative) 기준이라 시안 좌표와 같습니다. */
-  function convergeDistance(card) {
-    var cardCenter = card.offsetLeft + card.offsetWidth / 2;
-    return (CANVAS_WIDTH / 2 - cardCenter) * CONVERGE_RATIO;
-  }
-
   /* filter는 함수 종류와 순서가 처음부터 끝까지 같아야 보간됩니다.
      그래서 blur와 brightness를 항상 이 순서로 함께 씁니다. */
   function filterOf(blur, brightness) {
@@ -585,18 +567,13 @@
     });
   }
 
-  /* --- 2박자: 문장 / 3박자: 좌우 카드 퇴장 ---
-     이 둘은 pin 안에서 프레임이 흐르는 동안 함께 재생됩니다.
+  /* --- 2박자: 문장 ---
+     pin 안에서 프레임이 흐르는 동안 함께 재생됩니다.
 
      `to`가 아니라 `fromTo`입니다. 등장이 다른 트리거에 있어서, `to`로 두면
      시작값을 언제 기록하느냐에 따라(빠르게 스크롤하거나 refresh가 겹치면)
      등장 도중의 값이 시작값으로 굳을 수 있습니다. */
   function addIntroBody(gsap, timeline, cards, words) {
-    var cardA = cards[0];
-    var cardB = cards[1];
-    var imageA = cardA.querySelector("img");
-    var imageB = cardB.querySelector("img");
-
     timeline
       /* --- 2박자: 단어가 하나씩 --- */
       .fromTo(
@@ -610,53 +587,22 @@
           stagger: WORD_STAGGER
         },
         WORDS_START
-      )
-
-      /* --- 3박자: 중앙으로 모이며 물러남 --- */
-      .fromTo(
-        [cardA, cardB],
-        {
-          x: 0,
-          y: 0,
-          scale: 1,
-          opacity: 1,
-          filter: filterOf(0, 1)
-        },
-        {
-          x: function (index, target) {
-            return convergeDistance(target);
-          },
-          y: 130,
-          scale: EXIT_SCALE,
-          opacity: 0.08,
-          filter: filterOf(26, 1.35),
-          ease: "power2.in",
-          duration: EXIT_DURATION
-        },
-        EXIT_START
-      )
-      .fromTo(
-        imageA,
-        { rotationY: 0, rotation: TILT_A },
-        {
-          rotationY: -EXIT_TURN,
-          rotation: TILT_A * EXIT_TILT_RATIO,
-          ease: "power2.in",
-          duration: EXIT_DURATION
-        },
-        EXIT_START
-      )
-      .fromTo(
-        imageB,
-        { rotationY: 0, rotation: TILT_B },
-        {
-          rotationY: EXIT_TURN,
-          rotation: TILT_B * EXIT_TILT_RATIO,
-          ease: "power2.in",
-          duration: EXIT_DURATION
-        },
-        EXIT_START
       );
+
+    /* --- 3박자였던 "중앙으로 모이며 물러남"은 없앴습니다 ---
+
+       사용자 결정: "없어지지 않고 글자가 나타나는 그 멈춘 지점에서 끝까지 멈춰줘."
+       "이 자리에 고정되어 있어야 하고 스크롤을 내리면 같이 화면에서 사라져야 해."
+
+       그래서 등장이 끝난 뒤로는 **두 장에 아무 트윈도 걸지 않습니다.**
+       x 0 · y 0 · scale 1 · opacity 1 · 기울기 TILT_A / TILT_B 그대로 남고,
+       .showcase_frame 안에 있으므로 프레임이 흐르는 대로 아치 · 문장 · 갤러리와
+       **함께** 올라가 함께 화면 밖으로 나갑니다.
+
+       ★★ 화면 좌표에 붙들어 두는 트윈을 넣으면 안 됩니다(한 번 넣었다가 뺐습니다).
+       프레임만 올라가고 카드는 서 있으면 **아치에서 떨어져 나와 허공에 뜹니다**
+       — 시안의 "아치 위에 얹힌" 구도가 깨집니다. 1920에서 붙드는 동안 아치가
+       624px이나 올라갑니다. "고정"은 화면이 아니라 이 구도 기준입니다. */
   }
 
   /* 카드가 "다 뜬 순간" 프레임이 놓여 있어야 할 위치입니다(프레임 상단 기준 px).
@@ -989,7 +935,6 @@
 
   /* 카드가 프레임 중앙의 어느 쪽에 있는지로 출발 방향을 정합니다.
      좌표를 바꾸면 날아오는 방향도 알아서 따라옵니다.
-     (showcase 상단 두 장의 convergeDistance와 같은 생각입니다.)
      길이를 1로 맞춘 뒤 거리를 따로 곱해야, 중앙에 가까운 카드도 충분히 멀리서 출발합니다. */
   function enterDirection(layout, frameHeight, imageRatio) {
     var centerX = layout.left + layout.width / 2;

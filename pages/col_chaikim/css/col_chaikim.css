@@ -16,6 +16,8 @@
   --collection_quote: #dfdfdf;
   --collection_tag_line: #e2ddd5;
   --collection_hero_title: #262626;
+  /* 헤더 슬롯이 차지하는 높이. 1850~1990 구간에서만 파일 끝 블록이 줄입니다. */
+  --collection_header_reserve: var(--header_height);
   --collection_section_title: #1e1e1e;
 }
 
@@ -59,7 +61,7 @@
      나눠 두면 두 경우 모두 화면 높이 그대로가 됩니다(main.css의 --full_bleed_width와 같은 보정).
 
      헤더 슬롯이 이미 --header_height만큼 자리를 잡아 두어서 그만큼 뺍니다. */
-  max-height: calc(100svh / var(--site_view_scale, 1) - var(--header_height));
+  max-height: calc(100svh / var(--site_view_scale, 1) - var(--collection_header_reserve));
 
   background-color: var(--color_bg);
 }
@@ -1626,5 +1628,53 @@
   .asworn_list .asworn_text {
     font-size: 12.5px;
     line-height: 1.55;
+  }
+}
+
+/* =========================================================
+   발표용 축소 해제 — common.css의 1850~1990px `html { zoom: 0.75 }`
+
+   ★ 이 페이지는 그 축소를 쓰지 않습니다. 축소가 걸리면 콘텐츠가 화면의 75%만
+   쓰고 오른쪽과 아래에 큰 빈 공간이 남습니다(사용자 스크린샷의 증상입니다).
+   사용자 결정: "75% 줌이라고 콘텐츠 자체를 75% 크기로 줄이는 방식으로
+   해결하지 말아줘." 그래서 이 구간에서도 1배로 그립니다.
+
+   ★ 이 블록은 반드시 파일 끝에 있어야 합니다. common.css보다 뒤에 로드되고
+   선택자 특정도가 같아서, 순서로 이깁니다. 위로 옮기면 조용히 무력화됩니다.
+
+   ★ 자매 페이지에도 같은 블록이 있습니다. 한쪽만 두면 브랜드를 오갈 때
+   페이지 크기가 달라집니다.
+   ========================================================= */
+@media (min-width: 1850px) and (max-width: 1990px) {
+  :root {
+    /* 히어로의 max-height 계산이 이 값을 씁니다. 1로 되돌려야 100svh가 그대로 쓰입니다. */
+    --site_view_scale: 1;
+
+    /* ★ 헤더만은 다른 페이지와 같은 크기로 그립니다.
+       다른 페이지는 html zoom 0.75 안에서 헤더가 0.75배로 그려집니다. 이 페이지는
+       축소를 껐기 때문에 그대로 두면 **헤더만 1.33배로 커집니다**
+       (실측: 높이 64 vs 48, 로고 170 vs 127.5, 메뉴 글자 20 vs 15). */
+    --collection_header_scale: 0.75;
+
+    /* 헤더 슬롯이 실제로 차지하는 높이도 그만큼 줄어듭니다.
+       히어로의 max-height가 이 값을 빼야 "첫 화면에 딱 맞는" 계산이 맞습니다. */
+    --collection_header_reserve: calc(var(--header_height) * var(--collection_header_scale));
+  }
+
+  html {
+    zoom: 1;
+  }
+
+  /* 헤더는 이 슬롯 안에 있습니다(고정 위치라도 zoom은 함께 적용됩니다).
+     슬롯의 min-height도 같이 줄어들어 아래 섹션이 시작하는 지점이 다른 페이지와 같아집니다. */
+  .common_header_slot {
+    zoom: var(--collection_header_scale);
+  }
+
+  /* common.css가 축소를 되돌리려고 걸어 둔 역보정(1 / 0.75)도 함께 풉니다.
+     축소가 없는데 이것만 남으면 푸터와 TOP 버튼이 1.333배로 커집니다. */
+  .common_footer_slot,
+  .top_button {
+    zoom: 1;
   }
 }
