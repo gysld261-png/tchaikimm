@@ -1421,6 +1421,13 @@
     var period = 0;
     var isHovered = false;
     var isFocusing = false;
+    var isDragging = false;
+    /* 끌기 시작한 지점과 그때의 offset. 이동량은 이 둘로만 냅니다 —
+       pointermove마다 누적하면 이벤트가 몇 개 밀릴 때 값이 흘러갑니다. */
+    var dragStartX = 0;
+    var dragStartOffset = 0;
+    /* 몇 px 넘게 끌었으면 그때의 click은 취소합니다(끌고 놓았는데 링크가 열리는 것 방지). */
+    var dragDistance = 0;
     var focusTween = null;
     var holdTimer = 0;
 
@@ -1533,7 +1540,7 @@
     /* 다른 탭에 갔다 오면 프레임 간격이 몇 초씩 벌어집니다.
        그대로 곱하면 띠가 한 번에 몇백 px 튀므로 한 프레임 이동량을 잘라 둡니다. */
     function advance(deltaSeconds) {
-      if (isHovered || isFocusing) {
+      if (isHovered || isFocusing || isDragging) {
         return;
       }
 
@@ -1565,6 +1572,92 @@
 
     tags.forEach(function (tag) {
       tag.addEventListener("click", handleTagClick);
+    });
+
+    /* --- 마우스로 잡고 가로로 끌기 ---
+       띠의 위치는 offset 하나가 정하므로, 끈 거리를 offset에 그대로 더하면 됩니다.
+       render()가 period로 감싸므로 끝까지 끌어도 이어서 순환합니다. */
+
+    /* 이 거리(px)를 넘겨 끌었을 때만 "끌었다"고 봅니다. 손이 살짝 흔들린 정도로
+       링크가 안 열리면 안 되고, 반대로 너무 크면 끌었는데 링크가 열립니다. */
+    var DRAG_CLICK_THRESHOLD = 6;
+
+    function handleDragStart(event) {
+      /* ★ 마우스 왼쪽 버튼만 받습니다.
+         터치·펜까지 받으면 포인터를 붙잡는 동안 **세로 페이지 스크롤을 뺏습니다**
+         (띠 위에서 위아래로 쓸어도 띠만 옆으로 흐릅니다).
+         터치는 브라우저 기본 동작에 맡깁니다. */
+      if (event.pointerType !== "mouse" || event.button !== 0) {
+        return;
+      }
+
+      isDragging = true;
+      dragStartX = event.clientX;
+      dragStartOffset = offset;
+      dragDistance = 0;
+
+      /* 태그 클릭으로 돌던 트윈이 있으면 끕니다 — 두 주인이 offset을 다투면 튑니다. */
+      if (focusTween) {
+        focusTween.kill();
+        focusTween = null;
+      }
+
+      window.clearTimeout(holdTimer);
+      releaseFocus();
+
+      track.classList.add("is_dragging");
+      /* 포인터를 track에 묶어 두면 커서가 밖으로 나가도 move/up이 계속 옵니다. */
+      if (track.setPointerCapture) {
+        track.setPointerCapture(event.pointerId);
+      }
+    }
+
+    function handleDragMove(event) {
+      if (!isDragging) {
+        return;
+      }
+
+      var moved = event.clientX - dragStartX;
+
+      dragDistance = Math.max(dragDistance, Math.abs(moved));
+      /* 오른쪽으로 끌면 띠가 오른쪽으로 가야 하므로 offset은 반대 부호입니다. */
+      offset = dragStartOffset - moved;
+      render();
+    }
+
+    function handleDragEnd(event) {
+      if (!isDragging) {
+        return;
+      }
+
+      isDragging = false;
+      track.classList.remove("is_dragging");
+
+      if (track.releasePointerCapture && track.hasPointerCapture && track.hasPointerCapture(event.pointerId)) {
+        track.releasePointerCapture(event.pointerId);
+      }
+    }
+
+    /* ★ capture 단계입니다. 카드 안 링크에 click이 닿기 전에 잡아야 막을 수 있습니다. */
+    function handleDragClick(event) {
+      if (dragDistance <= DRAG_CLICK_THRESHOLD) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      dragDistance = 0;
+    }
+
+    track.classList.add("is_draggable");
+    track.addEventListener("pointerdown", handleDragStart);
+    track.addEventListener("pointermove", handleDragMove);
+    track.addEventListener("pointerup", handleDragEnd);
+    track.addEventListener("pointercancel", handleDragEnd);
+    track.addEventListener("click", handleDragClick, true);
+    /* 사진을 브라우저 기본 이미지 끌기로 가져가는 것을 막습니다. */
+    track.addEventListener("dragstart", function (event) {
+      event.preventDefault();
     });
 
     track.addEventListener("mouseenter", handleEnter);

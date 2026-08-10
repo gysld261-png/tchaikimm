@@ -790,24 +790,24 @@
 
 .asworn {
   width: 100%;
-  padding: 250px 0;
+  padding: 200px 0;
   background-color: var(--color_bg);
 }
 
 .asworn_head {
   display: flex;
   flex-direction: column;
-  gap: 49px;
+  gap: 40px;
   align-items: center;
-  width: 894px;
-  margin: 0 auto 118px;
+  width: 720px;
+  margin: 0 auto 94px;
 }
 
 .asworn_title {
   margin: 0;
   color: var(--collection_section_title);
   font-family: var(--font_display);
-  font-size: 48px;
+  font-size: 38px;
   font-weight: 600;
   line-height: 1.29;
   letter-spacing: -0.48px;
@@ -816,7 +816,7 @@
 
 .asworn_tags {
   display: flex;
-  gap: 27px;
+  gap: 22px;
   align-items: center;
 }
 
@@ -824,16 +824,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: 1px solid var(--collection_tag_line);
-  border-radius: 35px;
+  border-radius: 28px;
   background-color: #ffffff;
   color: var(--color_text_sub);
   font-family: var(--font_body);
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
   line-height: 1.38;
-  letter-spacing: 1.28px;
+  letter-spacing: 1.04px;
   white-space: nowrap;
   transition: border-color var(--duration_fast) var(--easing_base),
               color var(--duration_fast) var(--easing_base);
@@ -867,18 +867,49 @@
   width: 100%;
   overflow-x: clip;
   overflow-y: visible;
+  /* 마우스로 잡아 끌 수 있다는 표시. js가 붙는 .is_draggable에만 겁니다 —
+     스크립트가 없으면 끌 수 없으므로 손 모양만 남으면 거짓말이 됩니다. */
+}
+
+.asworn_track.is_draggable {
+  cursor: grab;
+}
+
+.asworn_track.is_dragging {
+  cursor: grabbing;
+  /* 끄는 동안 글자가 선택되거나 사진이 브라우저 기본 드래그로 끌려가는 것을 막습니다. */
+  user-select: none;
+}
+
+.asworn_track.is_dragging .asworn_figure img {
+  pointer-events: none;
 }
 
 .asworn_list {
+  /* 카드 한 벌의 크기와 간격을 여기 한 곳에서 정합니다.
+     네 카드가 모두 같은 값을 쓰므로 이 세 줄만 고치면 전부 따라옵니다. */
+
+  /* 시안은 441 × 681이었습니다. 화면에서 너무 크게 느껴진다는 지적으로 줄였습니다
+     (1080 화면 기준 높이 63% → 49%). 비율은 시안 그대로입니다(0.6476). */
+  --asworn_card_width: 272px;
+  --asworn_card_height: 420px;
+
+  /* ★ 사진과 글 사이 간격. 예전에는 카드마다 24 / 48 / 30px으로 제각각이었습니다. */
+  --asworn_photo_gap: 26px;
+
   position: relative;
   display: flex;
-  gap: 34px;
+  gap: 28px;
   align-items: center;
   width: max-content;
 }
 
 .asworn_item {
   display: flex;
+  /* ★ 사진 ↔ 글 간격은 오직 이 gap 하나가 정합니다.
+     카드별 override(24 / 48 / 0)를 없앴습니다. 여기에 padding을 더하면
+     그만큼 카드마다 간격이 다시 어긋나므로, 아래 글 요소들은 가로 padding을 쓰지 않습니다. */
+  gap: var(--asworn_photo_gap);
   align-items: flex-end;
   transform-origin: center center;
   transition: transform var(--duration_base) var(--easing_base);
@@ -889,36 +920,14 @@
   transform: scale(1.04);
 }
 
-.asworn_item_1 {
-  gap: 24px;
-}
-
-.asworn_item_2 {
-  gap: 48px;
-}
-
-.asworn_item_3,
-.asworn_item_4 {
-  gap: 0;
-}
-
 .asworn_figure {
   flex-shrink: 0;
-  width: 441px;
-  height: 681px;
+  width: var(--asworn_card_width);
+  height: var(--asworn_card_height);
   margin: 0;
-}
-
-.asworn_item_2 .asworn_figure {
-  width: 442px;
-}
-
-/* 세 번째·네 번째 카드는 시안에서 사진 둘레에 20px 여백이 있습니다. */
-.asworn_item_3 .asworn_figure,
-.asworn_item_4 .asworn_figure {
-  width: 481px;
-  height: 721px;
-  padding: 20px;
+  /* ★ padding을 두지 않습니다. 예전에는 3·4번째 카드만 둘레에 20px이 있어서
+     사진 가장자리와 글 사이가 다른 카드보다 20px 더 벌어졌습니다. */
+  padding: 0;
 }
 
 .asworn_figure img {
@@ -930,62 +939,56 @@
 
 .asworn_body {
   flex-shrink: 0;
-  width: 317px;
+  width: 254px;
 }
 
 .asworn_item_3 .asworn_body,
 .asworn_item_4 .asworn_body {
-  width: 337px;
-  padding: 10px;
+  width: 270px;
 }
 
 .asworn_name {
   margin: 0;
-  padding: 10px;
+  /* 가로 padding은 두지 않습니다(위 .asworn_item 주석 참고). 세로만 남깁니다. */
+  padding: 10px 0;
   color: var(--color_text);
   font-family: var(--font_display);
-  font-size: 24px;
+  font-size: 19px;
   font-weight: 400;
   line-height: 1.25;
   white-space: nowrap;
 }
 
-.asworn_item_3 .asworn_name,
-.asworn_item_4 .asworn_name {
-  padding: 10px 0;
-}
-
 .asworn_desc {
   display: flex;
   flex-direction: column;
-  gap: 17px;
+  gap: 14px;
   align-items: flex-start;
-  padding: 10px;
+  padding: 10px 0;
 }
 
 .asworn_item_2 .asworn_desc {
-  gap: 21px;
+  gap: 17px;
 }
 
 .asworn_item_3 .asworn_desc,
 .asworn_item_4 .asworn_desc {
-  gap: 15px;
-  padding: 0;
+  gap: 12px;
 }
 
 .asworn_text {
-  width: 289px;
+  width: 231px;
   margin: 0;
   color: var(--color_text);
   font-family: var(--font_body);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   line-height: 1.2;
 }
 
 .asworn_item_3 .asworn_text,
 .asworn_item_4 .asworn_text {
-  width: 341px;
+  width: 273px;
   padding: 10px 0;
 }
 
