@@ -39,8 +39,8 @@ var IMAGE_URLS = [
   "assets/images/gallery_img_knit.jpg",
   "assets/images/gallery_img_bottom.jpg",
   "assets/images/gallery_img_outer.png",
-  "assets/images/gallery_img_acc.jpg",
-  "assets/images/gallery_img_living.jpg"
+  "assets/images/gallery_img_living.jpg",
+  "assets/images/gallery_img_acc.jpg"
 ];
 
 var CARD_COUNT = IMAGE_URLS.length;
