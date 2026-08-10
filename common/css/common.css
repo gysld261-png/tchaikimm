@@ -120,6 +120,11 @@ body[data-header-variant="black"] .common_header_slot {
   .common_footer_slot {
     zoom: calc(1 / var(--site_view_scale));
   }
+
+  /* 공통 zoom 안에서도 TOP 버튼은 원래 48px 크기와 화면 기준 위치를 유지합니다. */
+  .top_button {
+    zoom: calc(1 / var(--site_view_scale));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

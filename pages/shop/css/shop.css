@@ -554,29 +554,23 @@
   /* hover 시 이미지가 추가로 커지는 배율. 상품별 확대(--card_img_zoom)에
      곱해지므로, 확대를 걸어둔 카드도 hover 반응은 똑같은 비율로 납니다. */
   --card_img_hover_grow: 1.04;
-  /* 아래 .card_product_link::after가 이 카드를 기준으로 펼쳐집니다. */
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
 }
 
-/* 카드 아무 데나 눌러도 상세 페이지로 가게 합니다. article 전체를 <a>로 감싸면
-   안에 있는 아이콘 링크·버튼과 링크가 중첩돼 잘못된 HTML이 되므로, 두 군데로
-   나눠서 덮습니다.
+/* 이미지와 상품 헤더를 누르면 상세 페이지로 가게 합니다. article 전체를 <a>로
+   감싸면 swatch 버튼과 링크가 중첩돼 잘못된 HTML이 되므로 두 군데로 나눕니다.
 
      사진 영역  → .card_product_media_link (사진을 직접 감싼 링크)
-     글 영역    → .card_product_link의 ::after
+     상품 헤더  → .card_product_link의 ::after
 
-   ::after를 카드 전체로 펼치면 사진 위까지 덮어버려서 마우스가
-   .card_product_media에 닿지 않고, 그러면 원단 사진 교체(:hover)가 아예
-   동작하지 않습니다. 그래서 ::after는 글 영역(.card_product_content) 안으로만
-   펼치고, 사진은 사진대로 자기 링크를 갖습니다. */
+   설명·태그·swatch에는 확장 링크가 닿지 않아 각각 독립적으로 동작합니다. */
 .card_product_link {
   color: inherit;
 }
 
-/* 여기가 ::after의 기준 상자입니다. 이게 없으면 카드 전체로 퍼져 사진을 덮습니다. */
 .card_product_content {
   position: relative;
 }
@@ -781,6 +775,48 @@
   filter: brightness(0) invert(1);
 }
 
+.card_product_wishlist_button.is_selected::before {
+  transform: scaleY(1);
+}
+
+.card_product_wishlist_button.is_selected .card_product_action_icon {
+  filter: brightness(0) invert(1);
+}
+
+.shop_action_toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 9997;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  min-height: 44px;
+  padding: 12px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: var(--color_point);
+  color: var(--color_text_on_dark);
+  box-shadow: 0 8px 24px rgba(10, 10, 10, 0.16);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translate(-50%, 14px);
+  transition: opacity 0.24s ease,
+              transform 0.32s var(--easing_base),
+              visibility 0s linear 0.32s;
+  font-family: var(--font_ui);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+}
+
+.shop_action_toast.is_visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  transition-delay: 0s;
+}
+
 .card_product_content {
   display: flex;
   flex-direction: column;
@@ -797,6 +833,7 @@
 }
 
 .card_product_header {
+  position: relative;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -825,18 +862,49 @@
 }
 
 .card_product_swatches {
+  position: relative;
+  z-index: 2;
   display: flex;
   gap: 8px;
+  width: fit-content;
 }
 
 .card_product_swatch {
+  display: block;
+  flex: 0 0 auto;
   width: 16px;
   height: 16px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 0;
+  box-shadow: none;
+  appearance: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease,
+              box-shadow 0.2s ease;
 }
 
-.card_product_swatch:first-child {
+.card_product_swatches:not(.is_initialized) .card_product_swatch:first-child,
+.card_product_swatch.is_selected {
   border: 1px solid #fff;
   box-shadow: 0 1px 1.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.card_product_swatch:not(.is_selected):hover {
+  border-color: #fff;
+  box-shadow: 0 1px 1.5px 0 rgba(0, 0, 0, 0.25);
+}
+
+.card_product_swatch:focus-visible {
+  outline: 1px solid var(--color_text);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card_product_swatch,
+  .shop_action_toast {
+    transition: none;
+  }
 }
 
 .card_product_supporting {

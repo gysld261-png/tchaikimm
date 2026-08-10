@@ -9,6 +9,28 @@
 
 :root {
   --color_bg_alt: #f7f7f7;
+
+  /* ★★ 화면 끝까지 채우는(full-bleed) 요소는 100vw 대신 반드시 이 변수를 쓰세요.
+
+     1850~1990px에서 common/css/common.css가 `html { zoom: 0.75 }`를 겁니다.
+     이때 100vw는 **축소되기 전 화면 폭**(1920px)으로 계산된 뒤 그려질 때 0.75가
+     곱해져 1440px이 됩니다. 그래서 좌우에 233px씩 배경이 드러나 띠가 벽에 막힌
+     것처럼 보였습니다(shop 마퀴 · collection 3D 스테이지에서 실제로 발생).
+
+     축소 비율로 미리 나눠 두면 그려질 때 정확히 화면 폭이 됩니다.
+     --site_view_scale은 그 구간에만 선언돼 있어 다른 폭에서는 폴백 1이 쓰입니다.
+
+     100vw에는 스크롤바가 포함돼 실제 화면보다 약 15px 넓지만,
+     common.css의 `body { overflow-x: hidden }`이 그만큼을 잘라내 가로 스크롤은
+     생기지 않습니다. */
+  --full_bleed_width: calc(100vw / var(--site_view_scale, 1));
+
+  /* ★ 세로(100vh)에는 같은 보정을 하지 마세요.
+     고정 구간의 높이는 이 파일 아래쪽 `.pin-spacer:has(...)` 역보정이 이미
+     처리합니다. ScrollTrigger가 **역보정이 걸리기 전에** 잰 높이를 인라인으로
+     박는데, 그 값이 역보정 안에서 정확히 1/0.75배가 되어 서로 상쇄됩니다.
+     여기서 100vh를 미리 나눠 두면 이중 보정이 되어 섹션이 화면보다 커집니다
+     (실제로 1440px이 나와 아래가 잘렸습니다). */
 }
 
 /* =========================================================
@@ -499,9 +521,14 @@
   display: inline-block;
 }
 
+/* ★ will-change에 filter를 넣지 마세요. 예전에는 글자 17개가 각각
+   filter: blur()를 스크롤에 맞춰 애니메이션했는데, blur는 합성만으로 처리되지 않아
+   **글자마다 매 프레임 다시 그려졌습니다.** 이 섹션부터 스크롤이 버벅인 주된
+   원인이었습니다. 등장 연출은 transform(scale·skew·이동)과 opacity로만 만듭니다 —
+   둘 다 GPU 합성으로 끝나 페인트가 0입니다. */
 .brand_collage_letter {
   display: inline-block;
-  will-change: transform, opacity, filter;
+  will-change: transform, opacity;
 }
 
 /* 중앙 카드 덱 카피 — 레퍼런스의 6개 텍스트 위계를 카드 주변에 배치합니다. */
@@ -1366,14 +1393,27 @@
   min-width: 120px;
   aspect-ratio: 1 / 1;
   border-radius: 50%;
+  overflow: hidden;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
-  background-repeat: no-repeat;
   background-color: var(--color_bg, #fffdf9);
   opacity: 0;
   transform: translate(-50%, -50%) scale(0.9);
   transition: opacity 0.25s ease, transform 0.25s ease;
   pointer-events: none;
-  will-change: transform, background-position;
+  will-change: transform;
+}
+
+/* ★ 확대된 사진을 transform으로 밀어 보여줍니다.
+   예전에는 이 원의 background-position을 매 프레임 바꿨는데, background-position은
+   합성만으로 처리되지 않아 **4380 × 1905 사진을 2.5배로 확대한 면적 전체를 매 프레임
+   다시 칠했습니다.** transform은 GPU 합성만으로 끝나 페인트가 0이 됩니다.
+   크기와 위치는 js/main.js가 인라인으로 씁니다(부모 원 기준 px). */
+.detail_lens_img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  max-width: none;
+  will-change: transform;
 }
 
 /* 섹션이 화면에 들어와 연출이 시작될 때 js/main.js가 켭니다.
@@ -1519,11 +1559,13 @@
 }
 
 /* product 마퀴 — 같은 5장 묶음을 두 벌 이어 끊김 없이 흘립니다. */
+/* 화면 끝까지 채웁니다 — 100vw를 직접 쓰면 1920 줌 구간에서 1440px로 줄어
+   좌우에 벽이 생깁니다. 이유는 파일 상단 --full_bleed_width 주석 참고. */
 .shop_products_viewport {
   overflow: hidden;
-  width: 100vw;
+  width: var(--full_bleed_width);
   margin-top: clamp(80px, 8vw, 200px);
-  margin-left: calc(50% - 50vw);
+  margin-left: calc(50% - var(--full_bleed_width) / 2);
 }
 
 .shop_products_track {
@@ -1556,6 +1598,58 @@
 
 .shop_product.is_dim {
   opacity: 0.2;
+}
+
+/* =========================================================
+   공통 1920px zoom 보정
+
+   일반 콘텐츠는 common/css/common.css의 0.75 zoom을 그대로 사용합니다.
+   전체 화면 Hero와 ScrollTrigger pin 구간만 바깥 좌표계까지 복원해야
+   화면 잘림, 섹션 겹침, pin 순간 좌측 이동이 생기지 않습니다.
+   ========================================================= */
+@media (min-width: 1850px) and (max-width: 1990px) {
+  .hero {
+    width: 100%;
+    zoom: calc(1 / var(--site_view_scale));
+  }
+
+  .pin-spacer:has(> .model),
+  .pin-spacer:has(> .detail_pin),
+  .pin-spacer:has(> .brand_word_pin),
+  .pin-spacer:has(> .collection) {
+    max-width: 100%;
+    zoom: calc(1 / var(--site_view_scale));
+  }
+
+  .pin-spacer > .model,
+  .pin-spacer > .detail_pin,
+  .pin-spacer > .brand_word_pin,
+  .pin-spacer > .collection {
+    /* ScrollTrigger가 공통 zoom 기준의 인라인 폭을 넣으므로 이 두 속성만
+       실제 1920px 화면 폭으로 덮어씁니다. 인라인보다 우선해야 해 !important가 필요합니다. */
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .pin-spacer > .detail_pin {
+    top: 0 !important;
+  }
+
+  /* ★ collection은 안에 full-bleed 요소(.collection_row)를 갖고 있습니다.
+     위 역보정으로 이 안쪽은 화면과 1:1 좌표계가 되므로 두 변수가 0.75로 나누면
+     안 됩니다(무대가 1.33배로 넘칩니다). 여기서 원래 뷰포트 단위로 되돌립니다.
+
+     ★ `--site_view_scale: 1`만 다시 선언하는 것으로는 안 됩니다.
+       커스텀 속성 안의 var()는 **선언된 곳(:root) 기준으로 먼저 계산되어**
+       그 결과가 상속되기 때문에, 아래에서 축소 비율만 바꿔도 이미 계산이
+       끝난 --full_bleed_* 값은 바뀌지 않습니다. 변수 자체를 덮어써야 합니다.
+
+     선택자에 .is_scroll_ready까지 붙인 것은 우선순위 때문입니다 —
+     `.collection.is_scroll_ready` 규칙이 이 블록보다 아래에 있어서
+     같은 우선순위면 그쪽이 이깁니다. */
+  .pin-spacer > .collection.is_scroll_ready {
+    --full_bleed_width: 100vw;
+  }
 }
 
 .shop_product_link {
@@ -1596,6 +1690,39 @@
   padding: 120px 0;
   text-align: center;
   background-color: var(--color_bg_alt);
+}
+
+/* ---------------------------------------------------------
+   스크롤 연출 — js/main.js가 .is_scroll_ready를 붙였을 때만.
+   섹션을 화면에 고정한 채 스크롤에 따라 카드가 한 장씩 흘러나옵니다.
+   붙지 않으면(모션 감소·GSAP 없음·1024px 미만) 예전처럼 시간으로 흐릅니다.
+
+   ★ 고정할 요소(.collection)의 부모는 main(block)이라 pinSpacing이 정상 동작합니다.
+     detail에서 겪은 "부모가 flex면 ScrollTrigger가 자리를 확보하지 않는" 문제가
+     여기서는 없습니다. 부모 구조를 바꿀 때 이 점을 확인하세요.
+   --------------------------------------------------------- */
+.collection.is_scroll_ready {
+  /* 제목·링크·아래 문구·여백이 쓰는 높이입니다. 무대 상한을 여기서 뺍니다.
+     값을 바꾸면 무대가 그만큼 커지거나 작아집니다. */
+  --collection_chrome: 460px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100vh;
+  /* ★ max-height가 안전장치입니다. 위 --collection_chrome이 실제와 조금 어긋나도
+     섹션이 화면보다 커지지 않습니다(넘치면 overflow: hidden이 위아래를 고르게
+     잘라냅니다). 이게 없으면 아래 문구가 화면 밖으로 밀립니다. */
+  max-height: 100vh;
+  /* 원래 120px인데, 화면 하나에 다 들어가야 하므로 줄입니다 */
+  padding: 48px 0;
+}
+
+/* 무대 높이를 화면 높이로도 한 번 더 제한합니다. 넓고 세로가 넉넉한 화면에서는
+   상한이 원래 값보다 커서 시안 크기가 그대로 남고, 세로가 짧은 화면에서만
+   무대가 낮아집니다. */
+.collection.is_scroll_ready .collection_row.is_perspective_ready {
+  height: min(clamp(440px, 47vw, 760px), calc(100vh - var(--collection_chrome)));
 }
 
 .collection_container {
@@ -1663,9 +1790,12 @@
 
   position: relative;
   display: block;
-  width: 100vw;
+  /* 카드가 좌우로 날아가는 무대라 화면 끝까지 닿아야 합니다 — 100vw를 직접 쓰면
+     1920 줌 구간에서 1440px로 줄어 233px 지점에서 사진이 잘립니다.
+     이유는 파일 상단 --full_bleed_width 주석 참고. */
+  width: var(--full_bleed_width);
   height: clamp(440px, 47vw, 760px);
-  margin-inline: calc(50% - 50vw);
+  margin-inline: calc(50% - var(--full_bleed_width) / 2);
   padding: 0;
   overflow: hidden;
   perspective: 900px;
@@ -2187,9 +2317,10 @@
     --collection_gap_stage_bottom: 40px;
   }
 
+  /* 이 폭에는 줌이 걸리지 않지만, full-bleed 계산을 한 가지로 통일해 둡니다 */
   .collection_row {
-    width: 100vw;
-    margin-inline: calc(50% - 50vw);
+    width: var(--full_bleed_width);
+    margin-inline: calc(50% - var(--full_bleed_width) / 2);
   }
 
   .collection_item,

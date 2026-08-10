@@ -8,12 +8,15 @@
   window.tchaikimShopTransitionInitialized = true;
 
   var TRANSITION_KEY = "tchaikim_shop_transition";
-  /* ★ 텍스트 체류 시간입니다. Main 쪽 2200ms + Shop 쪽 1000ms 동안 보여
-     사용자가 Tchai Kim / Shop을 읽은 뒤 계단 퇴장이 시작됩니다. */
-  var MIN_EXIT_DELAY_MS = 1000;
-  var MIN_NAVIGATION_DELAY_MS = 2200;
-  var MAX_WAIT_MS = 3200;
-  var EXIT_DURATION_MS = 1100;
+  var DETAIL_TRANSITION_KEY = "tchaikim_shop_detail_transition";
+  /* Resource warm-up runs in parallel with these shorter editorial intro timings. */
+  var MIN_EXIT_DELAY_MS = 450;
+  var MIN_NAVIGATION_DELAY_MS = 1350;
+  var MAX_WAIT_MS = 2200;
+  var EXIT_DURATION_MS = 850;
+  var DETAIL_NAVIGATION_DELAY_MS = 420;
+  var DETAIL_MAX_WAIT_MS = 800;
+  var DETAIL_ENTRY_DURATION_MS = 620;
   var isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function createTransition() {
@@ -99,6 +102,11 @@
 
   function isShopLink(link) {
     var targetUrl;
+    var href = link.getAttribute("href");
+
+    if (!href || href.charAt(0) === "#") {
+      return false;
+    }
 
     try {
       targetUrl = new URL(link.href, window.location.href);
@@ -110,12 +118,59 @@
       /\/pages\/shop\/(?:index\.html)?$/.test(targetUrl.pathname);
   }
 
+  function isShopDetailLink(link) {
+    var targetUrl;
+
+    try {
+      targetUrl = new URL(link.href, window.location.href);
+    } catch (error) {
+      return false;
+    }
+
+    return targetUrl.origin === window.location.origin &&
+      /\/pages\/shop_detail\/(?:index\.html)?$/.test(targetUrl.pathname);
+  }
+
+  function isCurrentShopPage() {
+    return /\/pages\/shop\/(?:index\.html)?$/.test(window.location.pathname);
+  }
+
+  function warmShopDetail(targetUrl) {
+    var detailUrl = new URL(targetUrl, window.location.href);
+    var baseUrl = new URL("./", detailUrl);
+
+    return Promise.allSettled([
+      fetchResource(detailUrl.href),
+      fetchResource(new URL("css/shop_detail.css", baseUrl).href),
+      loadImage(new URL("assets/shop1.png", baseUrl).href)
+    ]);
+  }
+
+  function navigateToShopDetail(link) {
+    document.documentElement.classList.add("is_shop_detail_leaving");
+
+    try {
+      window.sessionStorage.setItem(DETAIL_TRANSITION_KEY, "1");
+    } catch (error) {
+      /* Navigation continues when sessionStorage is unavailable. */
+    }
+
+    var minimumDelay = wait(isReducedMotion ? 80 : DETAIL_NAVIGATION_DELAY_MS);
+    var preload = warmShopDetail(link.href);
+
+    Promise.race([
+      Promise.all([minimumDelay, preload]),
+      wait(DETAIL_MAX_WAIT_MS)
+    ]).then(function () {
+      window.location.assign(link.href);
+    });
+  }
+
   function handleDocumentClick(event) {
     var link = event.target.closest("a[href]");
 
     if (
       !link ||
-      !isShopLink(link) ||
       event.defaultPrevented ||
       event.button !== 0 ||
       event.metaKey ||
@@ -124,6 +179,22 @@
       event.altKey ||
       link.target === "_blank"
     ) {
+      return;
+    }
+
+    if (isCurrentShopPage() && isShopDetailLink(link)) {
+      event.preventDefault();
+      navigateToShopDetail(link);
+      return;
+    }
+
+    if (!isShopLink(link)) {
+      return;
+    }
+
+    /* A Shop link inside the current Shop page is a no-op, so the intro cannot restart. */
+    if (isCurrentShopPage()) {
+      event.preventDefault();
       return;
     }
 
@@ -165,8 +236,10 @@
       /* 저장소가 막혀 있어도 아래 화면 공개는 계속합니다. */
     }
 
+    /* The 3D gallery uses optimized JPG textures. Its large PNG fallback is not
+       allowed to hold the intro open in browsers where WebGL is available. */
     var criticalImages = Array.prototype.slice.call(document.querySelectorAll(
-      ".hero_section_bg, .hero_gallery_fallback"
+      ".hero_section_bg"
     ));
     var imagePromises = criticalImages.map(function (image) {
       if (image.complete) {
@@ -201,10 +274,42 @@
     });
   }
 
+  function revealShopDetailPage() {
+    var root = document.documentElement;
+
+    if (!root.classList.contains("has_shop_detail_transition_entry")) {
+      return;
+    }
+
+    try {
+      window.sessionStorage.removeItem(DETAIL_TRANSITION_KEY);
+    } catch (error) {
+      /* The page reveal does not depend on storage access. */
+    }
+
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        root.classList.add("is_shop_detail_ready");
+
+        window.setTimeout(function () {
+          root.classList.remove(
+            "has_shop_detail_transition_entry",
+            "is_shop_detail_ready"
+          );
+        }, isReducedMotion ? 160 : DETAIL_ENTRY_DURATION_MS);
+      });
+    });
+  }
+
+  window.addEventListener("pageshow", function () {
+    document.documentElement.classList.remove("is_shop_detail_leaving");
+  });
+
   /* 이벤트 위임이라 common.js가 나중에 주입하는 헤더·푸터 링크도 잡힙니다. */
   /* capture 단계에서 먼저 받아 헤더 메뉴 등 다른 클릭 핸들러가 버블링을
      중단하더라도 Shop 전환을 놓치지 않습니다. */
   document.addEventListener("click", handleDocumentClick, true);
 
   revealShopPage();
+  revealShopDetailPage();
 })();

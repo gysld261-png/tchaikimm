@@ -281,6 +281,12 @@
         }
         gsap.set(bespokeCopyItems, { opacity: 1, y: 0 });
         gsap.set(readyCopyItems, { opacity: 0, y: 12 });
+        /* ★ 여기에 filter: blur()를 넣지 마세요. 글자 17개가 각각 blur를 스크롤에
+           맞춰 애니메이션하면 매 프레임 글자마다 다시 그려져 이 섹션부터 눈에 띄게
+           버벅입니다. 지금은 transform(scale·skew·이동)과 opacity만 씁니다 —
+           둘 다 GPU 합성으로 끝나 페인트가 발생하지 않습니다.
+           blur 느낌을 되살리고 싶다면 글자마다가 아니라 nameLeft/nameRight
+           두 요소에만 걸어야 합니다(레이어 17개 → 2개). */
         gsap.set(leftLetters, {
           opacity: 0,
           xPercent: -25,
@@ -288,7 +294,6 @@
           scale: 2,
           skewX: 15,
           skewY: 30,
-          filter: "blur(0.05em)",
           transformOrigin: "50% 100%"
         });
         gsap.set(rightLetters, {
@@ -298,8 +303,29 @@
           scale: 2,
           skewX: 15,
           skewY: 30,
-          filter: "blur(0.05em)",
           transformOrigin: "50% 0%"
+        });
+      }
+
+      /* ★ 카드 사진을 "드러나기 전에" 미리 디코딩해 둡니다.
+         사진은 loading="lazy"라 브라우저가 알아서 늦게 받는데, 그러면 디코딩이
+         카드가 나타나는 바로 그 프레임에 겹쳐 스크롤이 멈칫합니다.
+         고정 구간에 들어오는 순간(카드가 보이기 화면 여러 개 전)에 decode()를 불러
+         그 비용을 미리 치릅니다. decode()는 실패해도 무시하면 되므로 catch만 답니다. */
+      var warmDecodedCards = false;
+
+      function warmDecodeCards() {
+        if (warmDecodedCards || !cardItems.length) {
+          return;
+        }
+        warmDecodedCards = true;
+
+        cardItems.forEach(function (card) {
+          var img = card.querySelector("img");
+
+          if (img && typeof img.decode === "function") {
+            img.decode().catch(function () {});
+          }
         });
       }
 
@@ -310,6 +336,8 @@
           end: "+=" + window.innerHeight * 10,
           pin: true,
           scrub: 1,
+          onEnter: warmDecodeCards,
+          onEnterBack: warmDecodeCards,
           /* ★ 이 핀은 페이지에서 제일 아래에 있으므로 **가장 나중에** 계산돼야 합니다.
              ScrollTrigger는 기본적으로 "만들어진 순서"대로 다시 계산하는데, detail의
              핀은 이 파일 아래쪽 별도 IIFE에서 나중에 만들어집니다. 그대로 두면 이
@@ -337,7 +365,6 @@
               scale: 1,
               skewX: 0,
               skewY: 0,
-              filter: "blur(0em)",
               duration: 0.72,
               ease: "power3.out"
             }, randomOrder * 0.045);
@@ -899,6 +926,7 @@
   var pin = section && section.querySelector(".detail_pin");
   var stage = section && section.querySelector(".detail_stage");
   var lens = stage && stage.querySelector(".detail_lens");
+  var lensImage = lens && lens.querySelector(".detail_lens_img");
   var image = stage && stage.querySelector(".detail_img");
   var texts = stage ? stage.querySelectorAll(".detail_text") : [];
   var markers = stage ? stage.querySelectorAll(".detail_marker") : [];
@@ -1002,9 +1030,15 @@
     return Math.min(Math.max(value, min), max);
   }
 
-  /* 원본 경로는 마크업 한 곳(.detail_img)에만 두고 여기서 읽어옵니다 */
+  /* 확대해 보여줄 사진의 크기를 정합니다. 위치는 매 프레임 transform으로 밉니다.
+     ★ 크기(width)는 여기서 딱 한 번만 씁니다 — 매 프레임 바꾸면 레이아웃이
+       다시 계산되어 transform으로 옮긴 이점이 사라집니다. */
   function applyLensImage() {
-    lens.style.backgroundImage = 'url("' + (image.currentSrc || image.src) + '")';
+    if (!lensImage) {
+      return;
+    }
+    lensImage.style.width = stageWidth * DETAIL_LENS_ZOOM + "px";
+    lensImage.style.height = stageHeight * DETAIL_LENS_ZOOM + "px";
   }
 
   /* 돋보기가 들를 지점은 화면에 보이는 점(.detail_marker) 위치를 그대로 씁니다.
@@ -1059,8 +1093,13 @@
       Math.max(0, zoomedHeight - lensSize)
     );
 
-    lens.style.backgroundSize = zoomedWidth + "px " + zoomedHeight + "px";
-    lens.style.backgroundPosition = -backgroundX + "px " + -backgroundY + "px";
+    /* ★ transform만 씁니다. 예전에는 background-position을 바꿨는데, 그건 합성만으로
+       처리되지 않아 확대된 사진 면적 전체를 매 프레임 다시 칠했습니다.
+       translate3d는 GPU 합성으로 끝나 페인트가 발생하지 않습니다. */
+    if (lensImage) {
+      lensImage.style.transform =
+        "translate3d(" + -backgroundX + "px, " + -backgroundY + "px, 0)";
+    }
   }
 
   /* 설명을 돋보기 바로 옆에 놓습니다. 돋보기가 사진 오른쪽에 있으면 왼쪽에,
@@ -1147,6 +1186,8 @@
       anticipatePin: 1,
       onRefresh: function () {
         measure();
+        /* 창 크기가 바뀌면 사진 크기도 다시 잡아야 배율이 유지됩니다 */
+        applyLensImage();
       },
       onUpdate: function (self) {
         applyProgress(self.progress);
@@ -1176,6 +1217,9 @@
       section.classList.remove("is_scroll_ready");
       lens.classList.remove("is_active");
       lens.removeAttribute("style");
+      if (lensImage) {
+        lensImage.removeAttribute("style");
+      }
       Array.prototype.forEach.call(texts, function (text) {
         text.removeAttribute("style");
       });
@@ -1200,6 +1244,12 @@
   var MAX_VISIBLE_CARDS = 9;
   var CARD_INTRO_DELAY = 850;
   var RIGHT_STREAM_OFFSET = 0.5;
+  /* ★ 스크롤 연출에서 카드 한 장에 쓰는 스크롤 길이(화면 높이 %)입니다.
+     "너무 빨리 지나간다"면 올리고, "너무 길다"면 내리세요.
+     섹션 전체 길이 = 이 값 × (카드 흐름 전체 단계 수, 아래 phaseSpan). */
+  var COLLECTION_SCROLL_PER_CARD = 32;
+  /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
+  var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
   /* 배열을 한 번 섞은 뒤 홀수·짝수 위치를 좌우로 나눕니다.
      같은 이미지를 복제하지 않아 한 화면 안에서 중복되어 보이지 않습니다. */
   var STREAM_ORDER = [0, 7, 4, 3, 8, 11, 2, 1, 10, 9, 6, 5];
@@ -1252,6 +1302,16 @@
   var pausedAt = null;
   var isInView = false;
   var hasStarted = false;
+  /* 스크롤이 카드를 밀고 있는 동안에는 시간 기반 반복을 멈춥니다.
+     둘이 동시에 돌면 서로의 위치를 덮어씁니다. */
+  var isScrollDriven = false;
+
+  /* 흐름 전체를 한 번 다 보여주는 데 필요한 단계 수.
+     카드 i는 phase가 i일 때 출발해 i + streamLength에서 한 바퀴를 끝냅니다.
+     마지막 카드(index streamLength-1)까지 끝나려면 2 × streamLength − 1이 필요하고,
+     오른쪽 줄은 RIGHT_STREAM_OFFSET만큼 늦게 출발하므로 그만큼 더 갑니다. */
+  var streamLength = Math.max(leftItems.length, rightItems.length);
+  var phaseSpan = streamLength * 2 - 1 + RIGHT_STREAM_OFFSET;
 
   function setCardPosition(element, progress, direction) {
     /* x는 일정하게 이동하고 깊이만 smoothstep으로 변화시켜
@@ -1288,24 +1348,29 @@
     setCardPosition(element, position / visibleCardCount, direction);
   }
 
-  function render(time) {
-    var elapsed = time - startTime;
-    var phase = (elapsed - CARD_INTRO_DELAY) / CARD_INTERVAL;
-
+  /* 두 줄을 한 시점(phase)으로 그립니다. 시간 기반 반복과 스크롤 연출이 같은
+     경로를 쓰도록 분리해 두었습니다 — 어느 쪽이 밀든 화면 결과는 같습니다. */
+  function renderPhase(phase) {
     leftItems.forEach(function (element, index) {
       renderStreamCard(element, index, phase, -1, leftItems.length);
     });
     rightItems.forEach(function (element, index) {
       renderStreamCard(element, index, phase - RIGHT_STREAM_OFFSET, 1, rightItems.length);
     });
+  }
 
-    if (isInView && !document.hidden) {
+  function render(time) {
+    var elapsed = time - startTime;
+
+    renderPhase((elapsed - CARD_INTRO_DELAY) / CARD_INTERVAL);
+
+    if (isInView && !document.hidden && !isScrollDriven) {
       frameId = window.requestAnimationFrame(render);
     }
   }
 
   function syncPlayState() {
-    if (isInView && hasStarted && !document.hidden) {
+    if (isInView && hasStarted && !document.hidden && !isScrollDriven) {
       if (pausedAt !== null) {
         startTime += performance.now() - pausedAt;
         pausedAt = null;
@@ -1343,4 +1408,65 @@
   }
 
   document.addEventListener("visibilitychange", syncPlayState);
+
+  /* =========================================================
+     스크롤 연출 — 섹션을 화면에 고정하고 스크롤이 카드를 밀게 합니다.
+
+     시간으로 흐르면 스크롤 속도에 따라 사용자가 사진 12장 중 일부만 보고
+     지나갑니다. 고정해 두면 스크롤한 만큼 정확히 진행하므로 끝까지 볼 수
+     있고, 되감으면 되돌아갑니다.
+
+     ★ 이 핀은 페이지에서 brand_word_pin보다 아래에 있으므로 refreshPriority가
+       그보다 더 낮아야 합니다(-1 → -2). 핀은 "페이지 순서"대로 다시 계산돼야
+       하는데 ScrollTrigger는 기본적으로 "만들어진 순서"를 쓰기 때문입니다.
+       이 값을 지우면 위 핀이 자리를 잡기 전 좌표로 굳어 섹션이 겹칩니다.
+     ========================================================= */
+  var section = row.closest(".collection");
+  var isGsapReady = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
+
+  if (!section || !isGsapReady) {
+    return;
+  }
+
+  window.gsap.matchMedia().add(COLLECTION_SCROLL_MEDIA, function () {
+    isScrollDriven = true;
+    syncPlayState(); /* 돌고 있던 시간 기반 반복을 멈춥니다 */
+
+    section.classList.add("is_scroll_ready");
+    /* 가운데 검은 프레임은 연출 내내 보여야 합니다 */
+    row.classList.add("is_loop_active");
+
+    var trigger = window.ScrollTrigger.create({
+      trigger: section,
+      start: "top top",
+      end: "+=" + COLLECTION_SCROLL_PER_CARD * phaseSpan + "%",
+      pin: section,
+      anticipatePin: 1,
+      refreshPriority: -2,
+      onUpdate: function (self) {
+        renderPhase(self.progress * phaseSpan);
+      }
+    });
+
+    renderPhase(trigger.progress * phaseSpan);
+
+    /* ★ GSAP은 자기가 만든 것만 되돌립니다. 카드의 transform·opacity·z-index는
+       renderStreamCard가 element.style에 직접 쓰므로 여기서 손으로 지웁니다.
+       빼먹으면 창을 좁혔을 때 카드가 마지막 위치에 굳은 채 남습니다. */
+    return function cleanup() {
+      trigger.kill();
+      section.classList.remove("is_scroll_ready");
+      isScrollDriven = false;
+
+      sourceItems.forEach(function (element) {
+        element.removeAttribute("style");
+        element.style.opacity = "0";
+      });
+
+      /* 시간 기반 반복으로 되돌립니다 */
+      startTime = window.performance.now();
+      pausedAt = null;
+      syncPlayState();
+    };
+  });
 })();

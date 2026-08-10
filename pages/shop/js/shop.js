@@ -1,13 +1,13 @@
 import * as THREE from "three";
 
 /* 발표용 상품 상세 연결.
-   현재 상세 템플릿이 하나이므로 ALL / NEW의 열 개 카드에서 이미지, 상품명,
-   가방 아이콘을 누르면 모두 같은 상세페이지로 이동합니다. 상품별 상세가
-   추가되면 각 카드의 상품 식별값에 따라 경로만 나누면 됩니다. */
+   현재 상세 템플릿이 하나이므로 ALL / NEW의 열 개 카드에서 이미지와 상품명을
+   누르면 같은 상세페이지로 이동합니다. 상품별 상세가 추가되면 각 카드의 상품
+   식별값에 따라 경로만 나누면 됩니다. */
 (function connectProductDetailLinks() {
   var detailUrl = "../shop_detail/index.html";
   var productLinks = document.querySelectorAll(
-    ".card_product_media_link, .card_product_link, .card_product_action[href]"
+    ".card_product_media_link, .card_product_link, .motif_product_card"
   );
 
   productLinks.forEach(function (link) {
@@ -22,6 +22,202 @@ import * as THREE from "three";
    hover/focus 시 그 카드가 정면으로 돌아오며 자동 회전이 멈추고, 벗어나면
    멈춘 지점부터 다시 돌아갑니다. Three.js/WebGL을 쓸 수 없으면 정지 이미지
    (`.hero_gallery_fallback`)가 그대로 보입니다. */
+
+(function initProductActions() {
+  var WISHLIST_STORAGE_KEY = "tchaikim_wishlist";
+  var wishlistItems = readWishlistItems();
+  var toastTimer = 0;
+  var toast = document.createElement("div");
+  var toastMessage = document.createElement("span");
+
+  toast.className = "shop_action_toast";
+  toast.setAttribute("role", "status");
+  toast.setAttribute("aria-live", "polite");
+  toast.setAttribute("aria-atomic", "true");
+  toast.appendChild(toastMessage);
+  document.body.appendChild(toast);
+
+  function readWishlistItems() {
+    try {
+      var storedItems = JSON.parse(window.localStorage.getItem(WISHLIST_STORAGE_KEY));
+      return Array.isArray(storedItems) ? storedItems.filter(function (item) {
+        return typeof item === "string" && item.trim() !== "";
+      }) : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+  function saveWishlistItems() {
+    try {
+      window.localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistItems));
+    } catch (error) {
+      /* Wishlist selection still works for the current page session. */
+    }
+  }
+
+  function showToast(message) {
+    window.clearTimeout(toastTimer);
+    toast.classList.remove("is_visible");
+    toastMessage.textContent = message;
+
+    window.requestAnimationFrame(function () {
+      window.requestAnimationFrame(function () {
+        toast.classList.add("is_visible");
+      });
+    });
+
+    toastTimer = window.setTimeout(function () {
+      toast.classList.remove("is_visible");
+    }, 2400);
+  }
+
+  function updateWishlistButtons(productName, isSelected) {
+    document.querySelectorAll(".card_product_wishlist_button").forEach(function (button) {
+      if (button.dataset.productName !== productName) {
+        return;
+      }
+
+      button.classList.toggle("is_selected", isSelected);
+      button.setAttribute("aria-pressed", String(isSelected));
+
+      var label = button.querySelector(".a11y_hidden");
+      if (label) {
+        label.textContent = (isSelected ? "Remove " : "Add ") + productName +
+          (isSelected ? " from wishlist" : " to wishlist");
+      }
+    });
+  }
+
+  function convertToButton(action, className) {
+    var button = action;
+
+    if (action.tagName !== "BUTTON") {
+      button = document.createElement("button");
+      button.className = action.className;
+      button.innerHTML = action.innerHTML;
+      button.type = "button";
+      action.replaceWith(button);
+    }
+
+    button.classList.add(className);
+    return button;
+  }
+
+  function addCartItem() {
+    if (window.tchaikimCart && typeof window.tchaikimCart.add === "function") {
+      window.tchaikimCart.add(1);
+      return;
+    }
+
+    try {
+      var storedCount = parseInt(window.localStorage.getItem("tchaikim_cart_count"), 10);
+      var nextCount = (Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0) + 1;
+      window.localStorage.setItem("tchaikim_cart_count", String(nextCount));
+    } catch (error) {
+      /* The common header API will take over when it becomes available. */
+    }
+  }
+
+  document.querySelectorAll(".card_product").forEach(function (card) {
+    var productNameElement = card.querySelector(".card_product_name");
+    var productName = productNameElement ? productNameElement.textContent.trim() : "Product";
+    var heartAction = null;
+    var bagAction = null;
+
+    card.querySelectorAll(".card_product_action").forEach(function (action) {
+      var icon = action.querySelector(".card_product_action_icon");
+      var iconSource = icon ? icon.getAttribute("src") || "" : "";
+
+      if (iconSource.indexOf("icon_heart") !== -1) {
+        heartAction = action;
+      } else if (iconSource.indexOf("icon_bag") !== -1) {
+        bagAction = action;
+      }
+    });
+
+    if (heartAction) {
+      var wishlistButton = convertToButton(heartAction, "card_product_wishlist_button");
+      var isInitiallySelected = wishlistItems.indexOf(productName) !== -1;
+
+      wishlistButton.dataset.productName = productName;
+      updateWishlistButtons(productName, isInitiallySelected);
+      wishlistButton.addEventListener("click", function () {
+        var itemIndex = wishlistItems.indexOf(productName);
+        var isSelected = itemIndex === -1;
+
+        if (isSelected) {
+          wishlistItems.push(productName);
+        } else {
+          wishlistItems.splice(itemIndex, 1);
+        }
+
+        saveWishlistItems();
+        updateWishlistButtons(productName, isSelected);
+        showToast(isSelected ? "Saved to your wishlist." : "Removed from your wishlist.");
+      });
+    }
+
+    if (bagAction) {
+      var cartButton = convertToButton(bagAction, "card_product_cart_button");
+      var cartLabel = cartButton.querySelector(".a11y_hidden");
+
+      if (cartLabel) {
+        cartLabel.textContent = "Add " + productName + " to shopping bag";
+      }
+
+      cartButton.addEventListener("click", addCartItem);
+    }
+  });
+})();
+
+(function initProductSwatches() {
+  var swatchGroups = document.querySelectorAll(".card_product_swatches");
+
+  swatchGroups.forEach(function (group) {
+    var card = group.closest(".card_product");
+    var productNameElement = card ? card.querySelector(".card_product_name") : null;
+    var productName = productNameElement ? productNameElement.textContent.trim() : "Product";
+    var swatches = Array.prototype.map.call(
+      group.querySelectorAll(".card_product_swatch"),
+      function (swatch, index) {
+        var button = swatch;
+
+        if (swatch.tagName !== "BUTTON") {
+          button = document.createElement("button");
+          button.className = swatch.className;
+          button.style.cssText = swatch.style.cssText;
+          button.type = "button";
+          swatch.replaceWith(button);
+        }
+
+        button.setAttribute("aria-label", productName + " color option " + (index + 1));
+        return button;
+      }
+    );
+
+    if (!swatches.length) {
+      return;
+    }
+
+    function selectSwatch(selectedSwatch) {
+      swatches.forEach(function (swatch) {
+        var isSelected = swatch === selectedSwatch;
+        swatch.classList.toggle("is_selected", isSelected);
+        swatch.setAttribute("aria-pressed", String(isSelected));
+      });
+    }
+
+    selectSwatch(swatches[0]);
+    group.classList.add("is_initialized");
+
+    swatches.forEach(function (swatch) {
+      swatch.addEventListener("click", function () {
+        selectSwatch(swatch);
+      });
+    });
+  });
+})();
 
 var heroGallery = document.getElementById("hero_gallery");
 var canvas = document.getElementById("hero_gallery_canvas");

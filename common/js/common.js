@@ -292,6 +292,68 @@
   var lastScrollY = window.scrollY;
   var headerScrollTicking = false;
   var CURRENCY_STORAGE_KEY = "tchaikimm_currency";
+  var CART_STORAGE_KEY = "tchaikim_cart_count";
+  var headerCart = document.querySelector(".header_cart");
+  var headerCartCount = document.querySelector("[data-cart-count]");
+  var cartCount = 0;
+
+  function readCartCount() {
+    try {
+      var storedCount = parseInt(window.localStorage.getItem(CART_STORAGE_KEY), 10);
+      return Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0;
+    } catch (error) {
+      return 0;
+    }
+  }
+
+  function renderCartCount() {
+    if (headerCartCount) {
+      headerCartCount.textContent = cartCount > 99 ? "99+" : String(cartCount);
+      headerCartCount.hidden = cartCount === 0;
+    }
+
+    if (headerCart) {
+      headerCart.setAttribute(
+        "aria-label",
+        "Shopping bag, " + cartCount + (cartCount === 1 ? " item" : " items")
+      );
+    }
+  }
+
+  function setCartCount(nextCount) {
+    cartCount = Math.max(0, Math.floor(Number(nextCount) || 0));
+
+    try {
+      window.localStorage.setItem(CART_STORAGE_KEY, String(cartCount));
+    } catch (error) {
+      /* The in-page count still works when persistent storage is unavailable. */
+    }
+
+    renderCartCount();
+    document.dispatchEvent(new CustomEvent("cart:updated", {
+      detail: { count: cartCount }
+    }));
+    return cartCount;
+  }
+
+  cartCount = readCartCount();
+  renderCartCount();
+  window.tchaikimCart = {
+    add: function (amount) {
+      return setCartCount(cartCount + (Number(amount) || 1));
+    },
+    getCount: function () {
+      return cartCount;
+    },
+    setCount: setCartCount
+  };
+
+  window.addEventListener("storage", function (event) {
+    if (event.key === CART_STORAGE_KEY) {
+      cartCount = readCartCount();
+      renderCartCount();
+    }
+  });
 
   // 헤더가 fixed라 아래로 지나가는 배경이 밝은지 어두운지에 따라 글씨가 안 보일 수 있습니다.
   // 헤더가 덮고 있는 지점의 배경색을 읽어 밝기로 흑/백 변형을 고릅니다.
