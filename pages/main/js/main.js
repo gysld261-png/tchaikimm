@@ -1653,6 +1653,175 @@
 })();
 
 /* =========================================================
+   shop products — 자동 마퀴 + 포인터 드래그
+   ========================================================= */
+(function () {
+  "use strict";
+
+  var viewport = document.querySelector(".shop_products_viewport");
+  var track = viewport ? viewport.querySelector(".shop_products_track") : null;
+
+  if (!viewport || !track || typeof track.getAnimations !== "function") {
+    return;
+  }
+
+  var DRAG_THRESHOLD = 6;
+  var INERTIA_FRICTION = 0.92;
+  var INERTIA_STOP_VELOCITY = 0.02;
+  var activePointerId = null;
+  var marqueeAnimation = null;
+  var startX = 0;
+  var lastX = 0;
+  var lastTime = 0;
+  var velocityX = 0;
+  var isDragging = false;
+  var shouldSuppressClick = false;
+  var inertiaFrameId = null;
+
+  function getMarqueeAnimation() {
+    var animations = track.getAnimations();
+    return animations.length ? animations[0] : null;
+  }
+
+  function normalizeAnimationTime(time, duration) {
+    return ((time % duration) + duration) % duration;
+  }
+
+  function shiftMarquee(deltaX) {
+    if (!marqueeAnimation) {
+      return;
+    }
+
+    var timing = marqueeAnimation.effect.getComputedTiming();
+    var duration = Number(timing.duration);
+    var loopDistance = track.scrollWidth / 2;
+
+    if (!duration || !loopDistance) {
+      return;
+    }
+
+    var currentTime = Number(marqueeAnimation.currentTime) || 0;
+    marqueeAnimation.currentTime = normalizeAnimationTime(
+      currentTime - deltaX / loopDistance * duration,
+      duration
+    );
+  }
+
+  function stopInertia() {
+    if (inertiaFrameId !== null) {
+      window.cancelAnimationFrame(inertiaFrameId);
+      inertiaFrameId = null;
+    }
+  }
+
+  function resumeMarquee() {
+    viewport.classList.remove("is_dragging");
+    if (marqueeAnimation) {
+      marqueeAnimation.play();
+    }
+  }
+
+  function startInertia() {
+    var previousTime = performance.now();
+
+    function renderInertia(time) {
+      var elapsed = Math.min(32, time - previousTime);
+      previousTime = time;
+      shiftMarquee(velocityX * elapsed);
+      velocityX *= Math.pow(INERTIA_FRICTION, elapsed / 16.67);
+
+      if (Math.abs(velocityX) <= INERTIA_STOP_VELOCITY) {
+        inertiaFrameId = null;
+        resumeMarquee();
+        return;
+      }
+
+      inertiaFrameId = window.requestAnimationFrame(renderInertia);
+    }
+
+    inertiaFrameId = window.requestAnimationFrame(renderInertia);
+  }
+
+  function handlePointerDown(event) {
+    if (event.button !== 0 || activePointerId !== null) {
+      return;
+    }
+
+    marqueeAnimation = getMarqueeAnimation();
+    if (!marqueeAnimation) {
+      return;
+    }
+
+    stopInertia();
+    marqueeAnimation.pause();
+    activePointerId = event.pointerId;
+    startX = event.clientX;
+    lastX = event.clientX;
+    lastTime = performance.now();
+    velocityX = 0;
+    isDragging = false;
+    shouldSuppressClick = false;
+    viewport.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event) {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+
+    var now = performance.now();
+    var deltaX = event.clientX - lastX;
+    var elapsed = Math.max(1, now - lastTime);
+
+    if (!isDragging && Math.abs(event.clientX - startX) >= DRAG_THRESHOLD) {
+      isDragging = true;
+      shouldSuppressClick = true;
+      viewport.classList.add("is_dragging");
+    }
+
+    if (isDragging) {
+      shiftMarquee(deltaX);
+      velocityX = velocityX * 0.72 + deltaX / elapsed * 0.28;
+    }
+
+    lastX = event.clientX;
+    lastTime = now;
+  }
+
+  function finishPointerInteraction(event) {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+
+    if (viewport.hasPointerCapture(event.pointerId)) {
+      viewport.releasePointerCapture(event.pointerId);
+    }
+    activePointerId = null;
+
+    if (isDragging && Math.abs(velocityX) > INERTIA_STOP_VELOCITY) {
+      startInertia();
+    } else {
+      resumeMarquee();
+    }
+    isDragging = false;
+  }
+
+  viewport.addEventListener("pointerdown", handlePointerDown);
+  viewport.addEventListener("pointermove", handlePointerMove);
+  viewport.addEventListener("pointerup", finishPointerInteraction);
+  viewport.addEventListener("pointercancel", finishPointerInteraction);
+  viewport.addEventListener("dragstart", function (event) {
+    event.preventDefault();
+  });
+  viewport.addEventListener("click", function (event) {
+    if (shouldSuppressClick) {
+      event.preventDefault();
+      shouldSuppressClick = false;
+    }
+  }, true);
+})();
+
+/* =========================================================
    collection — 중앙 뒤에서 좌우 앞으로 흐르는 무한 반복
    ========================================================= */
 (function () {
@@ -1670,9 +1839,6 @@
   var COLLECTION_STICKY_HOLD = 28;
   /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
   var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)";
-  /* 첫 번째 휠로 사진을 충분히 볼 수 있도록 다음 입력을 잠깐 받지 않는 시간입니다.
-     숫자를 늘리면 더 묵직하게 머물고, 줄이면 두 번째 스크롤을 더 빨리 받을 수 있습니다. */
-  var COLLECTION_FIRST_STEP_HOLD = 520;
   /* 트랙패드 한 번의 손동작이 여러 wheel 이벤트로 쪼개지는 시간을 한 제스처로 묶습니다. */
   var COLLECTION_WHEEL_IDLE = 180;
   /* 두 번째 휠에서 다음 섹션으로 내려가는 Lenis 이동 시간입니다. */
@@ -1684,6 +1850,9 @@
   var COLLECTION_PULL_START_SCALE = 0.84;
   var COLLECTION_PULL_START_Y = 46;
   var COLLECTION_PULL_SEED_PHASE = 1.15;
+  /* 이 진행도보다 적게 당기고 놓으면 자동재생하지 않고 처음으로 돌아갑니다.
+     짧은 휠 한 번이 재생 명령으로 해석되는 것을 막는 문턱입니다. */
+  var COLLECTION_PULL_COMMIT_PROGRESS = 0.18;
   var COLLECTION_PULL_RELEASE_DURATION = 0.58;
   /* 마지막 휠에서 섹션이 살짝 위로 당겨진 뒤 다음 구간으로 풀리는 값입니다. */
   var COLLECTION_EXIT_PULL_SCALE = 0.985;
@@ -1940,7 +2109,8 @@
         (1.02 - COLLECTION_PULL_START_SCALE) * easedProgress;
       var translateY = COLLECTION_PULL_START_Y * (1 - easedProgress);
 
-      pullPhase = COLLECTION_PULL_SEED_PHASE * (0.35 + 0.65 * easedProgress);
+      /* 최소 이동값을 더하지 않습니다. 작은 입력은 작은 만큼만 실시간 반영됩니다. */
+      pullPhase = COLLECTION_PULL_SEED_PHASE * easedProgress;
       renderPhase(pullPhase);
       window.gsap.set(row, {
         y: translateY,
@@ -1950,9 +2120,19 @@
     }
 
     function completeCollectionPull() {
-      startCollectionStream(Math.max(pullPhase, COLLECTION_PULL_SEED_PHASE * 0.35));
+      var shouldStartStream = pullProgress >= COLLECTION_PULL_COMMIT_PROGRESS;
 
-      /* 사용자가 휠을 놓으면 현재 당겨진 위치에서 자동 재생으로 자연스럽게 이어집니다. */
+      if (shouldStartStream) {
+        startCollectionStream(pullPhase);
+      } else {
+        interactionStep = 0;
+        pullProgress = 0;
+        pullPhase = 0;
+        renderPhase(0);
+      }
+
+      /* 충분히 당겼다면 놓은 위치에서 자동재생으로 이어지고, 미세 입력이면
+         자동재생 없이 원위치로 돌아가 다음 제스처를 기다립니다. */
       window.gsap.to(row, {
         y: 0,
         scale: 1,
@@ -1971,7 +2151,7 @@
       window.clearTimeout(firstStepTimer);
       firstStepTimer = window.setTimeout(
         releaseFirstStepWhenIdle,
-        COLLECTION_FIRST_STEP_HOLD
+        COLLECTION_WHEEL_IDLE
       );
     }
 

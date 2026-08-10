@@ -117,15 +117,10 @@
   <section class="model" data-lenis-wheel-multiplier="0.7" aria-labelledby="model_title">
     <div class="common_container model_container">
       <figure class="model_figure" aria-hidden="true">
-        <!-- ★ model_scrub.mp4는 model.mp4를 **모든 프레임 키프레임(all-intra)**으로 다시 뽑은 것입니다.
-             원본은 키프레임이 1초에 하나뿐이라, 스크롤로 currentTime을 옮길 때마다 최대 23장의
-             P프레임을 되짚어 디코딩해야 했습니다. 지금은 어느 지점이든 한 장만 풀면 됩니다.
-             용량도 1.87MB → 1.05MB로 줄었습니다(SSIM 0.983). 원본은 같은 폴더에 그대로 둡니다.
-             ffmpeg -i model.mp4 -an -c:v libx264 -crf 24 -g 1 -keyint_min 1 -sc_threshold 0 \
-               -pix_fmt yuv420p -preset slow -movflags +faststart model_scrub.mp4
-             ★ preload는 metadata입니다 — auto로 두면 1MB가 히어로 사진과 대역폭을 다투며
-               첫 화면을 늦춥니다. js/main.js가 window load 뒤에 auto로 올려 미리 받습니다. -->
-        <video class="model_video" src="vid/model_scrub.mp4" poster="assets/main/cheolikmodel.webp" muted playsinline preload="metadata"></video>
+        <!-- 저장소에 포함된 model.mp4를 사용합니다. preload는 metadata입니다 — auto로 두면
+             영상이 히어로 사진과 대역폭을 다툽니다. js/main.js가 window load 뒤에 auto로
+             올려 스크롤 진입 전에 미리 받습니다. -->
+        <video class="model_video" src="vid/model.mp4" poster="assets/main/cheolikmodel.webp" muted playsinline preload="metadata"></video>
       </figure>
       <div class="model_text">
         <h2 class="model_title" id="model_title">Heritage Redefined,<br>Effortlessly Worn.</h2>
@@ -364,7 +359,7 @@
         </div>
       </div>
 
-      <div class="shop_products_viewport">
+      <div class="shop_products_viewport" role="region" aria-label="Featured products carousel">
         <div class="shop_products_track">
           <ul class="shop_products">
             <li class="shop_product is_dim"><a class="shop_product_link" href="../shop_detail/index.html"><img loading="lazy" decoding="async" src="assets/main/shop/shop_look1.webp" alt="A Tchai Kim look, faded"></a></li>

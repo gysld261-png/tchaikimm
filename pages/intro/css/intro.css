@@ -192,9 +192,8 @@ body {
   }
 }
 
-/* ★ 기본값이 "보이는 상태"입니다. JS가 .is_timed를 붙여야 숨겨지고,
-   3초 뒤 .is_visible로 다시 나타납니다. 반대로 만들면 JS가 실패했을 때
-   START 버튼이 영영 안 보여서 사이트에 들어갈 수 없게 됩니다. */
+/* 첫 페인트에서 문구·START·소셜 아이콘이 잠깐 보이지 않도록 기본 상태부터
+   숨깁니다. 사이트 진입용 .intro_skip은 이 오버레이 밖에 있어 항상 보입니다. */
 .scroll_overlay {
   position: absolute;
   top: 50%;
@@ -206,14 +205,11 @@ body {
   gap: 24px;
   text-align: center;
   color: var(--color_text);
+  opacity: 0;
   transition: opacity 900ms var(--easing_base);
 }
 
-.scroll.is_timed .scroll_overlay {
-  opacity: 0;
-}
-
-.scroll.is_timed .scroll_overlay.is_visible {
+.scroll_overlay.is_visible {
   opacity: 1;
 }
 
