@@ -784,6 +784,9 @@
      뒤에야 시작해 두 섹션 사이가 끊긴다(실측 216px 공백). */
   var WORDMARK_REVEAL_END = 0.5;
   var WORDMARK_START = "top 65%";
+  /* 아래 `ATELIER_STORY_GATE`와 같은 조건이다 — 이 무대는 그 스토리의 한 박자라
+     둘의 켜짐 조건이 어긋나면 안 된다. 1280 미만에서는 섹션이 시안 높이로 남는다. */
+  var WORDMARK_GATE = "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
 
   function initWordmarkScroll() {
     var section = document.querySelector(".wordmark");
@@ -801,7 +804,17 @@
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
-    gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", function () {
+    /* ★ 게이트에 **폭 조건이 필요하다**(2026-08-10 추가).
+       이 무대는 philosophy → atelier를 잇는 데스크톱 스토리의 한 박자인데,
+       그 스토리(`initAtelierStory`)는 1280px 이상에서만 돈다. 폭 조건이
+       없던 동안 **모바일에서도 240svh(360×800에서 1600px = 두 화면)**를
+       열어 두고, 그 두 화면에서 일어나는 일은 "TCHAI" 한 단어가 떠오르는
+       것뿐이었다. 손가락으로 두 번 넘겨야 다음 내용이 나온다.
+
+       이제 1280 미만에서는 class가 붙지 않아 섹션이 시안 높이
+       (`min-height: min(51.35vw, 986px)` = 360에서 185px)로 남는다.
+       글자는 CSS 기본 상태 그대로 보인다. */
+    gsap.matchMedia().add(WORDMARK_GATE, function () {
       /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것이 이 class다.
          트리거를 만들기 전에 붙여야 섹션 높이를 제대로 잰다. */
       section.classList.add("is_motion_ready");

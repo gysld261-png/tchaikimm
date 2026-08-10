@@ -141,13 +141,40 @@
 
    색만으로 구분하지 않도록 aria-pressed와 테두리도 함께 바꿉니다.
    ------------------------------------------------------------ */
+/* ★ 모바일도 **2열**입니다(2026-08-10, 사용자 요청).
+
+   1열이던 동안 360에서 원단 6장이 2,149px, 실루엣 3장이 1,303px이라
+   고르는 데만 손가락으로 네 번 넘겨야 했고, 뒤 항목을 보고 앞으로
+   돌아오려면 다시 올라와야 했습니다. 2열로 두면 원단은 3줄,
+   실루엣은 2줄로 줄어 한눈에 비교됩니다.
+
+   좁아진 만큼 카드 안쪽 여백과 간격도 같이 줄입니다 — 그러지 않으면
+   글 자리가 102px밖에 남지 않아 설명이 서너 줄로 접힙니다. */
 .bespoke_choice_grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 20px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+@media (min-width: 480px) {
+  .bespoke_choice_grid {
+    gap: 20px;
+  }
+}
+
+/* ★ 2열에서는 같은 줄의 카드 높이가 서로 다릅니다 — 설명 줄 수가 원단마다
+   다르기 때문입니다(360 실측 195 / 217 / 242 / 264). 1열일 때는 보이지 않던
+   문제이고, 그대로 두면 밑변이 들쭉날쭉합니다.
+   `<li>`가 격자 칸이라 기본으로 늘어나므로, 카드가 그 칸을 꽉 채우게 합니다. */
+.bespoke_choice_grid > li {
+  display: flex;
+}
+
+.bespoke_choice_grid > li > .bespoke_choice {
+  height: 100%;
 }
 
 @media (min-width: 768px) {
@@ -164,13 +191,20 @@
   }
 }
 
-/* 실루엣은 3장뿐이라 태블릿에서도 3열로 두면 너무 좁습니다.
-   2열 + 마지막 칸 가운데 정렬로 둡니다. */
-@media (min-width: 768px) and (max-width: 1279px) {
+/* 실루엣은 3장뿐이라 2열에서 마지막 한 장이 왼쪽에 홀로 남습니다.
+   가운데로 옮겨 균형을 맞춥니다. 1280 이상에서는 3열이라 해당 없습니다.
+   (예전에는 768 이상에만 걸려 있었는데, 모바일도 2열이 되면서 같이 필요해졌습니다.) */
+@media (max-width: 1279px) {
   .bespoke_choice_grid.is_three_up > :last-child {
     grid-column: 1 / -1;
-    max-width: calc(50% - 15px);
+    max-width: calc(50% - 6px);
     justify-self: center;
+  }
+}
+
+@media (min-width: 480px) and (max-width: 1279px) {
+  .bespoke_choice_grid.is_three_up > :last-child {
+    max-width: calc(50% - 15px);
   }
 }
 
@@ -182,7 +216,7 @@
   position: relative; /* 체크 배지의 기준 상자입니다. */
   display: block;
   width: 100%;
-  padding: 0 0 24px;
+  padding: 0 0 14px;
   border: 1px solid var(--color_border);
   background-color: var(--color_surface_subtle);
   color: var(--color_text);
@@ -193,6 +227,30 @@
               color var(--duration_base) var(--easing_base),
               opacity var(--duration_base) var(--easing_base),
               transform var(--duration_fast) var(--easing_base);
+}
+
+@media (min-width: 480px) {
+  .bespoke_choice {
+    padding-bottom: 24px;
+  }
+}
+
+/* 좁은 카드에서는 배지도 같이 줄입니다 — 154px 카드에서 28px 배지는
+   사진의 5분의 1을 덮습니다. */
+@media (max-width: 479px) {
+  .bespoke_choice::before {
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .bespoke_choice::after {
+    top: 15px;
+    right: 14px;
+    width: 9px;
+    height: 5px;
+  }
 }
 
 /* 라디오가 초점을 받으면 카드 전체에 초점 표시가 보이게 합니다.
@@ -218,9 +276,19 @@
 .bespoke_choice_body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding-inline: 24px;
-  margin-top: 20px;
+  gap: 6px;
+  /* 2열이라 카드 폭이 360에서 154px입니다. 24px씩 물리면 글 자리가
+     106px밖에 남지 않아 설명이 서너 줄로 접힙니다. */
+  padding-inline: 14px;
+  margin-top: 12px;
+}
+
+@media (min-width: 480px) {
+  .bespoke_choice_body {
+    gap: 10px;
+    padding-inline: 24px;
+    margin-top: 20px;
+  }
 }
 
 @media (min-width: 1280px) {
