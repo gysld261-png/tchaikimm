@@ -24,6 +24,11 @@
      JS가 없으면 마크업의 is_active / is_visible 그대로 01 Consultation이 보인다.
      --------------------------------------------------------- */
 
+  /* 스크롤로 단계를 넘기는 구간을 켜는 조건. 좁은 화면에서는 화면을 붙잡지
+     않는다(빠져나갈 방법이 없어진다). atelier 스토리와 같은 기준이다. */
+  var PROCESS_SCROLL_GATE =
+    "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
+
   function initProcessSteps() {
     var section = document.querySelector(".process");
 
@@ -103,6 +108,64 @@
 
     /* 터치에는 hover가 없어 이 경로가 유일하다. */
     section.addEventListener("click", handlePointer);
+
+    /* ── 스크롤로 단계 넘기기 (2026-08-10 사용자 요청) ────────────────────
+       "스크롤 내릴 때 1~5번이 나타나는데, 다 내려갈 때까지는 계속 고정."
+
+       섹션을 화면에 붙여 두고, 그 구간을 다섯 등분해 스크롤 위치가 곧 단계가
+       되게 한다. 다섯 번째까지 지나야 sticky가 풀리고 다음 섹션으로 넘어간다.
+
+       ★★ 고정은 **CSS sticky**다. ScrollTrigger `pin`을 쓰지 않는다 —
+       pin-spacer가 끼면 아래 섹션들의 문서 좌표가 전부 밀리고, 이 페이지는
+       지금 pin-spacer가 0개다(히어로·atelier도 전부 sticky다).
+       그래서 이 트리거는 값을 읽기만 하고 레이아웃은 건드리지 않는다.
+
+       ★ `end: "bottom bottom"`이 곧 sticky가 풀리는 지점이다. 붙어 있는
+       상자가 100svh이므로, 섹션 아랫변이 화면 아랫변에 닿는 순간과 정의상
+       같다. 숫자로 적으면 css의 활주로 길이와 한 쌍이 되어 조용히 어긋난다.
+
+       ★ 단계가 **바뀔 때만** 부른다. 매 프레임 부르면 마우스로 다른 단계를
+       짚어 둔 것을 스크롤이 계속 되돌려 버린다. 지금은 스크롤 단계가 실제로
+       넘어갈 때까지 hover가 살아 있다.
+
+       ★ 게이트 밖(좁은 화면 · 모션 감소 · GSAP 없음)에서는 `is_scroll_ready`가
+       붙지 않아 고정도 없고, 지금까지처럼 hover·클릭으로만 바뀐다.
+       좁은 화면에서 화면을 붙잡으면 빠져나갈 방법이 없어진다. */
+    if (!window.gsap || !window.ScrollTrigger) {
+      return;
+    }
+
+    window.gsap.registerPlugin(window.ScrollTrigger);
+
+    window.gsap.matchMedia().add(PROCESS_SCROLL_GATE, function () {
+      section.classList.add("is_scroll_ready");
+
+      var lastIndex = -1;
+
+      var trigger = window.ScrollTrigger.create({
+        trigger: section,
+        start: "top top",
+        end: "bottom bottom",
+        onUpdate: function (self) {
+          var index = Math.min(
+            steps.length - 1,
+            Math.floor(self.progress * steps.length)
+          );
+
+          if (index === lastIndex) {
+            return;
+          }
+
+          lastIndex = index;
+          setActiveKey(steps[index].dataset.step);
+        }
+      });
+
+      return function () {
+        section.classList.remove("is_scroll_ready");
+        trigger.kill();
+      };
+    });
   }
 
 
@@ -816,22 +879,48 @@
   /* 가운데 겹의 진한 부분이 100%에 닿는 값 = 100 + FEATHER. */
   var HERO_INK_END = 100 + HERO_INK_FEATHER;
 
-  var HERO_REVEAL_START = 0.1;
-  var HERO_REVEAL_END = 0.62;
+  /* ★ 아래 네 구간은 **전환 전체(run)를 1로 본 비율**이다. run이 길어지면
+     같은 비율이라도 그만큼 천천히 진행된다 — 속도 조절은 css의
+     `--bespoke_hero_run`과 이 비율, 둘을 같이 봐야 한다.
+
+     2026-08-10 "퍼지는 속도가 너무 빠르다"로 run을 80 → 120svh로 늘리면서
+     번짐 구간의 비율은 거의 그대로 뒀다. 결과적으로 번짐만 **약 1.4배 느려지고**
+     글 등장 속도는 이전과 같다(아래 표 참고).
+
+     | | 전(run 80svh) | 후(run 120svh) |
+     |---|---|---|
+     | 번짐 | 0.52 × 80 = 41.6svh | **0.49 × 120 = 58.8svh** |
+     | 제목 | 0.18 × 80 = 14.4svh | 0.12 × 120 = **14.4svh** (동일) |
+     | 설명 | 0.18 × 80 = 14.4svh | 0.12 × 120 = **14.4svh** (동일) |
+     | 붙잡아 두기 | 없음 | **0.20 × 120 = 24svh** */
+  var HERO_REVEAL_START = 0.05;
+  var HERO_REVEAL_END = 0.54;
   var HERO_REVEAL_EASE = "power2.out"; /* 처음에 확 번지고 끝에서 잦아든다 */
 
   /* ── 글 ─────────────────────────────────────────────────────────────
      배경이 다 퍼진 **뒤에** 제목, 그다음 설명이다(사용자 요청 순서).
      둘 다 philosophy 안에 있어 마스크에 함께 잘리므로, 이 시점엔 이미
      마스크가 화면을 덮고 있어야 글이 온전히 보인다. */
-  var HERO_TITLE_START = 0.62;
-  var HERO_TITLE_END = 0.8;
+  var HERO_TITLE_START = 0.54;
+  var HERO_TITLE_END = 0.66;
   var HERO_TITLE_RISE = 24; /* px */
   var HERO_TITLE_SCALE = 1.02;
 
-  var HERO_DESC_START = 0.82;
-  var HERO_DESC_END = 1;
+  var HERO_DESC_START = 0.68;
+  var HERO_DESC_END = 0.8;
   var HERO_DESC_RISE = 20; /* px */
+
+  /* ★★ 0.8 ~ 1.0 = **붙잡아 두는 구간**이다 (2026-08-10 사용자 요청:
+     "글씨들이 다 나오면 한번 픽스 되었다가 스크롤이 내려갈 수 있도록").
+
+     여기에는 트윈이 하나도 없다. 그런데도 배너가 화면에 붙어 있는 이유는
+     아래 ①의 상쇄 트윈이 **타임라인 전체(duration 1)에 걸쳐** 자연 스크롤을
+     계속 지우기 때문이다. 그래서 이 구간에서는 글이 전부 뜬 그림 그대로
+     화면이 멈춰 있고, 진행도 1에 닿는 순간 sticky가 풀리며 흘러간다.
+
+     ★ 길이를 조절하려면 `HERO_DESC_END`만 내리면 된다(0.75로 내리면 더 오래
+     붙잡는다). **①의 duration은 1로 두어야 한다** — 줄이면 그만큼 상쇄가
+     일찍 끝나서, 남은 구간에서 배너가 스크롤을 따라 그대로 밀려 올라간다. */
 
   /* 스크롤 안내는 **영상이 다가올 때 떠서 philosophy가 지나갈 때까지 그대로
      떠 있다**(사용자 요청). 그래서 히어로 타임라인이 아니라 별도 트리거를 쓴다 —

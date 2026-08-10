@@ -329,10 +329,15 @@
    --------------------------------------------------------- */
 
 .page_bespoke {
-  /* 전환 길이. 두 박자(영상 축소 → 원형 reveal)가 들어가야 해서 화면 높이의
-     80%를 쓴다. 한 화면이 안 되므로 여전히 짧다.
-     ★ 여기만 고치면 된다 — js는 `무대 높이 − 영상 높이`로 읽어 따라온다. */
-  --bespoke_hero_run: 80svh;
+  /* 전환 길이 = 영상이 화면에 붙어 있는 거리.
+     ★ 여기만 고치면 된다 — js는 `무대 높이 − 영상 높이`로 읽어 따라온다.
+
+     ★★ 2026-08-10 **80svh → 120svh**. 두 가지를 한 번에 해결한 값이다
+     ("퍼지는 속도가 너무 빠르다" + "글이 다 나오면 한번 픽스"):
+     같은 비율이라도 구간이 길어져 번짐이 약 1.4배 느려지고, 늘어난 만큼이
+     글이 다 뜬 뒤 **붙잡아 두는 구간**(진행도 0.8~1, 약 24svh)이 된다.
+     구간 비율은 js의 `HERO_REVEAL_*` / `HERO_TITLE_*` / `HERO_DESC_*`에 있다. */
+  --bespoke_hero_run: 120svh;
   /* ★ 건드리지 말 것. 위 주석의 기하학적 상수다. */
   --bespoke_hero_lift: 100svh;
 }
@@ -706,6 +711,59 @@
   display: flex;
   flex-direction: column;
   gap: 40px;
+}
+
+/* ---------------------------------------------------------
+   process 고정 구간 (js/bespoke.js가 붙이는 .is_scroll_ready)
+
+   다섯 단계가 다 지나갈 때까지 섹션을 화면에 붙여 둔다.
+   구조는 히어로 무대와 같다 — **섹션 자신이 활주로**이고, 안쪽 상자가 붙는다.
+
+       .process.is_scroll_ready         height = 100svh + 단계 5칸  ← 활주로
+       .process.is_scroll_ready 안의 layout   position: sticky      ← 붙는 것
+
+   ★ 활주로를 `padding`으로 만들면 안 된다. sticky는 부모의 padding 안으로
+   들어가지 못해서 상자가 한 번도 붙지 않는다(히어로에서 실제로 겪은 함정).
+   그래서 세로 padding을 0으로 두고 **height**로 길이를 만든다. 여백은
+   붙는 상자가 100svh이고 내용이 그 안에서 가운데 정렬되어 생긴다.
+
+   ★ 활주로 길이와 js의 단계 나누기는 **서로 맞물려 있다.** js는 구간을
+   `steps.length`(5)로 나누므로 여기도 5칸이어야 한 칸이 정확히 한 단계다.
+   ★ 한 단계에 머무는 거리를 바꾸려면 `--process_step_run`만 고치면 된다.
+   --------------------------------------------------------- */
+/* ★★ 선택자에 `.main`이 필요하다 — 특정도 (0,3,0).
+   파일 끝 1840 블록이 `.main .process { padding-block: calc(272 * ...) }`로
+   세로 padding을 도로 넣는데, 그쪽이 (0,2,0)이면서 **소스 순서가 뒤라** 같은
+   특정도로는 진다. 실제로 1920에서 padding이 되살아나 sticky 상자가 섹션의
+   content box 안에 갇혔고, **고정이 일찍 풀려 내용이 화면 위로 92px 잘렸다.**
+   (atelier 스토리가 `.main .atelier.is_story_ready`로 같은 문제를 푼다.) */
+.main .process.is_scroll_ready {
+  --process_step_run: 32svh;
+
+  height: calc(100vh + var(--process_step_run) * 5);
+  height: calc(100svh + var(--process_step_run) * 5);
+  padding-block: 0;
+}
+
+/* ★★ 가운데 정렬을 `align-items`로 하면 **두 열의 관계가 바뀐다.**
+   넓은 화면 규칙이 `align-items: flex-start`라 사진(556)과 글(633)이 윗변을
+   맞추고 있는데, `center`로 바꾸면 각자 따로 가운데로 가서 사진만 39px 내려간다.
+
+   그래서 항목이 아니라 **줄(flex line)을 가운데**로 보낸다. `flex-wrap: wrap`을
+   켜면 `align-content`가 살아나고, 한 줄짜리 이 줄(높이 = 큰 쪽 633)이 100svh
+   안에서 가운데에 놓인다. 줄 **안에서는** 여전히 `flex-start`라 두 열의 윗변이
+   그대로 맞는다 — 디자인은 한 픽셀도 바뀌지 않는다.
+
+   ★ `justify-content: center`를 쓰면 안 된다. 줄 방향이 가로라 그건 좌우
+   정렬이고, 세로 가운데와는 아무 상관이 없다(실제로 그렇게 뒀다가
+   내용이 화면 위에 붙고 아래가 267px 비었다). */
+.main .process.is_scroll_ready .process_layout {
+  position: sticky;
+  top: 0;
+  flex-wrap: wrap;
+  align-content: center;
+  min-height: 100vh;
+  min-height: 100svh;
 }
 
 .process_aside {
@@ -2176,9 +2234,26 @@
     height: calc(100svh * var(--bespoke_canvas) + var(--bespoke_hero_run));
   }
 
+  /* ★ 위 `.page_bespoke`의 run을 고치면 **여기도 같이 고쳐야 합니다.**
+     이 블록이 뒤에 있어 1920 구간에서는 이 값이 이깁니다 —
+     한쪽만 바꾸면 발표 화면에서만 예전 속도로 돌아갑니다(실제로 겪었습니다:
+     120svh로 올렸는데 1920에서 run이 864px 그대로였습니다). */
   .page_bespoke {
-    --bespoke_hero_run: calc(80svh * var(--bespoke_canvas));
+    --bespoke_hero_run: calc(120svh * var(--bespoke_canvas));
     --bespoke_hero_lift: calc(100svh * var(--bespoke_canvas));
+  }
+
+  /* process 고정 구간 — 히어로·atelier와 같은 보정입니다.
+     보정하지 않으면 붙는 상자가 화면의 **75%(810px)만** 덮어서, 내용이 위로
+     쏠리고 아래 270px에 다음 섹션이 비칩니다. */
+  .main .process.is_scroll_ready {
+    --process_step_run: calc(32svh * var(--bespoke_canvas));
+
+    height: calc(100svh * var(--bespoke_canvas) + var(--process_step_run) * 5);
+  }
+
+  .main .process.is_scroll_ready .process_layout {
+    min-height: calc(100svh * var(--bespoke_canvas));
   }
 
   /* `.main`이 필요합니다 — 위 규칙이 `.main .philosophy`(0,2,0)입니다. */
