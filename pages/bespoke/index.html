@@ -382,7 +382,12 @@
 
   <!-- reservation -->
   <section class="reservation">
-    <img class="reservation_bg" src="assets/main/reservation_section.png" alt="" aria-hidden="true">
+    <!-- 배경 영상. `.reservation_bg`는 class 선택자만 쓰므로(`img.reservation_bg`가
+         아니다) CSS를 고치지 않아도 video가 같은 규칙을 그대로 받는다.
+         속성 구성은 이 페이지 히어로 영상과 같다(H.264 · yuv420p라 그대로 쓴다).
+         원본 비율 1008 × 384(2.625)가 밴드 비율 1700 × 650(2.615)과 거의 같아
+         `object-fit: cover`로도 잘려 나가는 부분이 사실상 없다. -->
+    <video class="reservation_bg" src="assets/main/bespoke_re.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
     <div class="reservation_body">
       <h2 class="reservation_title">Book your first meeting.</h2>
       <p class="reservation_desc">Consultations take place at our Seoul atelier or by video call.</p>

@@ -51,14 +51,25 @@
 
     <!-- hero — Figma "Fashion_show_video" (1710:3866) -->
     <section class="collection_hero" aria-labelledby="collection_hero_title">
-      <!-- 재생하는 파일은 `collection_film.mp4`입니다 — 원본 `콜렉션 패션쇼 영상.mp4`
-         (4K 60fps HEVC, 191MB)를 웹용 1080p30 H.264로 압축한 것입니다(8.4MB, 21.6초).
-         원본은 asset에 그대로 두었습니다.
-         `poster`의 collection_film_poster.jpg가 이 영상의 첫 프레임입니다. -->
+      <!-- 재생하는 파일은 `tchaikimyoungjin_hero_web.mp4`입니다.
+
+         ★ 원본 `tchaikimyoungjin_hero.mp4`를 그대로 쓰면 안 됩니다 —
+         HEVC(H.265) Main 10 · 10bit · 2560 × 1440 · 47MB이라
+         **Firefox와 HEVC 디코더가 없는 Chrome/Edge에서 재생되지 않습니다.**
+         게다가 moov가 파일 끝에 있어 앞부분부터 재생할 수 없습니다.
+         (이 함정은 로컬에서 안 보입니다 — 이 PC의 Chromium은 HEVC를 재생합니다.)
+
+         웹용은 H.264 High · yuv420p · 1920 × 1080 · 9.4MB(22.1초)입니다:
+         ffmpeg -i tchaikimyoungjin_hero.mp4 -an -vf "scale=1920:-2:flags=lanczos" \
+           -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 23 -preset slow \
+           -movflags +faststart tchaikimyoungjin_hero_web.mp4
+
+         원본은 마스터로 asset에 그대로 두었습니다.
+         `poster`는 이 웹용 영상의 첫 프레임입니다. -->
       <video class="collection_hero_video" id="collection_hero_video" autoplay muted loop playsinline
-        preload="metadata" poster="asset/collection_film_poster.jpg"
+        preload="metadata" poster="asset/tchaikimyoungjin_hero_poster.jpg"
         aria-label="Tchai Kim Young Jin runway film">
-        <source src="asset/collection_film.mp4" type="video/mp4">
+        <source src="asset/tchaikimyoungjin_hero_web.mp4" type="video/mp4">
       </video>
       <h1 class="collection_hero_title" id="collection_hero_title">TChai Kim Young Jin</h1>
 

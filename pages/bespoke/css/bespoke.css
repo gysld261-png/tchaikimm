@@ -1229,6 +1229,8 @@
   margin: 0 auto;
 }
 
+/* ★ `opacity: 0.6`을 걷어냈다 — "배경이 흐릿하다"의 정체가 이 한 줄이었다.
+   대신 글 뒤에만 크림 그라디언트를 깔아 대비를 지킨다(바로 아래 `::before`). */
 .reservation_bg {
   position: absolute;
   inset: 0;
@@ -1236,13 +1238,64 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 0.6;
   pointer-events: none;
+}
+
+/* ★★ 글 뒤 크림 스크림 — 영상을 전체 불투명도로 되돌리면서 필요해진 것이다.
+
+   영상의 글 자리 밝기를 프레임별로 재 보면 **66 ~ 192**로 크게 흔들린다
+   (바느질하는 손이 지나가면서 그늘이 진다). 예전에는 `opacity: 0.6`이 크림
+   배경과 섞이며 이 흔들림을 눌러 줬는데, 그 한 줄을 걷어내면 어두운 프레임에서
+   검은 글씨(`#0a0a0a`) 대비가 **2.0:1**까지 떨어진다 — 사실상 안 읽힌다.
+
+   그래서 왼쪽 글 기둥에만 크림을 깔고 오른쪽은 영상을 그대로 보여 준다.
+   원본 footage가 이미 크림색 원단이라 덧댄 느낌 없이 이어진다.
+   최악(가장 어두운 프레임 × 글 오른쪽 끝)에서도 본문 대비 **5.9:1**로 AA를 넘는다.
+
+   ★ `.reservation`이 flex인데 이 가짜 요소가 flex item이 되지 않는 것은
+   `position: absolute`이기 때문이다. `static`으로 바꾸면 글을 옆으로 밀어낸다. */
+.reservation::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background-image: linear-gradient(
+    to right,
+    rgba(255, 253, 249, 0.88) 0%,
+    rgba(255, 253, 249, 0.78) 32%,
+    rgba(255, 253, 249, 0) 62%
+  );
+}
+
+/* ★★ 1840 미만에서는 크림을 밴드 끝까지 끌고 간다.
+
+   위 그라디언트는 **파일 끝 1840 블록의 레이아웃과 한 쌍**이다. 그 블록이
+   `padding-left: 215px`을 주고 밴드를 1700으로 묶어서, 글이 폭의 12.6%~33.2%에만
+   놓인다 — 62%에서 끝나는 fade로 충분히 덮인다(실측 대비 제목 13.3 / 본문 5.2).
+
+   그 블록이 걸리지 않는 폭에서는 padding이 사라져 **글이 왼쪽 끝에 붙고 훨씬
+   오른쪽까지 뻗는다** — 1265px 밴드에서 42.7%, 375px에서는 **94.7%**다.
+   그대로 두면 fade 밖 글자가 영상 위에 그냥 얹힌다.
+   실측(가장 어두운 프레임): 1280px에서 본문 **2.76:1**, 375px에서 **1.29:1**.
+
+   ★ 그래서 경계가 1279가 아니라 **1839**다. 레이아웃이 갈리는 지점과 정확히
+   맞물려야 한다 — 1279로 두면 1280~1839 구간만 조용히 빠져나간다(실제로 겪었다).
+   ★ 1840 이상 그라디언트는 건드리지 않는다. 그대로가 승인된 화면이다. */
+@media (max-width: 1839px) {
+  .reservation::before {
+    background-image: linear-gradient(
+      to right,
+      rgba(255, 253, 249, 0.86) 0%,
+      rgba(255, 253, 249, 0.76) 45%,
+      rgba(255, 253, 249, 0.66) 100%
+    );
+  }
 }
 
 .reservation_body {
   position: relative;
-  z-index: 1;
+  z-index: 2; /* 스크림(1)보다 위 */
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -1270,6 +1323,14 @@
   font-size: var(--fs_ui_16);
 }
 
+/* 예약 버튼 — **항상 보인다.**
+
+   ★ 한 번 hover에서만 나타나게 만들었다가 사용자 결정으로 되돌렸다
+   ("원래 호버가 되도록 명령했는데 지금 모습이 좋으니 이대로 유지"). 그래서 이
+   블록은 영상 교체 이전과 완전히 같은 상태다 — 다시 숨기지 마세요.
+   되살릴 일이 생기면 `opacity` 하나로 감추되, `display: none`이나
+   `visibility: hidden`은 쓰면 안 된다(각각 글 덩어리가 튀고, 키보드 초점이
+   닿지 않아 이 밴드의 유일한 CTA에 도달할 수 없게 된다). */
 .reservation_button {
   display: inline-flex;
   align-items: center;
