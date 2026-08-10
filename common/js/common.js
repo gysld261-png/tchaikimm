@@ -221,6 +221,34 @@
 
   initSmoothScroll();
 
+  /* 모든 페이지가 같은 스크롤 안내 마크업을 사용하도록 공통 JS에서 한 번만 만듭니다.
+     페이지 HTML에 복사하지 않으므로 문구·선 디자인 변경도 여기와 common.css만 보면 됩니다. */
+  function ensureCommonScrollHint() {
+    var existingHint = document.querySelector(".common_scroll_hint");
+
+    if (existingHint) {
+      return existingHint;
+    }
+
+    var hint = document.createElement("div");
+    var label = document.createElement("span");
+    var line = document.createElement("span");
+
+    hint.className = "common_scroll_hint";
+    hint.setAttribute("aria-hidden", "true");
+    label.className = "common_scroll_hint_label";
+    label.textContent = "Scroll";
+    line.className = "common_scroll_hint_line";
+
+    hint.appendChild(label);
+    hint.appendChild(line);
+    document.body.appendChild(hint);
+
+    return hint;
+  }
+
+  var commonScrollHint = ensureCommonScrollHint();
+
   var componentSlots = Array.prototype.slice.call(document.querySelectorAll("[data-component]"));
 
   function loadComponent(slot) {
@@ -250,6 +278,11 @@
     }
 
     var isBlack = theme === "black";
+
+    if (commonScrollHint && commonScrollHint.getAttribute("data-scroll-hint-mode") !== "custom") {
+      commonScrollHint.classList.toggle("is_on_light", isBlack);
+    }
+
     if (header.classList.contains(isBlack ? "is_black" : "is_white")) {
       return;
     }
@@ -257,6 +290,7 @@
     header.classList.toggle("is_black", isBlack);
     header.classList.toggle("is_white", !isBlack);
 
+    /* 페이지 전용 연출이 색상을 직접 정하는 동안에는 공통 판정을 덮어쓰지 않습니다. */
     var headerLogo = document.querySelector("[data-header-logo]");
     if (headerLogo) {
       headerLogo.src = isBlack ? HEADER_LOGO_BLACK : HEADER_LOGO_WHITE;
@@ -296,6 +330,35 @@
   var headerCart = document.querySelector(".header_cart");
   var headerCartCount = document.querySelector("[data-cart-count]");
   var cartCount = 0;
+  var scrollHintTicking = false;
+
+  /* 공통 모드에서는 첫 화면을 안내하는 동안만 보이고 자연스럽게 사라집니다.
+     bespoke처럼 더 긴 구간이 필요하면 data-scroll-hint-mode="custom"을 붙이고
+     페이지 타임라인에서 opacity와 is_on_light만 제어하면 됩니다. */
+  function updateCommonScrollHint() {
+    if (!commonScrollHint || commonScrollHint.getAttribute("data-scroll-hint-mode") === "custom") {
+      scrollHintTicking = false;
+      return;
+    }
+
+    var hasScrollableContent = document.documentElement.scrollHeight > window.innerHeight + 80;
+    var hideAt = Math.max(480, window.innerHeight * 0.72);
+
+    commonScrollHint.classList.toggle(
+      "is_visible",
+      hasScrollableContent && window.scrollY < hideAt
+    );
+    scrollHintTicking = false;
+  }
+
+  function handleCommonScrollHint() {
+    if (scrollHintTicking) {
+      return;
+    }
+
+    scrollHintTicking = true;
+    window.requestAnimationFrame(updateCommonScrollHint);
+  }
 
   function readCartCount() {
     try {
@@ -742,6 +805,10 @@
     // 폭이 바뀌면 헤더 아래에 오는 요소도 달라집니다.
     window.addEventListener("resize", handleHeaderScroll);
   }
+
+  updateCommonScrollHint();
+  window.addEventListener("scroll", handleCommonScrollHint, { passive: true });
+  window.addEventListener("resize", handleCommonScrollHint);
 
   var newsletterForm = document.getElementById("footer_newsletter");
   var emailInput = document.getElementById("footer_email_input");

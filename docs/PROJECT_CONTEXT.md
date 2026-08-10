@@ -647,6 +647,130 @@ atelier 스토리 2808→4968). 스크롤 전 구간 훑기(200px 간격)에서 
 - `prefers-reduced-motion: reduce`는 흉내 낼 수 없어 같은 결과인 "class 없는 상태"를
   손으로 만들어 확인했습니다.
 - 실기기에서의 영상 자동재생(`muted` + `playsinline`이라 될 것으로 봅니다).
+## Main — 공통 버튼 `.main_button` 신설 (2026-08-10)
+
+바로 아래 항목(promo_link를 collection_link처럼)에서 규칙을 복사해 뒀는데,
+**두 벌을 하나로 합쳤습니다.** collection 링크 스타일이 기준이고(사용자 선택),
+`pages/main/css/main.css` 안에만 둡니다(전 페이지 공통 아님 — 사용자 선택).
+
+지금 쓰는 곳 **네 군데**입니다: collection 2개 + promo 2개.
+`.collection_link*` · `.promo_link*` 규칙은 전부 삭제했고, CSSOM 확인 결과
+옛 클래스 규칙은 **0개**입니다. `.collection_links`(감싸는 flex 컨테이너)만 남았습니다.
+
+### ★ promo 링크의 보이는 변화 두 가지
+
+공통 버튼이 되면서 **collection 쪽 값으로 맞춰졌습니다.** 크기를 남기면
+"똑같이"가 되지 않기 때문입니다.
+
+| | 전(promo) | 후(공통) |
+|---|---|---|
+| 글자 크기 | 20.48px (`--fs_body_24`) | **16px** (`--fs_ui_16`) |
+| 대문자 변환 | `uppercase` | **없음** ("VISIT BESPOKE" → "Visit Bespoke") |
+
+> 되돌리려면 `.main_button`이 아니라 **promo 쪽에서만 덮어쓰세요.**
+> `.main_button` 값을 바꾸면 collection까지 같이 바뀝니다.
+
+`@media`의 `.promo_lead, .promo_link { font-size: 18px }`에서 `.promo_link`를
+뺐습니다 — 남겨두면 그 폭에서만 collection 버튼과 크기가 달라집니다.
+
+### ★ 밑줄 방향을 `:first-child`/`:last-child`로 가르면 안 됩니다
+
+collection에서는 첫 링크(왼쪽 화살표)가 오른쪽에서, 둘째가 왼쪽에서 차올랐습니다.
+그런데 **promo 링크는 형제가 하나뿐이라 first이자 last**여서 그 방식이 무너집니다.
+화살표 방향을 직접 보는 `:has()`로 바꿨습니다:
+
+```css
+.main_button::after { transform-origin: left center; }              /* 기본 */
+.main_button:has(.main_button_arrow_left)::after { transform-origin: right center; }
+```
+
+실측 확인: 왼쪽 화살표 링크만 origin `316.641px`(오른쪽 끝), 나머지 3개는 `0px`.
+(`:has()`는 이 저장소가 이미 bespoke 선택 카드에서 쓰고 있습니다)
+
+### 검증 (Chromium, localhost:5619)
+
+- 네 버튼의 계산값이 **전부 한 가지 값**: 16px · 500 · lh 26.08 ·
+  padding `6px 2px 9px` · gap 10px · `rgb(31,67,63)` · `text-transform: none` ·
+  밑줄 op 0.22. (속성별 고유값이 1개씩)
+- 1280 / 768 / 360 세 폭 전부 16px 유지, 네 버튼 모두 화면 안, 가로 스크롤 0.
+- `href` 4개 유지, `data-shop-transition` 유지, 화살표 전부 `aria-hidden="true"`.
+- 옛 클래스 규칙 0개, CSS 중괄호 359/359, 깨진 이미지 0, 실패 요청 0, 콘솔 오류 0.
+
+### 확인하지 못한 부분
+
+- **마우스 호버는 보지 못했습니다**(패널이 화면을 합성하지 않아 `:hover`를 띄울 수
+  없습니다). 선언값은 아래 항목에서 CSSOM으로 대조해 확인했습니다.
+- **promo 링크가 16px·소문자로 작아진 것이 눈에 괜찮은지는 직접 보셔야 합니다.**
+
+
+## Main promo_link 2개를 collection_link와 같은 인터랙션으로 (2026-08-10)
+
+"Visit Bespoke →" · "Visit Shop →" 두 링크를 `.collection_link`와 같게 바꿨습니다.
+**글자 크기·굵기·대문자 변환은 그대로 두고**(20.48px · 500 · uppercase,
+collection은 16px · 500 · none) 밑줄 방식과 호버 반응만 바꿨습니다.
+
+- `pages/main/index.html` — 화살표를 `<span class="promo_link_arrow" aria-hidden="true">`로 분리
+- `pages/main/css/main.css` — `.promo_link` 블록 재작성
+
+### ★ border-bottom을 반드시 지워야 합니다
+
+원래 `border-bottom: 1px solid`(항상 진한 실선) 하나였는데, 지금은 **두 겹**입니다 —
+`::before`가 항상 있는 흐린 선(22%), `::after`가 호버할 때 차오르는 진한 선.
+**border-bottom을 남겨두면 그 위에 겹쳐 줄이 두 개로 보입니다.**
+
+화살표가 오른쪽에 있으므로 `::after`의 `transform-origin: left center`입니다
+(`.collection_link:last-child`와 같은 방향). 화살표를 왼쪽으로 옮기면
+`right center`로 바꿔야 합니다.
+
+### 검증 (Chromium, localhost:5619)
+
+CSSOM에서 두 쪽 선언을 직접 꺼내 비교했고 **6개 항목 전부 글자까지 동일**했습니다 —
+hover(`color: rgb(22,51,47)` + `translateY(-2px)`) · hover::after(`scaleX(1)`) ·
+active(`translateY(0)`) · ::before(`--color_point` op 0.22) · 화살표 기본 ·
+화살표 hover(`translateX(6px) scale(1.06)`).
+
+계산값도 collection과 일치: `display: flex` · `gap: 10px` · `position: relative` ·
+`border-bottom: 0px` · `text-decoration: none` · 밑줄 1px.
+`href` 2개와 `data-shop-transition` 유지, 화살표 `aria-hidden="true"`(접근성 이름에서
+"→"가 빠집니다), 가로 스크롤 0, 깨진 이미지 0, 콘솔 오류 0, CSS 중괄호 365/365.
+
+> **★ 검증 도구 주의** — CSSOM을 훑을 때 `if (r.cssRules) { 재귀 }`를 먼저 쓰면
+> **아무것도 못 찾습니다.** CSS 중첩(nesting) 지원 이후 `CSSStyleRule`에도
+> `cssRules`가 (빈 리스트지만 truthy로) 생겨서, 모든 스타일 규칙이 재귀로
+> 빠져나가 `selectorText` 검사에 도달하지 못합니다.
+> **`selectorText`를 먼저 확인**하고 그 다음에 재귀하세요.
+
+### 확인하지 못한 부분
+
+- **실제 마우스 호버는 보지 못했습니다.** 이 패널은 화면을 합성하지 않아 `:hover`를
+  띄울 수 없고 트랜지션도 t=0에 멈춰 있습니다. 위 값은 CSSOM에서 읽은 선언값이라
+  목표 상태는 정확하지만, **밑줄이 차오르는 속도와 화살표 6px이 눈에 맞는지는
+  직접 봐야 합니다.**
+
+
+## Main collection — 가운데 검정 프레임 제거 (2026-08-10)
+
+`.collection_container` 안 무대 가운데에 있던 검정 박스를 없앴습니다(사용자 요청).
+실체는 요소가 아니라 **`.collection_row.is_perspective_ready::before`**였습니다 —
+`rgb(10, 10, 10)` · 281.6 × 88px(3.2:1) · 화면 가운데. 컨테이너 안에서 어두운 배경을
+가진 요소를 전수 조사했는데 검정은 이것 하나뿐이었습니다.
+
+- `pages/main/css/main.css` — `::before` 규칙과 `.is_loop_active::before` 규칙 삭제
+- `pages/main/js/main.js` — `row.classList.add("is_loop_active")` **3곳** 삭제
+
+> **★ `.is_loop_active`는 이 프레임 전용이었습니다.** 저장소 전체에서 이 class를
+> 쓰는 CSS가 `::before` 하나뿐이라, 프레임을 지우면 class가 아무 일도 하지 않는
+> 죽은 코드가 됩니다. 그래서 JS에서 붙이는 것도 같이 걷어냈습니다.
+> **되살리려면 CSS 규칙 2개와 JS 3줄을 함께 되돌려야 합니다.**
+> 카드 흐름 로직(`hasStarted` · `startTime` · `syncPlayState`)은 건드리지
+> 않았으므로 반복 재생은 그대로입니다.
+
+검증: `::before`가 `content: none`으로 아예 생성되지 않음, 컨테이너 안 검은 요소 0개,
+카드 12장 전부 스타일 적용(12/12), 무대 1280 × 340 그대로, 핀 3개 겹침 0,
+안착 끝 = 고정 시작 일치, 가로 스크롤 0, 깨진 이미지 0, 콘솔 오류 0,
+`node --check` 통과, CSS 중괄호 357/357.
+
+
 ## Main collection — 고정될 때 "착" 하는 느낌 없애기 (2026-08-10)
 
 "섹션이 들어올 때 착 하고 부자연스럽게 떨어진다"는 문제입니다.
@@ -803,6 +927,32 @@ IntersectionObserver는 **"지금 다시 확인해라"는 신호로만** 씁니�
 - **공유 파일을 고쳤으므로** shop(인트로 오버레이 정상 종료·스크롤 잠김 없음) ·
   bespoke(persisted 복귀가 무해) 확인, 나머지 `shop_transition.js`를 부르는
   7개 페이지는 오버레이 마크업이 없고 스크립트가 만들어 숨긴 상태로 시작합니다.
+
+### ★★ 후속 — bespoke 영상이 검은 상자로 보였습니다 (같은 날)
+
+"promo_bespoke_video만 안 보인다"는 문제입니다. **원인은 `preload="metadata"`였습니다.**
+
+`preload="metadata"`는 **첫 프레임을 화면에 내보내지 않습니다.** 크기
+(`videoWidth` 1122)도 잡히고 `readyState`가 **4(HAVE_ENOUGH_DATA)**까지 가는데도
+프레임이 표시되지 않아 요소가 **검은 상자**로 그려집니다.
+
+> **★ 이건 "영상 내용이 검다"가 아닙니다.** 캔버스에 그려 밝기를 재면 **0**인데,
+> **같은 0초 지점도 seek한 뒤에 재면 113.7**입니다. 속성만 보면 다 정상이라
+> (오류 없음·`readyState 4`·크기 있음) 원인을 찾기 어렵습니다.
+> **의심되면 캔버스에 그려서 밝기를 재세요** — 이게 유일하게 확실한 판별법입니다.
+
+shop 쪽은 예전에 `autoplay`가 있어서 곧바로 재생되며 이 구간을 지나쳤기 때문에
+드러나지 않았고, `autoplay`가 없던 bespoke만 검게 보였습니다. 위 작업에서 shop의
+`autoplay`를 걷어내면서 **두 개 다 검은 상자가 될 상태**였습니다.
+
+**처리: `primeFirstFrame()`이 아주 짧게 seek합니다**(`PROMO_FIRST_FRAME_TIME` 0.04초).
+그 지점 프레임이 실제로 디코딩돼 표시되므로, 재생이 시작되기 전까지 이 정지
+프레임이 보입니다. 메타데이터 전에는 `currentTime`을 쓸 수 없어 `readyState < 1`이면
+`loadedmetadata`에서 다시 부릅니다. 이미 재생 중이면 건너뜁니다(끊깁니다).
+
+검증: 두 영상 다 밝기 **0 → 113.7 / 112.9**, 맨 위에서의 전송량은 **여전히 0KB**
+(미루는 이점 그대로). 재생도 정상 — bespoke가 구간에 들어가면 0.04 → 0.9 → 1.81로
+진행하고 밝기도 113.8 → 120.2 → 127.1로 바뀝니다.
 
 ### 확인하지 못한 부분
 

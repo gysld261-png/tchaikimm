@@ -284,11 +284,7 @@
   min-height: 100dvh;
   padding: 0;
   overflow: clip;
-  /* Figma 2076:7413 — 위의 따뜻한 살구색이 페이지 기본 크림색으로 내려갑니다.
-     common_container에 직접 넣으면 1920px에서 좌우 단색 띠가 생기므로
-     모델 섹션 전체 배경에 적용해 full-bleed로 이어지게 합니다. */
   background-color: var(--color_bg);
-  background-image: linear-gradient(to bottom, #ffe3af 0%, var(--color_bg) 100%);
 }
 
 .model_container {
@@ -316,10 +312,12 @@
    ★ 전체 길이는 --model_flow_height, 첫 위치는 figure/text의 top에서 조절합니다. */
 @media (min-width: 1280px) {
   .model.is_model_flow {
-    /* 560dvh = 화면에 보이는 100dvh + 실제 진행 460dvh입니다.
-       이전 720dvh의 약 75%라 네 번 정도였던 진행을 약 세 번으로 줄입니다. */
-    --model_flow_height: 300dvh;
+    /* ★ 데스크탑 진행 길이 조절 위치입니다.
+       280dvh는 화면 높이를 크게 약 세 번 스크롤하면 마지막 위치에 도착하는 길이입니다. */
+    --model_flow_height: 280dvh;
     min-height: var(--model_flow_height);
+    /* 마지막 모델이 다음 detail_head 영역까지 이어져 보이도록 세로 클리핑만 해제합니다. */
+    overflow: visible;
   }
 
   .model.is_model_flow .model_container {
@@ -330,14 +328,19 @@
 
   .model.is_model_flow .model_figure {
     position: absolute;
-    top: min(30dvh, 280px);
+    top: 6dvh;
     left: 50%;
+    z-index: 1;
     translate: -50% 0;
+    pointer-events: none;
   }
 
   .model.is_model_flow .model_text {
     position: absolute;
-    top: 6dvh;
+    z-index: 2;
+    /* 원래 순서인 모델 → 텍스트로 복구합니다.
+       모델 높이(최대 720px / 화면 높이 기준 63.53dvh)와 기존 간격을 합친 위치입니다. */
+    top: calc(6dvh + min(720px, 63.53dvh) + clamp(32px, 6dvh, 68px));
     left: 50%;
     width: min(760px, calc(100% - (var(--layout_gutter) * 2)));
     translate: -50% 0;
@@ -965,11 +968,15 @@
   align-items: stretch;
   gap: 60px;
   padding: 80px 0 60px;
-  background-image: linear-gradient(to bottom, #fcfcfb, #fffdf9);
+  /* 위의 model 섹션과 같은 배경 토큰을 사용해 두 구간의 경계가 드러나지 않게 합니다. */
+  background-color: var(--color_bg);
 }
 
 /* 시안: header는 items-start(왼쪽 정렬), 페이지 폭 그대로(px-120), 가운데 정렬이 아닙니다 */
 .detail_head {
+  position: relative;
+  /* 모델 영상이 이 영역까지 내려와도 제목과 설명은 항상 영상 위에 보입니다. */
+  z-index: 3;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1612,15 +1619,100 @@
   line-height: var(--lh_body_20);
 }
 
-.promo_link {
-  padding: 3px 0;
-  border-bottom: 1px solid var(--color_point);
+/* =========================================================
+   .main_button — 이 페이지 공통 텍스트 버튼
+
+   원래 collection 섹션의 링크 스타일이었고, 사용자 요청으로 공통 버튼이
+   됐습니다. 지금 쓰는 곳은 **네 군데**입니다.
+     · collection — "View Tchai Kim Youngjin Collection"(왼쪽 화살표)
+                    "View Tchai Kim Collection"(오른쪽 화살표)
+     · promo      — "Visit Bespoke" · "Visit Shop"(둘 다 오른쪽 화살표)
+
+   ★★ 여기를 고치면 네 곳이 전부 같이 바뀝니다. 한 곳만 다르게 하고 싶으면
+      그 섹션에서 따로 덮어쓰세요(공통 값을 여기서 바꾸면 안 됩니다).
+
+   ★ 밑줄은 두 겹입니다. ::before가 항상 있는 흐린 선(22%),
+     ::after가 호버할 때 차오르는 진한 선입니다.
+     border-bottom을 함께 주면 그 위에 겹쳐 줄이 두 개로 보입니다.
+   ========================================================= */
+.main_button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 2px 9px;
   color: var(--color_point);
   font-family: var(--font_body);
-  font-size: var(--fs_body_24);
+  font-size: var(--fs_ui_16);
   font-weight: 500;
-  line-height: var(--lh_body_24);
-  text-transform: uppercase;
+  line-height: 1.63;
+  text-decoration: none;
+  transition: color var(--duration_fast) var(--easing_base),
+              transform var(--duration_fast) var(--easing_base);
+}
+
+.main_button::before,
+.main_button::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  content: "";
+}
+
+.main_button::before {
+  background-color: var(--color_point);
+  opacity: 0.22;
+}
+
+/* 기본은 왼쪽에서 오른쪽으로 차오릅니다 — 화살표가 오른쪽에 있는 경우입니다. */
+.main_button::after {
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--duration_base) var(--easing_base);
+}
+
+/* ★ 화살표가 왼쪽이면 반대 방향에서 차올라야 화살표 쪽으로 자랍니다.
+   예전에는 :first-child / :last-child로 갈랐는데, 그 방식은 형제가 하나뿐인
+   promo 링크에서 무너집니다(혼자면 first이자 last입니다).
+   화살표 방향을 직접 보고 정하므로 어디에 놓아도 맞습니다. */
+.main_button:has(.main_button_arrow_left)::after {
+  transform-origin: right center;
+}
+
+.main_button:hover,
+.main_button:focus-visible {
+  color: #16332f;
+  transform: translateY(-2px);
+}
+
+.main_button:hover::after,
+.main_button:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.main_button:active {
+  transform: translateY(0);
+}
+
+.main_button_arrow {
+  display: inline-block;
+  font-size: 1.15em;
+  line-height: 1;
+  transition: transform var(--duration_fast) var(--easing_base);
+}
+
+.main_button:hover .main_button_arrow_left,
+.main_button:focus-visible .main_button_arrow_left {
+  transform: translateX(-6px) scale(1.06);
+}
+
+.main_button:hover .main_button_arrow_right,
+.main_button:focus-visible .main_button_arrow_right {
+  transform: translateX(6px) scale(1.06);
 }
 
 .promo_img {
@@ -1740,16 +1832,26 @@
 
   .pin-spacer:has(> .model),
   .pin-spacer:has(> .detail_pin),
-  .pin-spacer:has(> .brand_word_pin),
-  .pin-spacer:has(> .collection) {
+  .pin-spacer:has(> .brand_word_pin) {
     max-width: 100%;
     zoom: calc(1 / var(--site_view_scale));
   }
 
+  /* collection은 pin-spacer 대신 native sticky 래퍼가 전체 길이를 가집니다. */
+  .collection_scroll.is_scroll_ready {
+    width: 100%;
+    zoom: calc(1 / var(--site_view_scale));
+  }
+
+  /* 컬렉션 무대의 역줌은 유지하되, 공통 버튼은 일반 promo 버튼과 같은
+     실제 화면 크기로 다시 축소합니다. 글자·간격·밑줄이 함께 동일해집니다. */
+  .collection_scroll.is_scroll_ready .main_button {
+    zoom: var(--site_view_scale);
+  }
+
   .pin-spacer > .model,
   .pin-spacer > .detail_pin,
-  .pin-spacer > .brand_word_pin,
-  .pin-spacer > .collection {
+  .pin-spacer > .brand_word_pin {
     /* ScrollTrigger가 공통 zoom 기준의 인라인 폭을 넣으므로 이 두 속성만
        실제 1920px 화면 폭으로 덮어씁니다. 인라인보다 우선해야 해 !important가 필요합니다. */
     width: 100% !important;
@@ -1810,6 +1912,22 @@
    (Figma node 1712:4444, celeb 섹션을 대체)
    ========================================================= */
 
+.collection_scroll {
+  position: relative;
+  background-color: var(--color_bg_alt);
+}
+
+/* GSAP의 fixed pin 대신 브라우저 기본 sticky를 사용합니다.
+   섹션이 원래 속도로 들어오다가 top에 닿는 순간 자연스럽게 머물러 위치 전환이 없습니다. */
+.collection_scroll.is_scroll_ready {
+  min-height: calc(100dvh + var(--collection_sticky_scroll, 28dvh));
+}
+
+.collection_scroll.is_scroll_ready .collection {
+  position: sticky;
+  top: 0;
+}
+
 .collection {
   overflow: hidden;
   padding: 120px 0;
@@ -1818,13 +1936,12 @@
 }
 
 /* ---------------------------------------------------------
-   자동 재생 + pin — js/main.js가 .is_scroll_ready를 붙였을 때만.
-   섹션은 화면에 고정하지만 카드 흐름은 스크롤과 무관하게 시간으로 재생됩니다.
+   자동 재생 + native sticky — js/main.js가 .is_scroll_ready를 붙였을 때만.
+   섹션은 자연스럽게 화면에 머물고 카드 흐름은 스크롤과 무관하게 시간으로 재생됩니다.
    붙지 않아도(모션 감소·GSAP 없음·1024px 미만) 기본 가로 배치를 유지합니다.
 
-   ★ 고정할 요소(.collection)의 부모는 main(block)이라 pinSpacing이 정상 동작합니다.
-     detail에서 겪은 "부모가 flex면 ScrollTrigger가 자리를 확보하지 않는" 문제가
-     여기서는 없습니다. 부모 구조를 바꿀 때 이 점을 확인하세요.
+   ★ collection_scroll이 고정 구간의 실제 높이를 만들고 collection이 sticky로 머뭅니다.
+     이 래퍼에 overflow를 추가하면 sticky가 동작하지 않으므로 그대로 유지하세요.
    --------------------------------------------------------- */
 .collection.is_scroll_ready {
   /* 제목·링크·아래 문구·여백이 쓰는 높이입니다. 무대 상한을 여기서 뺍니다.
@@ -1928,30 +2045,9 @@
   transform-style: preserve-3d;
 }
 
-/* 레퍼런스의 중앙 검정 프레임 — 사진은 이 안에서 시작해 좌우로 나갑니다 */
-.collection_row.is_perspective_ready::before {
-  position: absolute;
-  top: var(--collection_stage_center_y);
-  left: 50%;
-  width: clamp(280px, 22vw, 440px);
-  aspect-ratio: 3.2 / 1;
-  border-radius: 2px;
-  background: var(--color_text);
-  content: "";
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, -50%) scaleX(0.35);
-  transform-origin: 50% 50%;
-  transition:
-    transform 700ms cubic-bezier(0.22, 1, 0.36, 1),
-    opacity 250ms ease;
-  z-index: 0;
-}
-
-.collection_row.is_perspective_ready.is_loop_active::before {
-  opacity: 1;
-  transform: translate(-50%, -50%) scaleX(1);
-}
+/* 중앙 검정 프레임(::before)은 제거했습니다 — 사용자 요청.
+   그 프레임을 켜던 .is_loop_active class도 함께 쓰이지 않게 되어
+   js/main.js에서 붙이지 않습니다. 되살리려면 두 곳을 같이 되돌려야 합니다. */
 
 .collection_row.is_perspective_ready .collection_item {
   position: absolute;
@@ -2003,83 +2099,8 @@
   margin-bottom: var(--collection_gap_links_stage);
 }
 
-.collection_link {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 6px 2px 9px;
-  color: var(--color_point);
-  font-family: var(--font_body);
-  font-size: var(--fs_ui_16);
-  font-weight: 500;
-  line-height: 1.63;
-  text-decoration: none;
-  transition: color var(--duration_fast) var(--easing_base),
-              transform var(--duration_fast) var(--easing_base);
-}
-
-.collection_link::before,
-.collection_link::after {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 1px;
-  content: "";
-}
-
-.collection_link::before {
-  background-color: var(--color_point);
-  opacity: 0.22;
-}
-
-.collection_link::after {
-  background-color: currentColor;
-  transform: scaleX(0);
-  transition: transform var(--duration_base) var(--easing_base);
-}
-
-.collection_link:first-child::after {
-  transform-origin: right center;
-}
-
-.collection_link:last-child::after {
-  transform-origin: left center;
-}
-
-.collection_link:hover,
-.collection_link:focus-visible {
-  color: #16332f;
-  transform: translateY(-2px);
-}
-
-.collection_link:hover::after,
-.collection_link:focus-visible::after {
-  transform: scaleX(1);
-}
-
-.collection_link:active {
-  transform: translateY(0);
-}
-
-.collection_link_arrow {
-  display: inline-block;
-  font-size: 1.15em;
-  line-height: 1;
-  transition: transform var(--duration_fast) var(--easing_base);
-}
-
-.collection_link:hover .collection_link_arrow_left,
-.collection_link:focus-visible .collection_link_arrow_left {
-  transform: translateX(-6px) scale(1.06);
-}
-
-.collection_link:hover .collection_link_arrow_right,
-.collection_link:focus-visible .collection_link_arrow_right {
-  transform: translateX(6px) scale(1.06);
-}
+/* 이 안의 링크 2개는 공통 버튼 `.main_button`을 씁니다 —
+   스타일은 파일 위쪽 「.main_button」 블록에 있습니다(promo 링크와 공유). */
 
 
 /* =========================================================
@@ -2459,8 +2480,9 @@
     margin-bottom: 36px;
   }
 
-  .promo_lead,
-  .promo_link {
+  /* .promo_link는 공통 버튼(.main_button)이 되면서 이 목록에서 빠졌습니다 —
+     collection 쪽 버튼과 같은 크기를 유지해야 하기 때문입니다. */
+  .promo_lead {
     font-size: 18px;
   }
 

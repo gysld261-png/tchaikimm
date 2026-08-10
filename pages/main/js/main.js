@@ -83,21 +83,30 @@
     var MODEL_SCROLL_LENGTH_TABLET = 3.8;
     var MODEL_SCROLL_LENGTH_MOBILE = 2.8;
     /* ★ 모델 좌우 이동 폭 조절 위치
-       현재 화면 너비에 곱하는 비율입니다. 데스크탑 0.22는 화면 너비의 22%입니다. */
-    var MODEL_TRAVEL_DESKTOP = 0.22;
+       현재 화면 너비에 곱하는 비율입니다. 값을 줄이면 좌우 움직임이 차분해집니다.
+       권장 범위: 0.14 ~ 0.22 / 현재 데스크탑 0.2 */
+    var MODEL_TRAVEL_DESKTOP = 0.2;
     var MODEL_TRAVEL_TABLET = 0.16;
     var MODEL_TRAVEL_MOBILE = 0.1;
+    /* ★ 데스크탑 좌우 왕복 횟수 조절 위치
+       1은 전체 구간에서 왼쪽 → 오른쪽 → 중앙을 한 번 진행합니다.
+       값을 줄이면 방향 전환이 더 느려지고, 키우면 자주 움직여 가벼워 보일 수 있습니다. */
+    var MODEL_HORIZONTAL_WAVES_DESKTOP = 1;
+    /* ★ 중앙 정렬 유지 구간 조절 위치
+       0.18은 전체 진행의 앞 18% 동안 모델을 텍스트와 같은 중앙선에 유지합니다.
+       값을 키우면 중앙에 더 오래 머물고, 줄이면 좌우 이동을 더 일찍 시작합니다. */
+    var MODEL_HORIZONTAL_HOLD_RATIO = 0.18;
     var MODEL_TEXT_HOLD_RATIO = 0.2;
     var MODEL_TEXT_FADE_RATIO = 0.12;
     var MODEL_VIDEO_START_RATIO = 0.08;
     /* ★ 데스크탑 모델 스크롤 감도 조절 위치
        값을 키우면 스크롤을 놓은 뒤에도 더 천천히 따라와 묵직해집니다.
-       권장 범위: 0.8 ~ 1.5 / 현재 1.3
+       권장 범위: 1.2 ~ 2 / 현재 1.6
        전체 도착 거리는 main.css의 --model_flow_height에서 조절합니다. */
-    var MODEL_DESKTOP_SCRUB = 1.5;
-    /* ★ 마지막 모델과 detail_head 사이 간격(px)입니다.
-       숫자를 줄이면 모델이 detail 제목에 더 가까워집니다. */
-    var MODEL_DETAIL_HEAD_GAP = 32;
+    var MODEL_DESKTOP_SCRUB = 1.6;
+    /* ★ 마지막 모델이 detail_head 아래로 내려가는 거리(px)입니다.
+       값을 키우면 모델이 detail 제목 영역을 더 깊게 통과합니다. */
+    var MODEL_DETAIL_HEAD_OVERLAP = 24;
 
     if (!section || !video || !figure || !text) {
       return;
@@ -170,6 +179,23 @@
       return;
     }
 
+    /* 포스터에서 영상 프레임으로 바뀌는 작업을 첫 스크롤까지 미루면
+       모델이 움직이기 시작하는 순간 화면 안 피사체가 옆으로 튄 것처럼 보입니다.
+       섹션에 도착하기 전에 첫 프레임을 아주 조금 미리 디코딩해 전환을 끝냅니다. */
+    function primeModelFirstFrame() {
+      if (!video.duration) {
+        return;
+      }
+
+      requestVideoTime(Math.min(1 / 60, video.duration * 0.005));
+    }
+
+    if (video.readyState >= 1) {
+      primeModelFirstFrame();
+    } else {
+      video.addEventListener("loadedmetadata", primeModelFirstFrame, { once: true });
+    }
+
     /* ★ 이 핀은 반드시 "동기적으로" 만들어야 합니다.
        원래는 video.duration을 알아야 해서 loadedmetadata를 기다린 뒤에
        만들었는데, 그러면 핀이 늦게 생기면서 pin-spacer(화면 높이 3배)가
@@ -189,6 +215,9 @@
 
     if (isDesktopModelFlow) {
       section.classList.add("is_model_flow");
+      /* CSS의 left: 50% 기준과 GSAP 이동 좌표를 처음부터 분리합니다.
+         xPercent는 중앙정렬, x는 스크롤 좌우 이동만 담당해 첫 입력 때 기준점이 바뀌지 않습니다. */
+      gsap.set(figure, { xPercent: -50, x: 0, y: 0 });
     }
 
     function measureDesktopModelMotion() {
@@ -204,12 +233,12 @@
       }
 
       var sectionBottom = window.scrollY + sectionRect.top + sectionRect.height;
-      var detailHeadTop = window.scrollY + detailHead.getBoundingClientRect().top;
-      var detailHeadTopAtSectionEnd = window.innerHeight + detailHeadTop - sectionBottom;
+      var detailHeadBottom = window.scrollY + detailHead.getBoundingClientRect().bottom;
+      var detailHeadBottomAtSectionEnd = window.innerHeight + detailHeadBottom - sectionBottom;
 
       desktopEndDrift = Math.max(
         0,
-        detailHeadTopAtSectionEnd - MODEL_DETAIL_HEAD_GAP - figureRect.height - figureBaseTop
+        detailHeadBottomAtSectionEnd + MODEL_DETAIL_HEAD_OVERLAP - figureRect.height - figureBaseTop
       );
     }
 
@@ -219,7 +248,15 @@
 
     function applyDesktopModelMotion() {
       var progress = modelMotion.progress;
-      var horizontalWave = Math.sin(progress * Math.PI * 3);
+      var horizontalProgress = Math.max(
+        0,
+        Math.min(1, (progress - MODEL_HORIZONTAL_HOLD_RATIO) / (1 - MODEL_HORIZONTAL_HOLD_RATIO))
+      );
+      /* 중앙에서 갑자기 튀어나가지 않도록 좌우 진행률의 시작과 끝을 부드럽게 만듭니다. */
+      var easedHorizontalProgress = horizontalProgress * horizontalProgress * (3 - 2 * horizontalProgress);
+      var horizontalWave = Math.sin(
+        easedHorizontalProgress * Math.PI * 2 * MODEL_HORIZONTAL_WAVES_DESKTOP
+      );
       var horizontalPosition = -horizontalWave * getModelTravelDistance();
 
       gsap.set(figure, {
@@ -1415,23 +1452,26 @@
   var MAX_VISIBLE_CARDS = 9;
   var CARD_INTRO_DELAY = 850;
   var RIGHT_STREAM_OFFSET = 0.5;
-  /* ★ 고정 구간의 스크롤 길이(카드 흐름 단계당 화면 높이 %)입니다.
-     카드 위치는 스크롤이 아니라 CARD_INTERVAL 시간으로 자동 재생됩니다. */
-  var COLLECTION_SCROLL_PER_CARD = 32;
+  /* ★ 컬렉션 고정 유지 거리입니다.
+     카드 자동재생 길이와 분리해, 고정된 뒤 다음 스크롤에서 바로 풀리게 합니다.
+     값을 키우면 더 오래 고정되고 줄이면 더 빨리 다음 섹션으로 넘어갑니다. */
+  var COLLECTION_STICKY_HOLD = 28;
   /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
   var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
-  /* ★ 진입 안착(아래 "진입 안착" 주석 참고) 조절값 3개.
+  /* ★ 진입 안착(아래 "진입 안착" 주석 참고) 조절값.
      SHIFT — 컨테이너가 몇 px 아래에서 올라올지. 키우면 더 크게 움직입니다.
      START — 언제부터 따라오기 시작할지. "top bottom"은 섹션 윗변이 화면 아래에
              닿는 순간이라 화면 하나를 꽉 쓰는 가장 완만한 설정입니다.
+     END   — 안착이 끝나는 지점입니다. "top -20%"는 고정 후에도 화면 높이의
+             20%만큼 아주 조금 더 움직여 고정 순간의 속도 단절을 감춥니다.
      SCRUB — 스크롤을 멈춘 뒤 더 따라오는 여운(초). 0이면 딱딱해집니다.
      FADE  — 따라오기 시작할 때의 불투명도. 1이면 페이드 없이 움직임만 남고,
-             0에 가까울수록 화면 하나에 걸쳐 크게 나타납니다. 시안에 없는
-             연출이라 "흐릿하게 들어와 또렷해지는" 정도로만 두었습니다. */
-  var COLLECTION_SETTLE_SHIFT = 120;
+             0에 가까울수록 화면 하나에 걸쳐 크게 나타납니다. */
+  var COLLECTION_SETTLE_SHIFT = 56;
   var COLLECTION_SETTLE_START = "top bottom";
-  var COLLECTION_SETTLE_SCRUB = 1;
-  var COLLECTION_SETTLE_FADE = 0.4;
+  var COLLECTION_SETTLE_END = "top -20%";
+  var COLLECTION_SETTLE_SCRUB = 1.4;
+  var COLLECTION_SETTLE_FADE = 0.9;
   /* 배열을 한 번 섞은 뒤 홀수·짝수 위치를 좌우로 나눕니다.
      같은 이미지를 복제하지 않아 한 화면 안에서 중복되어 보이지 않습니다. */
   var STREAM_ORDER = [0, 7, 4, 3, 8, 11, 2, 1, 10, 9, 6, 5];
@@ -1484,13 +1524,6 @@
   var pausedAt = null;
   var isInView = false;
   var hasStarted = false;
-  /* 흐름 전체를 한 번 다 보여주는 데 필요한 단계 수.
-     카드 i는 phase가 i일 때 출발해 i + streamLength에서 한 바퀴를 끝냅니다.
-     마지막 카드(index streamLength-1)까지 끝나려면 2 × streamLength − 1이 필요하고,
-     오른쪽 줄은 RIGHT_STREAM_OFFSET만큼 늦게 출발하므로 그만큼 더 갑니다. */
-  var streamLength = Math.max(leftItems.length, rightItems.length);
-  var phaseSpan = streamLength * 2 - 1 + RIGHT_STREAM_OFFSET;
-
   function setCardPosition(element, progress, direction) {
     /* x는 일정하게 이동하고 깊이만 smoothstep으로 변화시켜
        뒤에서 앞으로 부드럽게 다가오는 원근감을 만듭니다. */
@@ -1572,7 +1605,6 @@
       if (isInView && !hasStarted) {
         hasStarted = true;
         startTime = performance.now();
-        row.classList.add("is_loop_active");
       }
 
       syncPlayState();
@@ -1581,35 +1613,33 @@
     isInView = true;
     hasStarted = true;
     startTime = performance.now();
-    row.classList.add("is_loop_active");
     syncPlayState();
   }
 
   document.addEventListener("visibilitychange", syncPlayState);
 
   /* =========================================================
-     자동 재생 + pin — 섹션은 화면에 고정하고 카드는 시간으로 흐릅니다.
+     자동 재생 + native sticky — 카드는 시간으로 흐르고 섹션은 CSS로 머뭅니다.
 
-     ScrollTrigger는 고정과 여백만 담당합니다. 카드 위치를 progress로 덮어쓰지
-     않아 사용자가 스크롤을 멈춰도 기존 자동 반복이 계속 재생됩니다.
-
-     ★ 이 핀은 페이지에서 brand_word_pin보다 아래에 있으므로 refreshPriority가
-       그보다 더 낮아야 합니다(-1 → -2). 핀은 "페이지 순서"대로 다시 계산돼야
-       하는데 ScrollTrigger는 기본적으로 "만들어진 순서"를 쓰기 때문입니다.
-       이 값을 지우면 위 핀이 자리를 잡기 전 좌표로 굳어 섹션이 겹칩니다.
+     GSAP pin이 section을 fixed로 바꾸던 순간의 "착 붙는" 느낌을 없애기 위해
+     바깥 collection_scroll의 높이만 늘리고 브라우저 기본 sticky를 사용합니다.
      ========================================================= */
   var section = row.closest(".collection");
   var container = section ? section.querySelector(".collection_container") : null;
+  var scrollStage = section ? section.closest(".collection_scroll") : null;
   var isGsapReady = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
 
-  if (!section || !container || !isGsapReady) {
+  if (!section || !container || !scrollStage || !isGsapReady) {
     return;
   }
 
   window.gsap.matchMedia().add(COLLECTION_SCROLL_MEDIA, function () {
     section.classList.add("is_scroll_ready");
-    /* 가운데 검은 프레임은 연출 내내 보여야 합니다 */
-    row.classList.add("is_loop_active");
+    scrollStage.classList.add("is_scroll_ready");
+    scrollStage.style.setProperty(
+      "--collection_sticky_scroll",
+      COLLECTION_STICKY_HOLD + "dvh"
+    );
 
     /* ---------------------------------------------------------
        진입 안착 — 고정되기 **전에** 컨테이너를 먼저 제자리에 앉힙니다.
@@ -1625,16 +1655,16 @@
          지점(= "top top")에서 정확히 끝나도록 맞췄습니다. 잠기는 순간에는
          컨테이너가 이미 멈춰 있어서, 고정이 "정지"가 아니라 "안착"으로 읽힙니다.
 
-       ★ ease가 핵심입니다
-         power2.out이라 움직임이 앞쪽에 몰립니다 — 진행도 50%에서 이미 목표의
-         75%까지 와 있고 마지막 20% 구간에서는 거의 제자리입니다. 선형(none)으로
-         두면 고정 직전까지 같은 속도로 움직여서 지금 문제가 그대로 남습니다.
+       ★ 고정 직후까지 같은 속도를 유지합니다
+         안착의 끝을 고정 시작보다 조금 뒤로 두고 ease를 none으로 맞춰, 고정되는
+         순간에 컨테이너 속도가 갑자기 0으로 바뀌지 않게 합니다. 이동량이 작아서
+         별도 모션처럼 보이지 않고 일반 스크롤의 관성처럼 이어집니다.
 
        ★ scrub 값이 여운입니다. 스크롤을 멈춰도 이 시간만큼 더 따라와 멎습니다.
          0으로 두면 스크롤과 1:1로 붙어 딱딱해집니다.
 
-       조절: COLLECTION_SETTLE_SHIFT(내려앉는 거리) ·
-             COLLECTION_SETTLE_START(언제부터 따라올지) · COLLECTION_SETTLE_SCRUB
+       조절: COLLECTION_SETTLE_SHIFT(내려앉는 거리) · COLLECTION_SETTLE_START ·
+             COLLECTION_SETTLE_END(언제 완전히 멈출지) · COLLECTION_SETTLE_SCRUB
        --------------------------------------------------------- */
     var settle = window.gsap.fromTo(container, {
       y: COLLECTION_SETTLE_SHIFT,
@@ -1642,25 +1672,14 @@
     }, {
       y: 0,
       opacity: 1,
-      ease: "power2.out",
+      ease: "none",
       scrollTrigger: {
-        trigger: section,
+        trigger: scrollStage,
         start: COLLECTION_SETTLE_START,
-        /* ★ 끝이 고정 시작점과 같아야 합니다. 더 뒤로 두면 고정된 뒤에도
-           컨테이너가 계속 움직여 화면 안에서 따로 떠다닙니다. */
-        end: "top top",
+        end: COLLECTION_SETTLE_END,
         scrub: COLLECTION_SETTLE_SCRUB,
-        refreshPriority: -2
+        invalidateOnRefresh: true
       }
-    });
-
-    var trigger = window.ScrollTrigger.create({
-      trigger: section,
-      start: "top top",
-      end: "+=" + COLLECTION_SCROLL_PER_CARD * phaseSpan + "%",
-      pin: section,
-      anticipatePin: 1,
-      refreshPriority: -2
     });
 
     syncPlayState();
@@ -1669,7 +1688,6 @@
        renderStreamCard가 element.style에 직접 쓰므로 여기서 손으로 지웁니다.
        빼먹으면 창을 좁혔을 때 카드가 마지막 위치에 굳은 채 남습니다. */
     return function cleanup() {
-      trigger.kill();
       /* 안착 트윈은 컨테이너의 element.style에 transform·opacity를 남기므로
          트리거만 죽이지 말고 되돌린 뒤 지웁니다. 빼먹으면 창을 좁혔을 때
          컨테이너가 120px 내려간 채(또는 opacity 0으로) 굳습니다. */
@@ -1680,6 +1698,8 @@
       container.removeAttribute("style");
 
       section.classList.remove("is_scroll_ready");
+      scrollStage.classList.remove("is_scroll_ready");
+      scrollStage.style.removeProperty("--collection_sticky_scroll");
 
       sourceItems.forEach(function (element) {
         element.removeAttribute("style");
@@ -1705,7 +1725,8 @@
      두 영상은 문서 19000px 부근에 있는데 autoplay는 화면 밖이어도 즉시 전부
      내려받습니다(합계 2.6MB). 화면에 다가올 때 재생하면 그만큼 첫 로딩에서
      빠지고, "다른 페이지에 갔다가 돌아왔을 때 다시 재생"하는 경로도 여기
-     한 곳에 모입니다. preload="metadata"라 첫 프레임은 그대로 보입니다.
+     한 곳에 모입니다. 재생 전에 보이는 정지 프레임은 아래 primeFirstFrame()이
+     만듭니다 — preload="metadata"만으로는 검은 상자가 됩니다.
    --------------------------------------------------------- */
 (function setupPromoVideos() {
   "use strict";
@@ -1713,6 +1734,8 @@
   var PROMO_VIDEO_IDS = ["promo_bespoke_video", "promo_shop_video"];
   /* 화면 높이의 60%만큼 앞에서 미리 걸어, 실제로 보일 때는 이미 돌고 있습니다. */
   var PROMO_VIEW_MARGIN_RATIO = 0.6;
+  /* 첫 프레임을 뽑아낼 시각(초). 0으로 두면 이미 0이라 seek이 일어나지 않습니다. */
+  var PROMO_FIRST_FRAME_TIME = 0.04;
 
   var videos = PROMO_VIDEO_IDS
     .map(function (id) {
@@ -1739,6 +1762,34 @@
     return rect.bottom > -margin && rect.top < window.innerHeight + margin;
   }
 
+  /* ★★ preload="metadata"만으로는 첫 프레임이 화면에 나오지 않습니다.
+     크기(videoWidth 1122)도 잡히고 readyState가 4(HAVE_ENOUGH_DATA)까지 가는데도
+     브라우저가 아직 프레임을 내보내지 않아 요소가 **검은 상자**로 그려집니다.
+     캔버스에 그려 밝기를 재면 정확히 0이었습니다(내용이 검은 게 아닙니다 —
+     같은 0초 지점도 seek한 뒤에 재면 113.7입니다).
+
+     shop 쪽은 예전에 autoplay가 있어서 곧바로 재생되며 이 구간을 지나쳤기 때문에
+     드러나지 않았고, autoplay가 없던 bespoke만 검게 보였습니다.
+
+     아주 짧게 seek하면 그 지점 프레임이 실제로 디코딩돼 표시됩니다.
+     재생이 시작되기 전까지 이 정지 프레임이 보이므로 검은 상자가 사라집니다. */
+  function primeFirstFrame(video) {
+    if (video.dataset.promoPrimed === "1" || !video.paused) {
+      return;
+    }
+
+    /* 메타데이터 전에는 currentTime을 쓸 수 없습니다. 준비되면 다시 부릅니다. */
+    if (video.readyState < 1) {
+      video.addEventListener("loadedmetadata", function () {
+        primeFirstFrame(video);
+      }, { once: true });
+      return;
+    }
+
+    video.dataset.promoPrimed = "1";
+    video.currentTime = PROMO_FIRST_FRAME_TIME;
+  }
+
   function playPromoVideo(video) {
     /* 소리가 있는 영상은 자동재생이 거절됩니다. 속성만이 아니라 속성값도 켜 둡니다
        — bfcache에서 되살아난 문서는 속성을 다시 읽지 않습니다. */
@@ -1747,7 +1798,7 @@
     var attempt = video.play();
 
     if (attempt && typeof attempt.catch === "function") {
-      /* 거절돼도 preload="metadata"의 첫 프레임이 남으므로 화면이 비지 않습니다. */
+      /* 거절돼도 위에서 뽑아 둔 첫 프레임이 남으므로 화면이 비지 않습니다. */
       attempt.catch(function () {});
     }
   }
@@ -1802,5 +1853,6 @@
     }
   });
 
+  videos.forEach(primeFirstFrame);
   syncPromoVideos();
 })();

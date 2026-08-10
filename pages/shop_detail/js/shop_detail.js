@@ -193,4 +193,83 @@
     var cardLink = card.querySelector("a");
     if (cardLink) cardLink.tabIndex = -1;
   });
+
+  /* 상품 첫 화면은 헤더 아래에 머물고, 스크롤 거리만큼 갤러리 사진이 이동합니다.
+     마지막 사진이 보이면 sticky가 자연스럽게 풀려 다음 craft 섹션으로 이어집니다. */
+  (function setupProductGalleryScroll() {
+    var hero = document.querySelector(".product_hero");
+    var inner = hero ? hero.querySelector(".product_hero_inner") : null;
+    var gallery = hero ? hero.querySelector(".product_gallery") : null;
+    var galleryColumns = gallery ? Array.prototype.slice.call(gallery.querySelectorAll(".product_gallery_column")) : [];
+    var gsap = window.gsap;
+    var ScrollTrigger = window.ScrollTrigger;
+    var GALLERY_SCROLL_MEDIA = "(min-width: 1101px) and (prefers-reduced-motion: no-preference)";
+    var GALLERY_SCROLL_SCRUB = 0.65;
+
+    if (!hero || !inner || !gallery || !galleryColumns.length || !gsap || !ScrollTrigger) {
+      return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    gsap.matchMedia().add(GALLERY_SCROLL_MEDIA, function () {
+      var galleryScrollDistance = 0;
+      var columnScrollDistances = [];
+
+      hero.classList.add("is_gallery_scroll_ready");
+
+      function measureGalleryScroll() {
+        var galleryStyle = window.getComputedStyle(gallery);
+        var bottomSpace = Number(galleryStyle.paddingBottom.replace("px", "")) || 0;
+        var visibleBottom = inner.clientHeight - bottomSpace;
+
+        columnScrollDistances = galleryColumns.map(function (column) {
+          var lastItem = column.lastElementChild;
+          var contentBottom = lastItem
+            ? column.offsetTop + lastItem.offsetTop + lastItem.offsetHeight
+            : 0;
+
+          return Math.max(0, contentBottom - visibleBottom);
+        });
+        galleryScrollDistance = Math.max.apply(Math, columnScrollDistances);
+        hero.style.setProperty("--product_gallery_scroll_distance", galleryScrollDistance + "px");
+        return galleryScrollDistance;
+      }
+
+      measureGalleryScroll();
+      gsap.set(galleryColumns, { y: 0 });
+
+      var galleryTween = gsap.to(galleryColumns, {
+        y: function (index) {
+          measureGalleryScroll();
+          return -columnScrollDistances[index];
+        },
+        ease: "none",
+        scrollTrigger: {
+          trigger: hero,
+          start: function () {
+            var headerHeight = parseFloat(
+              window.getComputedStyle(document.documentElement).getPropertyValue("--header_height")
+            ) || 64;
+
+            return "top top+=" + headerHeight;
+          },
+          end: function () {
+            return "+=" + measureGalleryScroll();
+          },
+          scrub: GALLERY_SCROLL_SCRUB,
+          invalidateOnRefresh: true
+        }
+      });
+
+      return function cleanupGalleryScroll() {
+        if (galleryTween.scrollTrigger) {
+          galleryTween.scrollTrigger.kill();
+        }
+        galleryTween.revert();
+        hero.classList.remove("is_gallery_scroll_ready");
+        hero.style.removeProperty("--product_gallery_scroll_distance");
+      };
+    });
+  })();
 })();

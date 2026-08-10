@@ -876,7 +876,7 @@
     /* ★ 영상이 아니라 **섹션**에서 찾는다. 안내 표시는 무대의 쌓임 맥락을
        벗어나야 philosophy 위로 올라올 수 있어서 섹션 직계 자식이다(html 주석 참고).
        없어도 나머지는 그대로 돌아야 하므로 위 필수 요소들과 함께 묶지 않는다. */
-    var hint = section.querySelector(".bespoke_hero_scroll");
+    var hint = document.querySelector(".common_scroll_hint");
 
     if (!title || !desc) {
       return;
@@ -947,6 +947,11 @@
       /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것이 이 class다.
          트리거를 만들기 전에 붙여야 섹션 높이를 제대로 잰다. */
       section.classList.add("is_hero_ready");
+
+      if (hint) {
+        hint.setAttribute("data-scroll-hint-mode", "custom");
+        hint.classList.remove("is_visible");
+      }
 
       /* ★★ philosophy를 끌어올려 두면(아래 ② 참고) **그 상태로 다른 트리거가
          길이를 잰다.** philosophy에는 자기 트리거가 넷(등장 둘 · 패럴랙스 · 퇴장)
@@ -1132,6 +1137,9 @@
 
         if (hint) {
           hint.classList.remove("is_on_light");
+          hint.removeAttribute("data-scroll-hint-mode");
+          hint.style.opacity = "";
+          window.dispatchEvent(new Event("scroll"));
         }
       };
     });

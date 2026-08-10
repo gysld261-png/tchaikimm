@@ -29,6 +29,62 @@
   margin-inline: auto;
 }
 
+/* 데스크톱 상품 갤러리 스크롤 무대.
+   JS가 준비된 경우에만 첫 화면을 sticky로 유지하고 사진 열만 이동합니다. */
+@media (min-width: 1101px) and (prefers-reduced-motion: no-preference) {
+  .product_hero.is_gallery_scroll_ready {
+    --product_detail_view_height: 100dvh;
+    min-height: calc(var(--product_detail_view_height) - var(--header_height) + var(--product_gallery_scroll_distance, 0px));
+  }
+
+  .product_hero.is_gallery_scroll_ready .product_hero_inner {
+    position: sticky;
+    top: var(--header_height);
+    height: calc(var(--product_detail_view_height) - var(--header_height));
+    overflow: hidden;
+  }
+
+  .product_hero.is_gallery_scroll_ready .product_gallery_column {
+    will-change: transform;
+  }
+
+  .product_hero.is_gallery_scroll_ready .product_gallery {
+    padding-bottom: 0;
+  }
+
+  /* 세로가 짧은 데스크톱에서도 구매 버튼을 가리지 않습니다.
+     구매 패널 위에서 휠을 움직이면 패널의 남은 내용도 확인할 수 있습니다. */
+  .product_hero.is_gallery_scroll_ready .purchase_panel {
+    height: calc(var(--product_detail_view_height) - var(--header_height));
+    max-height: calc(var(--product_detail_view_height) - var(--header_height));
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-color: var(--detail_border) transparent;
+    scrollbar-width: thin;
+  }
+
+  .product_hero.is_gallery_scroll_ready .purchase_benefits {
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, 0.75fr);
+    gap: 10px;
+    width: 100%;
+  }
+
+  .product_hero.is_gallery_scroll_ready .size_table,
+  .product_hero.is_gallery_scroll_ready .purchase_button {
+    width: 100%;
+  }
+}
+
+/* 공통 1920px zoom(0.75)에서는 100dvh도 함께 축소됩니다.
+   역보정한 높이를 사용해 상품 첫 화면이 실제 브라우저 하단까지 이어지게 합니다. */
+@media (min-width: 1850px) and (max-width: 1990px) and (prefers-reduced-motion: no-preference) {
+  .product_hero.is_gallery_scroll_ready {
+    --product_detail_view_height: calc(100dvh / var(--site_view_scale));
+  }
+}
+
 .product_gallery {
   display: grid;
   grid-template-columns: repeat(2, 348px);

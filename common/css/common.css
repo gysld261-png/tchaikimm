@@ -55,6 +55,93 @@ body[data-header-variant="black"] .common_header_slot {
   min-height: var(--header_height);
 }
 
+/* =========================================================
+   공통 스크롤 안내 — 모든 페이지에서 common.js가 한 번만 생성합니다.
+   페이지별 연출이 직접 제어할 때는 data-scroll-hint-mode="custom"을 사용합니다.
+   ========================================================= */
+.common_scroll_hint {
+  position: fixed;
+  top: calc(var(--header_height) + clamp(20px, 3svh, 36px));
+  left: var(--layout_gutter);
+  z-index: 42;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: max-content;
+  color: var(--color_text_inverse);
+  opacity: 0;
+  pointer-events: none;
+  transition: color var(--duration_fast) var(--easing_base),
+              opacity var(--duration_base) var(--easing_base);
+}
+
+.common_scroll_hint.is_visible {
+  opacity: 1;
+}
+
+.common_scroll_hint.is_on_light {
+  color: var(--color_text);
+}
+
+.common_scroll_hint.is_on_light .common_scroll_hint_line {
+  background-color: rgba(10, 10, 10, 0.22);
+}
+
+.common_scroll_hint_label {
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+.common_scroll_hint_line {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 56px;
+  overflow: hidden;
+  background-color: rgba(255, 253, 249, 0.3);
+}
+
+.common_scroll_hint_line::after {
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 45%;
+  background-color: currentColor;
+  content: "";
+  opacity: 1;
+  animation: common_scroll_hint_travel 2.4s var(--easing_base) infinite;
+}
+
+@keyframes common_scroll_hint_travel {
+  from {
+    transform: translateY(-100%);
+  }
+
+  to {
+    transform: translateY(222%);
+  }
+}
+
+/* 세로 화면에서는 다음 콘텐츠가 이미 함께 보여 별도 안내가 필요하지 않습니다. */
+@media (max-aspect-ratio: 1332 / 1000) {
+  .common_scroll_hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .common_scroll_hint {
+    transition: none;
+  }
+
+  .common_scroll_hint_line::after {
+    animation: none;
+  }
+}
+
 .top_button {
   --top_button_right: 12px;
   position: fixed;
