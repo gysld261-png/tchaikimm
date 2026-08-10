@@ -972,10 +972,16 @@
     }
 
     /* 열림일 때 `−`. 레퍼런스는 글자 그대로 `+`를 쓰므로 여기서도 글자를 바꾼다.
-       읽어 주는 이름은 `aria-expanded`가 맡으므로 글자는 `aria-hidden`이다. */
+       읽어 주는 이름은 `aria-expanded`가 맡으므로 글자는 `aria-hidden`이다.
+
+       ★ 닫힘일 때 글 안쪽 링크의 `tabindex`를 −1로 내린다.
+       글이 `opacity: 0`으로만 숨겨져 있어서, 이걸 하지 않으면 **보이지 않는
+       버튼·링크가 Tab 순서에 남는다.** shop_detail의 `.look_product`가
+       `cardLink.tabIndex = shouldOpen ? 0 : -1`로 하는 것과 같은 처리다. */
     function setOpen(pin, shouldOpen) {
       var card = pin.closest(".begin_card");
       var glyph = pin.querySelector(".begin_card_pin_glyph");
+      var content = card ? card.querySelector(".begin_card_content") : null;
 
       if (card) {
         card.classList.toggle("is_open", shouldOpen);
@@ -985,6 +991,16 @@
 
       if (glyph) {
         glyph.textContent = shouldOpen ? "−" : "+"; /* − (minus sign) */
+      }
+
+      if (content) {
+        content.setAttribute("aria-hidden", String(!shouldOpen));
+
+        var link = content.querySelector(".begin_card_link");
+
+        if (link) {
+          link.tabIndex = shouldOpen ? 0 : -1;
+        }
       }
     }
 
@@ -1007,6 +1023,12 @@
       pins.forEach(function (pin) {
         setOpen(pin, false);
       });
+    });
+
+    /* 시작은 전부 닫힘. 마크업의 `aria-expanded="false"`와 맞추고,
+       숨어 있는 링크를 Tab 순서에서 빼 둔다. */
+    pins.forEach(function (pin) {
+      setOpen(pin, false);
     });
   }
 

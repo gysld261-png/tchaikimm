@@ -1206,72 +1206,59 @@
   }
 }
 
-/* --- 열림 상태 -----------------------------------------------------------
-   조건 세 가지가 같은 결과를 낸다:
-   1. `.is_open`  — 핀을 눌러 **고정**된 상태(마우스가 나가도 유지)
-   2. `:hover`    — 마우스가 올라간 동안만 (진짜 마우스가 있을 때만)
-   3. 글 안쪽 포커스 — 키보드로 카드 안 링크에 들어왔을 때
-      ★ `.begin_card:focus-within`이 아니라 **글 묶음 안쪽**으로 좁힌다.
-      카드 전체로 두면 핀을 누르는 순간 핀이 포커스를 가져가서
-      `:focus-within`이 계속 참이 되고, **다시 눌러도 닫히지 않는다.**
+/* --- 열림 상태 — 오직 `.is_open` 하나가 만든다 ----------------------------
+   `.is_open`은 **핀 클릭으로만** 붙는다(js/bespoke.js). 그래서 마우스가
+   카드 위를 지나가는 것만으로는 아무 일도 일어나지 않고, 열어 둔 뒤
+   마우스가 나가도 그대로 남는다.
+
+   ★ 카드 `:hover`로 blur·글·스크림을 켜지 않는다.
+   ★ `:has(.begin_card_content:focus-within)`도 쓰지 않는다.
+     핀을 누르는 순간 포커스가 카드 안으로 들어와 조건이 계속 참이 되면
+     **다시 눌러도 닫히지 않는다.** 닫힘 상태의 키보드 접근은 CSS가 아니라
+     JS가 처리한다 — 글 안쪽 링크의 `tabindex`를 −1로 내려서 **보이지 않는
+     요소가 포커스를 받지 않게** 한다(shop_detail의 `.look_product`와 같은 방식).
    ------------------------------------------------------------------------ */
 
-.begin_card.is_open .begin_card_bg,
-.begin_card:has(.begin_card_content:focus-within) .begin_card_bg {
+.begin_card.is_open .begin_card_bg {
   filter: blur(6px);
   transform: scale(1.06);
 }
 
-.begin_card.is_open::after,
-.begin_card:has(.begin_card_content:focus-within)::after {
+.begin_card.is_open::after {
   opacity: 0.55;
 }
 
-.begin_card.is_open .begin_card_content,
-.begin_card:has(.begin_card_content:focus-within) .begin_card_content {
+.begin_card.is_open .begin_card_content {
   opacity: 1;
   transform: none;
 }
 
-.begin_card.is_open .begin_card_pin,
-.begin_card:has(.begin_card_content:focus-within) .begin_card_pin {
+.begin_card.is_open .begin_card_pin {
   top: var(--begin_pin_inset);
   right: var(--begin_pin_inset);
   background: var(--color_point);
   color: var(--color_text_inverse);
-}
-
-/* 핀 자체의 활성 표현 — 레퍼런스와 같다. */
-.begin_card_pin:focus-visible,
-.begin_card.is_open .begin_card_pin {
   transform: scale(1.15);
 }
 
-/* 진짜 마우스가 있을 때만 hover를 건다. 터치 기기에서 hover 상태가
-   눌린 채로 남는 문제를 막는다. */
+/* --- 핀 자체의 피드백 -----------------------------------------------------
+   hover가 하는 일은 **여기까지다.** 콘텐츠 상태는 건드리지 않는다.
+   열림(딥그린 + 1.15)과 구분되도록 hover는 옅은 톤 + 작은 확대만 준다.
+   `--color_surface_subtle`은 이미 있는 토큰이다. */
+
+.begin_card_pin:focus-visible {
+  transform: scale(1.15);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .begin_card:hover .begin_card_bg {
-    filter: blur(6px);
-    transform: scale(1.06);
+  .begin_card_pin:hover {
+    background: var(--color_surface_subtle);
+    transform: scale(1.08);
   }
 
-  .begin_card:hover::after {
-    opacity: 0.55;
-  }
-
-  .begin_card:hover .begin_card_content {
-    opacity: 1;
-    transform: none;
-  }
-
-  .begin_card:hover .begin_card_pin {
-    top: var(--begin_pin_inset);
-    right: var(--begin_pin_inset);
+  /* 열려 있을 때는 딥그린과 1.15를 유지한다 — hover가 되돌리지 않도록. */
+  .begin_card.is_open .begin_card_pin:hover {
     background: var(--color_point);
-    color: var(--color_text_inverse);
-  }
-
-  .begin_card:hover .begin_card_pin {
     transform: scale(1.15);
   }
 }
