@@ -1722,10 +1722,374 @@
     });
   }
 
+  /* =========================================================
+     브랜드 전환 탭 — 히어로 하단 overlay
+
+     두 브랜드는 각각 완성된 자매 페이지입니다. 그래서 이 탭은 콘텐츠를
+     갈아끼우는 것이 아니라 **페이지를 이동**합니다. 이동만 하면 화면이 뚝 끊기므로
+     떠나기 직전에 히어로를 옅게 만들고, 도착한 페이지가 히어로를 띄워
+     두 브랜드 영상이 이어지는 것처럼 보이게 합니다.
+
+     ★ 이 블록은 GSAP을 쓰지 않습니다. 위쪽 인터랙션들과 달리 CDN이 막힌
+     환경에서도 브랜드 전환은 반드시 동작해야 하기 때문입니다.
+     ========================================================= */
+
+  /* 떠날 때 히어로가 옅어지는 시간(ms). css의
+     `.collection_hero_video { transition: opacity 0.42s }`와 한 쌍입니다.
+     ★ 한쪽만 고치면 안 됩니다 — 여기가 짧으면 페이드가 끝나기 전에 페이지가 바뀌고,
+     길면 다 사라진 빈 화면을 그만큼 보고 있게 됩니다. */
+  var BRAND_LEAVE_MS = 420;
+
+  /* "브랜드를 바꿔서 왔다"는 표시. 도착한 페이지가 이걸 보고 히어로를 띄웁니다.
+     주소로 들어오거나 새로고침한 경우에는 없으므로 그냥 보통 화면이 됩니다. */
+  var BRAND_SWITCH_KEY = "collection_brand_switch";
+
+  function initBrandTabs() {
+    var tabs = document.querySelector(".brand_tabs");
+    var hero = document.querySelector(".collection_hero");
+
+    if (!tabs || !hero) {
+      return;
+    }
+
+    var indicator = tabs.querySelector(".brand_tab_indicator");
+    var list = tabs.querySelector(".brand_tab_list");
+    var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function activeLink() {
+      return tabs.querySelector(".brand_tab_item.is_active .brand_tab_link");
+    }
+
+    /* 밑줄을 그 탭 자리로 옮깁니다. 좌표를 css에 적어 두지 않고 매번 재는 이유는
+       글자 폭이 폰트 로딩·화면 폭·자간에 따라 달라지기 때문입니다. */
+    function moveIndicator(link) {
+      if (!indicator || !link) {
+        return;
+      }
+
+      var tabsRect = tabs.getBoundingClientRect();
+      var linkRect = link.getBoundingClientRect();
+
+      indicator.style.width = linkRect.width + "px";
+      indicator.style.transform = "translateX(" + (linkRect.left - tabsRect.left) + "px)";
+    }
+
+    function handleResize() {
+      moveIndicator(activeLink());
+    }
+
+    function goToBrand(link) {
+      try {
+        window.sessionStorage.setItem(BRAND_SWITCH_KEY, "1");
+      } catch (error) {
+        /* 시크릿 모드 등에서 막히면 페이드인만 생략됩니다. 이동은 그대로입니다. */
+      }
+
+      if (prefersReducedMotion) {
+        window.location.href = link.href;
+        return;
+      }
+
+      /* 밑줄이 먼저 움직이기 시작하고, 그 위로 히어로가 옅어집니다.
+         탭 자신은 옅어지지 않습니다 — 그래야 밑줄이 옮겨 가는 게 보입니다. */
+      moveIndicator(link);
+      hero.classList.add("is_brand_leaving");
+
+      window.setTimeout(function () {
+        window.location.href = link.href;
+      }, BRAND_LEAVE_MS);
+    }
+
+    function handleTabClick(event) {
+      var link = event.target.closest ? event.target.closest(".brand_tab_link") : null;
+
+      if (!link) {
+        return;
+      }
+
+      var item = link.closest(".brand_tab_item");
+
+      /* 지금 보고 있는 브랜드입니다. 같은 페이지를 다시 부르지 않습니다. */
+      if (item && item.classList.contains("is_active")) {
+        event.preventDefault();
+        return;
+      }
+
+      /* 새 탭으로 열기(⌘/Ctrl·가운데 버튼 등)는 브라우저에 그대로 맡깁니다. */
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) {
+        return;
+      }
+
+      event.preventDefault();
+      goToBrand(link);
+    }
+
+    /* 도착 연출. 떠날 때 옅어진 히어로를 이어받아 떠오릅니다. */
+    function playEnter() {
+      var isSwitched = false;
+
+      try {
+        isSwitched = window.sessionStorage.getItem(BRAND_SWITCH_KEY) === "1";
+        window.sessionStorage.removeItem(BRAND_SWITCH_KEY);
+      } catch (error) {
+        return;
+      }
+
+      if (!isSwitched || prefersReducedMotion) {
+        return;
+      }
+
+      hero.classList.add("is_brand_entering");
+
+      function reveal() {
+        hero.classList.remove("is_brand_entering");
+      }
+
+      /* 두 프레임 뒤에 뗍니다. 같은 프레임에 붙였다 떼면 브라우저가 변경을
+         하나로 묶어 버려 opacity 0 → 1이 재생되지 않습니다. */
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(reveal);
+      });
+
+      /* ★ 안전망입니다. 이 class는 히어로를 opacity 0으로 만들어 두는 것이라
+         떼는 데 실패하면 영상과 제목이 영영 보이지 않습니다.
+         백그라운드 탭에서 문서가 열리면 rAF가 멈춰 있어 위 콜백이 오지 않습니다.
+         setTimeout은 그 상태에서도 도착하므로 둘 중 먼저 오는 쪽이 걷어냅니다. */
+      window.setTimeout(reveal, 120);
+    }
+
+    tabs.addEventListener("click", handleTabClick);
+
+    if (indicator) {
+      /* 자리를 먼저 잡고 나서 class를 붙입니다. 순서를 바꾸면 밑줄이
+         화면 왼쪽 끝(폭 0)에서 미끄러져 들어오는 게 보입니다. */
+      moveIndicator(activeLink());
+      tabs.classList.add("is_slide_ready");
+
+      /* ★ 한 번만 재면 안 됩니다 — 실제로 겪었습니다.
+         스크립트가 도는 시점에는 웹폰트(Montserrat)가 아직 적용되지 않아
+         글자 폭이 다르고, 그 값으로 잰 밑줄이 글자와 어긋난 채 남았습니다
+         (1280에서 폭 142px / 위치 -8px, 실제로는 180px / 606px이어야 합니다).
+
+         그래서 "탭 줄의 크기가 바뀌면 다시 잰다"로 바꿉니다. ResizeObserver는
+         폰트 교체·창 크기 변경·자간 변경을 전부 같은 신호 하나로 잡아 주므로
+         원인마다 리스너를 따로 달 필요가 없습니다. */
+      if (list && typeof window.ResizeObserver === "function") {
+        new window.ResizeObserver(handleResize).observe(list);
+      }
+
+      /* ResizeObserver가 없는 환경용 그물입니다. load는 폰트·CSS가 다 적용된 뒤라
+         이 시점의 값이면 대체로 맞습니다. */
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(handleResize).catch(function () {});
+      }
+
+      window.addEventListener("load", handleResize);
+      window.addEventListener("resize", handleResize);
+    }
+
+    playEnter();
+
+    /* 뒤로 가기로 bfcache에서 되살아난 문서는 스크립트가 다시 실행되지 않아
+       떠날 때 붙인 class가 그대로 남습니다 — 히어로가 사라진 채로 보입니다. */
+    window.addEventListener("pageshow", function (event) {
+      if (event.persisted) {
+        hero.classList.remove("is_brand_leaving");
+        hero.classList.remove("is_brand_entering");
+      }
+    });
+  }
+
+  /* =========================================================
+     히어로 글자 색을 영상 밝기에 맞춥니다
+
+     제목과 브랜드 탭이 영상 위에 얹혀 있어서, 그 자리에 밝은 장면이 지나가면
+     크림색 글씨가, 어두운 장면이 지나가면 검은 글씨가 묻힙니다.
+     영상 프레임을 실제로 읽어 그 자리의 밝기로 색을 고릅니다.
+
+     ★ 배경색을 읽는 방식(common.js의 헤더 판정)을 여기서는 쓸 수 없습니다.
+     그 방식은 `background-color`를 읽는데 히어로의 배경은 영상이라
+     읽을 색 자체가 없습니다. 그래서 캔버스로 프레임을 직접 뜹니다.
+     ========================================================= */
+
+  /* 다시 재는 간격(ms). 짧게 잡을수록 장면 변화를 빨리 따라가지만
+     그만큼 자주 프레임을 뜹니다. 16 × 16px만 읽으므로 비용은 작습니다. */
+  var HERO_CONTRAST_INTERVAL = 400;
+
+  /* 읽어 들일 크기(px). 평균 밝기만 쓰므로 클 이유가 없습니다. */
+  var HERO_SAMPLE_SIZE = 16;
+
+  /* 이 밝기보다 밝으면 검은 글씨, 어두우면 크림 글씨입니다.
+
+     ★ common.js의 헤더 판정값 0.55를 그대로 가져오면 안 됩니다. 그 값은
+     "배경이 밝은 편인가"를 보는 것이고, 여기서 필요한 것은 **두 글자색 중
+     어느 쪽이 더 잘 보이는가**의 갈림점입니다. 두 색의 대비가 같아지는 지점을
+     풀면 (L + 0.05)² = (0.0194 + 0.05)(0.9832 + 0.05)이고 L = 0.218입니다
+     (0.0194 = #262626, 0.9832 = #fffdf9의 상대 휘도).
+     0.55로 두면 중간 밝기(L 0.4쯤) 장면에서 크림 글씨를 골라 오히려 흐려집니다. */
+  var HERO_LIGHT_THRESHOLD = 0.218;
+
+  /* ★ 갈림점에 여유를 둡니다 — 없으면 깜빡입니다.
+     `chaikimhero_web.mp4`의 제목 자리 밝기를 재 보면 0.198 / 0.243 / 0.246처럼
+     갈림점(0.218) **양옆을 오가는 구간**이 실제로 있습니다. 여유가 없으면 그동안
+     0.4초마다 검정 ↔ 크림이 뒤집혀 글자가 떱니다.
+
+     그래서 한 번 정한 색은 반대쪽으로 이 값만큼 더 가야 바뀝니다
+     (검은 글씨 → 크림은 0.158 아래, 크림 → 검은 글씨는 0.278 위). */
+  var HERO_CONTRAST_HYSTERESIS = 0.06;
+
+  function heroRelativeLuminance(r, g, b) {
+    var channels = [r, g, b].map(function (value) {
+      var ratio = value / 255;
+      return ratio <= 0.03928 ? ratio / 12.92 : Math.pow((ratio + 0.055) / 1.055, 2.4);
+    });
+
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+  }
+
+  function initHeroContrast() {
+    var hero = document.querySelector(".collection_hero");
+    var video = document.querySelector(".collection_hero_video");
+
+    if (!hero || !video) {
+      return;
+    }
+
+    var targets = [
+      document.querySelector(".collection_hero_title"),
+      document.querySelector(".brand_tabs")
+    ].filter(Boolean);
+
+    if (targets.length === 0) {
+      return;
+    }
+
+    var canvas = document.createElement("canvas");
+    canvas.width = HERO_SAMPLE_SIZE;
+    canvas.height = HERO_SAMPLE_SIZE;
+
+    /* willReadFrequently는 매번 읽어 갈 것을 브라우저에 미리 알리는 힌트입니다.
+       없으면 GPU에 올려 두고 읽을 때마다 되가져와 느려집니다. */
+    var context = canvas.getContext("2d", { willReadFrequently: true });
+
+    if (!context) {
+      return;
+    }
+
+    /* 캔버스 읽기가 막히면(교차 출처 영상 · file://) 다시 시도하지 않습니다.
+       매번 예외를 던지게 두면 400ms마다 조용히 비용만 나갑니다. */
+    var isBlocked = false;
+
+    function sampleLuminance(element) {
+      var sourceWidth = video.videoWidth;
+      var sourceHeight = video.videoHeight;
+
+      /* HAVE_CURRENT_DATA 미만이면 아직 그릴 프레임이 없습니다. */
+      if (!sourceWidth || !sourceHeight || video.readyState < 2) {
+        return null;
+      }
+
+      var videoRect = video.getBoundingClientRect();
+      var rect = element.getBoundingClientRect();
+
+      if (!videoRect.width || !videoRect.height || !rect.width || !rect.height) {
+        return null;
+      }
+
+      /* ★ object-fit: cover의 매핑을 되짚어야 합니다. 요소의 화면 좌표를 그대로
+         영상 좌표로 쓰면, cover가 잘라낸 몫만큼 어긋난 자리를 읽습니다
+         (세로로 긴 화면에서는 좌우가 크게 잘려 아예 다른 장면이 읽힙니다). */
+      var scale = Math.max(videoRect.width / sourceWidth, videoRect.height / sourceHeight);
+      var offsetX = (videoRect.width - sourceWidth * scale) / 2;
+      var offsetY = (videoRect.height - sourceHeight * scale) / 2;
+
+      var left = (rect.left - videoRect.left - offsetX) / scale;
+      var top = (rect.top - videoRect.top - offsetY) / scale;
+      var right = left + rect.width / scale;
+      var bottom = top + rect.height / scale;
+
+      /* 영상 밖으로 나간 몫을 잘라냅니다. drawImage에 영상 밖 좌표를 넘기면
+         그 부분이 투명(0,0,0,0)으로 읽혀 실제보다 어둡게 나옵니다. */
+      var x0 = Math.max(0, Math.min(sourceWidth, left));
+      var y0 = Math.max(0, Math.min(sourceHeight, top));
+      var x1 = Math.max(0, Math.min(sourceWidth, right));
+      var y1 = Math.max(0, Math.min(sourceHeight, bottom));
+
+      if (x1 - x0 < 1 || y1 - y0 < 1) {
+        return null;
+      }
+
+      var pixels;
+
+      try {
+        context.drawImage(video, x0, y0, x1 - x0, y1 - y0, 0, 0, HERO_SAMPLE_SIZE, HERO_SAMPLE_SIZE);
+        pixels = context.getImageData(0, 0, HERO_SAMPLE_SIZE, HERO_SAMPLE_SIZE).data;
+      } catch (error) {
+        isBlocked = true;
+        return null;
+      }
+
+      var total = 0;
+      var count = 0;
+
+      for (var index = 0; index < pixels.length; index += 4) {
+        total += heroRelativeLuminance(pixels[index], pixels[index + 1], pixels[index + 2]);
+        count += 1;
+      }
+
+      return count === 0 ? null : total / count;
+    }
+
+    function syncHeroContrast() {
+      if (isBlocked || document.hidden) {
+        return;
+      }
+
+      /* 히어로가 화면 밖으로 지나갔으면 잴 이유가 없습니다. */
+      var heroRect = hero.getBoundingClientRect();
+
+      if (heroRect.bottom <= 0 || heroRect.top >= window.innerHeight) {
+        return;
+      }
+
+      targets.forEach(function (target) {
+        var luminance = sampleLuminance(target);
+
+        if (luminance === null) {
+          return;
+        }
+
+        /* 지금 검은 글씨인지. class가 아직 없으면 CSS 기본값이 검은 글씨이므로
+           그쪽으로 봅니다 — 그래야 첫 판정이 기본 화면과 어긋나지 않습니다. */
+        var wasOnLight = !target.classList.contains("is_on_dark");
+
+        var isOnLight = wasOnLight
+          ? luminance > HERO_LIGHT_THRESHOLD - HERO_CONTRAST_HYSTERESIS
+          : luminance > HERO_LIGHT_THRESHOLD + HERO_CONTRAST_HYSTERESIS;
+
+        target.classList.toggle("is_on_light", isOnLight);
+        target.classList.toggle("is_on_dark", !isOnLight);
+      });
+    }
+
+    syncHeroContrast();
+
+    /* 첫 프레임이 준비되는 시점과 크기가 바뀌는 시점은 간격을 기다리지 않고
+       바로 맞춥니다. 그래야 로드 직후 한 박자 늦게 색이 바뀌지 않습니다. */
+    video.addEventListener("loadeddata", syncHeroContrast);
+    video.addEventListener("seeked", syncHeroContrast);
+    window.addEventListener("resize", syncHeroContrast);
+    document.addEventListener("visibilitychange", syncHeroContrast);
+
+    window.setInterval(syncHeroContrast, HERO_CONTRAST_INTERVAL);
+  }
+
   initShowcaseScroll();
   initShowcaseCarousel();
   initArchive();
   initArchiveDeck();
   initAsworn();
   initMobileReveal();
+  initBrandTabs();
+  initHeroContrast();
 })();

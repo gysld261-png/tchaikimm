@@ -68,6 +68,156 @@
   transform: translate(-50%, -50%);
 }
 
+/* ---------------------------------------------------------
+   brand tabs — 히어로 상단 중앙 overlay (TCHAI KIM / TCHAI KIM YOUNG JIN)
+
+   ★ 히어로 안에 absolute로 얹습니다. 히어로 높이(1182px)도, 가운데 제목의
+   `top: 50%` 기준도, 영상의 object-fit도 바뀌지 않습니다. 문서 높이도 그대로입니다.
+   탭을 히어로 밖 별도 섹션으로 빼면 이 세 가지가 전부 어긋납니다.
+
+   ★ 글자 색은 js가 영상 밝기를 읽어 정합니다(아래 is_on_light / is_on_dark).
+   여기 있는 --collection_hero_title은 영상을 읽을 수 없을 때의 기본값입니다.
+
+   ★ 자매 페이지 col_chaikimyoungjin.css에 같은 블록이 있습니다. 한쪽만 고치면
+   브랜드를 오갈 때 탭이 튑니다 — 반드시 둘 다 고치세요.
+   --------------------------------------------------------- */
+
+.brand_tabs {
+  position: absolute;
+  right: 0;
+  /* 히어로 윗변에서 띄우는 거리. 좁은 화면일수록 붙습니다.
+
+     ★ 헤더 높이를 더하지 않습니다. `common.css`의
+     `body[data-header-variant="black"] .common_header_slot`이 헤더 높이만큼
+     자리를 이미 잡아 두어서, 히어로 top 0이 곧 헤더 바로 아래입니다.
+     여기에 --header_height를 또 더하면 그만큼 아래로 밀립니다. */
+  top: clamp(28px, 4vw, 72px);
+  left: 0;
+  /* 영상(z-index 없음) 위, 제목과 같은 층. 서로 겹치지 않습니다. */
+  z-index: 2;
+  padding-inline: var(--layout_gutter);
+  color: var(--collection_hero_title);
+  transition: color 0.35s ease;
+}
+
+.brand_tab_list {
+  display: flex;
+  gap: clamp(22px, 3.2vw, 64px);
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brand_tab_link {
+  display: block;
+  /* 밑줄이 앉을 자리입니다. 이 값을 줄이면 글자와 선이 붙습니다. */
+  padding-bottom: 10px;
+  color: inherit;
+  font-family: var(--font_body);
+  font-size: clamp(11px, 1vw, 16px);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  /* 두 탭이 한 줄에 나란히 서야 합니다. "TCHAI KIM YOUNG JIN"이 접히면
+     탭 높이가 달라져 밑줄 위치가 서로 어긋납니다. */
+  white-space: nowrap;
+  /* 선택되지 않은 브랜드는 옅게. 색만으로 구분하지 않도록 밑줄이 함께 붙습니다. */
+  opacity: 0.45;
+  transition: opacity var(--duration_base) ease;
+}
+
+.brand_tab_item.is_active .brand_tab_link {
+  opacity: 1;
+}
+
+.brand_tab_link:hover,
+.brand_tab_link:focus-visible {
+  opacity: 0.8;
+}
+
+.brand_tab_item.is_active .brand_tab_link:hover,
+.brand_tab_item.is_active .brand_tab_link:focus-visible {
+  opacity: 1;
+}
+
+/* 폴백 밑줄 — JS가 없을 때 활성 탭 아래에 그대로 그려집니다.
+   JS가 미끄러지는 밑줄을 켜면(is_slide_ready) 이쪽을 끕니다. 둘 다 보이면 겹칩니다. */
+.brand_tab_item.is_active .brand_tab_link::after {
+  display: block;
+  height: 1px;
+  margin-top: 9px;
+  background-color: currentColor;
+  content: "";
+}
+
+.brand_tabs.is_slide_ready .brand_tab_item.is_active .brand_tab_link::after {
+  display: none;
+}
+
+/* 미끄러지는 밑줄. 위치와 폭은 js가 활성 탭을 재서 인라인으로 씁니다.
+   기본값이 폭 0이라 js가 켜기 전까지는 보이지 않습니다. */
+.brand_tab_indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  opacity: 0;
+}
+
+.brand_tabs.is_slide_ready .brand_tab_indicator {
+  opacity: 1;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 히어로 위 글자는 뒤에 지나가는 영상 밝기에 따라 색이 바뀝니다.
+   `js`의 initHeroContrast()가 영상 프레임을 읽어 이 class를 붙입니다.
+
+   ★ 기본값(class 없음)이 그대로 살아 있어야 합니다. 캔버스로 영상을 읽을 수
+   없는 환경(교차 출처 · file:// · 영상 실패)에서는 class가 붙지 않고
+   지금까지의 --collection_hero_title이 그대로 쓰입니다. */
+.collection_hero_title.is_on_light,
+.brand_tabs.is_on_light {
+  color: var(--collection_hero_title);
+}
+
+.collection_hero_title.is_on_dark,
+.brand_tabs.is_on_dark {
+  color: var(--color_bg);
+}
+
+/* 브랜드를 바꿀 때 — 떠날 때는 영상과 제목만 옅어지고 탭은 남습니다.
+   탭까지 같이 사라지면 밑줄이 옮겨 가는 게 안 보입니다.
+   ★ 히어로 자체(크기·위치)는 건드리지 않습니다. opacity만 씁니다. */
+.collection_hero_video,
+.collection_hero_title {
+  transition: opacity 0.42s ease;
+}
+
+/* ★ 색 전환을 여기에 따로 씁니다. 위 규칙에 합치면 영상에도 color transition이
+   걸리는데, 영상은 색을 쓰지 않으므로 의미 없는 선언이 됩니다. */
+.collection_hero_title {
+  transition:
+    opacity 0.42s ease,
+    color 0.35s ease;
+}
+
+.collection_hero.is_brand_leaving .collection_hero_video,
+.collection_hero.is_brand_leaving .collection_hero_title {
+  opacity: 0;
+}
+
+/* 도착한 페이지에서 히어로가 떠오릅니다. js가 붙였다 뗍니다. */
+.collection_hero.is_brand_entering .collection_hero_video,
+.collection_hero.is_brand_entering .collection_hero_title {
+  opacity: 0;
+  transition: none;
+}
+
 /* =========================================================
    showcase — arc(1710:3976) + Rounded Background(1710:3978) 위의
    떠 있는 사진과 문장
@@ -1381,6 +1531,18 @@
    ========================================================= */
 
 @media (max-width: 767px) {
+  /* ---------- brand tabs ----------
+     두 탭 글자 합이 화면 폭에 가까워집니다. 자간을 줄여 한 줄을 지킵니다.
+     ★ 여기서 white-space를 풀면 "TCHAI KIM YOUNG JIN"이 두 줄이 되어
+     두 탭의 높이가 달라지고 밑줄이 서로 다른 높이에 앉습니다. */
+  .brand_tab_list {
+    gap: 18px;
+  }
+
+  .brand_tab_link {
+    letter-spacing: 0.08em;
+  }
+
   /* 좁은 화면일수록 사진을 더 줄입니다. 화면을 꽉 채우면 스크롤이
      "사진 한 장 = 한 화면"이 되어 페이지가 끝없이 길어집니다.
      레퍼런스(obsidianassembly)도 본문 이미지를 화면의 28~66%로 씁니다. */
