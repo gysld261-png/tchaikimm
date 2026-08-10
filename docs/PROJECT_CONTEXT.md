@@ -209,6 +209,300 @@ detail의 pin-spacer가 생기기 전 위치로 굳어(**시작 6307 vs detail �
 - 실제 휠 스크롤 감각, 터치 기기에서 버튼 방식 조작, 스크린리더 낭독.
 
 
+## Bespoke — philosophy → wordmark → atelier 스토리 구간 (2026-08-10)
+
+세 섹션이 각각 화면을 채우고 스크롤 진행도로 서로 넘겨받는 하나의 흐름이 됐습니다.
+레퍼런스는 tarubali.com입니다.
+
+- `pages/bespoke/index.html` — atelier를 `.atelier_stage`로 감싸고 머리말/본문 분리,
+  예약 버튼 · 위치 문구 · meta 3줄 추가
+- `pages/bespoke/css/bespoke.css` — 스토리 블록 추가
+- `pages/bespoke/js/bespoke.js` — philosophy 퇴장 · wordmark 3박자 · `initAtelierStory()`
+
+### 기술 스택 확인 (요청에 있던 전제와 다릅니다)
+
+**Tailwind · React · Framer Motion · Next.js가 이 저장소에 없습니다.** 순수
+HTML/CSS/JS + GSAP 3.13 · ScrollTrigger · Lenis(CDN)입니다. 그래서
+`w-full h-full object-contain`은 일반 CSS로, hydration 오류는 해당 없음으로
+처리했습니다. **새 의존성은 하나도 추가하지 않았습니다.**
+
+### 구성
+
+| 구간 | 길이 | 무대 | 연출 |
+|---|---|---|---|
+| philosophy | `max(시안값, 100svh)` | — | 기존 등장·패럴랙스 + **퇴장**(글 상자 위로) |
+| wordmark | 240svh | sticky 100svh | 등장(0~0.5) → 유지(0.5~1) |
+| atelier | 260svh | sticky 100svh | 사진(0~0.4) → 왼쪽 제목(0.34~0.62) → 오른쪽 설명(0.52~0.88) |
+
+atelier 최종 구도는 **왼쪽 제목 / 가운데 사진 / 오른쪽 설명**입니다
+(`grid-template-columns: 1fr auto 1fr`). 1920에서 제목 64~599 · 사진 676~1230 ·
+설명 1306~1766으로 **겹침 0**, 사진은 에셋 원본 554 × 648 그대로 그려집니다.
+
+### ★ 사진을 왼쪽에서 가운데로 옮기던 버전은 폐기됐습니다
+
+처음에는 요청대로 사진이 왼쪽에서 들어와 가운데로 이동했습니다. 사용자 결정으로
+**처음부터 정중앙에서 떠오르게** 바꿨습니다 — 양옆이 글 자리라 사진이 지나가면
+글 위를 덮습니다. `ATELIER_STORY_OFFSET` / `startX()`는 그때 같이 사라졌습니다.
+
+### ★ sticky 무대는 마지막 100svh가 구조적으로 "빈 구간"입니다
+
+sticky는 섹션 바닥에 닿으면 풀리므로, 마지막 한 화면은 무대가 밀려 나가는
+구간입니다. **거기서 콘텐츠를 미리 지우면 빈 크림색 화면이 한 화면 내내
+지나갑니다**(실측 1080px). 그래서 wordmark에 **퇴장 페이드를 두지 않았습니다** —
+글자를 켜 둔 채 무대째 밀려 나가야 아래 atelier가 올라오는 것과 이어집니다.
+
+같은 이유로 시작점도 `"top top"`이 아닙니다:
+- wordmark `"top 65%"` — philosophy가 사라지는 구간과 겹칩니다(y=2400에서 둘 다 보임).
+  `"top top"`이면 그 사이 216px가 빈 화면이었습니다.
+- atelier `"top 40%"` — 사진이 실제로 보이기 시작하는 시점입니다(y=5200에서 워드마크와 겹침).
+
+### ★ 걸린 버그 두 개 (둘 다 실측으로 잡았습니다)
+
+1. **staggered `fromTo`는 scrub 타임라인에서 첫 대상만 시작 상태를 지킵니다.**
+   나머지는 자기 차례 전까지 원래 상태(opacity 1)로 보이다가 **깜빡입니다.**
+   실측에서 meta가 진행도 0에 이미 1이었다가 0.7에서 0으로 떨어졌습니다.
+   → `stagger`를 버리고 덩이마다 트윈을 따로 만들었습니다.
+2. **GSAP이 굴리는 속성에 CSS `transition`을 걸면 안 됩니다.**
+   예약 버튼에 `transition: opacity`가 있어서 등장이 끝나도 **버튼만 opacity 0**으로
+   남았습니다. hover를 배경색으로 바꿔 opacity를 GSAP에게 넘겼습니다.
+
+### ★ 특정도로 1840 블록을 피해 갑니다
+
+파일 끝 발표용 블록이 `.main .atelier`(0,2,0)로 시안 좌표를 쥐고 있습니다.
+스토리 규칙은 `.main .atelier.is_story_ready`(0,3,0)라 **소스 순서와 무관하게**
+이깁니다. 그 블록("주석부터 파일 끝까지 삭제하면 되돌아간다")을 건드리지 않았습니다.
+
+### 게이트와 폴백
+
+- atelier 스토리: **1280px 이상 + 모션 감소 아님**에서만. 그 밖에서는 시안대로
+  세로 스택(**머리말 → 사진 → 설명**)이고, 기존 확대(`is_zoom_ready`)와
+  글자 물결(`is_text_ready`)이 그대로 돕니다.
+- **1280px 이상에서는 그 둘을 끕니다.** 확대는 `object-fit: contain`(사진 전체를
+  보여주는 것)과 목적이 어긋나고, 글자 물결은 자기 트리거로 따로 재생돼
+  "사진 → 제목 → 설명" 순서를 지킬 수 없습니다.
+- 폴백에서 사진이 원본(554px)보다 커지지 않게 막았습니다 — 무대가 생기면서
+  기존 `flex: 0 0 42%`가 동작하지 않게 되어 1280에서 1152px까지 늘어났습니다.
+
+### 새로 쓴 글
+
+기존 문구와 구조를 그대로 씁니다 — `h2`는 "The Atelier",
+그 아래 `.atelier_lead`가 "A workshop built around one habit: looking closely."입니다.
+새로 쓴 것은 두 번째 단락("Measurements, fabric and proportion…"), meta 3줄,
+위치 문구뿐이고 전부 이 페이지에 이미 있던 어휘(measurement · fabric ·
+proportion · pattern · hand · appointment)만 씁니다.
+
+**왼쪽 타이포는 저장소 단계를 그대로 따릅니다**(사용자 지적으로 한 번 고쳤습니다).
+`.atelier_title`은 `--fs_display_32` / 500 / `--lh_display_32` / `--ls_tight_sm`으로,
+`.materials_title` · `.reservation_title` · `.begin_title`과 **계산값이 완전히
+동일합니다**(32px / 500 / lh 44.99 / Trirong). 리드 문장은 `.atelier_desc`와 같은
+`--fs_body_20`입니다. 처음에는 리드를 `--fs_display_64` 제목으로 올렸다가
+"왼쪽 글씨가 너무 크다"는 지적을 받고 되돌렸습니다 — 64px 단계는 이 페이지에서
+히어로와 philosophy 전용입니다.
+
+**예약 버튼**은 `reservation.html`로 갑니다(이 페이지의 기존 CTA와 같은 목적지).
+
+### 검증 (Chromium, localhost:5661)
+
+- **스크롤 전 구간 훑기(1800~8200, 200px 간격)**: 빈 화면 0.
+  philosophy●→(y=2400 겹침)→wordmark●→(y=5200 겹침)→사진●→제목●(6000)→설명●(6400).
+- **되감기·빠른 점프**: 같은 지점의 값이 **전부 일치**(내려가며 읽은 값 = 올라오며
+  읽은 값 = 0에서 바로 점프해 읽은 값). scrub이라 스크롤 위치에서 매번 다시
+  계산되므로 누적 오차가 없습니다.
+- **1920 최종 구도**: 겹침 0, 사진 554 × 648(원본 1:1), `object-fit: contain`,
+  가로 스크롤 0. **1280**: 열 339 / 356 / 339, 겹침 0.
+- **768 / 360**: 스토리 꺼짐, 머리말 → 사진 → 설명 스택, 버튼 화면 안,
+  가로 스크롤 0, 깨진 이미지 0.
+- **손대지 않은 섹션 높이 전부 그대로**: hero 1231 · quote 588 · process 799 ·
+  materials 968 · reservation 484 · begin 767.
+- pin-spacer **0개**(전부 CSS sticky), 콘솔 오류 **0**,
+  `node --check` 통과, CSS 중괄호 224/224.
+
+### 확인하지 못한 부분
+
+- **화면 캡처를 못 했습니다.** 미리보기 패널이 프레임을 합성하지 않습니다.
+  위 수치는 전부 DOM 측정입니다. **실제 스크롤 감각은 직접 봐야 합니다.**
+- **이 패널에서는 `scrub`의 관성이 재현되지 않습니다.** rAF가 돌지 않아
+  숫자 scrub이 따라잡지 못합니다(`gsap.ticker.tick()`도 시간이 흐르지 않아
+  소용없었습니다). 그래서 검증은 트리거가 스크롤에서 직접 계산한 진행도를
+  타임라인에 그대로 적용해(스무딩만 건너뛰고) 측정했습니다.
+  **관성의 세기(scrub 1)는 사용자가 봐야 합니다.**
+- `prefers-reduced-motion: reduce`는 흉내 낼 수 없어 같은 결과인
+  "class 없는 상태"를 손으로 만들어 확인했습니다.
+
+
+## 히어로 영상 3개 연결 — bespoke · col_chaikim · col_chaikimyoungjin (2026-08-10)
+
+세 페이지 모두 **존재하지 않는 파일을 가리키고 있었습니다**(404). 이제 전부 붙었습니다.
+
+| 페이지 | 이전 (404) | 지금 |
+|---|---|---|
+| bespoke | `assets/main/bespoke_main.mp4` | `assets/main/beskpokehero_web.mp4` |
+| col_chaikim | `asset/chaikim_video_web.mp4` | `asset/chaikimhero_web.mp4` |
+| col_chaikimyoungjin | `asset/chaikimyoungjin_video.mp4` | `asset/collection_film.mp4` |
+
+### ★ 받은 원본 2개가 HEVC라 그대로는 못 씁니다
+
+`beskpokehero.mp4`(48.6MB) · `chaikimhero.mp4`(49.3MB) 둘 다
+**HEVC(H.265) Main 10, moov가 파일 끝**이었습니다. 두 가지 문제입니다:
+
+1. **Firefox와 HEVC 디코더 없는 Chrome/Edge에서 재생되지 않습니다.**
+   col_chaikim의 기존 주석이 예전에 겪은 같은 문제를 이미 적어두고 있었습니다.
+2. **moov가 끝에 있으면** 앞부분부터 재생할 수 없어 50MB를 거의 다 받아야 시작합니다.
+
+> **이 함정은 로컬에서 안 보입니다.** 검증에 쓴 Chromium은
+> `canPlayType('...hvc1...')`이 `"probably"`라 이 PC에서는 HEVC가 그냥 재생됩니다.
+> **직접 열어보고 "잘 되는데?" 하면 안 됩니다** — 방문자 절반이 검은 화면을 봅니다.
+
+그래서 저장소에 이미 있던 방식(`chaikim_video_web.mp4` / `collection_film.mp4`)대로
+H.264 웹용을 만들어 붙였습니다. **원본은 마스터로 그대로 두었습니다.**
+
+```
+ffmpeg -i <원본>.mp4 -an -c:v libx264 -profile:v high -pix_fmt yuv420p \
+  -crf 23 -preset slow -movflags +faststart <이름>_web.mp4
+```
+
+- `-pix_fmt yuv420p`가 **필수**입니다. 원본이 10-bit(Main 10)이라 빼면 결과도
+  10-bit가 되어 같은 재생 문제가 남습니다.
+- `-an`은 음소거 자동재생 히어로라 소리를 버리는 것입니다.
+- `-movflags +faststart`가 moov를 앞으로 옮깁니다(셋 다 확인).
+
+| 파일 | 원본 | 웹용 |
+|---|---|---|
+| beskpokehero | 48.6MB HEVC | **12.6MB** H.264 CRF 23 (46.0초) |
+| chaikimhero | 49.3MB HEVC | **14.3MB** H.264 CRF 26 (39.3초) |
+
+#### chaikimhero만 CRF 26인 이유 — SSIM으로 정했습니다
+
+CRF 23으로는 23.0MB였습니다. 원본이 10Mbps로 촬영돼 같은 CRF에서도 비트레이트가
+높게 나옵니다. 원본(HEVC) 대비 SSIM을 재서 골랐습니다:
+
+| CRF | 용량 | SSIM (All) |
+|---|---|---|
+| 23 | 23.0MB | 0.9840 |
+| **26** | **14.3MB** | **0.9790** |
+| 28 | 10.7MB | 0.9745 |
+
+**23 → 26이 곡선의 무릎입니다** — 용량 38% 감소에 SSIM은 0.005(0.5%)만 떨어집니다.
+20초 지점에서 1:1 크롭(960×540)을 원본과 나란히 놓고 눈으로도 확인했습니다 —
+셔츠 주름·머리카락 가닥·배경 보케 전부 구분되지 않습니다.
+더 줄이려면 28(10.7MB)까지 갈 수 있지만 그라디언트에서 차이가 보이기 시작합니다.
+
+### col_chaikimyoungjin은 새 파일이 없었습니다
+
+에셋 폴더에 191MB 4K 원본(`콜렉션 패션쇼 영상.mp4`)만 있었습니다. 사용자 확인 후
+**이전 세션이 그 원본에서 만든 웹용 `collection_film.mp4`**(H.264 1080p30, 8.4MB,
+21.6초)를 `test/col_chaikimyoungjin_test/asset/`에서 페이지 폴더로 복사해 붙였습니다.
+길이 21.6초가 원본 21.57초와 일치해 같은 영상임을 확인했습니다.
+`poster`의 `collection_film_poster.jpg`가 이 영상의 첫 프레임입니다.
+
+### 검증 (Chromium, localhost:5661)
+
+- 세 영상 모두 `readyState 4`(HAVE_ENOUGH_DATA) · **1920 × 1080** · `error: null`.
+  코덱 h264 High / `yuv420p` / moov 선두 — ffprobe로 셋 다 확인.
+- **세 페이지의 로컬 참조 전량 200** (36 / 35 / 34건). 이전부터 있던 히어로 404가
+  사라졌습니다. 깨진 이미지 0장, 가로 스크롤 0.
+- poster 3개 전부 디코드 확인(hero.png 2543×1695, collection_film_poster.jpg 1920×1080).
+  bespoke 히어로는 원래부터 poster가 없습니다(이번에 추가하지 않았습니다).
+
+### 남은 것
+
+- **`.gitignore`에 `*.mp4`가 있습니다.** 커밋하려면 새 파일 3개에 `git add -f`가
+  필요합니다 — 안 하면 조용히 빠지고 배포에서 다시 404가 됩니다.
+- `asset/bespoke/main/beskpokehero.mp4`에 같은 원본이 한 벌 더 있습니다(중복).
+
+
+## Bespoke — wordmark 섹션 추가 (2026-08-10)
+
+Figma `1966:7580`("wordmark", 1920 × 986)을 **philosophy와 atelier 사이**에 넣었습니다.
+시안 그대로 크림 배경 한가운데 "TCHAI" 한 줄입니다 — Trirong ExtraLight(200) 600px,
+`--color_point`(#1f433f) 7%, 위 148 / 아래 75. philosophy를 지나면 이 워터마크가
+스크롤에 맞춰 떠오르고, 그다음 atelier로 넘어갑니다.
+
+- `pages/bespoke/index.html` — 섹션 추가, Google Fonts에 Trirong 200 추가
+- `pages/bespoke/css/bespoke.css` — 1840 발표용 블록 **앞에** wordmark 블록 추가
+- `pages/bespoke/js/bespoke.js` — `initWordmarkScroll()` 추가
+
+### ★ 사진을 넣었다가 뺐습니다 (사용자 결정)
+
+처음에는 요청(레퍼런스 tarubali.com)대로 **화면을 채우던 사진이 스크롤과 함께
+워드마크 자리로 수렴하는** 연출을 넣었습니다. `asset/main/bespoke/younjinimg.png`를
+220svh sticky 무대 위에서 scale 3.13 → 1로 줄이는 구조였습니다.
+**시안에는 사진이 없어서** 확인을 거쳐 걷어냈고, 지금은 시안 그대로 글자만 있습니다.
+
+같이 걷어낸 것: sticky 무대, `--wordmark_card_width`, `--wordmark_scroll_length`,
+`computeStartScale()`, 4박자 타임라인, `.wordmark_image` / `.wordmark_content`.
+안쪽 래퍼 이름도 `.wordmark_sticky` → **`.wordmark_stage`**로 바꿨습니다
+(더 이상 sticky가 아닌데 그 이름을 두면 나중에 반드시 오해를 부릅니다).
+
+> ~~다시 긴 스크롤 구간을 주지 마세요.~~ **2026-08-10 뒤집혔습니다** —
+> 맨 위 「스토리 구간」 항목에서 philosophy·atelier와 하나로 잇게 되면서
+> 240svh sticky 무대가 다시 들어왔습니다. 그때는 등장 + 유지 두 박자가
+> 있어서 빈 스크롤이 아닙니다.
+
+### ★ 기본 상태가 "글자가 보이는 상태"여야 합니다
+
+등장 연출은 JS가 `.is_motion_ready`를 붙일 때만 켜집니다. 반대로 만들면
+(기본 숨김 + JS가 표시) 스크립트가 실패했을 때 섹션이 영영 빈 채로 남습니다.
+philosophy·atelier와 같은 게이트입니다.
+
+### ★ 시안의 7%는 요소가 아니라 글자 **색**에 담습니다
+
+`opacity: 0.07`을 요소에 걸면 등장 트윈의 `opacity: 0 → 1`과 서로 덮어써서
+글자가 7%까지 올라오지 못합니다. 그래서 색을
+`color-mix(in srgb, var(--color_point) 7%, transparent)`로 두고
+(구형 브라우저용 `rgba(31, 67, 63, 0.07)` 폴백 한 줄을 앞에 둡니다),
+트윈은 요소 opacity 0 → 1만 씁니다.
+
+### 크기는 vw로 묶여 있습니다
+
+`font-size: min(31.25vw, 600px)` — 600 ÷ 1920 = 31.25vw라 어느 폭에서도 시안과
+같은 비율이고, 1920보다 넓으면 시안값 600px에서 멈춥니다. 섹션 높이도 같은 방식으로
+`min-height: min(51.35vw, 986px)`입니다(986 ÷ 1920).
+
+> 시안 986px은 padding(148 + 75)과 글자(600)의 합인 823px보다 163px 큽니다.
+> 시안의 여백을 그대로 살리려고 `min-height`로 채웠습니다. 그래서 글자 중심이
+> 섹션 중심보다 **36.5px 아래**에 있는데, 이건 시안의 위아래 padding 차이
+> (148 − 75) ÷ 2와 정확히 같은 값이라 의도된 것입니다.
+
+### 조절값
+
+JS 상단: `WORDMARK_RISE`(30px) `WORDMARK_START`("top 85%") `WORDMARK_END`("center center").
+
+> 끝을 `"center center"`로 둔 이유: 워터마크가 화면 한가운데 왔을 때 이미 다 떠
+> 있어야 합니다. 더 뒤로 미루면 섹션이 화면을 지나가는 내내 흐릿하게 남습니다.
+
+### 검증 (Chromium, localhost:5661)
+
+| 진행도 | opacity | y |
+|---|---|---|
+| 0.00 | 0.000 | 30.0px |
+| 0.25 | 0.578 | 12.7px |
+| 0.50 | 0.875 | 3.8px |
+| 1.00 | **1.000** | **0** |
+
+- `scrub: 1`이라 위로 되감으면 글자도 같이 내려갑니다. 구간 644px(1280 기준),
+  섹션 윗변이 화면 85%에 닿을 때 시작해 **섹션 중심이 화면 중심에 오면 진행도 1.00**.
+- **1920에서 시안과 일치**: 섹션 **986px**, padding 147.84 / 74.88(시안 148 / 75),
+  600px / weight 200 / `#1f433f` 7% / line-height 600px, 글자 폭 1759px,
+  가로 중심 오차 **0px**.
+- 섹션 순서 hero → philosophy → **wordmark** → atelier → …, **pin-spacer 0개**.
+- `.wordmark` 안의 `<img>` **0개**, 저장소에 `wordmark_image` / `wordmark_sticky` /
+  `younjinimg` 잔재 **0건**.
+- 360 / 1280 / 1920 전부 가로 스크롤 0, 깨진 이미지 0, **콘솔 오류 0**.
+  360에서 글자 330px이 화면 360px 안에 들어옵니다(112.5px = 31.25vw).
+- 정지 상태(`is_motion_ready` 제거 = 모션 감소 / JS 없음): 섹션 986px 그대로,
+  opacity 1, transform none, will-change 해제.
+- `node --check` 통과, CSS 중괄호 193/193.
+
+### 확인하지 못한 부분
+
+- **화면 캡처를 못 했습니다.** 미리보기 패널이 프레임을 합성하지 않습니다
+  (이전 세션들과 같은 증상). 위 수치는 전부 `getBoundingClientRect` /
+  `getComputedStyle` 측정이고, 트윈은 `progress()`로 직접 돌려 읽었습니다.
+  **떠오르는 속도감은 사용자가 직접 봐야 합니다.**
+- `prefers-reduced-motion: reduce`를 이 도구로 흉내 낼 수 없어, 같은 결과인
+  "`is_motion_ready` 없는 상태"를 손으로 만들어 확인했습니다.
+
 ## 메인 첫 로딩 38MB → 7MB, 히어로 4.9MB → 0.6MB (2026-08-09)
 
 "인트로에서 START를 눌러 메인으로 가면 히어로가 느리다"는 문제입니다.

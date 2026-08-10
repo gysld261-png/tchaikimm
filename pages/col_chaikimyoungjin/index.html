@@ -53,12 +53,14 @@
 
     <!-- hero — Figma "Fashion_show_video" (1710:3866) -->
     <section class="collection_hero" aria-labelledby="collection_hero_title">
-      <!-- 원본 `콜렉션 패션쇼 영상.mp4`(4K 60fps, 191MB)를 웹용 1080p30 H.264로 압축한 파일입니다.
-         원본은 asset에 그대로 두었습니다. -->
+      <!-- 재생하는 파일은 `collection_film.mp4`입니다 — 원본 `콜렉션 패션쇼 영상.mp4`
+         (4K 60fps HEVC, 191MB)를 웹용 1080p30 H.264로 압축한 것입니다(8.4MB, 21.6초).
+         원본은 asset에 그대로 두었습니다.
+         `poster`의 collection_film_poster.jpg가 이 영상의 첫 프레임입니다. -->
       <video class="collection_hero_video" id="collection_hero_video" autoplay muted loop playsinline
         preload="metadata" poster="asset/collection_film_poster.jpg"
         aria-label="Tchai Kim Young Jin runway film">
-        <source src="asset/chaikimyoungjin_video.mp4" type="video/mp4">
+        <source src="asset/collection_film.mp4" type="video/mp4">
       </video>
       <h1 class="collection_hero_title" id="collection_hero_title">TChai Kim Young Jin</h1>
     </section>
