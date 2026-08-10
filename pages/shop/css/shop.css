@@ -287,27 +287,6 @@
   color: var(--color_text_secondary);
 }
 
-.banner_crosslink_link {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding-bottom: 2px;
-  border-bottom: 1px solid var(--color_point);
-  color: var(--color_point);
-}
-
-.banner_crosslink_text {
-  font-family: var(--font_body);
-  font-weight: 600;
-  font-size: 11px;
-  letter-spacing: 2.42px;
-}
-
-.banner_crosslink_icon {
-  width: 15px;
-  height: 15px;
-}
-
 /* =========================================================
    garment_story
    ========================================================= */

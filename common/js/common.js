@@ -93,6 +93,40 @@
     }
 
     var gsap = window.gsap;
+    var weightedWheelSections = Array.prototype.slice.call(
+      document.querySelectorAll("[data-lenis-wheel-multiplier]")
+    );
+
+    /* 특정 스토리텔링 섹션에서만 휠 한 칸의 이동 거리를 줄입니다.
+       duration을 늘리는 방식과 달리 현재 스크롤 좌표를 뒤늦게 따라오지 않습니다.
+       데스크톱 마우스 휠에만 적용하며 터치 스크롤은 OS 기본 감각을 유지합니다. */
+    function adjustSectionWheel(input) {
+      if (
+        window.innerWidth < 1280 ||
+        !input.event ||
+        input.event.type !== "wheel" ||
+        !weightedWheelSections.length
+      ) {
+        return;
+      }
+
+      weightedWheelSections.some(function (section) {
+        var rect = section.getBoundingClientRect();
+        var isSectionActive = rect.top <= 1 && rect.bottom >= window.innerHeight - 1;
+
+        if (!isSectionActive) {
+          return false;
+        }
+
+        var multiplier = Number(section.dataset.lenisWheelMultiplier);
+        if (Number.isFinite(multiplier) && multiplier > 0 && multiplier <= 1) {
+          input.deltaY *= multiplier;
+        }
+
+        return true;
+      });
+    }
+
     var lenis = new window.Lenis({
       /* GSAP 티커가 프레임을 돌리므로 Lenis 자체 rAF는 끕니다.
          둘 다 켜면 한 프레임에 두 번 계산돼 속도가 어긋납니다. */
@@ -102,7 +136,8 @@
       duration: SCROLL_DURATION,
       easing: SCROLL_EASING,
       wheelMultiplier: SCROLL_WHEEL,
-      touchMultiplier: SCROLL_TOUCH
+      touchMultiplier: SCROLL_TOUCH,
+      virtualScroll: adjustSectionWheel
     });
 
     /* ScrollTrigger에 스크롤이 움직였다고 알려줍니다. 이게 없으면 pin·scrub이
@@ -225,8 +260,12 @@
      페이지 HTML에 복사하지 않으므로 문구·선 디자인 변경도 여기와 common.css만 보면 됩니다. */
   function ensureCommonScrollHint() {
     var existingHint = document.querySelector(".common_scroll_hint");
+    var pageHintMode = document.body.getAttribute("data-scroll-hint-mode");
 
     if (existingHint) {
+      if (pageHintMode && !existingHint.hasAttribute("data-scroll-hint-mode")) {
+        existingHint.setAttribute("data-scroll-hint-mode", pageHintMode);
+      }
       return existingHint;
     }
 
@@ -236,6 +275,9 @@
 
     hint.className = "common_scroll_hint";
     hint.setAttribute("aria-hidden", "true");
+    if (pageHintMode) {
+      hint.setAttribute("data-scroll-hint-mode", pageHintMode);
+    }
     label.className = "common_scroll_hint_label";
     label.textContent = "Scroll";
     line.className = "common_scroll_hint_line";
@@ -333,6 +375,7 @@
   var scrollHintTicking = false;
 
   /* 공통 모드에서는 첫 화면을 안내하는 동안만 보이고 자연스럽게 사라집니다.
+     persistent 모드는 페이지 전체에서 계속 표시하며 색상은 헤더 판정을 공유합니다.
      bespoke처럼 더 긴 구간이 필요하면 data-scroll-hint-mode="custom"을 붙이고
      페이지 타임라인에서 opacity와 is_on_light만 제어하면 됩니다. */
   function updateCommonScrollHint() {
@@ -343,10 +386,11 @@
 
     var hasScrollableContent = document.documentElement.scrollHeight > window.innerHeight + 80;
     var hideAt = Math.max(480, window.innerHeight * 0.72);
+    var isPersistent = commonScrollHint.getAttribute("data-scroll-hint-mode") === "persistent";
 
     commonScrollHint.classList.toggle(
       "is_visible",
-      hasScrollableContent && window.scrollY < hideAt
+      hasScrollableContent && (isPersistent || window.scrollY < hideAt)
     );
     scrollHintTicking = false;
   }

@@ -31,6 +31,82 @@ body {
   display: block;
 }
 
+/* Shared text-link button used across page sections. */
+.main_button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 2px 9px;
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: var(--fs_ui_16);
+  font-weight: 500;
+  line-height: 1.63;
+  text-decoration: none;
+  transition: color var(--duration_fast) var(--easing_base),
+              transform var(--duration_fast) var(--easing_base);
+}
+
+.main_button::before,
+.main_button::after {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 1px;
+  content: "";
+}
+
+.main_button::before {
+  background-color: var(--color_point);
+  opacity: 0.22;
+}
+
+.main_button::after {
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform var(--duration_base) var(--easing_base);
+}
+
+.main_button:has(.main_button_arrow_left)::after {
+  transform-origin: right center;
+}
+
+.main_button:hover,
+.main_button:focus-visible {
+  color: #16332f;
+  transform: translateY(-2px);
+}
+
+.main_button:hover::after,
+.main_button:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.main_button:active {
+  transform: translateY(0);
+}
+
+.main_button_arrow {
+  display: inline-block;
+  font-size: 1.15em;
+  line-height: 1;
+  transition: transform var(--duration_fast) var(--easing_base);
+}
+
+.main_button:hover .main_button_arrow_left,
+.main_button:focus-visible .main_button_arrow_left {
+  transform: translateX(-6px) scale(1.06);
+}
+
+.main_button:hover .main_button_arrow_right,
+.main_button:focus-visible .main_button_arrow_right {
+  transform: translateX(6px) scale(1.06);
+}
+
 /* Figma 1920px canvas baseline.
    Full-bleed backgrounds stay on the section; place only section content here. */
 .common_container {
@@ -102,6 +178,7 @@ body[data-header-variant="black"] .common_header_slot {
   height: 56px;
   overflow: hidden;
   background-color: rgba(255, 253, 249, 0.3);
+  transition: background-color var(--duration_fast) var(--easing_base);
 }
 
 .common_scroll_hint_line::after {

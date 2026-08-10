@@ -293,7 +293,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(32px, 6dvh, 68px);
+  gap: clamp(24px, 4dvh, 48px);
 }
 
 .model_figure {
@@ -313,8 +313,9 @@
 @media (min-width: 1280px) {
   .model.is_model_flow {
     /* ★ 데스크탑 진행 길이 조절 위치입니다.
-       280dvh는 화면 높이를 크게 약 세 번 스크롤하면 마지막 위치에 도착하는 길이입니다. */
-    --model_flow_height: 280dvh;
+       값을 줄이면 모델 섹션의 빈 여백과 도착까지 필요한 스크롤이 함께 짧아집니다.
+       현재 260dvh는 시간 지연 없이도 움직임을 긴 스크롤 거리에 나눠 천천히 보여줍니다. */
+    --model_flow_height: 260dvh;
     min-height: var(--model_flow_height);
     /* 마지막 모델이 다음 detail_head 영역까지 이어져 보이도록 세로 클리핑만 해제합니다. */
     overflow: visible;
@@ -328,7 +329,7 @@
 
   .model.is_model_flow .model_figure {
     position: absolute;
-    top: 6dvh;
+    top: 3dvh;
     left: 50%;
     z-index: 1;
     translate: -50% 0;
@@ -340,7 +341,7 @@
     z-index: 2;
     /* 원래 순서인 모델 → 텍스트로 복구합니다.
        모델 높이(최대 720px / 화면 높이 기준 63.53dvh)와 기존 간격을 합친 위치입니다. */
-    top: calc(6dvh + min(720px, 63.53dvh) + clamp(32px, 6dvh, 68px));
+    top: calc(3dvh + min(720px, 63.53dvh) + clamp(24px, 4dvh, 48px));
     left: 50%;
     width: min(760px, calc(100% - (var(--layout_gutter) * 2)));
     translate: -50% 0;
@@ -1165,11 +1166,20 @@
   display: block;
 }
 
-/* 화면에 고정되는 부분. 헤더는 이 밖에 있어 평소처럼 먼저 지나갑니다 */
+/* 화면에 고정되는 부분. 헤더는 이 밖에 있어 평소처럼 먼저 지나갑니다.
+
+   ★ 진행 표시(.detail_keywords)와 사진(.detail_stage)을 한 덩어리로 묶어
+     가로 가운데에 둡니다. 예전에는 두 요소가 각자 왼쪽 기준값을 갖고 있어서
+     (키워드 left: 40~80px, 사진 margin-left: 10.99%) 오른쪽 여백만 커졌습니다 —
+     1920에서 왼쪽 80px / 오른쪽 247px이라 전체가 왼쪽으로 치우쳐 보였습니다.
+     지금은 둘 다 이 flex의 자식으로 흐르므로 브라우저가 키워드 폭을 직접 재서
+     묶음을 가운데에 놓습니다. **폭 값을 CSS에 적어 둘 필요가 없습니다.** */
 .detail.is_scroll_ready .detail_pin {
   position: relative;
   display: flex;
   align-items: center;
+  justify-content: center;
+  gap: clamp(28px, 3.6vw, 72px);
   min-height: 100vh;
   margin-top: 60px; /* block으로 바뀌면서 사라진 .detail의 gap을 대신합니다 */
 }
@@ -1178,11 +1188,18 @@
    point color 선이 현재 스크롤 위치까지 위에서 아래로 내려옵니다. */
 .detail.is_scroll_ready .detail_keywords {
   --detail_progress: 0;
-  position: absolute;
-  top: clamp(96px, 13vh, 128px);
-  left: clamp(40px, 4.2vw, 80px);
+  /* ★ absolute가 아니라 flex 자식입니다 — .detail_pin이 사진과 함께 묶어서
+     가운데 정렬하려면 이 요소도 흐름 안에 있어야 폭이 계산에 들어갑니다.
+     다만 relative는 남겨야 합니다: 아래 ::before/::after(진행 막대)가 이 요소를
+     기준으로 absolute 배치되고, z-index도 위치 지정 요소에서만 동작합니다. */
+  position: relative;
+  /* 세로 위치는 그대로입니다. 부모의 align-items: center를 이 요소만 풀고
+     예전 top 값과 같은 거리를 margin으로 줍니다. */
+  align-self: flex-start;
+  margin-top: clamp(96px, 13vh, 128px);
   z-index: 2;
   display: flex;
+  flex: 0 0 auto;
   flex-direction: column;
   justify-content: space-between;
   width: max-content;
@@ -1258,8 +1275,8 @@
   box-shadow: 0 0 0 4px rgba(31, 67, 63, 0.14);
 }
 
-/* 시안 좌표(폭 76.04%, 왼쪽에서 10.99%)를 그대로 씁니다 — 글이 사진 좌우로 겹쳐
-   걸리는 배치라 가운데 정렬이 아닙니다.
+/* 폭은 시안값(76.04%)을 그대로 씁니다. 왼쪽 기준값(10.99%)은 더 쓰지 않습니다 —
+   가로 위치는 .detail_pin이 진행 표시와 함께 묶어서 가운데에 놓습니다.
 
    ★ 두 번째 값은 화면 높이에 맞춘 상한입니다. 사진 위아래로 설명이 걸칠 자리
      120px씩을 남겨야 하므로 사진 높이 ≤ 화면높이 − 240px이고, 사진 높이는
@@ -1267,9 +1284,14 @@
      세로 980px 이상에서는 이 값이 1700px을 넘어 시안 폭 1460px이 그대로 살고,
      세로가 짧은 화면에서만 사진이 작아집니다. */
 .detail.is_scroll_ready .detail_stage {
+  /* ★ flex-shrink를 막습니다. 폭은 아래 width가 정하고, 줄어들면 사진 비율에
+     맞춰 높이까지 따라 줄어 돋보기 좌표(js가 offsetWidth로 잽니다)와 어긋납니다. */
+  flex: 0 0 auto;
   width: min(76.04%, calc((100vh - 240px) / 0.435));
   max-width: 1460px;
-  margin-left: 10.99%;
+  /* ★ 왼쪽 기준값(10.99%)을 뺐습니다. 가운데 정렬은 .detail_pin의
+     justify-content: center가 진행 표시까지 묶어서 처리합니다. */
+  margin-left: 0;
 }
 
 .detail.is_scroll_ready .detail_marker,
@@ -1617,102 +1639,6 @@
   font-size: var(--fs_body_20);
   font-weight: 400;
   line-height: var(--lh_body_20);
-}
-
-/* =========================================================
-   .main_button — 이 페이지 공통 텍스트 버튼
-
-   원래 collection 섹션의 링크 스타일이었고, 사용자 요청으로 공통 버튼이
-   됐습니다. 지금 쓰는 곳은 **네 군데**입니다.
-     · collection — "View Tchai Kim Youngjin Collection"(왼쪽 화살표)
-                    "View Tchai Kim Collection"(오른쪽 화살표)
-     · promo      — "Visit Bespoke" · "Visit Shop"(둘 다 오른쪽 화살표)
-
-   ★★ 여기를 고치면 네 곳이 전부 같이 바뀝니다. 한 곳만 다르게 하고 싶으면
-      그 섹션에서 따로 덮어쓰세요(공통 값을 여기서 바꾸면 안 됩니다).
-
-   ★ 밑줄은 두 겹입니다. ::before가 항상 있는 흐린 선(22%),
-     ::after가 호버할 때 차오르는 진한 선입니다.
-     border-bottom을 함께 주면 그 위에 겹쳐 줄이 두 개로 보입니다.
-   ========================================================= */
-.main_button {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding: 6px 2px 9px;
-  color: var(--color_point);
-  font-family: var(--font_body);
-  font-size: var(--fs_ui_16);
-  font-weight: 500;
-  line-height: 1.63;
-  text-decoration: none;
-  transition: color var(--duration_fast) var(--easing_base),
-              transform var(--duration_fast) var(--easing_base);
-}
-
-.main_button::before,
-.main_button::after {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  left: 0;
-  height: 1px;
-  content: "";
-}
-
-.main_button::before {
-  background-color: var(--color_point);
-  opacity: 0.22;
-}
-
-/* 기본은 왼쪽에서 오른쪽으로 차오릅니다 — 화살표가 오른쪽에 있는 경우입니다. */
-.main_button::after {
-  background-color: currentColor;
-  transform: scaleX(0);
-  transform-origin: left center;
-  transition: transform var(--duration_base) var(--easing_base);
-}
-
-/* ★ 화살표가 왼쪽이면 반대 방향에서 차올라야 화살표 쪽으로 자랍니다.
-   예전에는 :first-child / :last-child로 갈랐는데, 그 방식은 형제가 하나뿐인
-   promo 링크에서 무너집니다(혼자면 first이자 last입니다).
-   화살표 방향을 직접 보고 정하므로 어디에 놓아도 맞습니다. */
-.main_button:has(.main_button_arrow_left)::after {
-  transform-origin: right center;
-}
-
-.main_button:hover,
-.main_button:focus-visible {
-  color: #16332f;
-  transform: translateY(-2px);
-}
-
-.main_button:hover::after,
-.main_button:focus-visible::after {
-  transform: scaleX(1);
-}
-
-.main_button:active {
-  transform: translateY(0);
-}
-
-.main_button_arrow {
-  display: inline-block;
-  font-size: 1.15em;
-  line-height: 1;
-  transition: transform var(--duration_fast) var(--easing_base);
-}
-
-.main_button:hover .main_button_arrow_left,
-.main_button:focus-visible .main_button_arrow_left {
-  transform: translateX(-6px) scale(1.06);
-}
-
-.main_button:hover .main_button_arrow_right,
-.main_button:focus-visible .main_button_arrow_right {
-  transform: translateX(6px) scale(1.06);
 }
 
 .promo_img {
@@ -2099,8 +2025,8 @@
   margin-bottom: var(--collection_gap_links_stage);
 }
 
-/* 이 안의 링크 2개는 공통 버튼 `.main_button`을 씁니다 —
-   스타일은 파일 위쪽 「.main_button」 블록에 있습니다(promo 링크와 공유). */
+/* 이 안의 링크 2개는 공통 버튼 `.main_button`을 씁니다.
+   기본 스타일은 common/css/common.css에서 다른 페이지와 공유합니다. */
 
 
 /* =========================================================

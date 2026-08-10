@@ -80,18 +80,18 @@
 
     /* 태블릿·모바일 고정형 구간 길이입니다.
        데스크탑 길이는 main.css의 --model_flow_height에서 조절합니다. */
-    var MODEL_SCROLL_LENGTH_TABLET = 3.8;
-    var MODEL_SCROLL_LENGTH_MOBILE = 2.8;
+    var MODEL_SCROLL_LENGTH_TABLET = 2.8;
+    var MODEL_SCROLL_LENGTH_MOBILE = 2.2;
     /* ★ 모델 좌우 이동 폭 조절 위치
        현재 화면 너비에 곱하는 비율입니다. 값을 줄이면 좌우 움직임이 차분해집니다.
        권장 범위: 0.14 ~ 0.22 / 현재 데스크탑 0.2 */
     var MODEL_TRAVEL_DESKTOP = 0.2;
     var MODEL_TRAVEL_TABLET = 0.16;
     var MODEL_TRAVEL_MOBILE = 0.1;
-    /* ★ 데스크탑 좌우 왕복 횟수 조절 위치
-       1은 전체 구간에서 왼쪽 → 오른쪽 → 중앙을 한 번 진행합니다.
-       값을 줄이면 방향 전환이 더 느려지고, 키우면 자주 움직여 가벼워 보일 수 있습니다. */
-    var MODEL_HORIZONTAL_WAVES_DESKTOP = 1;
+    /* ★ 좌우 방향 전환 시점 조절 위치
+       중앙에서 출발해 왼쪽으로 한 번 이동한 뒤 오른쪽에서 끝납니다.
+       값을 키우면 왼쪽에 늦게 도착하고, 줄이면 오른쪽 이동을 더 일찍 시작합니다. */
+    var MODEL_HORIZONTAL_TURN_RATIO = 0.38;
     /* ★ 중앙 정렬 유지 구간 조절 위치
        0.18은 전체 진행의 앞 18% 동안 모델을 텍스트와 같은 중앙선에 유지합니다.
        값을 키우면 중앙에 더 오래 머물고, 줄이면 좌우 이동을 더 일찍 시작합니다. */
@@ -100,10 +100,13 @@
     var MODEL_TEXT_FADE_RATIO = 0.12;
     var MODEL_VIDEO_START_RATIO = 0.08;
     /* ★ 데스크탑 모델 스크롤 감도 조절 위치
-       값을 키우면 스크롤을 놓은 뒤에도 더 천천히 따라와 묵직해집니다.
-       권장 범위: 1.2 ~ 2 / 현재 1.6
-       전체 도착 거리는 main.css의 --model_flow_height에서 조절합니다. */
-    var MODEL_DESKTOP_SCRUB = 1.6;
+       이 값은 모델이 현재 스크롤 위치를 따라잡는 시간입니다.
+       4처럼 크게 쓰면 약 4초 뒤처지므로 스크롤과 모델 위치가 어긋납니다.
+       현재 0.8은 부드러운 관성은 남기면서 사용자의 스크롤을 가깝게 따라옵니다.
+       느린 이동 속도는 main.css의 --model_flow_height에서 조절합니다. */
+    var MODEL_DESKTOP_SCRUB = 0.8;
+    /* 태블릿·모바일 고정 구간도 즉시 따라가지 않도록 완만하게 연결합니다. */
+    var MODEL_PINNED_SCRUB = 0.65;
     /* ★ 마지막 모델이 detail_head 아래로 내려가는 거리(px)입니다.
        값을 키우면 모델이 detail 제목 영역을 더 깊게 통과합니다. */
     var MODEL_DETAIL_HEAD_OVERLAP = 24;
@@ -252,12 +255,24 @@
         0,
         Math.min(1, (progress - MODEL_HORIZONTAL_HOLD_RATIO) / (1 - MODEL_HORIZONTAL_HOLD_RATIO))
       );
-      /* 중앙에서 갑자기 튀어나가지 않도록 좌우 진행률의 시작과 끝을 부드럽게 만듭니다. */
-      var easedHorizontalProgress = horizontalProgress * horizontalProgress * (3 - 2 * horizontalProgress);
-      var horizontalWave = Math.sin(
-        easedHorizontalProgress * Math.PI * 2 * MODEL_HORIZONTAL_WAVES_DESKTOP
-      );
-      var horizontalPosition = -horizontalWave * getModelTravelDistance();
+      var travelDistance = getModelTravelDistance();
+      var horizontalPosition = 0;
+
+      function smoothStep(value) {
+        return value * value * (3 - 2 * value);
+      }
+
+      /* 왕복 사인 곡선 대신 중앙 → 왼쪽 → 오른쪽의 두 구간만 사용합니다.
+         방향 전환점에서도 속도가 0이 되어 모델이 튀거나 촐싹거리지 않습니다. */
+      if (horizontalProgress <= MODEL_HORIZONTAL_TURN_RATIO) {
+        horizontalPosition = -travelDistance * smoothStep(
+          horizontalProgress / MODEL_HORIZONTAL_TURN_RATIO
+        );
+      } else {
+        horizontalPosition = -travelDistance + (travelDistance * 2 * smoothStep(
+          (horizontalProgress - MODEL_HORIZONTAL_TURN_RATIO) / (1 - MODEL_HORIZONTAL_TURN_RATIO)
+        ));
+      }
 
       gsap.set(figure, {
         x: horizontalPosition,
@@ -277,7 +292,7 @@
           return "+=" + window.innerHeight * getModelScrollLength();
         },
         pin: !isDesktopModelFlow,
-        scrub: isDesktopModelFlow ? MODEL_DESKTOP_SCRUB : 0.35,
+        scrub: isDesktopModelFlow ? MODEL_DESKTOP_SCRUB : MODEL_PINNED_SCRUB,
         anticipatePin: 1,
         invalidateOnRefresh: true,
         fastScrollEnd: true,
@@ -297,7 +312,7 @@
       );
 
     if (isDesktopModelFlow) {
-      /* 여러 트윈을 꺾어 붙이지 않고 하나의 연속 사인 곡선으로 좌우 위치를 계산합니다.
+      /* 좌우는 왼쪽 한 번, 오른쪽 한 번만 이동합니다.
          y는 실제 섹션 길이를 따라 내려가고 마지막에 화면 아래쪽으로 조금 더 이동합니다. */
       timeline.to(
         modelMotion,
@@ -310,27 +325,17 @@
         0
       );
     } else {
-      /* 태블릿·모바일은 직전의 고정형 좌우 이동을 그대로 유지합니다. */
+      /* 태블릿·모바일도 같은 방향 구성으로 한 번만 꺾어 움직입니다. */
       timeline
         .to(
           figure,
-          { x: function () { return -getModelTravelDistance(); }, duration: 0.22, ease: "sine.inOut" },
-          0.08
+          { x: function () { return -getModelTravelDistance(); }, duration: 0.32, ease: "sine.inOut" },
+          0.12
         )
         .to(
           figure,
-          { x: function () { return getModelTravelDistance(); }, duration: 0.3, ease: "sine.inOut" },
-          0.3
-        )
-        .to(
-          figure,
-          { x: function () { return -getModelTravelDistance() * 0.55; }, duration: 0.2, ease: "sine.inOut" },
-          0.6
-        )
-        .to(
-          figure,
-          { x: 0, duration: 0.2, ease: "sine.inOut" },
-          0.8
+          { x: function () { return getModelTravelDistance(); }, duration: 0.56, ease: "sine.inOut" },
+          0.44
         );
     }
 
