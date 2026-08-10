@@ -124,6 +124,58 @@
   opacity: 1;
 }
 
+/* 모바일 스와이프 트랙 (768px 미만).
+   그 폭에서는 WebGL 원통을 만들지 않아 사진이 한 장만 보이고 조작이 없었습니다.
+   js/shop.js가 카테고리 8장을 담은 트랙을 만들고 .is_swipe_ready를 붙입니다.
+   가로 스와이프는 브라우저 기본 스크롤 + scroll-snap이 처리하므로 제스처를
+   직접 계산하지 않습니다(관성·고무줄이 기기 기본 동작 그대로 남습니다).
+
+   ★ 트랙은 js가 만들 때만 존재합니다. 스크립트가 실패하면 이 규칙들이 아무것도
+     매칭하지 않고 .hero_gallery_fallback 정지 이미지가 그대로 남습니다. */
+/* ★ 768px 미만에서 .hero_gallery는 position: static입니다(아래 1023 블록).
+   그대로 두면 트랙의 absolute가 .hero_section_frame을 기준으로 잡혀
+   히어로 전체(360×810)를 덮고 카테고리를 가립니다. 기준을 되돌립니다. */
+.hero_gallery.is_swipe_ready {
+  position: relative;
+  /* ★ static일 때는 무시되던 기본 규칙의 left/top(-162px / 40px)이 relative가
+     되는 순간 살아납니다. 같이 지우지 않으면 갤러리가 화면 왼쪽 밖으로 나가고
+     아래 카테고리와 겹칩니다. */
+  left: auto;
+  top: auto;
+}
+
+.hero_gallery.is_swipe_ready .hero_gallery_fallback {
+  display: none;
+}
+
+.hero_gallery_track {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.hero_gallery_track::-webkit-scrollbar {
+  display: none;
+}
+
+.hero_gallery_slide {
+  /* 한 장이 트랙 폭을 정확히 채워야 scrollLeft / clientWidth가 곧 사진 번호가
+     됩니다. shrink를 0으로 두지 않으면 8장이 서로 눌려 계산이 어긋납니다. */
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+}
+
+.hero_gallery_slide_img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .hero_nav {
   --hero_nav_x: 0;
   --hero_nav_y: -200px;
@@ -153,6 +205,9 @@
 .hero_nav_link {
   display: inline-block;
   min-width: 110px;
+  /* ★ button은 기본 text-align이 center입니다. min-width가 110px이라
+     지정하지 않으면 짧은 항목(TOP, ACC)만 안쪽으로 밀려 왼쪽 선이 어긋납니다. */
+  text-align: left;
   color: var(--color_text_on_dark);
   font-family: var(--font_body);
   font-weight: 400;

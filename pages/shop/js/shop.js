@@ -758,6 +758,184 @@ function syncHeroGallery() {
 syncHeroGallery();
 heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
+/* 모바일 히어로 스와이프 (768px 미만 — WebGL 원통을 만들지 않는 구간).
+   그 폭에서는 사진이 한 장만 보이고 조작이 전혀 없었습니다. 여기서 카테고리
+   8장을 담은 가로 트랙을 만들어, 옆으로 밀면 그 사진에 해당하는 카테고리가
+   밝게 켜집니다(나머지는 .hero_nav.has_active 규칙이 0.22로 낮춥니다).
+
+   ★ 제스처를 직접 계산하지 않습니다. 가로 스와이프는 브라우저 기본 스크롤과
+     scroll-snap이 처리하고, 이 코드는 scrollLeft를 읽어 몇 번째인지만 봅니다.
+     그래서 관성·고무줄이 기기 기본 동작 그대로 남습니다.
+   ★ 데스크톱과 게이트가 겹치지 않습니다(768 미만 / 768 이상). 창 크기가 바뀌면
+     destroy로 트랙과 class를 전부 되돌립니다. */
+var heroSwipeQuery = window.matchMedia("(max-width: 767px)");
+var heroSwipeApi = null;
+
+var GALLERY_CATEGORY_LABELS = [
+  "ALL / NEW", "DRESS", "TOP", "KNIT", "BOTTOM", "OUTER", "LIVING", "ACC"
+];
+
+function initHeroSwipe() {
+  var nav = document.querySelector(".hero_nav");
+
+  if (!heroGallery || !nav || !navLinks.length) {
+    return null;
+  }
+
+  var track = document.createElement("div");
+  var activeIndex = -1;
+
+  /* 한 장의 폭은 스크롤 도중에 바뀌지 않습니다. 미리 재 두면 scroll마다
+     clientWidth를 읽지 않아도 되고(레이아웃 재계산 없음), 그래서 굳이
+     rAF로 묶지 않아도 됩니다. 창 크기가 바뀔 때만 다시 잽니다. */
+  var slideWidth = 0;
+
+  track.className = "hero_gallery_track";
+  track.setAttribute("aria-label", "Swipe through Tchai Kim categories");
+
+  IMAGE_URLS.forEach(function (url, index) {
+    var slide = document.createElement("div");
+    var image = document.createElement("img");
+
+    slide.className = "hero_gallery_slide";
+    image.className = "hero_gallery_slide_img";
+    image.src = url;
+    image.alt = "A model wearing a Tchai Kim " + GALLERY_CATEGORY_LABELS[index] + " look";
+    image.decoding = "async";
+
+    /* 첫 장은 바로 보이므로 즉시, 나머지는 밀어야 보이므로 미룹니다. */
+    if (index > 0) {
+      image.loading = "lazy";
+    }
+
+    slide.appendChild(image);
+    track.appendChild(slide);
+  });
+
+  heroGallery.appendChild(track);
+  heroGallery.classList.add("is_swipe_ready");
+
+  function applyActive(index) {
+    nav.classList.add("has_active");
+
+    navLinks.forEach(function (link) {
+      var isMatch = Number(link.getAttribute("data-gallery-index")) === index;
+
+      link.classList.toggle("is_active", isMatch);
+
+      /* 색·굵기만으로 상태를 전하지 않도록 읽기 도구에도 알립니다. */
+      if (isMatch) {
+        link.setAttribute("aria-current", "true");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  function readIndex() {
+    if (!slideWidth) {
+      return 0;
+    }
+
+    return Math.max(0, Math.min(IMAGE_URLS.length - 1, Math.round(track.scrollLeft / slideWidth)));
+  }
+
+  /* 스크롤은 한 번 밀 때 수십 번 발생하지만, 실제로 class를 고치는 것은
+     사진이 바뀌는 순간뿐입니다(아래 조기 반환). */
+  function syncActive() {
+    var index = readIndex();
+
+    if (index === activeIndex) {
+      return;
+    }
+
+    activeIndex = index;
+    applyActive(index);
+  }
+
+  function handleResize() {
+    slideWidth = track.clientWidth;
+    syncActive();
+  }
+
+  function handleNavClick(event) {
+    var button = event.target.closest(".hero_nav_link");
+
+    if (!button) {
+      return;
+    }
+
+    var index = Number(button.getAttribute("data-gallery-index"));
+    var shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    track.scrollTo({
+      left: index * slideWidth,
+      behavior: shouldReduceMotion ? "auto" : "smooth"
+    });
+
+    /* 부드러운 스크롤은 여러 프레임에 걸쳐 도착합니다. 눌린 즉시 그 카테고리가
+       켜져야 반응이 늦어 보이지 않습니다(도착 후 scroll이 같은 값을 다시 내도
+       조기 반환으로 아무 일도 하지 않습니다). */
+    activeIndex = index;
+    applyActive(index);
+  }
+
+  /* 넓은 화면에서 좁은 화면으로 줄인 경우, WebGL 쪽 blur 핸들러가 살아 있어
+     포커스가 빠질 때 is_active를 전부 지웁니다. 그 뒤에 되돌립니다. */
+  function handleNavFocusOut() {
+    window.setTimeout(function () {
+      if (activeIndex >= 0) {
+        applyActive(activeIndex);
+      }
+    }, 0);
+  }
+
+  track.addEventListener("scroll", syncActive, { passive: true });
+  nav.addEventListener("click", handleNavClick);
+  nav.addEventListener("focusout", handleNavFocusOut);
+  window.addEventListener("resize", handleResize);
+
+  slideWidth = track.clientWidth;
+  activeIndex = 0;
+  applyActive(0);
+
+  return {
+    destroy: function destroyHeroSwipe() {
+      track.removeEventListener("scroll", syncActive);
+      nav.removeEventListener("click", handleNavClick);
+      nav.removeEventListener("focusout", handleNavFocusOut);
+      window.removeEventListener("resize", handleResize);
+      track.remove();
+
+      heroGallery.classList.remove("is_swipe_ready");
+      nav.classList.remove("has_active");
+
+      navLinks.forEach(function (link) {
+        link.classList.remove("is_active");
+        link.removeAttribute("aria-current");
+      });
+    }
+  };
+}
+
+function syncHeroSwipe() {
+  if (heroSwipeQuery.matches) {
+    if (!heroSwipeApi) {
+      heroSwipeApi = initHeroSwipe();
+    }
+
+    return;
+  }
+
+  if (heroSwipeApi) {
+    heroSwipeApi.destroy();
+    heroSwipeApi = null;
+  }
+}
+
+syncHeroSwipe();
+heroSwipeQuery.addEventListener("change", syncHeroSwipe);
+
 /* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)를 휠 또는
    프레임의 세로 마우스 드래그로 이동시킵니다. 스크롤 위치는 네 개의 정수 스텝에
    맞추고, 화면의 진행도(progress)는 GSAP scrub으로 따라오게 해 부드럽게 스냅합니다.

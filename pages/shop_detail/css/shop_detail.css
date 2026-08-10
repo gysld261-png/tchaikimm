@@ -53,16 +53,21 @@
   }
 
   /* 세로가 짧은 데스크톱에서도 구매 버튼을 가리지 않습니다.
-     구매 패널 위에서 휠을 움직이면 패널의 남은 내용도 확인할 수 있습니다. */
+     내부 스크롤바는 감추되 스크롤 기능은 유지하고, 끝에 닿으면 휠 입력을
+     페이지로 넘겨 다음 섹션까지 끊김 없이 이어지게 합니다. */
   .product_hero.is_gallery_scroll_ready .purchase_panel {
     height: calc(var(--product_detail_view_height) - var(--header_height));
     max-height: calc(var(--product_detail_view_height) - var(--header_height));
     min-width: 0;
     overflow-x: hidden;
     overflow-y: auto;
-    overscroll-behavior: contain;
-    scrollbar-color: var(--detail_border) transparent;
-    scrollbar-width: thin;
+    overscroll-behavior-y: auto;
+    scrollbar-width: none;
+  }
+
+  .product_hero.is_gallery_scroll_ready .purchase_panel::-webkit-scrollbar {
+    width: 0;
+    height: 0;
   }
 
   .product_hero.is_gallery_scroll_ready .purchase_benefits {
@@ -918,7 +923,7 @@ html.has_purchase_modal {
 .look_product > div > span,
 .look_product h3,
 .look_product p,
-.look_product > a {
+.look_product_price {
   opacity: 0;
   transform: translateY(8px);
   transition: opacity .3s ease, transform .4s var(--easing_base);
@@ -927,7 +932,7 @@ html.has_purchase_modal {
 .look_product.is_active > div > span,
 .look_product.is_active h3,
 .look_product.is_active p,
-.look_product.is_active > a {
+.look_product.is_active .look_product_price {
   opacity: 1;
   transform: translateY(0);
 }
@@ -935,11 +940,11 @@ html.has_purchase_modal {
 .look_product.is_active > div > span { transition-delay: .08s; }
 .look_product.is_active h3 { transition-delay: .13s; }
 .look_product.is_active p { transition-delay: .18s; }
-.look_product.is_active > a { transition-delay: .23s; }
+.look_product.is_active .look_product_price { transition-delay: .23s; }
 .look_product:hover { border-color: var(--detail_green); }
 .look_product h3 { margin: 10px 0 0; font-family: var(--font_display); font-size: 24px; font-weight: 400; line-height: 1.25; }
 .look_product p { width: 160px; margin: 6px 0 0; color: var(--detail_secondary); font-size: 14px; line-height: 1.57; }
-.look_product > a { color: #343330; text-align: right; line-height: 2; }
+.look_product_price { color: #343330; text-align: right; line-height: 2; }
 
 @media (max-width: 1439px) {
   .product_hero { min-height: 1860px; }

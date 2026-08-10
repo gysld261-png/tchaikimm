@@ -375,7 +375,9 @@
   var headerCart = document.querySelector(".header_cart");
   var headerCartCount = document.querySelector("[data-cart-count]");
   var cartDrawer = document.getElementById("cart_drawer");
-  var cartDrawerClose = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-close]");
+  var cartDrawerCloseButtons = cartDrawer
+    ? Array.prototype.slice.call(cartDrawer.querySelectorAll("[data-cart-drawer-close]"))
+    : [];
   var cartDrawerStatus = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-status]");
   var cartDrawerHeading = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-heading]");
   var cartDrawerDescription = cartDrawer && cartDrawer.querySelector("[data-cart-drawer-description]");
@@ -538,12 +540,14 @@
     }
   });
 
-  if (headerCart && cartDrawer && cartDrawerClose) {
+  if (headerCart && cartDrawer && cartDrawerCloseButtons.length > 0) {
     headerCart.addEventListener("click", function () {
       setCartDrawerOpen(true);
     });
-    cartDrawerClose.addEventListener("click", function () {
-      setCartDrawerOpen(false);
+    cartDrawerCloseButtons.forEach(function (closeButton) {
+      closeButton.addEventListener("click", function () {
+        setCartDrawerOpen(false);
+      });
     });
     cartDrawer.addEventListener("click", handleCartDrawerClick);
     cartDrawer.addEventListener("close", handleCartDrawerClose);

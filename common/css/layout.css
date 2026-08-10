@@ -330,7 +330,7 @@ html.has_cart_drawer {
   height: 100dvh;
   max-height: none;
   margin: 0;
-  padding: 0;
+  padding: 20px;
   overflow: hidden;
   border: 0;
   background: transparent;
@@ -338,8 +338,8 @@ html.has_cart_drawer {
 }
 
 .cart_drawer[open] {
-  display: flex;
-  justify-content: flex-end;
+  display: grid;
+  place-items: center;
 }
 
 .cart_drawer::backdrop {
@@ -350,11 +350,13 @@ html.has_cart_drawer {
 .cart_drawer_panel {
   display: flex;
   flex-direction: column;
-  width: min(100%, 500px);
-  height: 100%;
-  padding: 0 clamp(24px, 4vw, 48px) clamp(28px, 5vh, 48px);
+  width: min(100%, 440px);
+  height: min(420px, calc(100dvh - 40px));
+  padding: 0 clamp(24px, 4vw, 36px) clamp(24px, 4vh, 32px);
+  border: 1px solid rgba(10, 10, 10, 0.22);
+  border-radius: 0;
   background-color: var(--color_bg);
-  box-shadow: -20px 0 50px rgba(10, 10, 10, 0.12);
+  box-shadow: 0 24px 60px rgba(10, 10, 10, 0.2);
   animation: cart_drawer_panel_in var(--duration_base) var(--easing_base) both;
 }
 
@@ -443,7 +445,7 @@ html.has_cart_drawer {
   justify-content: center;
   min-height: 54px;
   border: 1px solid var(--color_point);
-  border-radius: var(--radius_button);
+  border-radius: 0;
   background-color: var(--color_point);
   color: var(--color_text_inverse);
   font-family: var(--font_ui);
@@ -466,8 +468,14 @@ html.has_cart_drawer {
 }
 
 @keyframes cart_drawer_panel_in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .header_cart_count {
@@ -708,9 +716,12 @@ html.has_cart_drawer {
   font-size: var(--fs_ui_16);
 }
 
+/* ★ social·policy는 a에만 겁니다. 목적지가 아직 없는 항목(약관 4개, Blog)은
+   span이라, 그냥 두면 눌리지도 않는 글자가 마우스를 올릴 때마다 흐려져
+   링크처럼 보입니다. 나중에 a로 되돌리면 이 효과도 함께 되살아납니다. */
 .footer_menu_link:hover,
-.footer_social_link:hover,
-.footer_policy_link:hover {
+a.footer_social_link:hover,
+a.footer_policy_link:hover {
   opacity: 0.6;
 }
 

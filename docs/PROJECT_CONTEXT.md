@@ -70,6 +70,118 @@ run만 늘리면 글 등장과 붙잡기까지 같이 느려집니다. 그래서
   있어 `ScrollTrigger.update()`를 직접 불러 정적으로 쟀습니다).
   **1.49배가 충분한지는 직접 봐 주세요.**
 - 문서가 그만큼 길어졌습니다 — 1600 기준 11328 → **11598**(+270px = 30svh).
+
+## Shop 히어로 카테고리 — button 전환 + 모바일 스와이프 연동 (2026-08-11)
+
+두 가지입니다. "카테고리가 `a href="#"`라 누르면 맨 위로 튄다", 그리고 "사진 한 장씩
+보이는 폭에서 옆으로 스와이프하면 그에 맞는 카테고리가 하얗게 켜지게".
+
+파일 3개(`pages/shop/index.html` · `css/shop.css` · `js/shop.js`)만 고쳤습니다.
+**공통 파일은 건드리지 않았습니다.**
+
+### 1) `<a href="#">` → `<button type="button">` 8개
+
+카테고리는 페이지 이동이 아니라 갤러리를 돌리는 조작입니다. 실측으로 확인한
+증상: 스크롤 3000px 지점에서 누르면 **0px로 튑니다.**
+
+- **CSS 추가가 거의 필요 없었습니다.** `common/css/reset.css:48`이 button의
+  `margin/padding/border/background/color/font/cursor`를 이미 리셋합니다.
+- **★ 딱 한 줄, `text-align: left`가 필요합니다.** button은 기본이 `center`이고
+  `.hero_nav_link`에 `min-width: 110px`이 있어서, 지정하지 않으면 짧은 항목
+  (TOP · ACC)만 안쪽으로 밀려 왼쪽 선이 어긋납니다.
+- `class`와 `data-gallery-index`를 그대로 두어 **js는 한 줄도 고치지 않았습니다**
+  (`navLinks`가 `.hero_nav_link`로 잡고, 핸들러가 `data-gallery-index`를 읽습니다).
+
+### 2) 모바일 스와이프 트랙 (768px 미만)
+
+그 폭은 WebGL 원통을 만들지 않는 구간이라 사진이 한 장 떠 있고 **조작이 전혀
+없었습니다**(js 바인딩 자체가 WebGL 초기화 안에 있습니다). `initHeroSwipe()`가
+카테고리 8장을 담은 가로 트랙을 만들고 `.is_swipe_ready`를 붙입니다.
+
+- **제스처를 직접 계산하지 않습니다.** 가로 스와이프는 브라우저 기본 스크롤 +
+  `scroll-snap-type: x mandatory`가 처리하고, js는 `scrollLeft`를 읽어 몇 번째인지만
+  봅니다. 관성·고무줄이 기기 기본 동작 그대로 남습니다.
+- **강조 CSS는 새로 만들지 않았습니다.** 이미 있는
+  `.hero_nav.has_active .hero_nav_link{opacity:.22}` + `.is_active{opacity:1}`에
+  class만 붙입니다 — 데스크톱 hover와 똑같은 모양이 됩니다.
+- 색·굵기만으로 전하지 않도록 활성 항목에 `aria-current="true"`도 붙입니다.
+
+#### ★★ `position: relative`를 주는 순간 기본 규칙의 left/top이 살아납니다
+
+트랙이 `absolute; inset: 0`인데 **모바일에서 `.hero_gallery`는 `position: static`**
+입니다(1023 블록). 그대로 두면 기준이 `.hero_section_frame`으로 올라가
+**트랙이 히어로 전체(360×810)를 덮고 카테고리를 가립니다.** 실측으로 잡았습니다.
+
+그래서 `.hero_gallery.is_swipe_ready { position: relative }`를 줬더니 이번에는
+기본 규칙의 **`left: -162px; top: 40px`가 되살아나** 갤러리가 화면 왼쪽 밖
+(x = −142)으로 나갔습니다. static일 때는 무시되던 값입니다.
+**`left: auto; top: auto`를 반드시 함께 써야 합니다.**
+
+#### ★ rAF로 묶지 않았습니다
+
+처음에 scroll을 `requestAnimationFrame`으로 throttle했는데, 한 장의 폭은 스크롤
+도중에 바뀌지 않으므로 **폭을 미리 재 두면(`slideWidth`) scroll마다 레이아웃을
+읽을 일이 없습니다.** 실제로 class를 고치는 것도 사진이 바뀌는 순간뿐입니다
+(조기 반환). 덕분에 코드가 단순해지고 이 패널에서 검증도 가능해졌습니다
+— **미리보기 패널은 rAF가 0회/초라 rAF 안의 코드는 영영 실행되지 않습니다.**
+
+#### ★ 게이트가 겹치지 않습니다
+
+WebGL은 `(min-width: 768px)`, 스와이프는 `(max-width: 767px)`입니다. 둘 다
+`matchMedia`라 스크롤바가 있는 창에서도 판정이 어긋나지 않습니다.
+`destroy()`가 트랙 · `is_swipe_ready` · `has_active` · `is_active` ·
+`aria-current`를 전부 되돌립니다.
+
+### 검증 (Chromium, localhost:5690)
+
+**스와이프 → 카테고리 (360px, 슬라이드 폭 320)** — 양방향 전부 일치:
+
+| 슬라이드 | 0 | 1 | 2 | 5 | 7 | 3 | 0 |
+|---|---|---|---|---|---|---|---|
+| 켜진 카테고리 | ALL / NEW | DRESS | TOP | OUTER | ACC | KNIT | ALL / NEW |
+| `aria-current` | 동일 | 동일 | 동일 | 동일 | 동일 | 동일 | 동일 |
+
+흐림 규칙 매칭 **8/8**, 트랙 `scrollWidth` 2560 = 320 × 8, 카테고리 탭 시
+목표 좌표(1920 / 320 / 2240 / 0)에 **오차 0으로 도달**.
+
+**데스크톱 동작 유지 (1920)**: hover → `has_active` + 해당 항목만 `is_active`,
+회전 트윈 16개 생성 후 `progress(1)`에서 캔버스 지문 0 → 199475로 **실제 렌더 확인**.
+hover 해제 시 전부 복귀. 합성 focus/blur도 정상(네이티브 focus는 패널에
+`document.hasFocus() === false`라 발생하지 않습니다).
+
+**클릭이 더 이상 튀지 않습니다**: 2000px 지점에서 클릭 → 2000px 유지, 해시 없음.
+
+| 폭 | 스와이프 | WebGL | 버튼 | href 잔재 | 가로 스크롤 | 넘침 |
+|---|---|---|---|---|---|---|
+| 1920 | ✗ | O | 8 | 0 | 0 | 0 |
+| 1280 | ✗ | O | 8 | 0 | 0 | 0 |
+| 768 | ✗ | O | 8 | 0 | 0 | 0 |
+| **767** | **O** | ✗ | 8 | 0 | 0 | 0 |
+| 360 | O(8장) | ✗ | 8 | 0 | 0 | 0 |
+
+768에서 트랙 0개 · `has_active` 없음 · `aria-current` 잔재 0 — 게이트가 정확히 갈립니다.
+슬라이드 이미지 8/8 로드(첫 장 외 7장 `loading="lazy"`), 실패 요청 0,
+`node --check` 통과, CSS 중괄호 297/297, `console.log` 0.
+캐시 무효화로 `shop.css?v=10` · `shop.js?v=13`으로 올렸습니다.
+
+### 확인하지 못한 부분
+
+- **실제 손가락 스와이프를 못 해봤습니다.** 위 검증은 `scrollLeft`를 직접 옮겨
+  같은 결과를 만든 것입니다. **관성·스냅 감각은 실기기에서 봐야 합니다.**
+- **카테고리를 탭했을 때의 부드러운 스크롤이 완료되는 것을 못 봤습니다**
+  (`behavior: "smooth"`가 rAF 기반이라 이 패널에서 진행되지 않습니다).
+  목표 좌표는 `behavior: "auto"`로 바꿔 오차 0을 확인했고, class는 누른 즉시
+  적용되므로 스크롤이 늦어도 반응은 바로 보입니다.
+- **창 크기를 바꿀 때의 teardown을 직접 못 봤습니다** — 이 패널은
+  `matchMedia change`를 발생시키지 않습니다(기존 세션들과 동일). 각 폭에서
+  새로 로드한 결과만 검증했습니다.
+- `:focus-visible` 외곽선이 전역 규칙(`--color_point` 딥그린)이라 **어두운 히어로
+  사진 위에서 대비가 낮습니다.** `<a>`였을 때와 같은 조건이라 이번 변경으로
+  나빠진 것은 아니지만, 키보드 사용자에게는 개선 여지가 있습니다.
+- 슬라이드 0과 기존 `.hero_gallery_fallback`이 같은 파일(`gallery_img_all_web.webp`)을
+  가리켜 개발 서버(`Cache-Control: no-store`)에서는 두 번 내려받습니다.
+  실제 배포에서는 캐시 적중이라 한 번입니다.
+
 ## Collection showcase — 좁은 화면에서 문장이 화면 밖으로 나가고 사진과 겹치던 문제 (2026-08-11)
 
 "반응형에서 레이아웃 수정해줘. 데스크탑은 변경하지마."

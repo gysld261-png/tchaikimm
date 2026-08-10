@@ -31,9 +31,9 @@
   <link rel="stylesheet" href="../../common/css/tokens.css">
   <link rel="stylesheet" href="../../common/css/reset.css">
   <link rel="stylesheet" href="../../common/css/common.css">
-  <link rel="stylesheet" href="../../common/css/layout.css?v=4">
+  <link rel="stylesheet" href="../../common/css/layout.css?v=6">
   <link rel="stylesheet" href="../../common/css/shop_transition.css?v=3">
-  <link rel="stylesheet" href="css/shop_detail.css?v=6">
+  <link rel="stylesheet" href="css/shop_detail.css?v=8">
   <script>
     var hasShopDetailTransition = false;
 
@@ -59,7 +59,7 @@
   </script>
 </head>
 <body class="page_shop_detail" data-page="shop" data-header-variant="black">
-  <div class="common_header_slot" data-component="../../common/components/header.html?v=5">
+  <div class="common_header_slot" data-component="../../common/components/header.html?v=6">
     <span class="a11y_hidden">Loading header</span>
   </div>
 
@@ -231,10 +231,14 @@
         <button class="look_pin pin_top" type="button" data-look="top" aria-label="View Floral Jeogori" aria-expanded="false">+</button>
         <button class="look_pin pin_skirt" type="button" data-look="skirt" aria-label="View Grid Skirt Blue" aria-expanded="false">+</button>
         <button class="look_pin pin_outer" type="button" data-look="outer" aria-label="View Cheollik Robe" aria-expanded="false">+</button>
+        <!-- 가격은 아직 링크가 아닙니다. 상품별 상세 페이지가 없어서 a href="#"로
+             두면 눌렀을 때 페이지가 맨 위로 튑니다. 화살표(→)도 이동 표시라 뺐습니다.
+             ★ 상품별 상세가 생기면 span을 a href로 되돌리고 화살표를 다시 넣으면
+               됩니다(css의 .look_product_price 규칙은 그대로 쓸 수 있습니다). -->
         <div class="look_products" id="look_products">
-          <article class="look_product" data-look-card="top" aria-hidden="true"><div><span>TOP</span><h3>Floral Jeogori</h3><p>Light floral silk with soft ruffle details</p></div><a href="#">$130<br>→</a></article>
-          <article class="look_product" data-look-card="skirt" aria-hidden="true"><div><span>SKIRT</span><h3>Grid Skirt Blue</h3><p>Woven cotton with subtle check pattern</p></div><a href="#">$145<br>→</a></article>
-          <article class="look_product" data-look-card="outer" aria-hidden="true"><div><span>OUTER</span><h3>Cheollik Robe</h3><p>Sheer floral coat with front tie closure</p></div><a href="#">$210<br>→</a></article>
+          <article class="look_product" data-look-card="top" aria-hidden="true"><div><span>TOP</span><h3>Floral Jeogori</h3><p>Light floral silk with soft ruffle details</p></div><span class="look_product_price">$130</span></article>
+          <article class="look_product" data-look-card="skirt" aria-hidden="true"><div><span>SKIRT</span><h3>Grid Skirt Blue</h3><p>Woven cotton with subtle check pattern</p></div><span class="look_product_price">$145</span></article>
+          <article class="look_product" data-look-card="outer" aria-hidden="true"><div><span>OUTER</span><h3>Cheollik Robe</h3><p>Sheer floral coat with front tie closure</p></div><span class="look_product_price">$210</span></article>
         </div>
         <div class="look_caption"><span>TAP ANY + PIN TO EXPLORE THE LOOK</span><span>SS 2026 · TCHAI KIM</span></div>
       </div>
@@ -258,7 +262,7 @@
   <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-  <script src="../../common/js/common.js?v=9"></script>
+  <script src="../../common/js/common.js?v=10"></script>
   <script src="../../common/js/shop_transition.js?v=4"></script>
   <script src="js/shop_detail.js?v=4"></script>
 </body>
