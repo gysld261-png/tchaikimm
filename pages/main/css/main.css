@@ -26,6 +26,28 @@
   width: 100%;
   min-height: 520px;
   height: 80vh;
+  transition: box-shadow var(--duration_base) var(--easing_base);
+}
+
+/* hover 중 반대편 패널만 은은하게 어둡게 해 선택한 히어로에 시선을 모읍니다. */
+.hero_panel::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-color: rgba(10, 10, 10, 0.42);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--duration_base) var(--easing_base);
+}
+
+.hero_panel.is_dimmed::after {
+  opacity: 1;
+}
+
+.hero_panel.is_active {
+  z-index: 1;
+  box-shadow: 0 0 42px rgba(10, 10, 10, 0.24);
 }
 
 /* 사진이 잘리는 기준 위치를 직접 조정하려면 이 두 값만 바꾸면 됩니다.
@@ -33,10 +55,6 @@
    세로는 top(0%) ~ bottom(100%)/center(가운데)이고 %값으로도 조정할 수 있습니다.
    (예: "center 30%"로 하면 지금보다 사진이 조금 더 아래쪽을 기준으로 잘립니다) */
 .hero_panel_bespoke {
-  --hero_img_position: center top;
-}
-
-.hero_panel_shop {
   --hero_img_position: center top;
 }
 
@@ -50,6 +68,25 @@
   object-position: var(--hero_img_position, top);
   opacity: 0.9;
   pointer-events: none;
+}
+
+/* 오른쪽 히어로 (지금 작업한 확대+이동) */
+.hero_panel_shop {
+  position: relative;
+  overflow: hidden;
+}
+
+.hero_panel_shop .hero_panel_img {
+  object-position: 100% 70%;
+  transform: scale(1.15) translate(8%, 5%);
+  transform-origin: center;
+}
+
+/* 왼쪽 히어로: 오른쪽 사진과 같은 확대감으로 인물 구도를 왼쪽에 맞춥니다. */
+.hero_panel_bespoke .hero_panel_img {
+  object-position: center top;
+  transform: scale(1.15) translate(-5%, 5%);
+  transform-origin: center;
 }
 
 .hero_panel_video {
@@ -69,6 +106,7 @@
   right: var(--layout_gutter);
   bottom: 48px;
   left: var(--layout_gutter);
+  z-index: 2;
 }
 
 .hero_panel_title {
@@ -83,7 +121,7 @@
 .hero_panel_desc {
   max-width: 395px;
   margin-top: 3px;
-  color: var(--color_text_on_dark_sub);
+  color: var(--color_text_on_dark);
   font-family: var(--font_body);
   font-size: var(--fs_body_20);
   font-weight: 400;
@@ -1520,6 +1558,11 @@
   opacity: 0.2;
 }
 
+.shop_product_link {
+  display: block;
+  width: 100%;
+}
+
 .shop_product img {
   display: block;
   width: 100%;
@@ -1532,7 +1575,8 @@
   to { transform: translateX(calc(-50% - var(--shop_products_gap) / 2)); }
 }
 
-.shop_products_viewport:hover .shop_products_track {
+.shop_products_viewport:hover .shop_products_track,
+.shop_products_viewport:focus-within .shop_products_track {
   animation-play-state: paused;
 }
 

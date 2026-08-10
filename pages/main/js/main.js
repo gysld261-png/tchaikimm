@@ -721,7 +721,12 @@
         ensureTicking();
 
         panels.forEach(function (panel) {
-          setPanelCrossfade(panel, panel === activePanel, activePanel !== null);
+          var isActive = panel === activePanel;
+          var isDimmed = activePanel !== null && !isActive;
+
+          panel.classList.toggle("is_active", isActive);
+          panel.classList.toggle("is_dimmed", isDimmed);
+          setPanelCrossfade(panel, isActive, activePanel !== null);
         });
       }
 
@@ -831,6 +836,7 @@
         panels.forEach(function (panel) {
           var video = panel.querySelector(".hero_panel_video");
           var img = panel.querySelector(".hero_panel_img");
+          panel.classList.remove("is_active", "is_dimmed");
           gsap.set(panel, { clearProps: "width" });
           gsap.set(panel.querySelector(".hero_panel_body"), { clearProps: "opacity" });
           gsap.set(img, { clearProps: "width,left,right,opacity" });

@@ -52,6 +52,7 @@
 .header_logo_img {
   width: 150px;
   height: auto;
+  transition: filter var(--duration_fast) var(--easing_base);
 }
 
 /* 시안에 없는 모바일 전용 메뉴 버튼 */
@@ -306,6 +307,67 @@
 
 /* 모바일 메뉴 스태거 — 패널이 열린 뒤 항목이 위에서부터 차례로 내려옵니다. */
 @media (max-width: 1279px) {
+  body.has_open_menu {
+    overflow: hidden;
+  }
+
+  /* 모바일·태블릿 메뉴는 페이지 배경과 분리된 하나의 불투명 브랜드 패널로 사용합니다. */
+  .header.has_open_menu {
+    --header_text_color: var(--color_text);
+    --header_icon_filter: brightness(0);
+    --header_panel_background: var(--color_bg);
+    --header_dropdown_border: var(--color_line);
+    background-color: rgba(255, 253, 249, 0.98);
+    box-shadow: 0 8px 30px rgba(10, 10, 10, 0.08);
+    backdrop-filter: blur(18px);
+  }
+
+  .header.has_open_menu .header_logo_img {
+    filter: brightness(0);
+  }
+
+  .header.has_open_menu .header_toggle_bar,
+  .header.has_open_menu .header_toggle_bar::before,
+  .header.has_open_menu .header_toggle_bar::after {
+    background-color: var(--color_text);
+  }
+
+  .header.has_open_menu .header_menu_link:hover,
+  .header.has_open_menu .header_menu_link:focus-visible {
+    color: var(--color_point);
+  }
+
+  .header_inner {
+    min-height: calc(100dvh - var(--header_height));
+    max-height: calc(100dvh - var(--header_height));
+    padding: clamp(32px, 6vh, 64px) var(--layout_gutter) 32px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border-top: 1px solid var(--color_line);
+    scrollbar-width: none;
+  }
+
+  .header_inner::-webkit-scrollbar {
+    display: none;
+  }
+
+  .header_menu {
+    gap: clamp(22px, 3vh, 36px);
+  }
+
+  .header_menu_link {
+    font-size: clamp(24px, 4vw, 34px);
+    line-height: 1.2;
+  }
+
+  .header_right {
+    justify-content: space-between;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 24px;
+    border-top: 1px solid var(--color_line);
+  }
+
   .header_currency_menu {
     right: auto;
     left: 0;

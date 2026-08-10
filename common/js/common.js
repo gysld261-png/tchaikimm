@@ -507,6 +507,11 @@
     headerInner.classList.toggle("is_open", isOpen);
     headerToggle.setAttribute("aria-expanded", String(isOpen));
 
+    if (header) {
+      header.classList.toggle("has_open_menu", isOpen);
+    }
+    document.body.classList.toggle("has_open_menu", isOpen);
+
     if (isOpen && header) {
       header.classList.remove("is_hidden");
     }

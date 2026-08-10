@@ -736,8 +736,6 @@ START 버튼이 영영 안 보여서 **사이트에 들어갈 방법이 없어�
 - 판정식은 `rect.top <= 1 && rect.bottom > 0` — 인트로가 화면 맨 위를 덮는 동안만.
   pin 구간에서는 섹션이 top 0에 고정돼 계속 참이고, pin이 없는 좁은 화면에서도
   섹션이 지나가면 꺼집니다.
-- `.skip_link`는 헤더 슬롯 **바깥**(`index.html:23`)이라 영향받지 않습니다.
-
 ### ★ 영상 seek에는 HTTP Range 지원 서버가 필요합니다
 
 `python3 -m http.server`는 Range를 지원하지 않아 **`video.seekable`이 `[0, 0]`이 되고
