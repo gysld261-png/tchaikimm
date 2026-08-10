@@ -517,10 +517,16 @@
   padding: 130px 0 0 120px;
 }
 
-/* 레이어 이름이 sticky입니다. 사진이 지나가는 동안 연도 내비가 따라옵니다. */
+/* 시안 레이어 이름은 sticky지만 `position: sticky`를 쓰지 않습니다.
+
+   ★ 이 섹션은 ScrollTrigger가 통째로 pin합니다(js의 initArchive). pin 구간에서는
+   섹션 자체가 화면에 고정돼 있어 "사진이 지나가는 동안 연도 내비가 따라온다"를
+   이미 만족합니다. 여기에 sticky를 겹치면 **pin이 풀리는 순간 글이 섹션 안에서
+   293px 아래로 튑니다**(실측: 상대 위치 130 → 423). 스크롤을 내릴 때 글만 따로
+   흘러내려 다음 섹션으로 넘어가는 것처럼 보이는 증상이 이것이었습니다.
+
+   좁은 화면 블록도 같은 이유로 이미 static입니다. */
 .archive_txt_area {
-  position: sticky;
-  top: 160px;
   display: flex;
   flex-direction: column;
   gap: 50px;
@@ -614,7 +620,6 @@
      복귀할 때만 지연을 주어야 카드가 작아지는 동안 맨 위에 남아 있습니다. */
   transition:
     transform var(--duration_base) var(--easing_base),
-    box-shadow var(--duration_base) var(--easing_base),
     z-index 0s var(--duration_base);
 }
 
@@ -626,15 +631,19 @@
 }
 
 /* 올려 둔 사진이 쌓인 더미에서 빠져나와 전체가 보이도록 커지고 맨 앞으로 옵니다.
-   그림자는 올렸을 때만 생깁니다. 평소에도 두면 사진마다 사각 윤곽이 생겨
-   지우기로 한 액자와 같은 인상이 됩니다. */
+
+   ★ 그림자를 두지 않습니다. figure는 사진이 날아 들어오기 전에도(= img가
+   `opacity: 0`일 때도) 자리와 크기를 가지고 있어 hover 대상이 됩니다. 그래서
+   그림자를 걸어 두면 **사진은 없는데 그림자 사각형만 허공에 먼저 깔립니다.**
+   사용자 지적("사진 뒤에 쉐도우가 미리 깔린다")이 이것이었습니다.
+
+   커지는 것과 맨 앞으로 오는 것만 남깁니다 — 이 둘은 사진이 보이지 않는 동안에는
+   눈에 띄지 않습니다. */
 .archive_photo:hover {
   z-index: 20;
-  box-shadow: 0 26px 60px rgba(40, 40, 40, 0.26);
   transform: rotate(var(--archive_photo_tilt)) scale(1.08);
   transition:
     transform var(--duration_base) var(--easing_base),
-    box-shadow var(--duration_base) var(--easing_base),
     z-index 0s;
 }
 
@@ -1374,7 +1383,9 @@
        덱 위쪽 자리와 버튼 자리를 뺀 만큼으로 줄어 절대 겹치지 않습니다. */
     height: var(--archive_card_real);
     opacity: var(--archive_deck_opacity, 1);
-    box-shadow: 0 10px 30px rgba(24, 24, 20, 0.22);
+    /* ★ 그림자를 두지 않습니다(사용자 결정 — 데스크톱과 같은 기준).
+       겹친 장수는 뒤 카드가 위로 올라가며 작아지는 것(--archive_deck_y / _scale)으로
+       이미 드러납니다. */
     /* 뒤로 갈수록 위로 올라가며 작아집니다. js가 --archive_deck_* 를 씁니다.
        ★ 기울기를 넣지 않습니다. 레퍼런스의 카드 더미는 반듯하게 겹쳐 있고,
        기울이면 겹친 가장자리가 어긋나 지저분해 보입니다. */

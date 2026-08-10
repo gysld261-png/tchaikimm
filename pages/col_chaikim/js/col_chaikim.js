@@ -889,6 +889,54 @@
 
   /* 연도마다 사진 수가 다릅니다(2019·2020은 5장, 2021은 4장).
      남는 자리는 감춥니다. 그러지 않으면 이전 연도의 사진이 그 자리에 그대로 남습니다. */
+  /* =========================================================
+     사진 무리를 글 오른쪽 영역 가운데에 맞춥니다
+
+     시안 좌표를 그대로 쓰면 무리가 왼쪽으로 쏠립니다 — 2021 기준으로 글 오른쪽 끝
+     470에서 첫 사진 530까지 **60px**뿐인데 오른쪽은 **280px**이 빕니다.
+     연도마다 무리의 폭과 위치가 달라 한 값으로 밀어 둘 수도 없습니다
+     (예: 어떤 해는 오른쪽 끝이 1730까지 갑니다 — 그대로 밀면 화면 밖으로 나갑니다).
+
+     그래서 **연도마다 무리의 bounding box를 재서** 사용 가능한 영역 가운데에 놓습니다.
+     사진들의 상대 배치(시안의 흩어진 구도)는 그대로이고 무리 전체만 이동합니다.
+     ========================================================= */
+
+  /* 왼쪽 글 기둥의 오른쪽 끝(프레임 기준 px).
+     css의 .archive_sticky padding-left(120) + .archive_txt_area width(350)입니다.
+     ★ 둘 중 하나를 바꾸면 이 값도 같이 바꿔야 합니다. */
+  var ARCHIVE_TEXT_RIGHT = 470;
+
+  /* 글과 사진 사이, 그리고 오른쪽 끝에 두는 여백. 양쪽에 같은 값을 씁니다. */
+  var ARCHIVE_PHOTO_GUTTER = 150;
+
+  function centerArchiveLayouts(layouts) {
+    var minLeft = Infinity;
+    var maxRight = -Infinity;
+
+    layouts.forEach(function (layout) {
+      minLeft = Math.min(minLeft, layout.left);
+      maxRight = Math.max(maxRight, layout.left + layout.width);
+    });
+
+    if (!isFinite(minLeft)) {
+      return layouts;
+    }
+
+    var areaLeft = ARCHIVE_TEXT_RIGHT + ARCHIVE_PHOTO_GUTTER;
+    var areaRight = CANVAS_WIDTH - ARCHIVE_PHOTO_GUTTER;
+    /* 무리가 영역보다 넓으면 결과가 음수가 되어 양쪽으로 고르게 넘칩니다 — 그래도 균등합니다. */
+    var offset = areaLeft + (areaRight - areaLeft - (maxRight - minLeft)) / 2 - minLeft;
+
+    return layouts.map(function (layout) {
+      var moved = {};
+      Object.keys(layout).forEach(function (key) {
+        moved[key] = layout[key];
+      });
+      moved.left = Math.round(layout.left + offset);
+      return moved;
+    });
+  }
+
   function applyYearPhotos(figures, year) {
     var photos = ARCHIVE_PHOTOS[year];
     var layouts = ARCHIVE_LAYOUTS[year];
@@ -1067,6 +1115,21 @@
       return figure.querySelector("img");
     });
     var currentYear = ARCHIVE_DEFAULT_YEAR;
+
+    /* ★ 좌표를 여기서 한 번만 다시 씁니다. enterDirection 같은 다른 계산도 같은
+       ARCHIVE_LAYOUTS를 읽으므로, 원본을 고쳐 두어야 모두 같은 자리를 봅니다. */
+    Object.keys(ARCHIVE_LAYOUTS).forEach(function (year) {
+      ARCHIVE_LAYOUTS[year] = centerArchiveLayouts(ARCHIVE_LAYOUTS[year]);
+    });
+
+    /* css의 .archive_photo_1~5 기본값은 시안 좌표 그대로라 아직 왼쪽에 쏠려 있습니다.
+       첫 화면에도 정규화된 자리를 쓰도록 기본 연도에 한 번 적용합니다
+       (사진 파일은 HTML에 이미 있으므로 배치만 씁니다). */
+    ARCHIVE_LAYOUTS[currentYear].forEach(function (layout, index) {
+      if (figures[index] && layout) {
+        applyLayout(figures[index], layout);
+      }
+    });
 
     /* 1280px 미만과 모션 감소 설정에서는 타임라인을 만들지 않습니다.
        그때는 이 값이 계속 null이고, 사진은 CSS 레이아웃 그대로 보입니다. */
