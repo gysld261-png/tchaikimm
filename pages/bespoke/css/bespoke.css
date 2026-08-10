@@ -13,6 +13,75 @@
   --color_border_default: #e2ddd5;
 
   --fs_display_24: 24px;
+
+  /* ★ 시안 캔버스 단위. 파일 끝 1840 블록의 값이 전부 이 단위로 적혀 있습니다
+     (`gap: calc(179 * var(--bespoke_unit))` = 시안 179px).
+     기본은 1px이라 지금까지와 똑같고, 아래 75% 블록에서만 커집니다. */
+  --bespoke_unit: 1px;
+}
+
+/* =========================================================
+   ★ 75% 화면 스케일에 맞춘 레이아웃 밀도 (2026-08-10)
+
+   `common/css/common.css`가 1850~1990px 구간에서 `html { zoom: 0.75 }`를
+   겁니다(커밋 `0765b4b`). **그 축소는 그대로 둡니다.**
+
+   ★ 문제는 축소가 아니라 **폭·여백 값이 1920 캔버스에 고정**된 것입니다.
+   zoom 0.75에서 레이아웃이 쓰는 폭은 1905가 아니라
+   **1905 ÷ 0.75 = 2540 CSS px**입니다. 그런데 `--layout_inner`가 1600px,
+   아래 1840 블록의 컨테이너가 1700px이라 화면의 63~67%만 쓰고 좌우를
+   비웁니다. 타이포 clamp 상한(64/48/24px)도 마찬가지라 화면에는
+   48/36/18px로 보입니다. 그래서 "여백이 넓고 콘텐츠가 작다"가 됩니다.
+
+   전체를 다시 확대하지 않고(그건 zoom을 끄는 것과 같습니다)
+   **캔버스가 넓어진 배수만큼 레버 값을 키웁니다.** 배수는
+   `--site_view_scale`에서 끌어오므로 공통 파일에서 0.75를 바꾸면 따라갑니다.
+
+   같은 블록이 `bespoke_base.css`에도 있습니다 — index는 이 파일을,
+   예약·완료는 그 파일을 부릅니다. **한쪽만 고치면 세 페이지가 어긋납니다.**
+   ========================================================= */
+
+@media (min-width: 1850px) and (max-width: 1990px) {
+  :root {
+    /* 0.75 → 1.3333 */
+    --bespoke_canvas: calc(1 / var(--site_view_scale));
+
+    /* 1840 블록의 시안 값이 전부 이 단위로 곱해집니다. */
+    --bespoke_unit: calc(1px * var(--bespoke_canvas));
+
+    --layout_inner: calc(1600px * var(--bespoke_canvas));
+    --layout_gutter: calc(64px * var(--bespoke_canvas));
+
+    /* 타이포도 같은 이유로 화면에서는 0.75배로 보입니다. clamp의 vw 항과
+       상한을 함께 키워, 넓은 화면에서 시안 크기(64/48/32/24/20px)가
+       그대로 나오게 합니다. */
+    --fs_display_64: clamp(36px, calc(4.5vw * var(--bespoke_canvas)), calc(64 * var(--bespoke_unit)));
+    --fs_display_48: clamp(28px, calc(3.5vw * var(--bespoke_canvas)), calc(48 * var(--bespoke_unit)));
+    --fs_display_32: clamp(24px, calc(2.4vw * var(--bespoke_canvas)), calc(32 * var(--bespoke_unit)));
+    --fs_body_24: clamp(18px, calc(1.6vw * var(--bespoke_canvas)), calc(24 * var(--bespoke_unit)));
+    --fs_body_20: clamp(16px, calc(1.4vw * var(--bespoke_canvas)), calc(20 * var(--bespoke_unit)));
+    --fs_ui_20: calc(20 * var(--bespoke_unit));
+    --fs_ui_16: calc(16 * var(--bespoke_unit));
+    --fs_ui_15: calc(15 * var(--bespoke_unit));
+    --fs_ui_14: calc(14 * var(--bespoke_unit));
+  }
+
+  .page_bespoke {
+    --bespoke_section_gap: calc(160px * var(--bespoke_canvas));
+    --bespoke_head_gap: calc(80px * var(--bespoke_canvas));
+    --bespoke_fs_hero: calc(64px * var(--bespoke_canvas));
+    --bespoke_fs_section: calc(48px * var(--bespoke_canvas));
+    --bespoke_fs_card: calc(24px * var(--bespoke_canvas));
+  }
+
+  /* ★ 푸터는 공통 파일이 `zoom: calc(1 / --site_view_scale)`로 역보정해
+     이미 원래 크기입니다. 여기까지 폭을 키우면 2133px이 1905 화면을 넘겨
+     **가로 스크롤이 생깁니다.** 안에서는 원래 값으로 되돌립니다. */
+  .common_footer_slot {
+    --layout_inner: 1600px;
+    --layout_gutter: 64px;
+  }
+
 }
 
 /* Bespoke footer spacing differs from the shared Main/Shop footer. */
@@ -1693,7 +1762,7 @@
   .main .process,
   .main .materials,
   .main .begin {
-    max-width: calc(1700px + var(--layout_gutter) * 2);
+    max-width: calc(calc(1700 * var(--bespoke_unit)) + var(--layout_gutter) * 2);
   }
 
   /* 아래 고정폭은 전부 `flex: 0 1 <시안값>`이다(`0 0`이 아니다).
@@ -1704,13 +1773,13 @@
      181 + 텍스트 429 + 179 + 영상 760 + 250 = 1799
      선택자에 .main이 필요하다 — `.main section`(0,1,1)이 padding을 쥐고 있다. */
   .main .bespoke_hero {
-    gap: 179px;
-    padding-top: 181px;
-    padding-bottom: 250px;
+    gap: calc(179 * var(--bespoke_unit));
+    padding-top: calc(181 * var(--bespoke_unit));
+    padding-bottom: calc(250 * var(--bespoke_unit));
   }
 
   .bespoke_hero_body {
-    gap: 30px;
+    gap: calc(30 * var(--bespoke_unit));
   }
 
   /* --- philosophy: 1000 --------------------------------------------------
@@ -1719,7 +1788,7 @@
      48px로는 603px, 64px로 804px이라 64px으로 판단했다.
      max-width 840은 그 줄이 접히지 않게 하는 값이다. */
   .philosophy {
-    min-height: 1000px;
+    min-height: calc(1000 * var(--bespoke_unit));
   }
 
   .philosophy_title {
@@ -1728,31 +1797,31 @@
   }
 
   .philosophy_body {
-    gap: 35px;
-    max-width: 840px;
+    gap: calc(35 * var(--bespoke_unit));
+    max-width: calc(840 * var(--bespoke_unit));
   }
 
   /* --- atelier: 1000 -----------------------------------------------------
      176 + 이미지 648 + 176 = 1000 */
   .main .atelier {
-    gap: 200px;
-    padding-top: 176px;
-    padding-bottom: 176px;
+    gap: calc(200 * var(--bespoke_unit));
+    padding-top: calc(176 * var(--bespoke_unit));
+    padding-bottom: calc(176 * var(--bespoke_unit));
   }
 
   .atelier_image {
-    flex: 0 1 554px;
+    flex: 0 1 calc(554 * var(--bespoke_unit));
   }
 
   .atelier_body {
-    gap: 30px;
-    max-width: 509px;
+    gap: calc(30 * var(--bespoke_unit));
+    max-width: calc(509 * var(--bespoke_unit));
   }
 
   /* --- quote: 588 유지 ----------------------------------------------------
      시안 텍스트 노드가 95px인데 현재 70px이라 인용문↔출처 간격만 넓힌다. */
   .quote_cite {
-    margin-top: 41px;
+    margin-top: calc(41 * var(--bespoke_unit));
   }
 
   /* --- process ------------------------------------------------------------
@@ -1760,8 +1829,8 @@
      j-cat의 Project Story처럼 큰 사진 한 장 + 아래 번호 목록으로 바꿨다
      (사용자 결정). 위아래 여백만 시안값을 지킨다. */
   .main .process {
-    padding-top: 272px;
-    padding-bottom: 272px;
+    padding-top: calc(272 * var(--bespoke_unit));
+    padding-bottom: calc(272 * var(--bespoke_unit));
   }
 
   /* ★ 780 x 900이 이 사진들의 상한이다.
@@ -1771,20 +1840,20 @@
      900 / 780 = 1.154로 원본 비율(928/785 = 1.182)과 거의 같아 크롭도 거의 없다.
      왼쪽 열은 1700 - 780 - gap 100 = 820px을 쓴다. */
   .process {
-    --process_media_width: 780px;
-    --process_media_height: 900px;
-    --process_row_padding: 22px;
-    --process_pad_inline: 28px;
-    --process_num_width: 64px;
-    --process_head_gap: 48px;
+    --process_media_width: calc(780 * var(--bespoke_unit));
+    --process_media_height: calc(900 * var(--bespoke_unit));
+    --process_row_padding: calc(22 * var(--bespoke_unit));
+    --process_pad_inline: calc(28 * var(--bespoke_unit));
+    --process_num_width: calc(64 * var(--bespoke_unit));
+    --process_head_gap: calc(48 * var(--bespoke_unit));
   }
 
   .process_layout {
-    gap: 100px;
+    gap: calc(100 * var(--bespoke_unit));
   }
 
   .process_aside {
-    gap: 64px;
+    gap: calc(64 * var(--bespoke_unit));
   }
 
   /* --- materials(fabric_section): 1408 -----------------------------------
@@ -1794,29 +1863,29 @@
      1700을 19px 넘겨서 이 한 곳에서 줄였다.
      캡션 padding-top 127은 시안이 목록보다 캡션을 그만큼 아래에 둔 값이다. */
   .main .materials {
-    gap: 133px;
-    padding-top: 294px;
-    padding-bottom: 258px;
+    gap: calc(133 * var(--bespoke_unit));
+    padding-top: calc(294 * var(--bespoke_unit));
+    padding-bottom: calc(258 * var(--bespoke_unit));
   }
 
   .materials_body {
-    gap: 54px;
+    gap: calc(54 * var(--bespoke_unit));
   }
 
   .materials_content {
-    gap: 77px;
+    gap: calc(77 * var(--bespoke_unit));
   }
 
   .materials_list {
-    gap: 20px;
+    gap: calc(20 * var(--bespoke_unit));
   }
 
   .materials_detail {
-    gap: 224px;
+    gap: calc(224 * var(--bespoke_unit));
   }
 
   .materials_caption {
-    padding-top: 127px;
+    padding-top: calc(127 * var(--bespoke_unit));
   }
 
   /* --- reservation: 1700 × 650 -------------------------------------------
@@ -1824,19 +1893,19 @@
      그래서 세로 padding이 0이고, 위아래 간격은 이웃 섹션의 padding이 만든다.
      215px은 밴드 왼쪽 끝에서 글까지의 거리(스크린샷 1:1 실측). */
   .main .reservation {
-    max-width: 1700px;
-    padding: 0 0 0 215px;
+    max-width: calc(1700 * var(--bespoke_unit));
+    padding: 0 0 0 calc(215 * var(--bespoke_unit));
   }
 
   .reservation_body {
-    gap: 8px;
+    gap: calc(8 * var(--bespoke_unit));
   }
 
   .reservation_button {
     align-self: flex-start;
-    min-width: 340px;
-    margin-top: 40px;
-    padding: 26px 32px;
+    min-width: calc(340 * var(--bespoke_unit));
+    margin-top: calc(40 * var(--bespoke_unit));
+    padding: calc(26 * var(--bespoke_unit)) calc(32 * var(--bespoke_unit));
   }
 
   /* --- begin: 1360 -------------------------------------------------------
@@ -1847,26 +1916,91 @@
      교체했다(위 "begin 카드 hover" 블록 참고). 지우지 않고 둔 것은 이 블록의
      "주석부터 파일 끝까지 삭제하면 되돌아간다"는 계약을 지키기 위해서다. */
   .main .begin {
-    gap: 160px;
-    padding-top: 254px;
-    padding-bottom: 255px;
+    gap: calc(160 * var(--bespoke_unit));
+    padding-top: calc(254 * var(--bespoke_unit));
+    padding-bottom: calc(255 * var(--bespoke_unit));
   }
 
   .begin_head {
-    gap: 20px;
+    gap: calc(20 * var(--bespoke_unit));
   }
 
   .begin_cards {
-    gap: 76px;
+    gap: calc(76 * var(--bespoke_unit));
     justify-content: center;
   }
 
   .begin_card {
-    flex: 0 1 500px;
-    padding: 48px;
+    flex: 0 1 calc(500 * var(--bespoke_unit));
+    padding: calc(48 * var(--bespoke_unit));
   }
 
   .begin_card_bg {
     opacity: 1;
+  }
+}
+
+/* =========================================================
+   ★★ 75% 스케일 — 뷰포트 단위 보정 (2026-08-10)
+
+   **이 블록은 반드시 파일 맨 끝, 1840 블록 뒤에 있어야 합니다.**
+   여기 선택자들은 위쪽 규칙과 특정도가 같아서(`.philosophy` 등)
+   소스 순서로만 이깁니다. 파일 앞으로 옮기면 조용히 무효가 됩니다.
+
+   ★ 뷰포트 단위는 zoom을 따라가지 않습니다.
+   실측: zoom 0.75에서 `height: 100svh`인 상자가 화면 1080px 중
+   **810px(75%)**만 덮었습니다. `svh`/`vh`/`vw`는 물리 뷰포트 크기를
+   그대로 CSS px로 주고 거기에 zoom이 곱해집니다.
+
+   그래서 화면을 채워야 하는 것들이 4분의 3만 채웁니다 —
+   sticky 무대 둘(wordmark · atelier)이 아래 4분의 1을 비우고,
+   philosophy도 같습니다. 캔버스 배수를 곱해 되돌립니다.
+
+   되돌리기: 이 주석부터 파일 끝까지 삭제.
+   ========================================================= */
+
+@media (min-width: 1850px) and (max-width: 1990px) {
+
+  /* `.main`이 필요합니다 — 위 규칙이 `.main .philosophy`(0,2,0)입니다. */
+  .main .philosophy {
+    min-height: max(calc(1000 * var(--bespoke_unit)), calc(100svh * var(--bespoke_canvas)));
+  }
+
+  .wordmark {
+    --wordmark_scroll: calc(240svh * var(--bespoke_canvas));
+  }
+
+  .wordmark.is_motion_ready .wordmark_stage {
+    height: calc(100svh * var(--bespoke_canvas));
+  }
+
+  /* 워드마크 무대 높이와 글자는 vw 기준이라 같은 이유로 작아집니다. */
+  .wordmark_stage {
+    min-height: min(calc(51.35vw * var(--bespoke_canvas)), calc(986 * var(--bespoke_unit)));
+  }
+
+  .wordmark_text {
+    font-size: min(calc(31.25vw * var(--bespoke_canvas)), calc(600 * var(--bespoke_unit)));
+  }
+
+  .main .atelier.is_story_ready {
+    height: calc(260svh * var(--bespoke_canvas));
+  }
+
+  .atelier.is_story_ready .atelier_stage {
+    height: calc(100svh * var(--bespoke_canvas));
+  }
+
+  /* 에셋 원본이 554 × 648이라 상한을 넘기면 늘어나 뭉개집니다. */
+  .atelier.is_story_ready .atelier_image {
+    height: clamp(calc(300 * var(--bespoke_unit)),
+                  calc(60svh * var(--bespoke_canvas)),
+                  calc(648 * var(--bespoke_unit)));
+  }
+
+  /* quote는 1840 블록이 손대지 않아 시안 588px이 그대로 남아 있었습니다. */
+  .quote {
+    min-height: calc(588 * var(--bespoke_unit));
+    padding-block: calc(100 * var(--bespoke_unit));
   }
 }

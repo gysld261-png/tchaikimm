@@ -40,7 +40,9 @@
 .done_map img {
   display: block;
   width: 100%;
-  max-width: 1400px;
+  /* 시안 1400px. `--bespoke_unit`은 평소 1px이고 75% 화면(1850~1990)에서만
+     커집니다 — 고정 px로 두면 그 화면에서 지도만 1050px로 작아집니다. */
+  max-width: calc(1400 * var(--bespoke_unit));
   height: auto;
   margin-inline: auto;
   aspect-ratio: 1400 / 706;
