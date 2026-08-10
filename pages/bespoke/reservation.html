@@ -46,18 +46,23 @@
           <p class="bespoke_section_desc">Tell us about the piece you have in mind, and choose a time to meet &mdash; at our Seoul atelier, or by video call.</p>
         </div>
       </div>
-
-      <nav class="reservation_steps" aria-label="Reservation progress">
-        <div class="common_container">
-          <ol class="bespoke_steps" id="reservation_steps">
-            <li class="bespoke_steps_item is_active" data-step_for="step_design"><a class="reservation_steps_link" href="#step_design">01 Design &amp; Fabric</a></li>
-            <li class="bespoke_steps_item" data-step_for="step_schedule"><a class="reservation_steps_link" href="#step_schedule">02 Schedule</a></li>
-            <li class="bespoke_steps_item" data-step_for="step_details"><a class="reservation_steps_link" href="#step_details">03 Your Details</a></li>
-            <li class="bespoke_steps_item" data-step_for="step_confirm"><a class="reservation_steps_link" href="#step_confirm">04 Confirm</a></li>
-          </ol>
-        </div>
-      </nav>
     </section>
+
+    <!-- ★ 진행 단계 띠는 히어로 **밖**에 있어야 합니다.
+         sticky는 부모 상자 안에서만 붙습니다. 이 nav가 .reservation_hero의
+         마지막 자식이던 동안에는 붙을 여지가 -71px이라 전혀 붙지 않고
+         그냥 흘러갔습니다. 폼의 직계 자식이라야 폼 끝(= 전송 직전)까지 붙습니다.
+         다시 섹션 안으로 넣지 마세요. -->
+    <nav class="reservation_steps" aria-label="Reservation progress">
+      <div class="common_container">
+        <ol class="bespoke_steps" id="reservation_steps">
+          <li class="bespoke_steps_item is_active" data-step_for="step_design"><a class="reservation_steps_link" href="#step_design">01 Design &amp; Fabric</a></li>
+          <li class="bespoke_steps_item" data-step_for="step_schedule"><a class="reservation_steps_link" href="#step_schedule">02 Schedule</a></li>
+          <li class="bespoke_steps_item" data-step_for="step_details"><a class="reservation_steps_link" href="#step_details">03 Your Details</a></li>
+          <li class="bespoke_steps_item" data-step_for="step_confirm"><a class="reservation_steps_link" href="#step_confirm">04 Confirm</a></li>
+        </ol>
+      </div>
+    </nav>
 
     <!-- 01 실루엣 -->
     <section class="bespoke_section" id="step_design" aria-labelledby="silhouette_title">
@@ -77,7 +82,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="silhouette" value="jeogori_chima" checked>
                 <span class="bespoke_choice_media"><img src="assets/reservation/classic_two_piece.png" alt="Jeogori and chima, the classic two-piece hanbok silhouette" width="400" height="400"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Jeogori &amp; Chima<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Jeogori &amp; Chima</span>
                   <span class="bespoke_choice_desc">The classic two-piece silhouette</span>
                 </span>
               </label>
@@ -87,7 +92,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="silhouette" value="durumagi">
                 <span class="bespoke_choice_media"><img src="assets/reservation/overcoat.png" alt="Durumagi, a structured hanbok overcoat" width="400" height="400"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Durumagi<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Durumagi</span>
                   <span class="bespoke_choice_desc">A structured overcoat for layering</span>
                 </span>
               </label>
@@ -97,7 +102,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="silhouette" value="modern_hanbok">
                 <span class="bespoke_choice_media"><img src="assets/reservation/modern_hanbok.png" alt="Modern hanbok with reworked lines for daily wear" width="400" height="400"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Modern Hanbok<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Modern Hanbok</span>
                   <span class="bespoke_choice_desc">Reworked lines for daily wear</span>
                 </span>
               </label>
@@ -124,7 +129,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="fabric" value="silk">
                 <span class="bespoke_choice_media"><img src="assets/main/slik.jpg" alt="Silk fabric swatch" width="400" height="300"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Silk<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Silk</span>
                   <span class="bespoke_choice_desc">Refined, elegant, timeless</span>
                 </span>
               </label>
@@ -134,7 +139,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="fabric" value="cotton" checked>
                 <span class="bespoke_choice_media"><img src="assets/main/cotton.jpg" alt="Cotton fabric swatch" width="400" height="300"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Cotton<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Cotton</span>
                   <span class="bespoke_choice_desc">Natural, easy care</span>
                 </span>
               </label>
@@ -144,7 +149,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="fabric" value="linen">
                 <span class="bespoke_choice_media"><img src="assets/main/linen.jpg" alt="Linen fabric swatch" width="400" height="300"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Linen<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Linen</span>
                   <span class="bespoke_choice_desc">Light, organic, modern</span>
                 </span>
               </label>
@@ -154,7 +159,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="fabric" value="ramie">
                 <span class="bespoke_choice_media"><img src="assets/main/mosi.jpg" alt="Ramie (mosi) fabric swatch" width="400" height="300"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Ramie<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Ramie</span>
                   <span class="bespoke_choice_desc">Heritage texture</span>
                 </span>
               </label>
@@ -164,7 +169,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="fabric" value="traditional_silk">
                 <span class="bespoke_choice_media"><img src="assets/main/tranditional_slik.jpg" alt="Traditional silk fabric swatch" width="400" height="300"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Traditional Silk<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Traditional Silk</span>
                   <span class="bespoke_choice_desc">Woven with historic technique</span>
                 </span>
               </label>
@@ -174,7 +179,7 @@
                 <input class="bespoke_choice_input a11y_hidden" type="radio" name="fabric" value="seasonal">
                 <span class="bespoke_choice_media"><img src="assets/main/seasonal_fabric.jpg" alt="Seasonal fabric swatch" width="400" height="300"></span>
                 <span class="bespoke_choice_body">
-                  <span class="bespoke_choice_name">Seasonal Fabric<span class="bespoke_choice_mark"> &mdash; selected</span></span>
+                  <span class="bespoke_choice_name">Seasonal Fabric</span>
                   <span class="bespoke_choice_desc">A rotating limited selection</span>
                 </span>
               </label>
@@ -298,7 +303,7 @@
               </li>
               <li>
                 <label class="reservation_time">
-                  <input class="a11y_hidden" type="radio" name="meeting_time" value="13:00">
+                  <input class="a11y_hidden" type="radio" name="meeting_time" value="13:00" checked>
                   <span class="reservation_time_face">1:00 PM</span>
                 </label>
               </li>

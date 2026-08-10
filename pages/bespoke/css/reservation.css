@@ -61,12 +61,46 @@
   }
 }
 
+/* ------------------------------------------------------------
+   진행 단계 띠 — 폼을 보는 내내 화면에 붙어 있습니다.
+
+   ★ 이 페이지의 고정 UI는 둘이고 **성격이 반대**입니다.
+   · 헤더 — 스크롤 방향에 따라 나타났다 사라집니다(common.js). 유지해야 합니다.
+   · 이 띠 — 언제나 보여야 합니다. 잘못 고른 단계로 되돌아가는 길입니다.
+
+   그래서 띠가 붙는 자리는 **헤더의 상태에 따라 달라집니다.**
+
+     헤더 표시 → top = 헤더 높이   [헤더][띠][내용]
+     헤더 숨김 → top = 0           [띠][내용]
+
+   ★ **헤더는 `transform: translateY(-100%)`로 사라집니다 — 자리를 비우지
+   않고 그림만 치웁니다.** 그래서 띠의 `top`을 헤더 높이로 고정해 두면,
+   헤더가 사라진 뒤에도 그 높이만큼 **빈 띠가 남고 그 사이로 내용이
+   지나갑니다.** 아래 `--steps_top`을 JS가 헤더의 `is_hidden`에 맞춰
+   0과 헤더 높이 사이에서 바꿔 줍니다.
+
+   기준값은 `.reservation_form`의 변수 **두 개뿐**이고, 붙는 자리도
+   앵커 여백도 전부 거기서 계산합니다. 폭마다 px를 적어 두지 않습니다.
+   ------------------------------------------------------------ */
+.reservation_form {
+  /* JS가 실제 크기로 덮어씁니다. 아래 값은 JS가 없을 때의 대비책입니다.
+     헤더는 `min-height`라 내용에 따라 토큰보다 커질 수 있어(1280에서
+     토큰 64 / 실제 66) 실측이 필요합니다. */
+  --steps_header_h: var(--header_height);
+  --steps_bar_h: 72px;
+  --steps_top: var(--steps_header_h);
+}
+
 .reservation_steps {
   position: sticky;
-  top: 0;
+  top: var(--steps_top);
   z-index: 30;
   margin-top: 56px;
   background-color: var(--color_bg);
+  /* 헤더가 미끄러지는 것과 같은 길이·곡선으로 따라 올라갑니다.
+     붙어 있지 않은 동안에는 `top`이 아무 일도 하지 않으므로
+     페이지 위쪽 레이아웃에는 영향이 없습니다. */
+  transition: top var(--duration_base) var(--easing_base);
 }
 
 @media (min-width: 1280px) {
@@ -83,21 +117,18 @@
 }
 
 /* 띠가 화면 위에 붙어 있어 링크로 뛰면 제목을 가립니다.
-   띠 높이(2줄일 수 있어 넉넉히)만큼 미리 띄웁니다. */
+   위의 기준값 **두 개로 계산합니다** — 폭마다 px를 적어 두지 않습니다.
+   (예전에는 130 / 80을 폭마다 박아 두었는데, 띠 높이가 바뀔 때마다
+   따로 고쳐야 했고 실제로 모자랐습니다.)
+
+   `--steps_top`이 아니라 `--steps_header_h`를 씁니다 — 뛰는 도중에 헤더가
+   나타날 수 있으므로 **헤더가 보이는 경우를 기준으로** 잡아야 제목이
+   가려지지 않습니다. 헤더가 숨은 채로 뛰면 그만큼 여유 있게 멈춥니다. */
 #step_design,
 #step_schedule,
 #step_details,
 #step_confirm {
-  scroll-margin-top: 130px;
-}
-
-@media (min-width: 768px) {
-  #step_design,
-  #step_schedule,
-  #step_details,
-  #step_confirm {
-    scroll-margin-top: 80px;
-  }
+  scroll-margin-top: calc(var(--steps_header_h) + var(--steps_bar_h) + 12px);
 }
 
 /* ------------------------------------------------------------
