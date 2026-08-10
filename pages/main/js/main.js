@@ -1251,6 +1251,12 @@
   /* 한 부위 구간에서 앞의 이만큼은 머무르고, 나머지에서 다음 부위로 옮겨갑니다.
      올리면 설명을 읽는 시간이 길어지고 이동이 빨라집니다(0 ~ 1). */
   var DETAIL_HOLD_RATIO = 0.45;
+  /* detail_pin이 top top에서 고정되는 순간 내부 화면까지 바로 멈추면
+     스티커가 붙듯 정지점이 드러납니다. 처음 6% 동안 무대를 34px 더 위로
+     이동시키며 감속해, 페이지 흐름이 자연스럽게 고정 연출로 이어지게 합니다.
+     DISTANCE를 키우면 이어지는 이동이 커지고, RATIO를 키우면 더 천천히 안착합니다. */
+  var DETAIL_PIN_SETTLE_DISTANCE = 34;
+  var DETAIL_PIN_SETTLE_RATIO = 0.06;
   /* 스크롤 연출을 켜는 조건. 좁은 화면에서는 사진 위에 겹치는 설명이 들어갈
      자리가 없어 버튼 방식을 그대로 씁니다. */
   var DETAIL_SCROLL_MEDIA = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
@@ -1573,18 +1579,33 @@
     measure();
     applyLensImage();
 
+    var settleTargets = keywordList ? [keywordList, stage] : [stage];
+
+    function applyPinSettle(progress) {
+      var settleProgress = clamp(progress / DETAIL_PIN_SETTLE_RATIO, 0, 1);
+      /* power3.out과 같은 곡선입니다. 고정 직후에는 이전 스크롤 방향을 이어가고
+         끝으로 갈수록 이동량이 줄어들어 정지 시점을 알아차리기 어렵게 합니다. */
+      var easedProgress = 1 - Math.pow(1 - settleProgress, 3);
+
+      window.gsap.set(settleTargets, {
+        y: DETAIL_PIN_SETTLE_DISTANCE * (1 - easedProgress),
+        force3D: true
+      });
+    }
+
     var trigger = window.ScrollTrigger.create({
       trigger: pin,
       start: "top top",
       end: "+=" + DETAIL_SCROLL_PER_PART * stops.length + "%",
       pin: pin,
-      anticipatePin: 1,
+      anticipatePin: 1.5,
       onRefresh: function () {
         measure();
         /* 창 크기가 바뀌면 사진 크기도 다시 잡아야 배율이 유지됩니다 */
         applyLensImage();
       },
       onUpdate: function (self) {
+        applyPinSettle(self.progress);
         applyProgress(self.progress);
       },
       /* 고정 구간에 들어와 있는 동안만 돋보기를 띄웁니다. onEnter/onLeave 네 개를
@@ -1601,6 +1622,7 @@
       }
     });
 
+    applyPinSettle(trigger.progress);
     applyProgress(trigger.progress);
 
     /* ★ GSAP은 자기가 만든 것(트리거·pin)만 되돌립니다. 위에서 element.style에
@@ -1609,6 +1631,7 @@
        남습니다. */
     return function cleanup() {
       trigger.kill();
+      window.gsap.set(settleTargets, { clearProps: "transform" });
       section.classList.remove("is_scroll_ready");
       lens.classList.remove("is_active");
       lens.removeAttribute("style");
