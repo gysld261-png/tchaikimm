@@ -107,7 +107,10 @@ mood
   left: 0;
   width: 768px;
   height: 644px;
-  color: var(--color_text);
+  /* .mood_word_title/desc처럼 어두운 mood 배경(var(--brand_black)) 위에
+     놓이는 글이라 on-dark 토큰을 씁니다. var(--color_text)(#0a0a0a)는
+     밝은 배경용이라 이 배경 위에서는 거의 안 보였습니다. */
+  color: var(--color_text_on_dark);
   /* mood_right(2분할 초록 패널)이 슬라이드해 들어오는 동안 이 박스와
      잠깐 겹칩니다(설계상 — 아래 mood_copy_title 주석 참고). z-index를
      올려 그 구간에서도 글이 항상 위에 그려지고 패널에 가려지지
@@ -777,9 +780,15 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
 1279로 맞춰 그 틈을 없앴습니다 — 값 자체는 1024 기준으로 잡은 것을
 그대로 씁니다(1025~1279 구간은 약간 여유 있게 보일 뿐, 잘리지는 않습니다). */
 
-@media (max-width: 1279px) {
+/* mood만 별도 기준(1919)을 씁니다. mood_stage는 1920px 고정 캔버스라
+   다른 섹션과 같은 1280 기준을 쓰면 1280~1919 구간에서 무대가
+   뷰포트보다 넓어져 오른쪽 무드 단어(.mood_right, 특히 Modern/Elegant
+   카드)가 .mood의 overflow-x: clip에 잘려 나갔습니다(문 열림 인터랙션이
+   켜져 있어 mood_stage가 그대로 1920px width를 유지하기 때문). JS도
+   같은 값을 써야 합니다(js/brand.js의 MOOD_MIN_WIDTH 참고). */
+@media (max-width: 1919px) {
   /* ---- mood ------------------------------------------------------------
-     JS 인터랙션이 꺼져 있으므로(1280 미만) 여기서부터는 문(.mood_reveal)이
+     JS 인터랙션이 꺼져 있으므로(1920 미만) 여기서부터는 문(.mood_reveal)이
      다 열린 정적 모습만 배치합니다. 왼쪽(글) 위 · 오른쪽(무드 단어) 아래로
      쌓습니다 — 768(mood_left) + 1152(mood_right)를 나란히 두기엔
      1024보다 훨씬 넓어야 해서, 태블릿부터 이미 세로로 쌓습니다. */
@@ -793,30 +802,43 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
     position: relative;
     top: auto;
     left: auto;
+    display: grid;
+    grid-template-columns: 1fr;
     width: 100%;
     height: auto;
     transform: none;
     overflow: visible;
   }
 
+  /* mood_room(사진)과 mood_left(글)를 같은 grid 칸(1 / 1)에 겹쳐, 글이
+     "사진 아래"가 아니라 사진 위에 놓이도록 합니다. 행 높이는 auto라
+     둘 중 더 큰 쪽(보통 글 쪽의 min-height)에 맞춰지고, 사진은
+     height: 100%로 그 높이를 그대로 채웁니다. mood_right(무드 단어)는
+     2행으로 사진 아래에 그대로 쌓입니다. */
   .mood_room {
-    position: relative;
-    top: auto;
-    left: auto;
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
     width: 100%;
-    height: 480px;
+    height: 100%;
+    min-height: 0;
     max-width: none;
     object-position: 35% 30%;
   }
 
   .mood_inner {
-    width: 100%;
-    height: auto;
-    flex-direction: column;
+    display: contents;
   }
 
   .mood_left {
+    grid-column: 1;
+    grid-row: 1;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     width: 100%;
+    min-height: 480px;
     height: auto;
     padding: 72px 56px;
     box-sizing: border-box;
@@ -829,14 +851,19 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
     width: 100%;
     max-width: 640px;
     height: auto;
-    margin-inline: auto;
+    /* 사진 안에서 텍스트가 오른쪽에 오도록 오른쪽으로 붙입니다
+       (margin-inline: auto 대신 margin-left만 auto). */
+    margin-inline: auto 0;
   }
 
   .mood_copy_title {
     position: relative;
     top: auto;
     left: auto;
-    font-size: 48px;
+    /* 768~1919px 구간에서 36px → 48px로 폭에 비례해 매끄럽게 커집니다
+       (768/1919 두 지점에서 정확히 36px/48px가 되도록 계산한 값 — 아래
+       768px 구간의 두 번째 clamp와 이어집니다). */
+    font-size: clamp(36px, calc(28px + 1.0426vw), 48px);
     white-space: normal;
   }
 
@@ -845,10 +872,14 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
     top: auto;
     left: auto;
     margin-top: 28px;
+    /* 768~1919px 구간에서 18px → 24px로 매끄럽게 커집니다. */
+    font-size: clamp(18px, calc(14px + 0.5213vw), 24px);
     white-space: normal;
   }
 
   .mood_right {
+    grid-column: 1;
+    grid-row: 2;
     width: 100%;
     height: auto;
     padding: 56px;
@@ -892,7 +923,9 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
     height: auto;
     aspect-ratio: 306 / 180;
   }
+}
 
+@media (max-width: 1279px) {
   /* ---- kimyoungjin -------------------------------------------------------
      솔로 사진 + 곁사진/텍스트 → 그룹2 → wordmark → handmade 순서로
      위아래로 쌓습니다. initYoungjinMotion()의 스크럽 등장은 좁은 화면에서도
@@ -1072,8 +1105,16 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
     width: 100%;
   }
 
+  /* .heritage_stage의 기본 padding(100px 240px, 위 규칙에서 96px 56px로
+     축소)은 title 화면(.heritage_stage_title) 전용입니다. 사진을 감싸는
+     .heritage_stage(.heritage_photos 안)에도 같은 선택자라 그대로
+     상속되어, 사진(.heritage_figure) 위아래에 96px씩 빈 여백이 더 붙고
+     .heritage_photos의 gap(60px)과 합쳐져 사진 사이가 총 252px(96+60+96)
+     이나 벌어졌습니다. 사진 간 간격은 .heritage_photos의 gap 하나로만
+     맞추고, 이 안쪽 stage는 padding을 지웁니다. */
   .heritage_photos .heritage_stage {
     width: 100%;
+    padding: 0;
   }
 
   .heritage_headline {
@@ -1087,25 +1128,34 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
     aspect-ratio: 400 / 714;
   }
 
+  /* is_pinned(1280px 이상, JS pin)일 때만 .heritage_info가 text-align:left로
+     바뀌고 버튼도 왼쪽 텍스트에 맞춰 왼쪽에 붙습니다. 여기(1280 미만,
+     text-align:center)에서는 버튼도 같이 가운데로 와야 하는데, flex
+     자식이라 auto margin이 없으면 왼쪽에 붙어 위 문단(가운데 정렬)과
+     어긋나 보였습니다. */
+  .heritage_button {
+    margin-inline: auto;
+  }
+
 
 }
 
 @media (max-width: 768px) {
   /* ---- mood ------------------------------------------------------------ */
-  .mood_room {
-    height: 360px;
-  }
-
   .mood_left {
+    min-height: 360px;
     padding: 56px 32px;
   }
 
+  /* 390~768px 구간에서 28px → 36px(제목) / 16px → 18px(본문)로 매끄럽게
+     커집니다 — 390px 아래로는 clamp의 최솟값(28px/16px)에서 더 줄지
+     않습니다. */
   .mood_copy_title {
-    font-size: 36px;
+    font-size: clamp(28px, calc(19.75px + 2.1164vw), 36px);
   }
 
   .mood_copy_body {
-    font-size: 18px;
+    font-size: clamp(16px, calc(13.94px + 0.5291vw), 18px);
     margin-top: 20px;
   }
 
@@ -1204,21 +1254,18 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
 
 @media (max-width: 390px) {
   /* ---- mood -------------------------------------------------------------- */
-  .mood_room {
-    height: 280px;
-  }
-
   .mood_left {
+    min-height: 280px;
     padding: 40px 20px;
   }
 
+  /* font-size는 768px 구간의 clamp가 390px에서 이미 28px/16px(최솟값)로
+     떨어져 그대로 유지하면 됩니다 — 여기서 다시 고정할 필요가 없습니다. */
   .mood_copy_title {
-    font-size: 28px;
     letter-spacing: -0.5px;
   }
 
   .mood_copy_body {
-    font-size: 16px;
     margin-top: 16px;
   }
 
@@ -1352,5 +1399,284 @@ scrub, tchaikim 정지 pin)은 js/brand.js에서 1280px 미만이면 켜지지 �
   .atelier_row.is_marquee {
     animation: none;
     transform: none;
+  }
+}
+/* =========================================================
+   MOOD RESPONSIVE
+   Breakpoints
+   1024px / 768px / 390px
+   ========================================================= */
+
+
+/* =========================================================
+   1024px 이하
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1024px) {
+
+  .mood {
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .mood_stage {
+    position: relative;
+    width: 100%;
+  }
+
+  .mood_reveal {
+    position: relative;
+    width: 100%;
+    min-height: 650px;
+    overflow: hidden;
+  }
+
+  /* 배경 이미지 */
+  .mood_reveal .mood_room {
+    position: absolute;
+    inset: 0;
+
+    width: 100%;
+    height: 100%;
+
+    max-width: none;
+
+    object-fit: cover;
+    object-position: center center;
+
+    z-index: 0;
+  }
+
+  /* 이미지 위 콘텐츠 */
+  .mood_reveal .mood_inner {
+    position: relative;
+
+    width: 100%;
+    min-height: 650px;
+
+    z-index: 1;
+  }
+
+  /* 오른쪽 텍스트 */
+  .mood_reveal .mood_left {
+    position: absolute;
+
+    top: 0;
+    right: 0;
+
+    width: 50%;
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+
+    padding: 50px;
+
+    box-sizing: border-box;
+
+    z-index: 2;
+  }
+
+  .mood_reveal .mood_copy {
+    width: 100%;
+    max-width: 380px;
+    margin: 0;
+  }
+
+  .mood_reveal .mood_copy_title {
+    margin: 0;
+
+    font-size: clamp(36px, 5vw, 52px);
+    line-height: 1.08;
+  }
+
+  .mood_reveal .mood_copy_body {
+    margin-top: 30px;
+
+    font-size: 14px;
+    line-height: 1.65;
+  }
+
+  /* Unique / Modern / Elegant */
+  .mood_reveal .mood_right {
+    position: absolute;
+
+    right: 30px;
+    bottom: 30px;
+
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 16px;
+
+    /* 위쪽(1919px 이하) .mood_right 규칙의 width: 100% / padding: 56px /
+       justify-content: center가 이 규칙보다 나중에 오지 않아도 이 클래스
+       조합(.mood_reveal .mood_right)이 아니라서 계속 상속되고 있었습니다.
+       그 값들이 남아 있으면 카드 묶음이 오른쪽 아래 구석이 아니라
+       (56px 안쪽 여백 + 100% 너비를 가운데 정렬한) 화면 중앙 쪽으로
+       밀려나고, 왼쪽으로 30px 넘쳐 잘렸습니다. 여기서 명시적으로
+       되돌립니다. */
+    width: auto;
+    padding: 0;
+    justify-content: flex-start;
+
+    z-index: 3;
+  }
+
+  .mood_reveal .mood_word {
+    width: 110px;
+  }
+}
+
+
+/* =========================================================
+   768px 이하
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 767px) {
+
+  .mood_reveal {
+    min-height: 700px;
+  }
+
+  .mood_reveal .mood_inner {
+    min-height: 700px;
+  }
+
+  /*
+   * 텍스트를 오른쪽 50%에서
+   * 이미지 전체 위쪽으로 전환
+   */
+  .mood_reveal .mood_left {
+    width: 100%;
+    height: auto;
+
+    top: 0;
+    right: 0;
+
+    display: block;
+
+    padding: 55px 24px 30px;
+
+    box-sizing: border-box;
+  }
+
+  .mood_reveal .mood_copy {
+    width: 100%;
+    max-width: 340px;
+
+    margin-left: auto;
+    margin-right: 0;
+  }
+
+  .mood_reveal .mood_copy_title {
+    font-size: clamp(34px, 9vw, 46px);
+    line-height: 1.08;
+  }
+
+  .mood_reveal .mood_copy_body {
+    margin-top: 24px;
+
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  /*
+   * Mood Words
+   * 하단 가로 배치
+   */
+  .mood_reveal .mood_right {
+    left: 24px;
+    right: 24px;
+    bottom: 24px;
+
+    display: flex;
+    gap: 10px;
+  }
+
+  .mood_reveal .mood_word {
+    flex: 1;
+
+    width: auto;
+    min-width: 0;
+  }
+
+  .mood_reveal .mood_word_media {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+
+    overflow: hidden;
+  }
+
+  .mood_reveal .mood_word_media img {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+  }
+
+  .mood_reveal .mood_word_title {
+    margin-top: 6px;
+
+    font-size: 11px;
+    line-height: 1.2;
+  }
+
+  .mood_reveal .mood_word_desc {
+    display: none;
+  }
+}
+
+
+/* =========================================================
+   390px 이하
+   SMALL MOBILE
+   ========================================================= */
+
+@media (max-width: 390px) {
+
+  .mood_reveal {
+    min-height: 660px;
+  }
+
+  .mood_reveal .mood_inner {
+    min-height: 660px;
+  }
+
+  .mood_reveal .mood_left {
+    padding: 45px 20px 25px;
+  }
+
+  .mood_reveal .mood_copy {
+    max-width: 300px;
+  }
+
+  .mood_reveal .mood_copy_title {
+    font-size: 32px;
+    line-height: 1.08;
+  }
+
+  .mood_reveal .mood_copy_body {
+    margin-top: 20px;
+
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .mood_reveal .mood_right {
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+
+    gap: 8px;
+  }
+
+  .mood_reveal .mood_word_title {
+    font-size: 10px;
+  }
+
+  .mood_reveal .mood_word_desc {
+    display: none;
   }
 }
