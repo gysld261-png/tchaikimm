@@ -1168,7 +1168,30 @@
     transform: none;
   }
 
+  /* ★★★ 2026-08-11: **줄의 절대배치를 여기서 풀어야 합니다.**
+
+     위에서 `.showcase_quote`를 `position: static` + flex column으로 바꿨는데,
+     줄(`.showcase_quote_line`)은 데스크톱 규칙의 `position: absolute`를 그대로
+     물려받고 있었습니다. 그래서 두 가지가 한꺼번에 깨졌습니다:
+
+     1. 줄이 **데스크톱 좌표를 그대로 씁니다.** `.showcase_quote_line2`의
+        `left: 266px` + 고정폭 288.5px이라 375 화면에서 **오른쪽 끝이 555px** —
+        가운데 줄이 화면 밖으로 나갑니다.
+     2. 절대배치된 자식만 남아 **부모 높이가 0으로 무너집니다.** 그러면 문장이
+        자리를 차지하지 않아 **바로 아래 사진 a·b가 글자 위로 올라옵니다**
+        (실측: 사진 a와 첫 줄이 둘 다 y=347).
+
+     `position: static`으로 되돌리면 셋 다 해결됩니다 — 줄이 flex 흐름에 들어가
+     가운데 정렬되고, 부모가 제 높이를 갖고, 사진과 겹치지 않습니다.
+
+     ★ 고정 `width: 288.5px` · `height: 82px`도 같이 풀어야 합니다. 안 풀면
+     좁은 화면에서 글자만 작아지고 상자는 288.5px로 남아 정렬이 어긋납니다.
+     ★ `.showcase_quote_line1~3`의 `top`/`left`는 `position: static`에서
+     무시되므로 따로 지우지 않았습니다(데스크톱 규칙 그대로 둡니다). */
   .showcase_quote_line {
+    position: static;
+    width: 100%;
+    height: auto;
     justify-content: center;
     font-size: clamp(23px, 6vw, 44px);
   }
