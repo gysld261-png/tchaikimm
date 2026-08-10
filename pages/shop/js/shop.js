@@ -33,14 +33,14 @@ var navLinks = Array.prototype.slice.call(document.querySelectorAll(".hero_nav_l
    Shop에 들어올 때 히어로가 뜨기까지 그만큼을 기다려야 했습니다.
    원본 PNG는 같은 폴더에 그대로 있습니다 — 카드를 더 키우면 다시 내보내면 됩니다. */
 var IMAGE_URLS = [
-  "assets/images/gallery_image1.jpg",
-  "assets/images/gallery_image2.jpg",
-  "assets/images/gallery_image3.jpg",
-  "assets/images/gallery_image4.jpg",
-  "assets/images/gallery_image1.jpg",
-  "assets/images/gallery_image2.jpg",
-  "assets/images/gallery_image3.jpg",
-  "assets/images/gallery_image4.jpg"
+  "assets/images/gallery_img_all.png",
+  "assets/images/gallery_img_dress.jpg",
+  "assets/images/gallery_img_top.png",
+  "assets/images/gallery_img_knit.jpg",
+  "assets/images/gallery_img_bottom.jpg",
+  "assets/images/gallery_img_outer.png",
+  "assets/images/gallery_img_acc.jpg",
+  "assets/images/gallery_img_living.jpg"
 ];
 
 var CARD_COUNT = IMAGE_URLS.length;
