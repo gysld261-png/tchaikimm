@@ -386,8 +386,17 @@
          아니다) CSS를 고치지 않아도 video가 같은 규칙을 그대로 받는다.
          속성 구성은 이 페이지 히어로 영상과 같다(H.264 · yuv420p라 그대로 쓴다).
          원본 비율 1008 × 384(2.625)가 밴드 비율 1700 × 650(2.615)과 거의 같아
-         `object-fit: cover`로도 잘려 나가는 부분이 사실상 없다. -->
-    <video class="reservation_bg" src="assets/main/bespoke_re.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
+         `object-fit: cover`로도 잘려 나가는 부분이 사실상 없다.
+
+         ★ 2026-08-11: `bespoke_re.mp4` → `main_reservation.mp4`로 교체(사용자 제공).
+         **규격이 같아서 CSS는 한 줄도 고치지 않았다** — H.264 High · 1008 × 384
+         (비율 2.625로 동일) · moov 선두(faststart) · 오디오 없음 · 3.16MB.
+         경로는 이 페이지 기준 상대경로(`assets/main/...`)로 기존 방식 그대로다.
+
+         ★★ 이전 `bespoke_re.mp4`는 **저장소에 한 번도 커밋된 적이 없어서**
+         이 자리가 계속 404였다(`.gitignore`의 `*.mp4`에 걸려 조용히 빠졌다).
+         **이 파일도 `git add -f`가 필요하다** — 안 하면 같은 일이 되풀이된다. -->
+    <video class="reservation_bg" src="assets/main/main_reservation.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
     <div class="reservation_body">
       <h2 class="reservation_title">Book your first meeting.</h2>
       <p class="reservation_desc">Consultations take place at our Seoul atelier or by video call.</p>
