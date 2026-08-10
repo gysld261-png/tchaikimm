@@ -373,6 +373,20 @@
   outline-offset: 3px;
 }
 
+/* 모두 동의하기 — 개별 항목의 부모라는 것이 보이게 한 줄 띄우고
+   글자만 조금 진하게 둡니다. 체크박스 모양은 `.bespoke_check_input`
+   그대로라 아래 개별 항목과 크기·색이 같습니다. */
+.reservation_check_all {
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--color_border);
+}
+
+.reservation_check_all .bespoke_check_label {
+  color: var(--color_text);
+  font-weight: 500;
+}
+
 /* 시간을 안 골랐을 때 시간표 바로 아래에 뜹니다.
    비어 있으면 base의 .bespoke_status:empty가 숨깁니다. */
 #schedule_status {

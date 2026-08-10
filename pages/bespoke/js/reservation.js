@@ -169,10 +169,50 @@
       status.textContent = isAgreed() ? "" : AGREE_MESSAGE;
     }
 
-    [agreePrivacy, agreeProduction].forEach(function (box) {
-      if (box) {
-        box.addEventListener("change", refreshAgreeStatus);
+    /* ----------------------------------------------------------
+       모두 동의하기 — 개별 항목과 양방향으로 맞춥니다.
+
+       · 부모를 켜면 개별 항목이 전부 켜지고, 끄면 전부 꺼집니다.
+       · 개별 항목을 하나라도 끄면 부모가 꺼지고, 전부 켜면 부모가 켜집니다.
+       · 일부만 켜진 동안에는 `indeterminate`(반쯤 찬 표시)로 둡니다 —
+         켜짐/꺼짐 둘 중 하나로만 보이면 상태를 잘못 읽게 됩니다.
+
+       `#agree_all`에는 `name`이 없어 폼 데이터에 들어가지 않습니다.
+       전송을 막는 조건은 지금까지와 같이 **개별 두 항목**뿐입니다
+       (`isAgreed()`를 건드리지 않았습니다).
+       ---------------------------------------------------------- */
+    var agreeAll = document.getElementById("agree_all");
+    var agreeBoxes = [agreePrivacy, agreeProduction].filter(Boolean);
+
+    function syncAgreeAll() {
+      if (!agreeAll || agreeBoxes.length === 0) {
+        return;
       }
+
+      var checkedCount = agreeBoxes.filter(function (box) {
+        return box.checked;
+      }).length;
+
+      agreeAll.checked = checkedCount === agreeBoxes.length;
+      agreeAll.indeterminate = checkedCount > 0 && checkedCount < agreeBoxes.length;
+    }
+
+    if (agreeAll) {
+      agreeAll.addEventListener("change", function handleAgreeAll() {
+        agreeBoxes.forEach(function (box) {
+          box.checked = agreeAll.checked;
+        });
+
+        agreeAll.indeterminate = false;
+        refreshAgreeStatus();
+      });
+    }
+
+    agreeBoxes.forEach(function (box) {
+      box.addEventListener("change", function handleAgreeChange() {
+        syncAgreeAll();
+        refreshAgreeStatus();
+      });
     });
 
     /* 시간을 고르는 순간 안내 문구를 지웁니다. */
@@ -211,6 +251,7 @@
       window.location.href = DONE_URL;
     });
 
+    syncAgreeAll();
     refreshAgreeStatus();
   }
 

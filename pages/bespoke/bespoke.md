@@ -1112,6 +1112,114 @@ JS가 없으면 CSS 대비값이 쓰여 지금까지처럼 헤더 아래에 고�
 
 ---
 
+## 예약 폼을 시연용 기본 상태로 (2026-08-10)
+
+**이 페이지는 실제 서비스가 아니라 리디자인을 보여주는 프로토타입입니다**
+(사용자 확인). 들어오자마자 예시 데이터가 다 차 있고 바로 예약 버튼까지
+누를 수 있게 했습니다.
+
+- `reservation.html` — 고객 정보 값, 동의 2개 `checked`, "Agree to all" 추가
+- `js/reservation.js` — `initSubmit()` 안에 전체 동의 동기화
+- `css/reservation.css` — `.reservation_check_all` 한 블록
+
+### 손댄 곳과 손대지 않은 곳
+
+**기존 구조를 그대로 씁니다.** 선택 상태는 여전히 네이티브 라디오와
+`initCalendar()`가 관리하고, 전송 검증(`isAgreed()` · `getCheckedTime()`)과
+완료 페이지 이동(`DONE_URL`)도 그대로입니다. **API·저장·인증·결제는
+아무것도 추가하지 않았습니다.** `common/`은 0줄입니다.
+
+### 1) 선택 항목 — 이미 다 차 있었습니다
+
+| 갈래 | 기본값 | 관리 방식 |
+|---|---|---|
+| silhouette | Jeogori & Chima | 라디오 `checked` |
+| fabric | Cotton | 라디오 `checked` |
+| meeting_time | 1:00 PM | 라디오 `checked` (앞 항목에서 채움) |
+| meeting_mode | Visit the Atelier | 라디오 `checked` |
+| 날짜 | 2026-08-07 | `.reservation_day.is_selected` + 숨은 `#reservation_date_value` |
+| occasion | Everyday wear | `<option selected>` |
+
+### 2) 고객 정보 — `placeholder`가 아니라 `value`입니다
+
+`#field_name` **홍길동** · `#field_phone` **010-1234-5678** ·
+`#field_email` **example@example.com** · `#field_notes`에 한 문장.
+**필드명·구조는 그대로 두고 값만 넣었습니다**(새 필드 없음).
+
+> 폼 문구는 영문인데 이름만 한글입니다 — 사용자가 준 예시 그대로입니다.
+> 영문 데모가 필요하면 이 세 값만 바꾸면 됩니다.
+
+### 3) 동의 — 둘 다 `checked`로 시작
+
+문구는 한 글자도 바꾸지 않았습니다. `#reservation_status`의 마크업 문구
+("Both agreements above are required")는 **비웠습니다** — 둘 다 켜진 채로
+시작하므로 그대로 두면 로드 순간 잠깐 보였다 사라집니다.
+동의를 풀면 `refreshAgreeStatus()`가 다시 채웁니다.
+
+### 4) Agree to all — 부모/자식 양방향 동기화
+
+`.bespoke_check` 클래스를 그대로 재사용해 개별 항목과 같은 모양입니다.
+CSS는 구분선 + 글자 굵기만 더한 한 블록입니다.
+
+- **`#agree_all`에는 `name`이 없습니다** — 조작용 컨트롤이지 전송할 값이
+  아닙니다. `FormData` 키에 들어가지 않는 것을 확인했습니다.
+- 일부만 켜진 동안에는 **`indeterminate`(반쯤 찬 표시)**로 둡니다.
+  켜짐/꺼짐 둘 중 하나로만 보이면 상태를 잘못 읽게 됩니다.
+- 로직은 **`initSubmit()` 안**에 넣었습니다. 거기에 이미
+  `agreePrivacy` · `agreeProduction` · `refreshAgreeStatus()`가 있어
+  같은 기능을 새로 만들 필요가 없었습니다. 기존의
+  `box.addEventListener("change", refreshAgreeStatus)` 한 줄을
+  `syncAgreeAll()` + `refreshAgreeStatus()`로 넓힌 것뿐입니다.
+- **전송을 막는 조건은 그대로 개별 두 항목입니다** — `isAgreed()`를
+  건드리지 않았습니다.
+
+### 검증 (Chromium, localhost:5671)
+
+**진입 직후 `FormData`** — 사람이 아무것도 건드리지 않은 상태:
+
+```
+silhouette=jeogori_chima  fabric=cotton  meeting_date=2026-08-07
+meeting_time=13:00  meeting_mode=atelier  occasion=everyday
+full_name=홍길동  phone=010-1234-5678  email=example@example.com
+notes=(한 문장)  agree_privacy=on  agree_production=on
+```
+`agree_all`은 **키에 없습니다**. 안내 문구 두 개 다 빈 문자열이라 숨겨져
+있고, 전송 버튼은 `disabled: false`입니다.
+
+**전체 동의 동기화 7단계** — 라벨을 실제 마우스 순서로 눌러 확인:
+
+| 조작 | all | 반쯤 | privacy | production | 안내 문구 |
+|---|---|---|---|---|---|
+| 진입 직후 | ✓ | — | ✓ | ✓ | 없음 |
+| all 해제 | ✗ | — | ✗ | ✗ | 표시 |
+| all 체크 | ✓ | — | ✓ | ✓ | 없음 |
+| privacy만 해제 | ✗ | **✓** | ✗ | ✓ | 표시 |
+| privacy 되돌림 | ✓ | — | ✓ | ✓ | 없음 |
+| 개별 2개 해제 | ✗ | — | ✗ | ✗ | 표시 |
+| all 체크 | ✓ | — | ✓ | ✓ | 없음 |
+
+- **한 번에 완료까지**: 새로 연 뒤 아무것도 건드리지 않고 전송 버튼만
+  눌러 **`reservation_done.html` 도달**(제목 "Reservation received").
+  막는 문구 둘 다 빈 상태였습니다.
+- **1280 / 768 / 360**: Agree to all 줄 37px 고정, 체크박스 18 × 18로
+  개별 항목과 동일, 구분선 1px `#e2ddd5`, 아래 첫 항목과 14px.
+  세 폭 모두 **가로 스크롤 0 · 넘치는 요소 0 · 깨진 이미지 0**,
+  입력값 세 개 모두 잘리지 않고 화면 안, 메모 상자 넘침 없음.
+- **앞 작업 회귀 없음**: 띠 고정(360 top 64 / 768 헤더 숨김 상태 top 0),
+  카드 `offsetHeight` 균일, 문서 높이 6993.
+- **콘솔 오류 0**, `node --check` 통과, `reservation.css` 중괄호 64/64,
+  **`common/` 변경 0줄**.
+
+### 확인하지 못한 부분
+
+- **화면 캡처를 못 했습니다.** Agree to all 줄이 개별 항목과 어울리는지,
+  `indeterminate` 표시(브라우저 기본 모양)가 눈에 자연스러운지는
+  직접 봐야 합니다.
+- 문서 높이가 6993으로 **51px 늘었습니다**(Agree to all 줄 37 + 여백 14).
+  의도한 것이고 다른 섹션 좌표는 그대로입니다.
+
+---
+
 ## 이 폴더의 남은 문제
 
 `docs/PROJECT_CONTEXT.md`의 "Bespoke 다음 작업"과 같은 내용입니다.

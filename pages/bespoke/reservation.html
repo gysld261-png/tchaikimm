@@ -346,15 +346,15 @@
         <div class="bespoke_form_grid">
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_name">Full name</label>
-            <input class="bespoke_field_input" id="field_name" name="full_name" type="text" placeholder="your name" autocomplete="name">
+            <input class="bespoke_field_input" id="field_name" name="full_name" type="text" placeholder="your name" autocomplete="name" value="홍길동">
           </p>
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_phone">Contact number</label>
-            <input class="bespoke_field_input" id="field_phone" name="phone" type="tel" placeholder="+1 000 000 0000" autocomplete="tel">
+            <input class="bespoke_field_input" id="field_phone" name="phone" type="tel" placeholder="+1 000 000 0000" autocomplete="tel" value="010-1234-5678">
           </p>
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_email">Email address</label>
-            <input class="bespoke_field_input" id="field_email" name="email" type="email" placeholder="your@email.com" autocomplete="email">
+            <input class="bespoke_field_input" id="field_email" name="email" type="email" placeholder="your@email.com" autocomplete="email" value="example@example.com">
           </p>
           <p class="bespoke_field">
             <label class="bespoke_field_label" for="field_occasion">Occasion</label>
@@ -370,7 +370,7 @@
 
         <p class="bespoke_field reservation_notes">
           <label class="bespoke_field_label" for="field_notes">Special requests or notes</label>
-          <textarea class="bespoke_field_textarea" id="field_notes" name="notes" rows="3" placeholder="Let us know anything about the silhouette, occasion, or details you'd like your designer to consider."></textarea>
+          <textarea class="bespoke_field_textarea" id="field_notes" name="notes" rows="3" placeholder="Let us know anything about the silhouette, occasion, or details you'd like your designer to consider.">I would like a slightly longer chima than the standard length, and a collar finished by hand.</textarea>
         </p>
       </div>
     </section>
@@ -385,13 +385,22 @@
           <p class="bespoke_section_desc">Reservations are confirmed by email within 2 business days. Fabric and pricing details are finalized during your consultation.</p>
         </div>
 
+        <!-- 모두 동의하기 — 아래 개별 항목의 부모입니다.
+             `name`을 주지 않습니다: 전송할 값이 아니라 조작용 컨트롤이라
+             폼 데이터에 들어가면 안 됩니다.
+             동기화는 js/reservation.js의 initSubmit()이 맡습니다. -->
+        <div class="bespoke_check reservation_check_all">
+          <input class="bespoke_check_input" id="agree_all" type="checkbox" checked>
+          <label class="bespoke_check_label" for="agree_all">Agree to all</label>
+        </div>
+
         <ul class="bespoke_check_list">
           <li class="bespoke_check">
-            <input class="bespoke_check_input" id="agree_privacy" name="agree_privacy" type="checkbox" required>
+            <input class="bespoke_check_input" id="agree_privacy" name="agree_privacy" type="checkbox" required checked>
             <label class="bespoke_check_label" for="agree_privacy">I agree to the collection and use of my personal information for the purpose of this consultation.</label>
           </li>
           <li class="bespoke_check">
-            <input class="bespoke_check_input" id="agree_production" name="agree_production" type="checkbox" required>
+            <input class="bespoke_check_input" id="agree_production" name="agree_production" type="checkbox" required checked>
             <label class="bespoke_check_label" for="agree_production">I understand that average production time is 3&ndash;5 weeks, and production begins upon confirmation of payment.</label>
           </li>
         </ul>
@@ -400,7 +409,10 @@
 
         <div class="reservation_submit">
           <button class="bespoke_button is_primary" type="submit">Request a reservation</button>
-          <p class="bespoke_status" id="reservation_status" role="status">Both agreements above are required</p>
+          <!-- 두 동의가 모두 켜진 상태로 시작하므로 비워 둡니다
+               (`.bespoke_status:empty`가 숨깁니다). 동의를 풀면
+               refreshAgreeStatus()가 안내 문구를 다시 채웁니다. -->
+          <p class="bespoke_status" id="reservation_status" role="status"></p>
         </div>
       </div>
     </section>
