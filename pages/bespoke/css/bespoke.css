@@ -736,18 +736,16 @@
   overflow: hidden;
 }
 
-/* 레퍼런스와 같은 방식: 크로스페이드가 아니라 **한 장을 흐렸다가 갈아 끼운다**.
-   JS가 is_fading을 붙여 0으로 만들고, 전환이 끝나면 src를 바꾼 뒤 뗀다. */
+/* ★ 큰 사진에는 페이드를 걸지 않는다. 클릭하면 그 자리에서 갈아 끼운다.
+
+   예전에는 레퍼런스대로 `is_fading`으로 0.4초 흐렸다가 src를 바꿨는데,
+   그 0.4초 동안 **자리가 비어 보였다**("눌렀는데 한참 뒤에 뜬다").
+   여기에 opacity transition을 다시 넣으면 그 증상이 그대로 돌아온다.
+   --materials_fade는 아래 스와치 흐리기에서 계속 쓴다. */
 .materials_texture img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  opacity: 1;
-  transition: opacity var(--materials_fade) ease;
-}
-
-.materials_texture img.is_fading {
-  opacity: 0;
 }
 
 .materials_content {
