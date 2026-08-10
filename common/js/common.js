@@ -724,7 +724,7 @@
       return option.getAttribute("data-currency") === currencyCode;
     })[0];
 
-    if (!selectedOption || !currencyValue || !currencyTrigger) {
+    if (!selectedOption || selectedOption.disabled || !currencyValue || !currencyTrigger) {
       return;
     }
 
@@ -752,9 +752,12 @@
   }
 
   function moveCurrencyFocus(currentOption, direction) {
-    var currentIndex = currencyOptions.indexOf(currentOption);
-    var nextIndex = (currentIndex + direction + currencyOptions.length) % currencyOptions.length;
-    currencyOptions[nextIndex].focus();
+    var enabledOptions = currencyOptions.filter(function (option) {
+      return !option.disabled;
+    });
+    var currentIndex = enabledOptions.indexOf(currentOption);
+    var nextIndex = (currentIndex + direction + enabledOptions.length) % enabledOptions.length;
+    enabledOptions[nextIndex].focus();
   }
 
   function handleCurrencyTriggerClick() {
@@ -771,10 +774,14 @@
     var currentOption = event.target.closest("[data-currency]");
 
     if (event.target === currencyTrigger && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      var enabledOptions = currencyOptions.filter(function (option) {
+        return !option.disabled;
+      });
+
       event.preventDefault();
       setCurrencyOpen(true, true);
       if (event.key === "ArrowUp") {
-        currencyOptions[currencyOptions.length - 1].focus();
+        enabledOptions[enabledOptions.length - 1].focus();
       }
       return;
     }
@@ -787,8 +794,12 @@
       event.preventDefault();
       moveCurrencyFocus(currentOption, event.key === "ArrowDown" ? 1 : -1);
     } else if (event.key === "Home" || event.key === "End") {
+      var focusableOptions = currencyOptions.filter(function (option) {
+        return !option.disabled;
+      });
+
       event.preventDefault();
-      currencyOptions[event.key === "Home" ? 0 : currencyOptions.length - 1].focus();
+      focusableOptions[event.key === "Home" ? 0 : focusableOptions.length - 1].focus();
     } else if (event.key === "Escape") {
       event.preventDefault();
       setCurrencyOpen(false, false);

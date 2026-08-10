@@ -314,8 +314,8 @@
   .model.is_model_flow {
     /* ★ 데스크탑 진행 길이 조절 위치입니다.
        값을 줄이면 모델 섹션의 빈 여백과 도착까지 필요한 스크롤이 함께 짧아집니다.
-       현재 260dvh는 시간 지연 없이도 움직임을 긴 스크롤 거리에 나눠 천천히 보여줍니다. */
-    --model_flow_height: 260dvh;
+       현재 250dvh는 시간 지연 없이도 움직임을 긴 스크롤 거리에 나눠 천천히 보여줍니다. */
+    --model_flow_height: 250dvh;
     min-height: var(--model_flow_height);
     /* 마지막 모델이 다음 detail_head 영역까지 이어져 보이도록 세로 클리핑만 해제합니다. */
     overflow: visible;
@@ -792,6 +792,12 @@
     brand_stack_action_sheen 4.6s ease-in-out infinite;
   transition:
     transform 0.4s var(--easing_base),
+    /* ★ background-color가 필요합니다. 카피가 김영진 ↔ 차이킴으로 바뀔 때 바탕색도
+       핑크 ↔ 그린으로 함께 바뀌는데, 이게 없으면 글자는 0.3초에 걸쳐 크로스페이드
+       되는데 바탕만 한 프레임에 툭 갈립니다. box-shadow와 같은 0.4초라 그림자와
+       바탕이 한 몸으로 움직입니다. 호버에는 영향이 없습니다 — 호버는 바탕색이 아니라
+       ::before가 차오르는 방식입니다. */
+    background-color 0.4s var(--easing_base),
     box-shadow 0.4s var(--easing_base),
     color 0.9s cubic-bezier(0.35, 0.35, 0, 1);
 }
@@ -856,6 +862,42 @@
 .brand_stack_action:focus-visible::after {
   scale: 0.85;
   animation-play-state: paused;
+}
+
+/* 김영진 카피일 때의 핑크. 위 그린 버튼과 **구조는 완전히 같고 색만 바꿉니다** —
+   떠 있는 움직임, 빛 스침, 차오르는 층, 점, 누름 반응을 하나도 건드리지 않습니다.
+
+   ★★ 선택자가 class가 아니라 [data-brand="youngjin"]입니다.
+     이 버튼은 카드 덱 3/4 지점에서 카피가 "DISCOVER TCHAI KIM"으로 바뀝니다.
+     브랜드 색이 **김영진 = 핑크 / 차이킴 = 그린**이라 색도 함께 돌아가야 하는데,
+     그 전환은 js/main.js의 GSAP 스크럽 타임라인이 tl.set(attr)로 처리합니다.
+     href·aria-label과 **한 속성 묶음**에 넣어 두면 셋이 절대 어긋나지 않고,
+     되감을 때 GSAP이 "youngjin"으로 알아서 되돌립니다.
+     ★ 여기를 .is_pink로 되돌리면 차이킴 카피에서도 핑크가 남습니다.
+
+   바꿔야 하는 것이 넷입니다. 하나라도 빼면 티가 납니다.
+     1. background-color            — 버튼 바탕
+     2. --brand_stack_action_deep   — 호버에서 아래에서 차오르는 층
+     3. box-shadow 3개              — 초록빛 그림자가 남으면 핑크 버튼에 초록 테가 집니다
+     4. ::after 점                  — 크림 그대로입니다(핑크 위 4.76:1로 보입니다)
+
+   ★ 그림자 색은 버튼 색과 같은 계열이어야 합니다. rgba(31, 67, 63, …)를 그대로 두면
+     핑크 버튼 아래에 초록 그림자가 깔립니다. 아래 세 줄은 --color_point_pink의
+     rgb(150, 102, 88)에 원래와 같은 투명도(0.28 / 0.38 / 0.3)를 씌운 값입니다. */
+.brand_stack_action[data-brand="youngjin"] {
+  --brand_stack_action_deep: var(--color_point_pink_deep);
+
+  background-color: var(--color_point_pink);
+  box-shadow: 0 10px 24px rgba(150, 102, 88, 0.28);
+}
+
+.brand_stack_action[data-brand="youngjin"]:hover,
+.brand_stack_action[data-brand="youngjin"]:focus-visible {
+  box-shadow: 0 18px 34px rgba(150, 102, 88, 0.38);
+}
+
+.brand_stack_action[data-brand="youngjin"]:active {
+  box-shadow: 0 6px 14px rgba(150, 102, 88, 0.3);
 }
 
 @keyframes brand_stack_action_float {
@@ -1508,6 +1550,16 @@
   top: 0;
   left: 0;
   max-width: none;
+}
+
+/* ★ will-change를 기본 규칙에 두면 안 됩니다.
+   이 이미지는 원본을 2.5배로 늘린 3260 × 1417(약 4.6백만 픽셀)이라, 상시
+   will-change면 페이지를 여는 순간부터 끝까지 그만한 GPU 레이어(약 18MB)를
+   붙잡습니다. 실제로 쓰이는 것은 돋보기가 켜져 있는 detail 고정 구간뿐입니다.
+   `.is_active`는 js/main.js가 그 구간에 들어올 때 붙입니다 — 스크럽이 시작되기
+   전이라 레이어를 만들 시간이 충분합니다.
+   (common/css/shop_transition.css의 전환 조각 8개도 같은 이유로 고쳤습니다) */
+.detail_lens.is_active .detail_lens_img {
   will-change: transform;
 }
 

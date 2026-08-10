@@ -1,4 +1,6 @@
-import * as THREE from "three";
+/* Three.js는 Hero에서만 필요합니다. 원격 모듈을 첫 줄에서 기다리면 상품 버튼과
+   배너까지 늦게 초기화되므로, 데스크톱 Hero가 필요할 때만 비동기로 불러옵니다. */
+var THREE = null;
 
 /* 발표용 상품 상세 연결.
    현재 상세 템플릿이 하나이므로 ALL / NEW의 열 개 카드에서 이미지와 상품명을
@@ -25,8 +27,12 @@ import * as THREE from "three";
 
 (function initProductActions() {
   var WISHLIST_STORAGE_KEY = "tchaikim_wishlist";
+  var HEADER_REVEAL_DURATION = 3000;
   var wishlistItems = readWishlistItems();
   var toastTimer = 0;
+  var headerRevealTimer = 0;
+  var headerRevealStartY = 0;
+  var shouldHideHeaderAfterReveal = false;
   var toast = document.createElement("div");
   var toastMessage = document.createElement("span");
 
@@ -104,18 +110,66 @@ import * as THREE from "three";
     return button;
   }
 
+  function temporarilyRevealCartHeader() {
+    var header = document.querySelector(".header");
+
+    if (!header) {
+      return;
+    }
+
+    if (!header.classList.contains("is_cart_revealed")) {
+      shouldHideHeaderAfterReveal = header.classList.contains("is_hidden");
+      headerRevealStartY = window.scrollY;
+    }
+
+    window.clearTimeout(headerRevealTimer);
+    header.classList.remove("is_hidden");
+    header.classList.add("is_cart_revealed");
+
+    headerRevealTimer = window.setTimeout(function () {
+      var isMenuOpen = header.classList.contains("has_open_menu");
+      var currencyMenu = document.querySelector("[data-currency-menu]");
+      var isCurrencyOpen = currencyMenu && currencyMenu.classList.contains("is_open");
+      var hasScrolledUp = window.scrollY < headerRevealStartY - 6;
+
+      header.classList.remove("is_cart_revealed");
+
+      if (
+        shouldHideHeaderAfterReveal &&
+        window.scrollY > 80 &&
+        !hasScrolledUp &&
+        !isMenuOpen &&
+        !isCurrencyOpen
+      ) {
+        header.classList.add("is_hidden");
+      }
+
+      shouldHideHeaderAfterReveal = false;
+    }, HEADER_REVEAL_DURATION);
+  }
+
   function addCartItem() {
     if (window.tchaikimCart && typeof window.tchaikimCart.add === "function") {
-      window.tchaikimCart.add(1);
-      return;
+      return window.tchaikimCart.add(1);
     }
 
     try {
       var storedCount = parseInt(window.sessionStorage.getItem("tchaikim_cart_count"), 10);
       var nextCount = (Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0) + 1;
+      var headerCartCount = document.querySelector("[data-cart-count]");
+
       window.sessionStorage.setItem("tchaikim_cart_count", String(nextCount));
+
+      if (headerCartCount) {
+        headerCartCount.textContent = String(nextCount);
+        headerCartCount.hidden = false;
+        headerCartCount.setAttribute("aria-hidden", "false");
+      }
+
+      return nextCount;
     } catch (error) {
       /* The common header API will take over when it becomes available. */
+      return 0;
     }
   }
 
@@ -166,7 +220,11 @@ import * as THREE from "three";
         cartLabel.textContent = "Add " + productName + " to shopping bag";
       }
 
-      cartButton.addEventListener("click", addCartItem);
+      cartButton.addEventListener("click", function () {
+        addCartItem();
+        showToast("Added to your shopping bag.");
+        temporarilyRevealCartHeader();
+      });
     }
   });
 })();
@@ -268,14 +326,14 @@ var navLinks = Array.prototype.slice.call(document.querySelectorAll(".hero_nav_l
    Shop에 들어올 때 히어로가 뜨기까지 그만큼을 기다려야 했습니다.
    원본 PNG는 같은 폴더에 그대로 있습니다 — 카드를 더 키우면 다시 내보내면 됩니다. */
 var IMAGE_URLS = [
-  "assets/images/gallery_img_all.png",
-  "assets/images/gallery_img_dress.jpg",
-  "assets/images/gallery_img_top.png",
-  "assets/images/gallery_img_knit.jpg",
-  "assets/images/gallery_img_bottom.jpg",
-  "assets/images/gallery_img_outer.png",
-  "assets/images/gallery_img_living.jpg",
-  "assets/images/gallery_img_acc.jpg"
+  "assets/images/gallery_img_all_web.webp",
+  "assets/images/gallery_img_dress_web.webp",
+  "assets/images/gallery_img_top_web.webp",
+  "assets/images/gallery_img_knit_web.webp",
+  "assets/images/gallery_img_bottom_web.webp",
+  "assets/images/gallery_img_outer_web.webp",
+  "assets/images/gallery_img_living_web.webp",
+  "assets/images/gallery_img_acc_web.webp"
 ];
 
 var CARD_COUNT = IMAGE_URLS.length;
@@ -367,7 +425,9 @@ function initHeroGallery() {
     return;
   }
 
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  /* 고해상도 화면에서도 과도한 WebGL 픽셀 생성을 막습니다.
+     1.5면 카드 선명도는 유지하면서 DPR 2 대비 렌더 면적을 약 44% 줄입니다. */
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
   renderer.setSize(width, height, false);
 
   var scene = new THREE.Scene();
@@ -430,7 +490,13 @@ function initHeroGallery() {
     );
   });
 
+  var isRenderActive = true;
+
   function render() {
+    if (!isRenderActive || !heroGallery.classList.contains("is_ready")) {
+      return;
+    }
+
     renderer.render(scene, camera);
   }
 
@@ -460,6 +526,20 @@ function initHeroGallery() {
     if (autoTween !== null) {
       autoTween.kill();
       autoTween = null;
+    }
+  }
+
+  var isHeroIntersecting = true;
+
+  function syncHeroRenderActivity() {
+    isRenderActive = isHeroIntersecting && !document.hidden;
+
+    if (isRenderActive) {
+      pauseReasons.delete("offscreen");
+      startAutoRotate();
+    } else {
+      pauseReasons.add("offscreen");
+      stopAutoRotate();
     }
   }
 
@@ -577,6 +657,19 @@ function initHeroGallery() {
 
   window.addEventListener("resize", handleWindowResize);
 
+  /* Hero가 화면 밖으로 내려간 뒤에도 WebGL을 계속 그리면 이후 섹션의 Lenis가
+     버벅입니다. 화면에 보일 때만 회전과 렌더를 실행합니다. */
+  if (typeof window.IntersectionObserver !== "undefined") {
+    var heroVisibilityObserver = new window.IntersectionObserver(function (entries) {
+      isHeroIntersecting = entries[0] ? entries[0].isIntersecting : true;
+      syncHeroRenderActivity();
+    }, { rootMargin: "120px 0px" });
+
+    heroVisibilityObserver.observe(heroGallery);
+  }
+
+  document.addEventListener("visibilitychange", syncHeroRenderActivity);
+
   gsap.ticker.add(render);
   heroGallery.classList.add("is_ready");
   startAutoRotate();
@@ -615,6 +708,27 @@ function initHeroGallery() {
    판정이 어긋나면 캔버스는 도는데 레이아웃은 모바일이 됩니다. */
 var heroGalleryQuery = window.matchMedia("(min-width: 768px)");
 var heroGalleryApi = null;
+var threeLoadPromise = null;
+
+function loadThreeLibrary() {
+  if (THREE) {
+    return Promise.resolve(THREE);
+  }
+
+  if (!threeLoadPromise) {
+    threeLoadPromise = import("three")
+      .then(function (threeModule) {
+        THREE = threeModule;
+        return THREE;
+      })
+      .catch(function () {
+        /* 네트워크가 느리거나 차단되면 정지 fallback 이미지를 그대로 사용합니다. */
+        return null;
+      });
+  }
+
+  return threeLoadPromise;
+}
 
 function syncHeroGallery() {
   if (!heroGalleryQuery.matches) {
@@ -631,7 +745,14 @@ function syncHeroGallery() {
 
   /* 초기화가 실패하면(WebGL 불가, 폭 0 등) null이 돌아옵니다. 그대로 두면
      다음 변화 때 다시 시도합니다 — 처음에 폭이 0이었던 경우를 구제합니다. */
-  heroGalleryApi = initHeroGallery() || null;
+  loadThreeLibrary().then(function (threeModule) {
+    if (!threeModule || !heroGalleryQuery.matches || heroGalleryApi) {
+      return;
+    }
+
+    /* 초기화가 실패하면 fallback 이미지를 유지합니다. */
+    heroGalleryApi = initHeroGallery() || null;
+  });
 }
 
 syncHeroGallery();
@@ -687,6 +808,7 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   /* 설명과 이미지가 맞닿아 보이지 않도록 한 화면 높이보다 더 떨어뜨립니다. */
   var CONTENT_SPACING_MULTIPLIER = 2;
   /* 숫자가 작을수록 적은 스크롤로 네 콘텐츠를 빠르게 통과합니다. */
+  /* 네 콘텐츠가 연속으로 이어지되 고정 구간이 과도하게 길어지지 않는 거리입니다. */
   var SCROLL_DISTANCE_PERCENT = 550;
   /* ★ 섹션이 화면에 고정된 직후 **아무것도 진행하지 않고 첫 가먼트를 그대로
      보여주는 구간**입니다(전체 스크롤 길이 대비 비율).
@@ -701,6 +823,7 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
      끝에서도 마지막 가먼트를 읽을 시간을 주고 싶으면 아래 timeline의 duration을
      `1 - LEAD_HOLD_RATIO - TAIL` 로 바꾸면 됩니다. */
+  /* 진입 직후 첫 상품을 잠깐 읽을 여유만 두고 바로 연속 전환을 시작합니다. */
   var LEAD_HOLD_RATIO = 0.18;
   /* Wheel 한 번을 한 가먼트 이동으로 해석합니다. 트랙패드는 한 번의 손동작에서도
      wheel 이벤트를 여러 번 보내므로, 이동 애니메이션과 관성 입력이 모두 끝날 때까지
@@ -709,11 +832,16 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   /* ★ Garment Story 한 칸 이동 속도 조절 위치
      숫자를 키우면 더 천천히, 줄이면 더 빠르게 이동합니다. 실제 스크롤 좌표를
      이 시간 동안 움직이므로 이전처럼 먼저 튄 뒤 내용만 따라오지 않습니다. */
-  var SNAP_DURATION = 1.15;
+  /* 기존 1.15초보다 아주 조금 가볍게 조정했습니다.
+     구조는 그대로 한 휠 = 한 단어이며, 이 값만 줄이면 한 칸 도착이 빨라집니다. */
+  var SNAP_DURATION = 1.05;
   /* 스크롤 위치를 따라가는 화면 요소의 미세한 잔상을 조절합니다.
      너무 크게 올리면 입력보다 늦게 멈추므로 짧게 유지합니다. */
-  var SNAP_SCRUB = 0.18;
-  var SNAP_IDLE_DELAY = 220;
+  /* 강제 단계 스냅 대신 Lenis의 실제 이동을 부드럽게 따라가는 값입니다. */
+  var SNAP_SCRUB = 0.15;
+  /* 트랙패드 관성 입력을 한 제스처로 묶는 시간입니다.
+     220ms에서 190ms로만 줄여 다음 조작을 조금 빨리 받을 수 있게 했습니다. */
+  var SNAP_IDLE_DELAY = 190;
   /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
      한 항목에 머무르는 시간(=사용자가 쉬는 시간)이 늘어납니다.
      시안에 없는 값이라 추정치이며, 더 여유를 주고 싶으면 이 숫자를
@@ -935,7 +1063,7 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
       }, LEAD_HOLD_RATIO);
 
     garmentTrigger = garmentTimeline.scrollTrigger;
-    /* capture 단계에서 먼저 받아 Lenis의 연속 스크롤보다 한 칸 스냅을 우선합니다. */
+    /* 한 번의 휠/트랙패드 제스처가 한 가먼트만 이동하도록 먼저 받습니다. */
     window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
 
     /* GSAP은 자기가 만든 트윈·트리거만 되돌립니다. applyProgress()는

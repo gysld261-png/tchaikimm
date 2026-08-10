@@ -90,6 +90,36 @@ body {
   transform: translateY(0);
 }
 
+/* 핑크 변형. 기본 그린 버튼과 **구조는 완전히 같고 색만 바꿉니다** —
+   밑줄이 차오르는 방식, 화살표 이동, 떠오르는 정도를 건드리지 않습니다.
+
+   ★ ::after(차오르는 밑줄)에는 규칙이 없습니다. 그 선은 `currentColor`라
+     위의 color 두 줄만 바꾸면 기본·호버 모두 저절로 따라옵니다.
+   ★ 이 modifier를 쓰는 곳은 지금 pages/main뿐입니다. 그래도 규칙을 여기 두는 것은
+     .main_button 본체가 여기 있기 때문입니다 — 한 컴포넌트를 두 파일에 쪼개면
+     나중에 한쪽만 고치게 됩니다. */
+.main_button.is_pink {
+  color: var(--color_point_pink);
+}
+
+.main_button.is_pink::before {
+  background-color: var(--color_point_pink);
+}
+
+.main_button.is_pink:hover,
+.main_button.is_pink:focus-visible {
+  color: var(--color_point_pink_deep);
+}
+
+/* ★ 포커스 링도 함께 바꿉니다. 이 파일 위쪽의 전역 규칙이
+   `:focus-visible { outline: 2px solid var(--color_point) }`이라, 두지 않으면
+   핑크 버튼에 **초록 링**이 뜹니다. 밝은 쪽(#966658, 크림 대비 4.76)이 아니라
+   짙은 쪽을 쓰는 것은 포커스 표시가 3:1 이상이어야 하기 때문입니다 — 5.90입니다. */
+.main_button.is_pink:focus-visible,
+.brand_stack_action[data-brand="youngjin"]:focus-visible {
+  outline-color: var(--color_point_pink_deep);
+}
+
 .main_button_arrow {
   display: inline-block;
   font-size: 1.15em;

@@ -88,17 +88,39 @@
     var MODEL_TRAVEL_DESKTOP = 0.2;
     var MODEL_TRAVEL_TABLET = 0.16;
     var MODEL_TRAVEL_MOBILE = 0.1;
-    /* ★ 좌우 방향 전환 시점 조절 위치
-       중앙에서 출발해 왼쪽으로 한 번 이동한 뒤 오른쪽에서 끝납니다.
-       값을 키우면 왼쪽에 늦게 도착하고, 줄이면 오른쪽 이동을 더 일찍 시작합니다. */
-    var MODEL_HORIZONTAL_TURN_RATIO = 0.38;
-    /* ★ 중앙 정렬 유지 구간 조절 위치
-       0.18은 전체 진행의 앞 18% 동안 모델을 텍스트와 같은 중앙선에 유지합니다.
-       값을 키우면 중앙에 더 오래 머물고, 줄이면 좌우 이동을 더 일찍 시작합니다. */
-    var MODEL_HORIZONTAL_HOLD_RATIO = 0.18;
+    /* =========================================================
+       ★ 모델 회전·좌우 이동 타이밍 조절값
+
+       ScrollTrigger의 전체 진행률은 0부터 1까지입니다.
+       예: 0.5 = 모델 섹션 스크롤의 절반, 0.666 = 약 2/3 지점입니다.
+
+       MODEL_ROTATION_END_RATIO
+       - 영상이 한 바퀴 회전을 끝내는 시점입니다.
+       - 현재 2 / 3이므로 전체 스크롤의 앞 2/3에서만 영상이 재생됩니다.
+       - 마지막 1/3에서는 마지막 프레임을 유지한 채 오른쪽으로 이동합니다.
+       - 0.75로 올리면 더 오래 회전하고, 0.55로 내리면 더 일찍 끝납니다.
+
+       MODEL_HORIZONTAL_HOLD_RATIO
+       - 모델이 처음 중앙에서 움직이지 않고 머무는 구간입니다.
+       - 0.1은 전체 스크롤의 처음 10%를 뜻합니다.
+       - 값을 키우면 중앙에 오래 있고, 줄이면 왼쪽 이동을 빨리 시작합니다.
+
+       실제 이동 순서
+       1) 0 ~ HOLD: 중앙에서 잠깐 대기
+       2) HOLD ~ ROTATION_END: 회전하면서 중앙 → 왼쪽
+       3) ROTATION_END ~ 1: 회전 완료 자세를 유지하면서 왼쪽 → 오른쪽 도착
+       ========================================================= */
+    var MODEL_ROTATION_END_RATIO = 2 / 3;
+    var MODEL_HORIZONTAL_HOLD_RATIO = 0.1;
     var MODEL_TEXT_HOLD_RATIO = 0.2;
     var MODEL_TEXT_FADE_RATIO = 0.12;
+    /* 영상은 섹션 진입 직후 바로 튀지 않도록 전체 진행률 8%부터 재생합니다.
+       값을 줄이면 더 빨리 돌기 시작하고, 키우면 정면을 더 오래 보여준 뒤 돕니다.
+       반드시 MODEL_ROTATION_END_RATIO보다 작은 값이어야 합니다. */
     var MODEL_VIDEO_START_RATIO = 0.08;
+    /* 원본 영상의 끝부분에 빈 프레임이 있어 실제 길이의 90%까지만 사용합니다.
+       이 값은 스크롤 시점이 아니라 영상 파일에서 사용할 마지막 프레임 위치입니다. */
+    var MODEL_VIDEO_END_FRAME_RATIO = 0.9;
     /* ★ 데스크탑 모델 스크롤 감도 조절 위치
        이 값은 모델이 현재 스크롤 위치를 따라잡는 시간입니다.
        4처럼 크게 쓰면 약 4초 뒤처지므로 스크롤과 모델 위치가 어긋납니다.
@@ -169,26 +191,39 @@
       window.addEventListener("load", warmModelVideo, { once: true });
     }
 
-    /* 스크롤 프레임마다 currentTime을 바로 바꾸면 이전 영상 탐색이 끝나기도 전에
-       새 디코딩 요청이 계속 쌓여 섹션 진입 순간 스크롤까지 잠깐 멎습니다.
-       가장 최근 재생 위치만 기억하고 seek가 끝난 뒤 다음 위치를 적용합니다. */
+    /* =========================================================
+       ★ 스크롤 진행률을 영상 프레임으로 바꾸는 방식
+
+       이전 코드는 영상 탐색(seek)이 끝날 때까지 isVideoSeeking으로 다음 요청을
+       막았습니다. 그런데 첫 요청이 영상의 0초와 아주 가까우면 브라우저가 실제
+       탐색을 하지 않아 seeked 이벤트도 보내지 않는 경우가 있습니다. 그러면 잠금이
+       영원히 풀리지 않아 모델 위치는 내려가는데 영상 currentTime만 0에 멈췄습니다.
+
+       지금 방식은 GSAP이 계산한 가장 최신 시간을 즉시 currentTime에 적용합니다.
+       - 1/30초보다 작은 중복 이동은 아래 THRESHOLD에서 건너뜁니다.
+       - seeked 이벤트가 오지 않아도 잠기지 않습니다.
+       - model_scrub.mp4는 모든 프레임이 키프레임이라 빠르게 프레임을 찾습니다.
+       ========================================================= */
     var requestedVideoTime = 0;
-    var appliedVideoTime = -1;
-    var isVideoSeeking = false;
     var VIDEO_SEEK_THRESHOLD = 1 / 30;
 
     function applyRequestedVideoTime() {
-      if (
-        !video.duration ||
-        isVideoSeeking ||
-        Math.abs(requestedVideoTime - appliedVideoTime) < VIDEO_SEEK_THRESHOLD
-      ) {
+      if (!video.duration) {
         return;
       }
 
-      isVideoSeeking = true;
-      appliedVideoTime = requestedVideoTime;
-      video.currentTime = requestedVideoTime;
+      var safeRequestedTime = Math.max(
+        0,
+        Math.min(requestedVideoTime, video.duration * MODEL_VIDEO_END_FRAME_RATIO)
+      );
+
+      /* 1/30초보다 작은 차이는 같은 화면 프레임으로 보고 건너뜁니다.
+         이 값을 더 작게 하면 프레임은 촘촘하지만 디코딩 요청이 늘어납니다. */
+      if (Math.abs(safeRequestedTime - video.currentTime) < VIDEO_SEEK_THRESHOLD) {
+        return;
+      }
+
+      video.currentTime = safeRequestedTime;
     }
 
     function requestVideoTime(time) {
@@ -196,13 +231,30 @@
       applyRequestedVideoTime();
     }
 
-    video.addEventListener("seeked", function () {
-      isVideoSeeking = false;
-      window.requestAnimationFrame(applyRequestedVideoTime);
-    });
+    /* 데스크탑에서는 모델의 실제 위치 진행률(modelMotion.progress)을 그대로 받아
+       영상 진행률로 환산합니다. 따라서 위치가 움직였다면 영상 시간도 반드시 함께
+       갱신됩니다. START 이전은 0, ROTATION_END 이후는 1로 고정됩니다. */
+    function updateModelVideoFromScrollProgress(scrollProgress) {
+      if (!video.duration) {
+        return;
+      }
+
+      var videoProgress = Math.max(
+        0,
+        Math.min(
+          1,
+          (scrollProgress - MODEL_VIDEO_START_RATIO) /
+            (MODEL_ROTATION_END_RATIO - MODEL_VIDEO_START_RATIO)
+        )
+      );
+
+      requestVideoTime(
+        video.duration * MODEL_VIDEO_END_FRAME_RATIO * videoProgress
+      );
+    }
 
     function seekToRestPose() {
-      video.currentTime = video.duration * 0.9;
+      video.currentTime = video.duration * MODEL_VIDEO_END_FRAME_RATIO;
     }
 
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -283,27 +335,42 @@
 
     function applyDesktopModelMotion() {
       var progress = modelMotion.progress;
-      var horizontalProgress = Math.max(
-        0,
-        Math.min(1, (progress - MODEL_HORIZONTAL_HOLD_RATIO) / (1 - MODEL_HORIZONTAL_HOLD_RATIO))
-      );
       var travelDistance = getModelTravelDistance();
       var horizontalPosition = 0;
+
+      /* 위치와 회전을 같은 progress에서 계산해야 둘 중 하나만 멈추지 않습니다. */
+      updateModelVideoFromScrollProgress(progress);
 
       function smoothStep(value) {
         return value * value * (3 - 2 * value);
       }
 
-      /* 왕복 사인 곡선 대신 중앙 → 왼쪽 → 오른쪽의 두 구간만 사용합니다.
-         방향 전환점에서도 속도가 0이 되어 모델이 튀거나 촐싹거리지 않습니다. */
-      if (horizontalProgress <= MODEL_HORIZONTAL_TURN_RATIO) {
-        horizontalPosition = -travelDistance * smoothStep(
-          horizontalProgress / MODEL_HORIZONTAL_TURN_RATIO
+      /* 회전 완료 시점 전에는 중앙에서 왼쪽으로만 이동합니다.
+         HOLD와 ROTATION_END 사이를 다시 0~1로 환산한 값이 leftProgress입니다. */
+      if (progress <= MODEL_ROTATION_END_RATIO) {
+        var leftProgress = Math.max(
+          0,
+          Math.min(
+            1,
+            (progress - MODEL_HORIZONTAL_HOLD_RATIO) /
+              (MODEL_ROTATION_END_RATIO - MODEL_HORIZONTAL_HOLD_RATIO)
+          )
         );
+
+        horizontalPosition = -travelDistance * smoothStep(leftProgress);
       } else {
-        horizontalPosition = -travelDistance + (travelDistance * 2 * smoothStep(
-          (horizontalProgress - MODEL_HORIZONTAL_TURN_RATIO) / (1 - MODEL_HORIZONTAL_TURN_RATIO)
-        ));
+        /* 영상이 한 바퀴를 다 돈 뒤에만 오른쪽 이동을 시작합니다.
+           남은 1/3 구간을 0~1로 환산해 왼쪽(-distance)에서 오른쪽(+distance)까지 갑니다. */
+        var rightProgress = Math.max(
+          0,
+          Math.min(
+            1,
+            (progress - MODEL_ROTATION_END_RATIO) / (1 - MODEL_ROTATION_END_RATIO)
+          )
+        );
+
+        horizontalPosition = -travelDistance +
+          travelDistance * 2 * smoothStep(rightProgress);
       }
 
       gsap.set(figure, {
@@ -357,36 +424,54 @@
         0
       );
     } else {
-      /* 태블릿·모바일도 같은 방향 구성으로 한 번만 꺾어 움직입니다. */
+      /* 태블릿·모바일도 데스크탑과 타이밍을 맞춥니다.
+         회전 완료 전까지 왼쪽으로 이동하고, 2/3 이후에만 오른쪽으로 갑니다. */
       timeline
         .to(
           figure,
-          { x: function () { return -getModelTravelDistance(); }, duration: 0.32, ease: "sine.inOut" },
-          0.12
+          {
+            x: function () { return -getModelTravelDistance(); },
+            duration: MODEL_ROTATION_END_RATIO - MODEL_HORIZONTAL_HOLD_RATIO,
+            ease: "sine.inOut"
+          },
+          MODEL_HORIZONTAL_HOLD_RATIO
         )
         .to(
           figure,
-          { x: function () { return getModelTravelDistance(); }, duration: 0.56, ease: "sine.inOut" },
-          0.44
+          {
+            x: function () { return getModelTravelDistance(); },
+            duration: 1 - MODEL_ROTATION_END_RATIO,
+            ease: "sine.inOut"
+          },
+          MODEL_ROTATION_END_RATIO
         );
     }
 
-    timeline.to(
+    /* 데스크탑 영상은 위 applyDesktopModelMotion()에서 위치와 함께 갱신합니다.
+       아래 별도 playhead는 pin 구조를 사용하는 태블릿·모바일에서만 필요합니다. */
+    if (!isDesktopModelFlow) {
+      timeline.to(
         modelPlayhead,
         {
           progress: 1,
-          duration: 1 - MODEL_VIDEO_START_RATIO,
+          /* 이 tween은 전체 타임라인의 2/3 지점에서 끝납니다.
+             이후 ScrollTrigger가 계속 진행되어도 modelPlayhead는 1로 고정되므로
+             마지막 1/3에서는 영상이 더 돌지 않고 오른쪽 이동만 보입니다. */
+          duration: MODEL_ROTATION_END_RATIO - MODEL_VIDEO_START_RATIO,
           ease: "none",
           onUpdate: function () {
             /* 메타데이터가 아직 안 왔으면 duration이 NaN이라 건너뜁니다. */
             if (!video.duration) {
               return;
             }
-            requestVideoTime(video.duration * 0.9 * modelPlayhead.progress);
+            requestVideoTime(
+              video.duration * MODEL_VIDEO_END_FRAME_RATIO * modelPlayhead.progress
+            );
           }
         },
         MODEL_VIDEO_START_RATIO
       );
+    }
   })();
 
   gsap.matchMedia().add("(min-width: 1024px) and (prefers-reduced-motion: no-preference)", function () {
@@ -736,13 +821,29 @@
                 ease: "power2.out"
               }, phaseStart + 0.25);
 
+            /* ★ data-brand도 여기서 함께 넘깁니다. 브랜드 색이
+               김영진 = 핑크 / 차이킴 = 그린이라 카피가 바뀌면 버튼 색도 돌아가야 합니다.
+               css의 .brand_stack_action[data-brand="youngjin"]가 이 값을 봅니다 —
+               "ready"가 되는 순간 핑크 규칙이 떨어져 기본 그린으로 돌아갑니다.
+               ★ href·aria-label과 **같은 attr 묶음**에 둔 것이 핵심입니다. 따로 두면
+                 스크럽을 빠르게 되감을 때 셋의 시점이 어긋나 색과 문구가 안 맞습니다.
+                 되감으면 GSAP이 시작값("youngjin")으로 알아서 되돌립니다. */
+            /* ★★ 시점이 +0.25가 아니라 **+0.3**입니다. 김영진 카피가 완전히 사라지는
+               순간(위 fade-out이 phaseStart → +0.3)입니다.
+               +0.25에 두면 김영진 글자가 아직 39% 남은 채 버튼만 그린이 됩니다 —
+               실측으로 진행도 0.785~0.795 구간에서 그 어긋남을 확인하고 옮겼습니다.
+               +0.3에서는 김영진 글자가 0이고 차이킴 글자가 이제 17%쯤 떠오르는
+               참이라, 어느 방향으로 스크롤해도 **글자와 색이 서로 다른 브랜드를
+               가리키는 구간이 없습니다.**
+               ★ 위 fade-out의 duration(0.3)을 바꾸면 이 값도 같이 바꿔야 합니다. */
             if (stackAction) {
               tl.set(stackAction, {
                 attr: {
                   href: "#promo_shop_video",
-                  "aria-label": "Discover Tchai Kim"
+                  "aria-label": "Discover Tchai Kim",
+                  "data-brand": "ready"
                 }
-              }, phaseStart + 0.25);
+              }, phaseStart + 0.3);
             }
           }
         });
@@ -1397,6 +1498,20 @@
     var height = text.offsetHeight;
     var half = lensSize / 2;
 
+    /* Sleeve 설명만 옷 중앙을 가르지 않도록 돋보기 원 바로 아래에 놓습니다.
+       다른 부위는 기존처럼 돋보기 좌우 중 여유 있는 방향에 배치합니다. */
+    if (part === "sleeve") {
+      text.style.left =
+        clamp(lensX - width / 2, EDGE_MARGIN, stageWidth - width - EDGE_MARGIN) + "px";
+      text.style.top =
+        clamp(
+          lensY + half + TEXT_GAP,
+          -(verticalRoom - EDGE_MARGIN),
+          stageHeight + verticalRoom - height - EDGE_MARGIN
+        ) + "px";
+      return;
+    }
+
     var left =
       lensX > stageWidth / 2
         ? lensX - half - TEXT_GAP - width
@@ -1522,14 +1637,35 @@
 
   var CARD_INTERVAL = 620;
   var MAX_VISIBLE_CARDS = 9;
-  var CARD_INTRO_DELAY = 850;
+  /* 첫 휠 입력 뒤 카드가 반응하기 시작하는 대기 시간입니다.
+     너무 크면 클릭처럼 늦게 보이므로 0.1초만 두고 바로 깊이감 있는 이동을 시작합니다. */
+  var CARD_INTRO_DELAY = 100;
   var RIGHT_STREAM_OFFSET = 0.5;
   /* ★ 컬렉션 고정 유지 거리입니다.
      카드 자동재생 길이와 분리해, 고정된 뒤 다음 스크롤에서 바로 풀리게 합니다.
      값을 키우면 더 오래 고정되고 줄이면 더 빨리 다음 섹션으로 넘어갑니다. */
   var COLLECTION_STICKY_HOLD = 28;
   /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
-  var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
+  var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)";
+  /* 첫 번째 휠로 사진을 충분히 볼 수 있도록 다음 입력을 잠깐 받지 않는 시간입니다.
+     숫자를 늘리면 더 묵직하게 머물고, 줄이면 두 번째 스크롤을 더 빨리 받을 수 있습니다. */
+  var COLLECTION_FIRST_STEP_HOLD = 520;
+  /* 트랙패드 한 번의 손동작이 여러 wheel 이벤트로 쪼개지는 시간을 한 제스처로 묶습니다. */
+  var COLLECTION_WHEEL_IDLE = 180;
+  /* 두 번째 휠에서 다음 섹션으로 내려가는 Lenis 이동 시간입니다. */
+  var COLLECTION_EXIT_DURATION = 1.15;
+  /* ★ 사진 당김 감도 조절 위치
+     첫 휠의 누적 입력량이 DISTANCE에 도달할 때까지 사진이 중앙 뒤에서 앞으로 끌려옵니다.
+     START_SCALE/Y를 크게 벌리면 당김이 더 선명하고, RELEASE_DURATION을 늘리면 놓이는 감각이 묵직해집니다. */
+  var COLLECTION_PULL_WHEEL_DISTANCE = 360;
+  var COLLECTION_PULL_START_SCALE = 0.84;
+  var COLLECTION_PULL_START_Y = 46;
+  var COLLECTION_PULL_SEED_PHASE = 1.15;
+  var COLLECTION_PULL_RELEASE_DURATION = 0.58;
+  /* 마지막 휠에서 섹션이 살짝 위로 당겨진 뒤 다음 구간으로 풀리는 값입니다. */
+  var COLLECTION_EXIT_PULL_SCALE = 0.985;
+  var COLLECTION_EXIT_PULL_Y = -18;
+  var COLLECTION_EXIT_PULL_DURATION = 0.34;
   /* ★ 진입 안착(아래 "진입 안착" 주석 참고) 조절값.
      SHIFT — 컨테이너가 몇 px 아래에서 올라올지. 키우면 더 크게 움직입니다.
      START — 언제부터 따라오기 시작할지. "top bottom"은 섹션 윗변이 화면 아래에
@@ -1539,11 +1675,11 @@
      SCRUB — 스크롤을 멈춘 뒤 더 따라오는 여운(초). 0이면 딱딱해집니다.
      FADE  — 따라오기 시작할 때의 불투명도. 1이면 페이드 없이 움직임만 남고,
              0에 가까울수록 화면 하나에 걸쳐 크게 나타납니다. */
-  var COLLECTION_SETTLE_SHIFT = 56;
-  var COLLECTION_SETTLE_START = "top bottom";
-  var COLLECTION_SETTLE_END = "top -20%";
-  var COLLECTION_SETTLE_SCRUB = 1.4;
-  var COLLECTION_SETTLE_FADE = 0.9;
+  var COLLECTION_SETTLE_SHIFT = 72;
+  var COLLECTION_SETTLE_START = "top 88%";
+  var COLLECTION_SETTLE_END = "top top";
+  var COLLECTION_SETTLE_SCRUB = 0.9;
+  var COLLECTION_SETTLE_FADE = 0.88;
   /* 배열을 한 번 섞은 뒤 홀수·짝수 위치를 좌우로 나눕니다.
      같은 이미지를 복제하지 않아 한 화면 안에서 중복되어 보이지 않습니다. */
   var STREAM_ORDER = [0, 7, 4, 3, 8, 11, 2, 1, 10, 9, 6, 5];
@@ -1596,6 +1732,23 @@
   var pausedAt = null;
   var isInView = false;
   var hasStarted = false;
+
+  function startCollectionStream(initialPhase) {
+    if (hasStarted) {
+      return;
+    }
+
+    hasStarted = true;
+    /* 휠로 당겨온 사진 위치에서 자동 재생이 그대로 이어지게 시간을 역산합니다.
+       모바일 자동 재생처럼 initialPhase가 없으면 기존 시작 타이밍을 유지합니다. */
+    startTime = Number.isFinite(initialPhase)
+      ? performance.now() - CARD_INTRO_DELAY - initialPhase * CARD_INTERVAL
+      : performance.now();
+    pausedAt = null;
+    row.classList.add("is_interaction_started");
+    syncPlayState();
+  }
+
   function setCardPosition(element, progress, direction) {
     /* x는 일정하게 이동하고 깊이만 smoothstep으로 변화시켜
        뒤에서 앞으로 부드럽게 다가오는 원근감을 만듭니다. */
@@ -1674,18 +1827,17 @@
     new window.IntersectionObserver(function (entries) {
       isInView = entries[0].isIntersecting && entries[0].intersectionRatio >= 0.15;
 
-      if (isInView && !hasStarted) {
-        hasStarted = true;
-        startTime = performance.now();
+      /* 데스크탑은 고정된 뒤 첫 휠을 기다립니다. 휠이 없는 모바일·터치 화면은
+         기존처럼 화면에 들어왔을 때 자동으로 재생해 빈 무대가 남지 않게 합니다. */
+      if (isInView && !hasStarted && !window.matchMedia(COLLECTION_SCROLL_MEDIA).matches) {
+        startCollectionStream();
       }
 
       syncPlayState();
     }, { threshold: [0, 0.15] }).observe(row);
   } else {
     isInView = true;
-    hasStarted = true;
-    startTime = performance.now();
-    syncPlayState();
+    startCollectionStream();
   }
 
   document.addEventListener("visibilitychange", syncPlayState);
@@ -1712,6 +1864,218 @@
       "--collection_sticky_scroll",
       COLLECTION_STICKY_HOLD + "dvh"
     );
+
+    var interactionStep = 0;
+    var isWheelLocked = false;
+    var isExitingCollection = false;
+    var lastWheelTime = 0;
+    var firstStepTimer = 0;
+    var exitTimer = 0;
+    var pullProgress = 0;
+    var pullPhase = 0;
+    var nextSection = scrollStage.nextElementSibling;
+
+    function isCollectionPinned() {
+      var sectionRect = section.getBoundingClientRect();
+      var stageRect = scrollStage.getBoundingClientRect();
+
+      return (
+        Math.abs(sectionRect.top) <= 4 &&
+        stageRect.top <= 4 &&
+        stageRect.bottom > window.innerHeight
+      );
+    }
+
+    function stopLenisForInteraction() {
+      if (window.tchaikimmLenis && typeof window.tchaikimmLenis.stop === "function") {
+        var anchorY = window.scrollY;
+        window.tchaikimmLenis.stop();
+        window.tchaikimmLenis.scrollTo(anchorY, {
+          immediate: true,
+          force: true
+        });
+      }
+    }
+
+    function startLenisAfterInteraction() {
+      if (window.tchaikimmLenis && typeof window.tchaikimmLenis.start === "function") {
+        window.tchaikimmLenis.start();
+      }
+    }
+
+    function applyCollectionPull(deltaY) {
+      var wheelAmount = Math.max(0, deltaY);
+
+      pullProgress = Math.min(
+        1,
+        pullProgress + wheelAmount / COLLECTION_PULL_WHEEL_DISTANCE
+      );
+
+      /* 초반은 묵직하고 끝에서 조금 더 잘 따라오는 곡선입니다. */
+      var easedProgress = pullProgress * pullProgress * (3 - 2 * pullProgress);
+      var scale = COLLECTION_PULL_START_SCALE +
+        (1.02 - COLLECTION_PULL_START_SCALE) * easedProgress;
+      var translateY = COLLECTION_PULL_START_Y * (1 - easedProgress);
+
+      pullPhase = COLLECTION_PULL_SEED_PHASE * (0.35 + 0.65 * easedProgress);
+      renderPhase(pullPhase);
+      window.gsap.set(row, {
+        y: translateY,
+        scale: scale,
+        transformOrigin: "50% 50%"
+      });
+    }
+
+    function completeCollectionPull() {
+      startCollectionStream(Math.max(pullPhase, COLLECTION_PULL_SEED_PHASE * 0.35));
+
+      /* 사용자가 휠을 놓으면 현재 당겨진 위치에서 자동 재생으로 자연스럽게 이어집니다. */
+      window.gsap.to(row, {
+        y: 0,
+        scale: 1,
+        duration: COLLECTION_PULL_RELEASE_DURATION,
+        ease: "back.out(1.6)",
+        clearProps: "transform",
+        overwrite: true,
+        onComplete: function () {
+          isWheelLocked = false;
+          startLenisAfterInteraction();
+        }
+      });
+    }
+
+    function scheduleCollectionPullRelease() {
+      window.clearTimeout(firstStepTimer);
+      firstStepTimer = window.setTimeout(
+        releaseFirstStepWhenIdle,
+        COLLECTION_FIRST_STEP_HOLD
+      );
+    }
+
+    function releaseFirstStepWhenIdle() {
+      var idleTime = performance.now() - lastWheelTime;
+
+      if (idleTime < COLLECTION_WHEEL_IDLE) {
+        firstStepTimer = window.setTimeout(
+          releaseFirstStepWhenIdle,
+          COLLECTION_WHEEL_IDLE - idleTime
+        );
+        return;
+      }
+
+      completeCollectionPull();
+    }
+
+    function beginCollectionInteraction(initialDeltaY) {
+      interactionStep = 1;
+      isWheelLocked = true;
+      lastWheelTime = performance.now();
+      pullProgress = 0;
+      pullPhase = 0;
+      stopLenisForInteraction();
+
+      /* 사진이 나타나는 순간 무대 전체를 살짝 뒤에서 당겨와, 단순 재생 버튼처럼
+         띡 켜지지 않고 손에 걸렸다 놓이는 느낌을 만듭니다. */
+      window.gsap.killTweensOf(row);
+      applyCollectionPull(initialDeltaY);
+
+      /* 같은 마우스 한 칸/트랙패드 한 번이 두 번째 단계까지 통과하지 않도록
+         사진이 들어오는 동안 입력을 한 번만 소비합니다. */
+      scheduleCollectionPullRelease();
+    }
+
+    function finishCollectionExit() {
+      window.clearTimeout(exitTimer);
+      isExitingCollection = false;
+      startLenisAfterInteraction();
+      window.gsap.killTweensOf(section);
+      window.gsap.set(section, { clearProps: "transform" });
+    }
+
+    function scrollOutOfCollection() {
+      var targetTop = nextSection
+        ? window.scrollY + nextSection.getBoundingClientRect().top
+        : scrollStage.offsetTop + scrollStage.offsetHeight;
+
+      window.clearTimeout(exitTimer);
+      /* Lenis 이동이 브라우저 탭 전환 등으로 중단돼도 wheel 잠금이 남지 않는 안전장치입니다. */
+      exitTimer = window.setTimeout(
+        finishCollectionExit,
+        (COLLECTION_EXIT_DURATION + 0.35) * 1000
+      );
+
+      if (window.tchaikimmLenis) {
+        window.tchaikimmLenis.scrollTo(targetTop, {
+          duration: COLLECTION_EXIT_DURATION,
+          easing: function (progress) {
+            return progress < 0.5
+              ? 4 * progress * progress * progress
+              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+          },
+          lock: true,
+          force: true,
+          onComplete: finishCollectionExit
+        });
+        return;
+      }
+
+      window.scrollTo({ top: targetTop, behavior: "smooth" });
+    }
+
+    function exitCollection() {
+      interactionStep = 2;
+      isExitingCollection = true;
+      window.gsap.killTweensOf(section);
+
+      /* 바로 스크롤 좌표를 바꾸지 않고 섹션을 먼저 위로 살짝 당깁니다.
+         당김이 끝난 시점부터 Lenis가 다음 구간으로 부드럽게 풀어줍니다. */
+      window.gsap.to(section, {
+        y: COLLECTION_EXIT_PULL_Y,
+        scale: COLLECTION_EXIT_PULL_SCALE,
+        duration: COLLECTION_EXIT_PULL_DURATION,
+        ease: "power2.inOut",
+        overwrite: true,
+        onComplete: scrollOutOfCollection
+      });
+    }
+
+    function handleCollectionWheel(event) {
+      if (isExitingCollection) {
+        event.preventDefault();
+        return;
+      }
+
+      if (!isCollectionPinned() || event.deltaY <= 0) {
+        return;
+      }
+
+      event.preventDefault();
+      lastWheelTime = performance.now();
+
+      if (isWheelLocked) {
+        if (interactionStep === 1 && !hasStarted) {
+          applyCollectionPull(event.deltaY);
+          scheduleCollectionPullRelease();
+        }
+        return;
+      }
+
+      if (interactionStep === 0) {
+        beginCollectionInteraction(event.deltaY);
+        return;
+      }
+
+      if (interactionStep === 1) {
+        exitCollection();
+      }
+    }
+
+    /* 데스크탑에서만 두 번의 휠 제스처를 단계로 해석합니다.
+       모바일·터치·모션 감소 환경은 이 matchMedia에 들어오지 않아 기본 스크롤입니다. */
+    window.addEventListener("wheel", handleCollectionWheel, {
+      passive: false,
+      capture: true
+    });
 
     /* ---------------------------------------------------------
        진입 안착 — 고정되기 **전에** 컨테이너를 먼저 제자리에 앉힙니다.
@@ -1763,6 +2127,15 @@
       /* 안착 트윈은 컨테이너의 element.style에 transform·opacity를 남기므로
          트리거만 죽이지 말고 되돌린 뒤 지웁니다. 빼먹으면 창을 좁혔을 때
          컨테이너가 120px 내려간 채(또는 opacity 0으로) 굳습니다. */
+      window.removeEventListener("wheel", handleCollectionWheel, true);
+      window.clearTimeout(firstStepTimer);
+      window.clearTimeout(exitTimer);
+      isWheelLocked = false;
+      isExitingCollection = false;
+      startLenisAfterInteraction();
+      window.gsap.killTweensOf([row, section]);
+      window.gsap.set([row, section], { clearProps: "transform" });
+
       if (settle.scrollTrigger) {
         settle.scrollTrigger.kill();
       }
@@ -1779,9 +2152,15 @@
       });
 
       /* breakpoint가 바뀌어도 시간 기반 반복을 새 좌표에서 다시 시작합니다 */
-      startTime = window.performance.now();
+      row.classList.remove("is_interaction_started");
+      hasStarted = false;
+      startTime = null;
       pausedAt = null;
-      syncPlayState();
+      if (isInView) {
+        startCollectionStream();
+      } else {
+        syncPlayState();
+      }
     };
   });
 })();

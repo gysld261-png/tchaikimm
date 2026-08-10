@@ -822,6 +822,11 @@
   transition-delay: 0s;
 }
 
+/* 장바구니 추가 직후에는 공통 스크롤 헤더가 숨김 상태여도 3초간 확인할 수 있게 합니다. */
+.header.is_cart_revealed {
+  transform: translateY(0);
+}
+
 .card_product_content {
   display: flex;
   flex-direction: column;
