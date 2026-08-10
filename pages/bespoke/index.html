@@ -24,7 +24,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Trirong:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600&family=Trirong:ital,wght@0,200;0,400;0,500;0,600;1,400&display=swap">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.css">
 
@@ -54,8 +54,13 @@
       <p class="bespoke_hero_desc">Bespoke at Tchaikim Yeongjin follows <br>no standard size, no standard taste.<br>From first consultation to final fitting,<br> one piece takes shape across five meetings.</p>
     </div>
 
+    <!-- 재생하는 파일은 `beskpokehero_web.mp4`(H.264)입니다.
+         원본 `beskpokehero.mp4`는 HEVC(H.265) Main 10이라 Firefox나 HEVC 디코더가
+         없는 환경에서 재생되지 않고, moov가 파일 끝에 있어 앞부분부터 바로 재생되지도
+         않습니다. 원본은 마스터로 assets에 그대로 두었습니다.
+         (자매 페이지 col_chaikim과 같은 구성입니다.) -->
     <div class="bespoke_hero_video">
-      <video src="./assets/main/bespoke_main.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+      <video src="./assets/main/beskpokehero_web.mp4" autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video>
     </div>
   </section>
 
@@ -66,6 +71,28 @@
       
       <h2 class="philosophy_title">There is no standard size.<br>Only your measurements,<br> and your taste.</h2>
       <p class="philosophy_desc">Ready-to-wear is an average made for many.<br> Bespoke is the one right answer, made for one person.<br>From the moment a fabric is chosen to the final stitch,<br> our artisans think of nothing else..</p>
+    </div>
+  </section>
+
+  <!-- wordmark
+       Figma 1966:7580 (1920 x 986) — 크림 배경 한가운데 거대한 "TCHAI" 한 줄.
+
+       시안에는 글자만 있고 사진이 없다. 사진은 사용자 요청(레퍼런스 tarubali.com)으로
+       더한 것이다: 화면을 거의 채우던 사진이 스크롤에 맞춰 줄어들며 워드마크 자리로
+       수렴하고, 안착한 뒤 글자가 그 위로 떠오른다.
+
+       기본 상태(아래 마크업 그대로)는 **정지한 최종 화면**이다. JS나 GSAP이 없거나
+       모션 감소 설정이면 사진과 워드마크가 시안처럼 그냥 놓여 있다.
+       js/bespoke.js가 `.is_motion_ready`를 붙일 때만 sticky 무대와 스크롤 연출이 켜진다.
+       (philosophy·atelier와 같은 게이트 방식) -->
+  <section class="wordmark" aria-label="Tchai Kim">
+    <div class="wordmark_sticky">
+      <div class="wordmark_image">
+        <img src="../../asset/main/bespoke/younjinimg.png" alt="Folded Tchai Kim garments stamped with the house mark" loading="lazy" decoding="async">
+      </div>
+      <div class="wordmark_content">
+        <p class="wordmark_text">TCHAI</p>
+      </div>
     </div>
   </section>
 

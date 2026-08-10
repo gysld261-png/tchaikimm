@@ -1155,6 +1155,131 @@
 }
 
 /* =========================================================
+   wordmark — Figma 1966:7580 (1920 × 986)
+
+   시안은 크림 배경 한가운데 "TCHAI" 한 줄이다:
+   Trirong ExtraLight(200) 600px, --color_point(#1f433f)를 7%로, 위 148 / 아래 75.
+
+   사진은 시안에 없다. 사용자 요청으로 더한 것이고, 스크롤에 묶여
+   화면을 채우던 크기에서 이 자리로 줄어든다(js/bespoke.js).
+
+   ★ 기본 상태가 "정지한 최종 화면"이어야 한다.
+   아래 규칙만으로 사진 + 워드마크가 시안대로 놓인다. sticky 무대와 긴 스크롤
+   구간은 JS가 `.is_motion_ready`를 붙일 때만 켜진다. 반대로 만들면(기본 sticky +
+   JS가 해제) 스크립트가 실패했을 때 사진이 화면을 덮은 채로 남는다.
+   ========================================================= */
+
+.wordmark {
+  /* 사진이 안착하는 최종 크기. 워드마크 글자 안쪽에 들어앉을 만큼만 잡는다.
+
+     ★ 30vw는 워드마크 글자 폭의 약 1/3이라, 어느 폭에서도 사진과 글자의
+     관계가 같다. 아래 176px은 좁은 화면에서 사진이 우표만 해지는 것을 막는
+     하한이다(360px에서 30vw는 108px). **이 하한을 240px까지 올리면 안 된다** —
+     360px 화면에서 최종 크기가 화면의 67%가 되어, 시작(94%)과 차이가 1.41배밖에
+     안 남아 "줄어든다"는 느낌이 사라진다. 176px이면 1.92배다. */
+  --wordmark_card_width: clamp(176px, 30vw, 576px);
+  /* 연출에 쓰는 스크롤 길이. 100svh는 무대가 쓰고 나머지가 진행 구간이다. */
+  --wordmark_scroll_length: 220svh;
+
+  position: relative;
+}
+
+/* 시안의 워드마크 띠는 화면 좌우 끝까지 닿는다. philosophy·quote와 같은 이유로
+   `.main section`(특정도 0,1,1)이 쥐고 있는 max-width와 padding을 여기서 푼다. */
+.main .wordmark {
+  max-width: none;
+  padding: 0;
+}
+
+.wordmark_sticky {
+  position: relative;
+  display: grid;
+  place-items: center;
+  /* 확대된 사진이 페이지에 가로 스크롤을 만들지 않도록 가둔다. */
+  overflow: hidden;
+  /* 시안의 위 148 / 아래 75 (1920 기준). 정지 상태에서만 쓰인다. */
+  padding-block: clamp(64px, 7.7vw, 148px) clamp(40px, 3.9vw, 75px);
+  /* 시안 986px(986 ÷ 1920 = 51.35vw). padding과 글자만으로는 823px이라
+     시안보다 163px 낮다 — 모션 감소 설정에서 보이는 것이 이 정지 화면이므로
+     시안의 여백을 그대로 남긴다. is_motion_ready에서는 무대가 100svh라 무시된다. */
+  min-height: min(51.35vw, 986px);
+  background-color: var(--color_bg);
+}
+
+/* 사진과 글자를 같은 grid 칸에 겹쳐 둔다 — 최종 구도의 중심이 서로 정확히 맞는다. */
+.wordmark_image,
+.wordmark_content {
+  grid-area: 1 / 1;
+}
+
+.wordmark_image {
+  z-index: 1;
+  width: var(--wordmark_card_width);
+  /* 원본 크기 그대로다(younjinimg.png 1454 × 912 — 실측).
+     상자 비율을 원본에 맞춰 두면 어떤 배율에서도 사진이 찌그러지지 않고,
+     `contain`이 남기는 여백도 0이 된다. */
+  aspect-ratio: 1454 / 912;
+}
+
+.wordmark_image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.wordmark_content {
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 600 ÷ 1920 = 31.25vw. vw로 두면 어느 폭에서도 시안과 같은 비율로 놓이고,
+   1920보다 넓은 화면에서는 시안값 600px에서 멈춘다.
+
+   ★ 시안의 opacity 7%를 요소가 아니라 **색**에 담는다. 요소에 걸면 등장
+   애니메이션의 opacity와 서로 덮어써서 글자가 7%까지 올라오지 못한다. */
+.wordmark_text {
+  color: rgba(31, 67, 63, 0.07);
+  color: color-mix(in srgb, var(--color_point) 7%, transparent);
+  font-family: var(--font_display);
+  font-size: min(31.25vw, 600px);
+  font-weight: 200;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* --- 스크롤 연출이 켜진 상태 (js/bespoke.js가 붙인다) --------------------- */
+
+.wordmark.is_motion_ready {
+  height: var(--wordmark_scroll_length);
+}
+
+.wordmark.is_motion_ready .wordmark_sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh; /* svh를 모르는 브라우저용 */
+  height: 100svh; /* iOS Safari에서 주소창 때문에 무대 높이가 튀지 않는다 */
+  min-height: 0; /* 위 시안 높이(986px)가 무대보다 커지면 sticky가 밀린다 */
+  padding-block: 0;
+}
+
+.wordmark.is_motion_ready .wordmark_image {
+  will-change: transform;
+}
+
+.wordmark.is_motion_ready .wordmark_text {
+  will-change: transform, opacity;
+}
+
+/* 세로로 긴 화면에서는 사진이 폭으로만 커지므로 같은 길이를 굴리면 지루하다. */
+@media (max-width: 767px) {
+  .wordmark {
+    --wordmark_scroll_length: 180svh;
+  }
+}
+
+/* =========================================================
    [시안 정렬 · 데스크톱 전용] Figma 1745:12160 (1920 × 10438.68)
 
    위쪽 규칙은 그대로 두고, **1840px 이상에서만** 시안 좌표로 덮어쓴다.

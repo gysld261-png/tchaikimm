@@ -1,6 +1,207 @@
 # Tchai Kim 현재 상태
 
 
+## 히어로 영상 3개 연결 — bespoke · col_chaikim · col_chaikimyoungjin (2026-08-10)
+
+세 페이지 모두 **존재하지 않는 파일을 가리키고 있었습니다**(404). 이제 전부 붙었습니다.
+
+| 페이지 | 이전 (404) | 지금 |
+|---|---|---|
+| bespoke | `assets/main/bespoke_main.mp4` | `assets/main/beskpokehero_web.mp4` |
+| col_chaikim | `asset/chaikim_video_web.mp4` | `asset/chaikimhero_web.mp4` |
+| col_chaikimyoungjin | `asset/chaikimyoungjin_video.mp4` | `asset/collection_film.mp4` |
+
+### ★ 받은 원본 2개가 HEVC라 그대로는 못 씁니다
+
+`beskpokehero.mp4`(48.6MB) · `chaikimhero.mp4`(49.3MB) 둘 다
+**HEVC(H.265) Main 10, moov가 파일 끝**이었습니다. 두 가지 문제입니다:
+
+1. **Firefox와 HEVC 디코더 없는 Chrome/Edge에서 재생되지 않습니다.**
+   col_chaikim의 기존 주석이 예전에 겪은 같은 문제를 이미 적어두고 있었습니다.
+2. **moov가 끝에 있으면** 앞부분부터 재생할 수 없어 50MB를 거의 다 받아야 시작합니다.
+
+> **이 함정은 로컬에서 안 보입니다.** 검증에 쓴 Chromium은
+> `canPlayType('...hvc1...')`이 `"probably"`라 이 PC에서는 HEVC가 그냥 재생됩니다.
+> **직접 열어보고 "잘 되는데?" 하면 안 됩니다** — 방문자 절반이 검은 화면을 봅니다.
+
+그래서 저장소에 이미 있던 방식(`chaikim_video_web.mp4` / `collection_film.mp4`)대로
+H.264 웹용을 만들어 붙였습니다. **원본은 마스터로 그대로 두었습니다.**
+
+```
+ffmpeg -i <원본>.mp4 -an -c:v libx264 -profile:v high -pix_fmt yuv420p \
+  -crf 23 -preset slow -movflags +faststart <이름>_web.mp4
+```
+
+- `-pix_fmt yuv420p`가 **필수**입니다. 원본이 10-bit(Main 10)이라 빼면 결과도
+  10-bit가 되어 같은 재생 문제가 남습니다.
+- `-an`은 음소거 자동재생 히어로라 소리를 버리는 것입니다.
+- `-movflags +faststart`가 moov를 앞으로 옮깁니다(셋 다 확인).
+
+| 파일 | 원본 | 웹용 |
+|---|---|---|
+| beskpokehero | 48.6MB HEVC | **12.6MB** H.264 CRF 23 (46.0초) |
+| chaikimhero | 49.3MB HEVC | **14.3MB** H.264 CRF 26 (39.3초) |
+
+#### chaikimhero만 CRF 26인 이유 — SSIM으로 정했습니다
+
+CRF 23으로는 23.0MB였습니다. 원본이 10Mbps로 촬영돼 같은 CRF에서도 비트레이트가
+높게 나옵니다. 원본(HEVC) 대비 SSIM을 재서 골랐습니다:
+
+| CRF | 용량 | SSIM (All) |
+|---|---|---|
+| 23 | 23.0MB | 0.9840 |
+| **26** | **14.3MB** | **0.9790** |
+| 28 | 10.7MB | 0.9745 |
+
+**23 → 26이 곡선의 무릎입니다** — 용량 38% 감소에 SSIM은 0.005(0.5%)만 떨어집니다.
+20초 지점에서 1:1 크롭(960×540)을 원본과 나란히 놓고 눈으로도 확인했습니다 —
+셔츠 주름·머리카락 가닥·배경 보케 전부 구분되지 않습니다.
+더 줄이려면 28(10.7MB)까지 갈 수 있지만 그라디언트에서 차이가 보이기 시작합니다.
+
+### col_chaikimyoungjin은 새 파일이 없었습니다
+
+에셋 폴더에 191MB 4K 원본(`콜렉션 패션쇼 영상.mp4`)만 있었습니다. 사용자 확인 후
+**이전 세션이 그 원본에서 만든 웹용 `collection_film.mp4`**(H.264 1080p30, 8.4MB,
+21.6초)를 `test/col_chaikimyoungjin_test/asset/`에서 페이지 폴더로 복사해 붙였습니다.
+길이 21.6초가 원본 21.57초와 일치해 같은 영상임을 확인했습니다.
+`poster`의 `collection_film_poster.jpg`가 이 영상의 첫 프레임입니다.
+
+### 검증 (Chromium, localhost:5661)
+
+- 세 영상 모두 `readyState 4`(HAVE_ENOUGH_DATA) · **1920 × 1080** · `error: null`.
+  코덱 h264 High / `yuv420p` / moov 선두 — ffprobe로 셋 다 확인.
+- **세 페이지의 로컬 참조 전량 200** (36 / 35 / 34건). 이전부터 있던 히어로 404가
+  사라졌습니다. 깨진 이미지 0장, 가로 스크롤 0.
+- poster 3개 전부 디코드 확인(hero.png 2543×1695, collection_film_poster.jpg 1920×1080).
+  bespoke 히어로는 원래부터 poster가 없습니다(이번에 추가하지 않았습니다).
+
+### 남은 것
+
+- **`.gitignore`에 `*.mp4`가 있습니다.** 커밋하려면 새 파일 3개에 `git add -f`가
+  필요합니다 — 안 하면 조용히 빠지고 배포에서 다시 404가 됩니다.
+- `asset/bespoke/main/beskpokehero.mp4`에 같은 원본이 한 벌 더 있습니다(중복).
+
+
+## Bespoke — wordmark 섹션 추가 (2026-08-10)
+
+Figma `1966:7580`("wordmark", 1920 × 986)을 **philosophy와 atelier 사이**에 넣었습니다.
+시안은 크림 배경 한가운데 "TCHAI" 한 줄입니다 — Trirong ExtraLight(200) 600px,
+`--color_point`(#1f433f) 7%, 위 148 / 아래 75.
+
+여기에 사용자 요청(레퍼런스 tarubali.com)으로 **스크롤에 묶인 사진**을 더했습니다.
+화면을 채우던 사진이 스크롤과 함께 줄어들어 워드마크 자리로 수렴하고, 안착한 뒤
+글자가 그 위로 떠오릅니다.
+
+- `pages/bespoke/index.html` — 섹션 추가, Google Fonts에 Trirong 200 추가
+- `pages/bespoke/css/bespoke.css` — 1840 발표용 블록 **앞에** wordmark 블록 추가
+- `pages/bespoke/js/bespoke.js` — `initWordmarkScroll()` 추가
+
+### ★ 시안에 사진이 없습니다 — 에셋은 판단해서 골랐습니다
+
+`1966:7580`은 글자만 있는 프레임입니다(스크린샷·design context 양쪽 확인).
+사진은 요청된 인터랙션에 필요해서 더한 것이라 **시안과 다른 결정**입니다.
+고른 것은 `asset/main/bespoke/younjinimg.png`(1454 × 912) —
+差異 도장이 찍힌 크림색 원단 사진입니다.
+
+**크림색인 것이 중요합니다.** 워드마크가 7% 불투명도라, 어두운 사진 위에서는
+글자가 사라져 워드마크가 가운데만 뜯겨 보입니다. 이 사진은 배경 크림(#fffdf9)과
+톤이 거의 같아 글자가 사진 위와 밖에서 **같은 농도로** 읽힙니다.
+사진을 바꾼다면 이 조건을 먼저 확인해야 합니다.
+
+복사하지 않고 `../../asset/main/bespoke/younjinimg.png`로 참조합니다
+(1.33MB 중복 방지 · collection 페이지와 같은 방식). `loading="lazy"`입니다 —
+문서 위에서 2화면쯤 아래에 있습니다.
+
+### ★ pin이 아니라 CSS sticky입니다
+
+ScrollTrigger `pin`을 쓰면 pin-spacer가 끼어들어 아래 atelier부터 좌표가 밀립니다.
+무대 고정은 `position: sticky`가 하고, ScrollTrigger는 **진행도만** 만듭니다
+(`start: "top top"` / `end: "bottom bottom"` / `scrub: 1`). 검증에서 pin-spacer 0개.
+
+### ★ 기본 상태가 "정지한 최종 화면"이어야 합니다
+
+`.is_motion_ready`(JS가 붙임)가 있을 때만 sticky 무대와 긴 스크롤 구간이 열립니다.
+반대로 만들면(기본 sticky + JS가 해제) 스크립트가 실패했을 때 사진이 화면을
+덮은 채 남습니다. philosophy·atelier와 같은 게이트입니다.
+class가 없으면 섹션이 **정확히 시안 986px**로 돌아옵니다.
+
+### ★ 시작 배율은 박아둘 수 없습니다
+
+최종 크기가 `clamp(vw)`라 화면마다 다르고 채울 화면도 매번 다릅니다.
+`computeStartScale()`이 매 refresh마다 다시 구합니다(`invalidateOnRefresh: true`).
+
+**`getBoundingClientRect`가 아니라 `offsetWidth/Height`를 읽어야 합니다.**
+rect는 이미 걸린 scale이 반영된 값이라, 다시 잴 때마다 시작 배율이 제곱으로 커집니다.
+
+### 걸렸던 것 두 가지
+
+1. **`power2.out`은 너무 앞으로 쏠립니다.** 진행도 0.4에 이미 최종 크기(1.12)에
+   닿아서 0.4~0.75가 아무 일도 없는 빈 스크롤이 됐습니다. `power1.out`으로
+   내려 0.5에서 1.10입니다(`WORDMARK_SHRINK_EASE`).
+2. **최종 카드 하한을 240px로 두면 모바일에서 효과가 죽습니다.** 360px 화면에서
+   최종이 화면의 67%가 되어 시작(94%)과 차이가 1.41배뿐이었습니다.
+   176px으로 내려 1.92배입니다.
+
+### 조절값
+
+CSS `.wordmark`: `--wordmark_card_width`(clamp 176/30vw/576)
+`--wordmark_scroll_length`(220svh, 768 미만 180svh).
+JS: `WORDMARK_FILL_WIDTH`(0.94) `WORDMARK_FILL_HEIGHT`(0.88)
+`WORDMARK_SETTLE_FROM`(1.04) `WORDMARK_DRIFT`(6) `WORDMARK_TEXT_RISE`(30)
+`WORDMARK_SHRINK_EASE`(power1.out) + 구간 4개(0.6 / 0.75 / 0.7 / 0.9).
+
+> 타임라인 길이를 정확히 1로 맞춰 뒀습니다(4박자의 빈 트윈이 그 역할입니다).
+> 그래서 **구간 상수가 곧 스크롤 진행도**입니다. 빈 트윈을 빼면 타임라인이
+> 0.9에서 끝나 상수와 실제 진행도가 어긋납니다.
+
+### 검증 (Chromium, localhost:5661)
+
+진행도별 실측(1280 × 800):
+
+| 진행도 | 사진 폭 | 글자 |
+|---|---|---|
+| 0.00 | 1122px (화면 88%) | opacity 0, y 30 |
+| 0.30 | 580px (45%) | opacity 0 |
+| 0.60 | 399px (31%) | opacity 0 |
+| 0.75 | **384px (30%) 안착** | opacity 0.58, y 12.7 |
+| 0.90 | 384px | **opacity 1, y 0** |
+| 1.00 | 384px | 유지 |
+
+| 폭 | 시작 → 최종 | 줄어드는 배수 | 글자 | 가로 스크롤 |
+|---|---|---|---|---|
+| 360 | 338 → 176px | 1.92배 | 112.5px | 0 |
+| 768 | 723 → 230px | 3.14배 | 240px | 0 |
+| 1280 | 1122 → 384px | 2.92배 | 400px | 0 |
+| 1920 | 1516 → 576px | 2.63배 | **600px (시안값)** | 0 |
+
+- 1920에서 타이포가 시안과 일치: 600px / weight 200 / `#1f433f` 7% / line-height 600px.
+- 사진과 글자의 중심이 최종 상태에서 무대 중심과 **오차 0px**. `elementFromPoint`로
+  사진 한가운데에서 잡히는 것이 `wordmark_text` — 글자가 사진 위입니다(z 1 / 2).
+- 사진 상자 비율 1.5948 = 원본 1454×912(1.5943) → `contain` 여백 0.
+- **pin-spacer 0개**, 섹션 순서 hero → philosophy → **wordmark** → atelier → …,
+  깨진 이미지 0장, 모든 진행도에서 가로 스크롤 0.
+- 정지 상태(`is_motion_ready` 제거 = 모션 감소 / JS 없음): 섹션 **986px = 시안값**,
+  position relative, 사진 transform none, 글자 그대로 보임, will-change 해제.
+- `node --check` 통과, CSS 중괄호 202/202.
+- 로컬 404는 `bespoke_main.mp4` 하나뿐입니다 — **이번 변경과 무관한 기존 문제**
+  (아래 Bespoke 항목에 이미 적혀 있습니다).
+
+### 확인하지 못한 부분
+
+- **화면 캡처를 못 했습니다.** 미리보기 패널이 프레임을 합성하지 않습니다
+  (`the pane is not compositing frames` — 이전 세션들과 같은 증상).
+  위 수치는 전부 `getBoundingClientRect` / `getComputedStyle` / `elementFromPoint`
+  측정이고, 타임라인은 `tl.progress()`로 직접 돌려 읽었습니다.
+  **실제로 흐르는 모습과 속도감은 사용자가 직접 봐야 합니다.**
+- 같은 이유로 **사진이 lazy로 자동 로드되는 것을 보지 못했습니다.** 화면을 그리지
+  않아 관찰자가 발동하지 않습니다. 경로는 HTTP 200(1.33MB)이고, 강제로 받아
+  1454 × 912로 디코드되는 것까지 확인했습니다.
+- `prefers-reduced-motion: reduce`를 이 도구로 흉내 낼 수 없어, 같은 결과인
+  "`is_motion_ready` 없는 상태"를 손으로 만들어 확인했습니다. GSAP `matchMedia`
+  게이트 자체는 philosophy·atelier와 같은 코드입니다.
+- `scrub: 1`의 관성 정도(스크롤을 멈췄을 때 따라오는 여운).
+
+
 ## 메인 첫 로딩 38MB → 7MB, 히어로 4.9MB → 0.6MB (2026-08-09)
 
 "인트로에서 START를 눌러 메인으로 가면 히어로가 느리다"는 문제입니다.

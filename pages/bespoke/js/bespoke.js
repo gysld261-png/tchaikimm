@@ -674,10 +674,158 @@
     }
   }
 
+  /* ---------------------------------------------------------
+     wordmark — 사진이 화면을 채운 채 시작해 워드마크 자리로 수렴하고,
+     안착한 뒤 글자가 그 위로 떠오른다. (레퍼런스: tarubali.com)
+
+     philosophy·atelier와 같이 GSAP + ScrollTrigger scrub이다. 진행도가
+     스크롤 위치에 직접 묶여야 해서 IntersectionObserver로는 만들 수 없다.
+     무대 고정은 ScrollTrigger의 pin이 아니라 **CSS `position: sticky`**로
+     한다 — pin-spacer가 끼어들지 않아 아래 atelier 섹션의 좌표가 그대로다.
+
+     타임라인 길이를 정확히 1로 맞춰 둔다. scrub이 트리거 진행도(0~1)를
+     타임라인 진행도에 그대로 옮기므로, 아래 구간 상수가 곧 스크롤 진행도다.
+
+     ★ 크기는 transform(scale)로만 바꾼다. width/height를 건드리면 스크롤
+     한 프레임마다 레이아웃을 다시 계산하고, 사진 상자가 커지면서 아래
+     섹션까지 밀린다. scale은 합성 단계에서만 처리된다.
+
+     JS나 GSAP이 없거나 모션 감소 설정이면 아무것도 하지 않는다. 그때는
+     css의 기본 규칙대로 사진과 워드마크가 정지한 최종 화면으로 보인다.
+     --------------------------------------------------------- */
+
+  /* 조절값 — 숫자만 바꾸면 된다 */
+  var WORDMARK_FILL_WIDTH = 0.94; /* 시작 시점에 사진이 덮는 화면 폭 비율 */
+  var WORDMARK_FILL_HEIGHT = 0.88; /* 같은 것의 세로 비율 (둘 중 작은 쪽이 이긴다) */
+  var WORDMARK_SETTLE_FROM = 1.04; /* 안착 직전 배율 — 1에 곧장 닿지 않고 살짝 남겨 둔다 */
+  var WORDMARK_DRIFT = 6; /* 사진이 함께 올라오는 거리(자기 높이의 %) */
+  var WORDMARK_TEXT_RISE = 30; /* 글자가 아래에서 올라오는 거리(px) */
+  /* 줄어드는 곡선. **power2(cubic) 이상으로 올리면 안 된다** — 실측에서
+     진행도 0.4에 이미 최종 크기(배율 1.12)에 닿아 버려서, 남은 구간이
+     아무 일도 없는 빈 스크롤이 됐다. power1(quad)은 0.5에서 1.10이라
+     구간 전체에 걸쳐 줄어드는 것이 보인다. */
+  var WORDMARK_SHRINK_EASE = "power1.out";
+
+  /* 구간 — 전체 스크롤을 1로 봤을 때의 위치다.
+     사진이 다 줄어든(0.6) 뒤에 글자가 시작(0.7)하도록 떨어뜨려 두는 것이
+     이 연출의 핵심이다. 둘이 같이 나타나면 "수렴하고 나서 글자가 뜬다"는
+     순서가 사라진다. 0.9~1은 최종 화면을 눈에 남기는 여백이다. */
+  var WORDMARK_SHRINK_END = 0.6;
+  var WORDMARK_SETTLE_END = 0.75;
+  var WORDMARK_TEXT_START = 0.7;
+  var WORDMARK_TEXT_END = 0.9;
+
+  function initWordmarkScroll() {
+    var section = document.querySelector(".wordmark");
+
+    if (!section) {
+      return;
+    }
+
+    var image = section.querySelector(".wordmark_image");
+    var text = section.querySelector(".wordmark_text");
+
+    if (!image || !text || !window.gsap || !window.ScrollTrigger) {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    /* 시작 배율은 박아둘 수 없다. 사진의 최종 크기가 clamp(vw)라 화면 폭마다
+       다르고, 채워야 할 화면도 매번 다르기 때문이다. 그래서 매 refresh마다
+       실제 크기에서 다시 구한다(아래 invalidateOnRefresh).
+
+       ★ getBoundingClientRect가 아니라 offsetWidth/Height를 읽는다.
+       rect는 이미 걸려 있는 scale이 반영된 값이라, 다시 잴 때마다 시작
+       배율이 제곱으로 커진다. offset*는 transform 이전의 레이아웃 크기다. */
+    function computeStartScale() {
+      var width = image.offsetWidth;
+      var height = image.offsetHeight;
+
+      if (!width || !height) {
+        return 1;
+      }
+
+      return Math.max(
+        1,
+        Math.min(
+          (window.innerWidth * WORDMARK_FILL_WIDTH) / width,
+          (window.innerHeight * WORDMARK_FILL_HEIGHT) / height
+        )
+      );
+    }
+
+    gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", function () {
+      /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것은 이 class다.
+         트리거를 만들기 전에 붙여야 섹션 높이를 제대로 잰다. */
+      section.classList.add("is_motion_ready");
+
+      var timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 1,
+          /* 창 크기가 바뀌면 위 computeStartScale을 다시 부른다. */
+          invalidateOnRefresh: true
+        }
+      });
+
+      /* 1박자 (0 → 0.6) — 화면을 채우던 사진이 줄어들며 가운데로 모인다. */
+      timeline.fromTo(
+        image,
+        { scale: computeStartScale, yPercent: WORDMARK_DRIFT },
+        {
+          scale: WORDMARK_SETTLE_FROM,
+          yPercent: 0,
+          duration: WORDMARK_SHRINK_END,
+          ease: WORDMARK_SHRINK_EASE
+        },
+        0
+      );
+
+      /* 2박자 (0.6 → 0.75) — 남겨둔 4%를 마저 놓으며 최종 자리에 안착한다. */
+      timeline.to(
+        image,
+        {
+          scale: 1,
+          duration: WORDMARK_SETTLE_END - WORDMARK_SHRINK_END,
+          ease: "power1.inOut"
+        },
+        WORDMARK_SHRINK_END
+      );
+
+      /* 3박자 (0.7 → 0.9) — 사진이 거의 멎은 뒤 글자가 떠오른다.
+         끝 불투명도는 1이고, 시안의 7%는 css가 글자 색에 담고 있다. */
+      timeline.fromTo(
+        text,
+        { opacity: 0, y: WORDMARK_TEXT_RISE },
+        {
+          opacity: 1,
+          y: 0,
+          duration: WORDMARK_TEXT_END - WORDMARK_TEXT_START,
+          ease: "power2.out"
+        },
+        WORDMARK_TEXT_START
+      );
+
+      /* 4박자 (0.9 → 1) — 최종 화면을 그대로 두는 여백.
+         빈 트윈이지만 타임라인 길이를 1로 맞추는 역할을 한다. 이게 없으면
+         타임라인이 0.9에서 끝나 위 구간 상수와 실제 스크롤 진행도가 어긋난다. */
+      timeline.to({}, { duration: 1 - WORDMARK_TEXT_END }, WORDMARK_TEXT_END);
+
+      return function () {
+        section.classList.remove("is_motion_ready");
+      };
+    });
+  }
+
   initProcessSteps();
   initMaterialsSelector();
   initPhilosophyMotion();
   initAtelierZoom();
+  initWordmarkScroll();
 
   /* 글 나누기는 **웹폰트가 적용된 뒤**에 해야 한다. 시스템 폰트로 재면 줄 폭이
      달라서 "글자로 나눠도 되는가" 판단이 뒤집힌다. 폰트를 못 기다리는
