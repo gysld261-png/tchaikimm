@@ -226,7 +226,7 @@
 
     <div class="materials_body">
       <div class="materials_texture">
-        <img class="materials_texture_img" src="assets/main/silk.png" alt="Silk fabric shown close up">
+        <img class="materials_texture_img" src="assets/main/slik.jpg" alt="Silk fabric shown close up" fetchpriority="high">
       </div>
 
       <div class="materials_content">
@@ -238,37 +238,37 @@
           <li class="materials_swatch is_active">
             <button class="materials_swatch_button" type="button" data-fabric="silk" aria-pressed="true">
               <span class="materials_swatch_index">[1]</span>
-              <span class="materials_swatch_img"><img src="assets/main/silk.png" alt="Silk fabric swatch"></span>
+              <span class="materials_swatch_img"><img src="assets/main/slik.jpg" alt="Silk fabric swatch"></span>
             </button>
           </li>
           <li class="materials_swatch">
             <button class="materials_swatch_button" type="button" data-fabric="cotton" aria-pressed="false">
               <span class="materials_swatch_index">[2]</span>
-              <span class="materials_swatch_img"><img src="assets/main/cotton.png" alt="Cotton fabric swatch"></span>
+              <span class="materials_swatch_img"><img src="assets/main/cotton.jpg" alt="Cotton fabric swatch"></span>
             </button>
           </li>
           <li class="materials_swatch">
             <button class="materials_swatch_button" type="button" data-fabric="linen" aria-pressed="false">
               <span class="materials_swatch_index">[3]</span>
-              <span class="materials_swatch_img"><img src="assets/main/linen.png" alt="Linen fabric swatch"></span>
+              <span class="materials_swatch_img"><img src="assets/main/linen.jpg" alt="Linen fabric swatch"></span>
             </button>
           </li>
           <li class="materials_swatch">
             <button class="materials_swatch_button" type="button" data-fabric="ramie" aria-pressed="false">
               <span class="materials_swatch_index">[4]</span>
-              <span class="materials_swatch_img"><img src="assets/main/ramie_mosi.png" alt="Ramie (Mosi) fabric swatch"></span>
+              <span class="materials_swatch_img"><img src="assets/main/mosi.jpg" alt="Ramie (Mosi) fabric swatch"></span>
             </button>
           </li>
           <li class="materials_swatch">
             <button class="materials_swatch_button" type="button" data-fabric="seasonal" aria-pressed="false">
               <span class="materials_swatch_index">[5]</span>
-              <span class="materials_swatch_img"><img src="assets/main/sesonal_fabric.png" alt="Seasonal fabric swatch"></span>
+              <span class="materials_swatch_img"><img src="assets/main/seasonal_fabric.jpg" alt="Seasonal fabric swatch"></span>
             </button>
           </li>
           <li class="materials_swatch">
             <button class="materials_swatch_button" type="button" data-fabric="myungjoo" aria-pressed="false">
               <span class="materials_swatch_index">[6]</span>
-              <span class="materials_swatch_img"><img src="assets/main/traditional_silk_sangju_myungjoo.png" alt="Traditional Silk (Sangju Myungjoo) fabric swatch"></span>
+              <span class="materials_swatch_img"><img src="assets/main/tranditional_slik.jpg" alt="Traditional Silk (Sangju Myungjoo) fabric swatch"></span>
             </button>
           </li>
         </ul>
@@ -367,30 +367,52 @@
       <p class="begin_desc">Before creating your bespoke hanbok, explore the materials, timeline, and investment.</p>
     </div>
 
+    <!-- 카드는 기본 상태에서 **사진만** 보이고, hover(또는 키보드 포커스)에서만
+         사진이 흐려지면서 글이 떠오른다. 글 묶음이 `.begin_card_content` 한 겹으로
+         묶여 있어야 다섯 요소가 한꺼번에 페이드된다.
+
+         사진은 `.jpg`다 — 원본 `.png` 3장은 **알파가 전 픽셀 76(29.8%)으로
+         구워져 있어** 무슨 수를 써도 선명해지지 않는다. 알파만 걷어낸 것이고
+         RGB는 손대지 않았다. png는 마스터로 남겨 두었다. -->
     <ul class="begin_cards">
       <li class="begin_card">
-        <img class="begin_card_bg" src="assets/main/material.png" alt="" aria-hidden="true">
-        <p class="begin_card_num">01</p>
-        <h3 class="begin_card_title">Material</h3>
-        <p class="begin_card_label">Fabric Guide</p>
-        <p class="begin_card_desc">Six signature fabrics, drawn from a wider range of premium materials.</p>
-        <button class="begin_card_link" type="button">View Guide →</button>
+        <img class="begin_card_bg" src="assets/main/material.jpg" alt="" aria-hidden="true">
+        <button class="begin_card_pin" type="button" aria-expanded="false" aria-controls="begin_card_content_material" aria-label="Material details">
+          <span class="begin_card_pin_glyph" aria-hidden="true">+</span>
+        </button>
+        <div class="begin_card_content" id="begin_card_content_material">
+          <p class="begin_card_num">01</p>
+          <h3 class="begin_card_title">Material</h3>
+          <p class="begin_card_label">Fabric Guide</p>
+          <p class="begin_card_desc">Six signature fabrics, drawn from a wider range of premium materials.</p>
+          <button class="begin_card_link" type="button">View Guide →</button>
+        </div>
       </li>
       <li class="begin_card">
-        <img class="begin_card_bg" src="assets/main/timeline.png" alt="" aria-hidden="true">
-        <p class="begin_card_num">02</p>
-        <h3 class="begin_card_title">Timeline</h3>
-        <p class="begin_card_label">Production Time</p>
-        <p class="begin_card_desc">From consultation to completion, expect an average of 6 to 8 weeks.</p>
-        <button class="begin_card_link" type="button">View Process →</button>
+        <img class="begin_card_bg" src="assets/main/timeline.jpg" alt="" aria-hidden="true">
+        <button class="begin_card_pin" type="button" aria-expanded="false" aria-controls="begin_card_content_timeline" aria-label="Timeline details">
+          <span class="begin_card_pin_glyph" aria-hidden="true">+</span>
+        </button>
+        <div class="begin_card_content" id="begin_card_content_timeline">
+          <p class="begin_card_num">02</p>
+          <h3 class="begin_card_title">Timeline</h3>
+          <p class="begin_card_label">Production Time</p>
+          <p class="begin_card_desc">From consultation to completion, expect an average of 6 to 8 weeks.</p>
+          <button class="begin_card_link" type="button">View Process →</button>
+        </div>
       </li>
       <li class="begin_card">
-        <img class="begin_card_bg" src="assets/main/contact.png" alt="" aria-hidden="true">
-        <p class="begin_card_num">03</p>
-        <h3 class="begin_card_title">Contact</h3>
-        <p class="begin_card_label">Description</p>
-        <p class="begin_card_desc">Guide to booking &amp; direct link to the booking page</p>
-        <a class="begin_card_link" href="#">Contact →</a>
+        <img class="begin_card_bg" src="assets/main/contact.jpg" alt="" aria-hidden="true">
+        <button class="begin_card_pin" type="button" aria-expanded="false" aria-controls="begin_card_content_contact" aria-label="Contact details">
+          <span class="begin_card_pin_glyph" aria-hidden="true">+</span>
+        </button>
+        <div class="begin_card_content" id="begin_card_content_contact">
+          <p class="begin_card_num">03</p>
+          <h3 class="begin_card_title">Contact</h3>
+          <p class="begin_card_label">Description</p>
+          <p class="begin_card_desc">Guide to booking &amp; direct link to the booking page</p>
+          <a class="begin_card_link" href="#">Contact →</a>
+        </div>
       </li>
     </ul>
   </section>

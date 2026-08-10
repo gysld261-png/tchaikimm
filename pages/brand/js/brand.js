@@ -64,17 +64,18 @@
   "use strict";
 
   /* ---- mood 문 열림 (스크롤로 mood에 들어오면 재생) -----------------------
-     배경 사진·글·무드 단어는 절대 움직이지 않습니다. 문(.mood_reveal)의
-     크기만 커집니다 — 사진은 처음부터 무대 전체 크기로 고정돼 있고,
-     문을 통해 보이는 범위만 늘어납니다. */
+     배경 사진(.mood_room)은 항상 object-fit: cover로 무대 전체 폭/높이를
+     채우고 절대 움직이지 않습니다 — 문(.mood_reveal)의 크기만 커집니다.
+     문이 다 열렸을 때의 가로 폭은 1920px로 고정하지 않고 "100%"(실제
+     .mood_stage 폭, 1920px보다 넓은 화면에서는 그만큼 더 넓게)로 잡아서,
+     사진이 어떤 화면 폭에서도 좌우 여백 없이 가득 찹니다. */
 
-  /* 문의 시작 크기(닫힌 상태)와 무대 크기(다 열린 상태). CSS(.mood_stage /
-     .mood_reveal)와 같은 값이어야 합니다 — 여기서 숫자를 바꾸면 CSS의
-     .mood_reveal width/height 기본값(끝난 모습, 1920 × 1080)도 같이
-     바꿔야 크기가 어긋나지 않습니다. */
+  /* 문의 시작 크기(닫힌 상태)와 무대 높이(다 열린 상태). CSS(.mood_stage /
+     .mood_reveal)와 같은 값이어야 합니다. 가로 폭은 고정 숫자를 쓰지
+     않고 실행 시점의 무대 실제 폭("100%")을 그대로 씁니다(아래 play()의
+     width: "100%" 참고) — 세로 높이만 여기 상수로 고정합니다. */
   var REVEAL_CLOSED_WIDTH = 30;
   var REVEAL_CLOSED_HEIGHT = 484;
-  var REVEAL_STAGE_WIDTH = 1920;
   var REVEAL_STAGE_HEIGHT = 1080;
 
   /* ★ 화면을 붙잡아 두는(pin) 길이 — heritage/scroll 섹션과 같은 방식입니다.
@@ -90,12 +91,12 @@
      스크롤 감각) 맞췄습니다. */
   var MOOD_PIN_LENGTH = "+=244%";
 
-  /* ★ 이 너비 미만에서는 pin+scrub 인트로를 켜지 않습니다. mood_stage는
-     1920px 고정 캔버스라 1280(다른 섹션과 같은 기준)에서 켜면 1280~1919
-     구간에서 무대가 뷰포트보다 넓어 오른쪽 무드 단어(.mood_right)가
+  /* ★ 이 너비 미만에서는 pin+scrub 인트로를 켜지 않습니다. 1280(다른
+     섹션과 같은 기준)에서 켜면 1280~1919 구간에서 mood_left/mood_right
+     같은 1920 기준 고정폭 콘텐츠가 뷰포트보다 넓어 오른쪽 무드 단어가
      .mood의 overflow-x: clip에 잘려 나갑니다. 그래서 mood만 기준을
      1920으로 올렸습니다 — CSS도 같은 값을 써야 합니다(brand.css
-     "@media (max-width: 1919px)"의 mood 규칙 참고). 1920 미만에서는
+     "@media (max-width: 1919.98px)"의 mood 규칙 참고). 1920 미만에서는
      문이 이미 다 열린 정적인 모습(CSS 기본값)이라 pin이 필요 없습니다. */
   var MOOD_MIN_WIDTH = 1920;
 
@@ -144,42 +145,24 @@
      바꿨습니다. 최종 자리(2분할, #3b3c32 배경 + 카드 3개)는 CSS 값
      그대로라 바뀌지 않습니다 — 등장 방향만 바뀌었습니다.
 
-     ★ 배경 사진(.mood_room)도 "완성된 모습(사진+글)이 통째로 왼쪽으로
-     이동하고 그 자리를 mood_right가 채우며 들어와야 한다"는 요청으로,
-     ③(슬라이드) 구간에서 텍스트와 같은 시간·이징(REVEAL_TEXT_SLIDE_DURATION,
-     slideStart 공유)은 물론 **같은 거리**(REVEAL_ROOM_SLIDE = REVEAL_TEXT_SLIDE)
-     로도 함께 움직입니다 — 거리까지 같아야 사진 위에 놓인 글의 관계가
-     이동 중에도 흐트러지지 않고 "하나로 붙어서" 이동하는 것처럼
-     보입니다. 그 전(문이 열리는 동안 · ①② 구간)에는 REVEAL_ROOM_SLIDE만큼
-     오른쪽으로 밀린 자리에 멈춰 있다가, 슬라이드가 끝나면 원래 자리
-     (CSS에 정의된 위치 — 이제는 창문이 화면 밖으로 밀려나 안 보이는
-     자리)로 정확히 돌아옵니다.
+     ★ 배경 사진(.mood_room)은 ③(슬라이드) 구간에서 더 이상 텍스트를
+     따라 움직이지 않습니다. object-fit: cover로 무대 폭 전체를 채우는
+     구조로 바뀌면서(1920px보다 넓은 화면까지 여백 없이 채우기 위한
+     결정 — brand.css .mood_room 주석 참고), 사진을 고정 px 거리만큼
+     밀면 화면 폭에 따라 반대쪽에 빈 여백이 생기는 문제가 생겨 사진의
+     이동은 뺐습니다. 지금은 글(.mood_copy)과 무드 단어(.mood_right)만
+     슬라이드하고, 사진은 항상 같은 자리에서 화면을 채운 채 그 위로
+     글이 지나가는 모습입니다.
 
      ★ REVEAL_TEXT_SLIDE는 Figma mood_inner2(node 1962:6949, "문이 다 열린
      직후" 화면) 실측으로 계산했습니다 — 창문 오른쪽 프레임 ~ 무대 오른쪽
      끝 사이 벽면의 가운데에 타이틀이 오도록 화면 좌표 약 1224px을
-     목표로 잡고, CSS left(72px, mood_copy_title 참고)를 뺀 값입니다.
-
-     ★ REVEAL_ROOM_SLIDE는 REVEAL_TEXT_SLIDE와 **항상 같은 값이어야
-     합니다.** "문이 다 열린 완성된 모습(사진+글)이 통째로 왼쪽으로
-     이동하고, 그 자리를 mood_right가 채우며 들어와야 한다"는 요청 —
-     사진과 글이 서로 다른 거리로 움직이면 마치 글만 따로 미끄러지는
-     것처럼 보여서 "하나로 붙어서 이동"하는 느낌이 깨집니다. 한때
-     사진을 덜 자르려고 이동 거리를 따로 줄인 적이 있었는데(585),
-     그러면 이 "함께 이동" 요구를 못 지켜서 다시 합쳤습니다 — 대신
-     늘어난 이동 거리(1152px)를 gap 없이 소화하려고 .mood_room의 배율을
-     1.32배 → 1.65배로 다시 올렸습니다(그 CSS 주석 참고). 최종 정지
-     상태에서 창문이 아예 안 보이게 되는 건 부작용이 아니라 Figma
-     최종 화면(mood_inner3)과 일치하는 의도된 결과입니다. */
+     목표로 잡고, CSS left(72px, mood_copy_title 참고)를 뺀 값입니다. */
   var REVEAL_TEXT_SLIDE = 1152;            /* 글이 오른쪽에서 들어오는 거리(px, 멈춤② 자리) — 문이 다 열렸을 때
                                                사진의 열린 벽면(창문 오른쪽 ~ 무대 오른쪽 끝) 가운데에 오도록
                                                Figma mood_inner2 실측 기준으로 계산한 값 */
   var REVEAL_TEXT_SETTLE = 50;             /* ① 페이드인 동안 안착하는 추가 거리(px) */
   var REVEAL_WORD_SLIDE = 250;             /* 무드 단어가 오른쪽에서 들어오는 거리(px) */
-  var REVEAL_ROOM_SLIDE = 1152;            /* 배경 사진이 ③ 구간에서 텍스트와 같이 밀리는 거리(px) — 항상
-                                               REVEAL_TEXT_SLIDE와 같은 값이어야 "완성된 모습이 통째로 이동"하는
-                                               느낌이 유지됩니다. .mood_room CSS 배율(1.65배)이 이 거리를 gap
-                                               없이 소화할 수 있는 값으로 맞춰져 있습니다. */
   var REVEAL_TEXT_FADE_DURATION = 0.9;     /* ① 안착하며 페이드인 */
   var REVEAL_TEXT_HOLD_DURATION = 1;       /* ② 오른쪽에서 멈춰 있는 시간(전체 사진 + 텍스트만 보임) */
   var REVEAL_TEXT_SLIDE_DURATION = 1.6;    /* ③ 왼쪽으로 슬라이드 — "천천히 들어와야해" 요청으로 0.9 → 1.6 */
@@ -312,17 +295,13 @@
       function () {
         /* 시작 상태 — 닫힌 문(30 × 484). 글(.mood_copy)·무드 단어(.mood_right)
            둘 다 투명 + 오른쪽으로(REVEAL_TEXT_SLIDE / REVEAL_WORD_SLIDE만큼).
-           배경 사진(.mood_room)도 ③ 구간에서 같이 밀릴 수 있도록 미리
-           REVEAL_ROOM_SLIDE만큼 오른쪽으로 옮겨 둡니다(불투명하므로 이
-           상태에서도 그냥 보입니다 — 문이 열리는 동안은 이 자리에 고정).
-           CSS 기본값(끝난 모습 = 다 열리고 다 보이는 상태)과 반대이므로,
-           재생 전에 반드시 되돌려야 합니다. */
+           배경 사진(.mood_room)은 object-fit: cover라 항상 무대를 채우고
+           있어 따로 되돌릴 상태가 없습니다. CSS 기본값(끝난 모습 = 다
+           열리고 다 보이는 상태)과 반대이므로, 재생 전에 반드시
+           되돌려야 합니다. */
         gsap.set(reveal, {
           width: REVEAL_CLOSED_WIDTH,
           height: REVEAL_CLOSED_HEIGHT
-        });
-        gsap.set(room, {
-          x: REVEAL_ROOM_SLIDE
         });
         gsap.set(copy, {
           opacity: 0,
@@ -362,9 +341,14 @@
           /* 2. 띠 모양이 완성된 뒤 잠깐 멈췄다가(REVEAL_WIDTH_DELAY), 가로로
                 펼쳐지며 배경처럼 넓어집니다. 남은 세로(60% → 100%)도 이때
                 함께 자라 배경 사진이 다 드러납니다. 이 시점까지 글·무드
-                단어는 여전히 투명합니다. */
+                단어는 여전히 투명합니다.
+
+                width는 고정 px(1920)가 아니라 "100%"입니다 — .mood_stage가
+                실제로 차지하는 폭(1920px보다 넓은 화면에서는 그만큼 더
+                넓음) 그대로 문이 열려야 사진(.mood_room, object-fit: cover)이
+                화면 전체를 채웁니다. */
           timeline.to(reveal, {
-            width: REVEAL_STAGE_WIDTH,
+            width: "100%",
             height: REVEAL_STAGE_HEIGHT,
             duration: REVEAL_WIDTH_DURATION,
             ease: "power2.inOut"
@@ -394,15 +378,6 @@
           var slideStart = revealEnd + REVEAL_TEXT_FADE_DURATION + REVEAL_TEXT_HOLD_DURATION;
 
           timeline.to(copy, {
-            x: 0,
-            duration: REVEAL_TEXT_SLIDE_DURATION,
-            ease: "power1.out"
-          }, slideStart);
-
-          /* 배경 사진도 텍스트와 정확히 같은 시작 시점·길이·이징으로 함께
-             왼쪽으로 밀립니다 — "왼쪽(창문) 부분이 텍스트와 같이 밀려서
-             마지막 화면처럼 나와야 한다"는 요청입니다. */
-          timeline.to(room, {
             x: 0,
             duration: REVEAL_TEXT_SLIDE_DURATION,
             ease: "power1.out"

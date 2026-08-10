@@ -508,11 +508,16 @@
      구조를 실측해 보니 이 섹션과 거의 같은 배치였다 —
      [큰 사진 | 머리글 + 썸네일 줄 + (이름 목록 | 설명)].
 
-     그쪽 동작을 그대로 옮겼다.
-     · **마우스를 올리면(hover) 바뀐다.** 클릭이 아니다. 벗어나도 되돌아가지
-       않고 마지막에 지난 원단이 그대로 남는다(레퍼런스 확인).
-     · 큰 사진은 **크로스페이드가 아니다.** 한 장을 0.4초에 걸쳐 흐리게
-       만든 뒤 src를 갈아 끼우고 다시 나타낸다(`.is-fading { opacity: 0 }`).
+     그쪽 동작을 그대로 옮겼다가 2026-08-10에 두 가지를 뒤집었다.
+
+     · **클릭(탭)으로만 바뀐다. hover는 아무것도 하지 않는다**(사용자 결정).
+       레퍼런스와 이전 구현은 hover였는데, 원단 사진이 원본 카메라 파일
+       (장당 1~4MB)로 바뀌면서 마우스가 스쳐 지나가기만 해도 큰 사진이
+       갈아 끼워지는 게 손해가 됐다. 되돌아가지 않는 것은 그대로다.
+     · **큰 사진에 페이드가 없다. 클릭한 순간 갈아 끼운다.**
+       예전에는 0.4초 흐렸다가(`.is_fading { opacity: 0 }`) 바꿨는데,
+       그 0.4초가 화면에서는 **빈 자리로 보였다** — "눌렀는데 한참 비어
+       있다가 사진이 뜬다"의 정체가 이것이다. 지금은 흐리는 단계가 없다.
      · 설명은 전환 없이 즉시 바뀐다(레퍼런스에 transition이 없다).
 
      레퍼런스는 `<div>`에 `cursor: pointer`만 걸었지만 여기서는 `<button>`을
@@ -551,29 +556,62 @@
       return button ? button.dataset.fabric : null;
     }
 
-    /* 레퍼런스와 같은 "흐렸다가 갈아 끼우기". 전환 시간은 CSS에서 읽는다 —
-       모션 감소 설정이면 --materials_fade가 0.01ms라 기다리지 않고 바뀐다. */
+    /* ★ 이 섹션의 사진은 원본 카메라 파일이다(3000~6000px, 장당 1~4MB).
+       클릭한 뒤에 받기 시작하면 다 받을 때까지 자리가 비어 보이므로,
+       **여섯 장을 미리 받아 둔다.** 목록은 스와치 마크업에서 그대로 읽으니
+       사진을 바꿔도 여기를 고칠 필요가 없다.
+
+       DOM의 <img>와 같은 URL이라 브라우저 캐시에서 한 벌만 받는다.
+       이 섹션에서 실제로 쓰는 여섯 장만 대상이다. */
+    var preloaded = Object.create(null);
+
+    function preloadTexture(source) {
+      if (!source || preloaded[source]) {
+        return preloaded[source] || null;
+      }
+
+      var image = new Image();
+
+      image.src = source;
+      preloaded[source] = image;
+
+      return image;
+    }
+
+    /* 클릭한 순간 갈아 끼운다. 페이드로 흐리는 단계가 없어 빈 자리가 없다.
+
+       ★ **아직 안 받아진 사진이면 src를 바꾸지 않고 기다린다.** 바꿔 버리면
+       받는 동안 <img>가 빈 상자가 되어(= 고치려던 그 증상) 자리가 비어 보인다.
+       기다리는 동안에는 **직전 원단 사진이 그대로 떠 있다** — 화면이 비는
+       구간이 어느 경로에서도 생기지 않는다. 미리 받아 두었으므로 보통은
+       `complete`가 참이라 이 대기 경로를 타지 않는다. */
     function swapTexture(source, alt) {
       if (!source || textureImage.getAttribute("src") === source) {
         return;
       }
 
-      var duration = parseFloat(getComputedStyle(textureImage).transitionDuration) * 1000;
       var token = ++textureToken;
+      var image = preloadTexture(source);
 
-      textureImage.classList.add("is_fading");
-
-      window.setTimeout(function () {
-        /* 흐려지는 동안 더 최근 요청이 들어왔으면 이 차례는 버린다.
-           그쪽 타이머가 마지막 원단으로 마무리한다. */
+      function apply() {
+        /* 기다리는 사이에 다른 원단을 눌렀으면 이 차례는 버린다. */
         if (token !== textureToken) {
           return;
         }
 
         textureImage.src = source;
         textureImage.alt = alt;
-        textureImage.classList.remove("is_fading");
-      }, duration > 0 ? duration : 0);
+      }
+
+      if (!image || image.complete) {
+        apply();
+        return;
+      }
+
+      image.addEventListener("load", apply, { once: true });
+      /* 사진이 깨져 있으면 계속 기다리지 말고 그대로 넣는다 —
+         그래야 alt가 읽히고 문제가 화면에 드러난다. */
+      image.addEventListener("error", apply, { once: true });
     }
 
     function setActiveFabric(fabric) {
@@ -657,25 +695,13 @@
       reservedWidth = captionBox.clientWidth;
     }
 
-    /* hover는 버블링하지 않으므로 mouseover로 위임한다. 버튼 안쪽 요소를
-       지날 때마다 다시 들어오지만 setActiveFabric이 같은 값이면 바로 빠진다. */
-    section.addEventListener("mouseover", function (event) {
-      var button = event.target.closest ? event.target.closest("[data-fabric]") : null;
+    /* ★ 트리거는 클릭(탭) **하나뿐**이다. mouseover·focusin 위임을 두지 않는다.
 
-      if (button && section.contains(button)) {
-        setActiveFabric(button.dataset.fabric);
-      }
-    });
-
-    /* 키보드(Tab)와 터치(클릭) 경로. 터치에는 hover가 없어 이쪽이 유일하다. */
-    section.addEventListener("focusin", function (event) {
-      var button = event.target.closest ? event.target.closest("[data-fabric]") : null;
-
-      if (button) {
-        setActiveFabric(button.dataset.fabric);
-      }
-    });
-
+       예전에는 셋 다 있었다. hover를 빼는 것은 사용자 결정이고, focusin도
+       같이 뺐다 — Tab으로 지나가기만 해도 사진이 바뀌는 것은 "클릭으로만
+       바뀐다"는 규칙과 어긋난다. `<button>`이라 키보드 Enter·Space가
+       click 이벤트를 그대로 발생시키므로 **키보드로 고르는 길은 그대로
+       남아 있다.** 터치도 tap이 click이라 같은 경로를 탄다. */
     section.addEventListener("click", function (event) {
       var button = event.target.closest ? event.target.closest("[data-fabric]") : null;
 
@@ -691,6 +717,16 @@
     })[0];
 
     activeFabric = fabricOf(initialItem || listItems[0]);
+
+    /* 여섯 장을 미리 받아 둔다. 첫 클릭이 곧바로 갈아 끼워지려면
+       이 시점에 시작해 두어야 한다. */
+    swatches.forEach(function (swatch) {
+      var image = swatch.querySelector(".materials_swatch_img img");
+
+      if (image) {
+        preloadTexture(image.getAttribute("src"));
+      }
+    });
 
     reserveCaptionHeight();
 
@@ -947,7 +983,93 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     begin 카드 + 핀 — 눌러서 상세 내용을 열어 둔다
+
+     레퍼런스는 shop_detail의 `.look_pin`이다. 그쪽 동작을 그대로 따른다:
+     · 같은 핀을 다시 누르면 닫힌다
+     · 다른 핀을 누르면 앞의 것이 닫힌다(한 번에 하나)
+     · Escape로 전부 닫힌다
+     · 열림 상태는 class + `aria-expanded`로만 표현한다
+
+     **CSS가 모든 시각 변화를 맡는다.** 여기서는 class만 붙였다 뗀다.
+     인라인 스타일을 쓰지 않으므로 이 섹션에 GSAP이 나중에 붙어도
+     같은 속성을 두고 다투지 않는다(현재 begin에는 GSAP이 없다).
+
+     hover는 CSS `:hover`가 따로 처리하고, 이 class는 그것과 독립이다.
+     그래서 hover → click → 마우스 벗어남 순서에서도 열린 상태가 남는다.
+     --------------------------------------------------------- */
+
+  function initBeginCards() {
+    var pins = Array.prototype.slice.call(document.querySelectorAll(".begin_card_pin"));
+
+    if (!pins.length) {
+      return;
+    }
+
+    /* 열림일 때 `−`. 레퍼런스는 글자 그대로 `+`를 쓰므로 여기서도 글자를 바꾼다.
+       읽어 주는 이름은 `aria-expanded`가 맡으므로 글자는 `aria-hidden`이다.
+
+       ★ 닫힘일 때 글 안쪽 링크의 `tabindex`를 −1로 내린다.
+       글이 `opacity: 0`으로만 숨겨져 있어서, 이걸 하지 않으면 **보이지 않는
+       버튼·링크가 Tab 순서에 남는다.** shop_detail의 `.look_product`가
+       `cardLink.tabIndex = shouldOpen ? 0 : -1`로 하는 것과 같은 처리다. */
+    function setOpen(pin, shouldOpen) {
+      var card = pin.closest(".begin_card");
+      var glyph = pin.querySelector(".begin_card_pin_glyph");
+      var content = card ? card.querySelector(".begin_card_content") : null;
+
+      if (card) {
+        card.classList.toggle("is_open", shouldOpen);
+      }
+
+      pin.setAttribute("aria-expanded", String(shouldOpen));
+
+      if (glyph) {
+        glyph.textContent = shouldOpen ? "−" : "+"; /* − (minus sign) */
+      }
+
+      if (content) {
+        content.setAttribute("aria-hidden", String(!shouldOpen));
+
+        var link = content.querySelector(".begin_card_link");
+
+        if (link) {
+          link.tabIndex = shouldOpen ? 0 : -1;
+        }
+      }
+    }
+
+    pins.forEach(function (pin) {
+      pin.addEventListener("click", function () {
+        var wasOpen = pin.getAttribute("aria-expanded") === "true";
+
+        /* 하나만 열어 둔다 — 나머지는 접는다. */
+        pins.forEach(function (item) {
+          setOpen(item, item === pin && !wasOpen);
+        });
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      pins.forEach(function (pin) {
+        setOpen(pin, false);
+      });
+    });
+
+    /* 시작은 전부 닫힘. 마크업의 `aria-expanded="false"`와 맞추고,
+       숨어 있는 링크를 Tab 순서에서 빼 둔다. */
+    pins.forEach(function (pin) {
+      setOpen(pin, false);
+    });
+  }
+
   initProcessSteps();
+  initBeginCards();
   initMaterialsSelector();
   initPhilosophyMotion();
   initAtelierZoom();
