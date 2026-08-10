@@ -243,6 +243,107 @@
   }
 }
 
+/* ---------------------------------------------------------
+   스크롤 안내 표시 — 영상 상단, 헤더 로고 바로 아래
+
+   ★ 아래가 아니라 **위**인 이유: 이 영상은 자막이 화면에 구워져 있고
+   (아래에서 46~148px 자리), 처음에 아래에 뒀더니 1280 화면에서 자막과
+   36px 겹쳤다(실측). 위쪽은 헤더만 피하면 비어 있다.
+
+   ★ **기본은 숨김**이다. 이 표시는 영상이 화면을 꽉 채우고 고정돼 있을 때만
+   의미가 있는 안내이고, 전환이 꺼진 상태(모션 감소·세로 화면)에서는 영상이
+   16:9라 다음 내용이 바로 아래에 보인다 — 안내할 것이 없다.
+   콘텐츠가 아니라 어포던스라서 "기본은 보이는 상태" 원칙의 대상이 아니다.
+
+   ★ `position: fixed`다. philosophy가 올라와도 그 위에 그대로 떠 있어야 하는데
+   (사용자 요청), 영상 안에 두면 영상과 함께 밀려 나가고 philosophy에 덮인다.
+   `z-index: 2`가 philosophy(1)를 넘고, 공통 헤더(50)보다는 아래다.
+   --------------------------------------------------------- */
+
+.bespoke_hero_scroll {
+  display: none;
+}
+
+.bespoke_hero.is_hero_ready .bespoke_hero_scroll {
+  position: fixed;
+  top: calc(var(--header_height) + clamp(20px, 3svh, 36px));
+  left: var(--layout_gutter);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  width: max-content;
+  color: var(--color_text_inverse);
+  pointer-events: none;
+}
+
+.bespoke_hero_scroll_label {
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+
+/* 가는 세로선 안에서 밝은 토막이 아래로 흐른다.
+   선 자체는 옅게 깔아 두고 `::after`만 움직여서, 애니메이션이 꺼져도
+   선은 그대로 보인다(모션 감소 대응). */
+.bespoke_hero_scroll_line {
+  position: relative;
+  display: block;
+  width: 1px;
+  height: 56px;
+  overflow: hidden;
+  background-color: rgba(255, 253, 249, 0.3);
+}
+
+.bespoke_hero_scroll_line::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: 0;
+  height: 45%;
+  background-color: currentColor;
+  animation: bespoke_hero_scroll_travel 2.4s var(--easing_base) infinite;
+}
+
+/* ★ 먹물이 이 표시 자리까지 번지면 배경이 밝은 philosophy로 바뀐다.
+   크림색 그대로 두면 밝은 배경 위에서 사라진다 — js가 이 class를 붙인다. */
+.bespoke_hero_scroll.is_on_light {
+  color: var(--color_text);
+}
+
+.bespoke_hero_scroll.is_on_light .bespoke_hero_scroll_line {
+  background-color: rgba(10, 10, 10, 0.22);
+}
+
+@keyframes bespoke_hero_scroll_travel {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(222%);
+  }
+}
+
+/* ★ 이 저장소에는 애니메이션을 일괄로 끄는 전역 규칙이 없다
+   (`common.css`의 모션 감소 블록은 `scroll-behavior`만 손댄다).
+   그래서 여기서 직접 끈다. 끄면 밝은 토막이 위쪽에 멈춰 선다. */
+@media (prefers-reduced-motion: reduce) {
+  .bespoke_hero_scroll_line::after {
+    animation: none;
+  }
+}
+
+/* 세로로 긴 화면에서는 영상이 화면을 채우지 않아(16:9로 되돌아간다)
+   "더 내려야 다음이 나온다"는 안내가 필요 없다. 히어로 전환과 같은 경계다. */
+@media (max-aspect-ratio: 1332 / 1000) {
+  .bespoke_hero_scroll {
+    display: none;
+  }
+}
+
 .bespoke_hero_brand {
   align-self: flex-start;
   color: var(--color_text);
@@ -330,32 +431,53 @@
   height: calc(100svh + var(--bespoke_hero_run));
 }
 
-/* 영상이 화면에 붙고, `scale`과 `clip-path: circle()`이 함께 가운데로 빨아들인다.
-   붙어 있는 동안 상자가 화면과 정확히 겹치므로 **요소 중심 = 화면 중심**이고,
-   philosophy의 원도 같은 좌표를 쓴다(js 주석 참고). */
+/* ★★ 영상에는 **어떤 스크롤 애니메이션도 걸지 않는다** (2026-08-10 사용자 지적).
+
+   전에는 여기에 `scale`·`clip-path`·`opacity`를 스크롤에 묶어 뒀는데, 그러면
+   영상 상자가 실제로 움직인다 — 실측으로 진행도 0.40에서 `left 15.9 / top 9.0`,
+   0.72에서 `left 428.6 / top 243.0`까지 밀렸다. 여기에 `scrub: 0.3`이 겹쳐
+   스크롤을 멈춘 뒤에도 0.3초 동안 계속 따라오니 "미세하게 흔들린다"가 된다.
+   스케일되는 `<video>`가 매 프레임 리샘플링되어 화면이 어른거리는 것도 같은 원인.
+
+   ★ sticky·Lenis·scrub·부모 transform은 **무혐의다.** 트윈이 없는 구간(진행도
+   0.15 이전)에서 100px을 굴려 보면 `left 0.00 / top 0.00 / w 1905.00`으로
+   소수점까지 고정이다. 그래서 `position: fixed`로 덮어쓸 필요가 없다 —
+   **트윈을 빼는 것만으로 완전히 고정된다.**
+
+   영상을 없애는 처리도 하지 않는다. philosophy가 마지막에 화면을 다 덮으므로
+   영상은 덮인 채 뒤에 남아 있다가 무대가 끝나면 그대로 지나간다. */
 .bespoke_hero.is_hero_ready .bespoke_hero_video {
   position: sticky;
   top: 0;
-  transform-origin: 50% 50%;
-  will-change: transform, opacity, clip-path;
 }
 
-/* philosophy = 영상이 사라진 자리에서 **원형으로 열리는** 섹션.
-   디자인·콘텐츠는 그대로이고, js가 `clip-path: circle()`만 키운다.
+/* philosophy = 고정된 영상 **위에서 먹물처럼 번져 나오는** 레이어.
+   디자인·콘텐츠는 그대로이고, js가 `mask-image`만 키운다.
+
+   ★★ `clip-path: circle()`을 버렸다. 수학적으로 정확한 경계라 안티에일리어싱
+   1px 외에는 번짐이 전혀 없고, 그 안쪽이 불투명한 크림이라 **"원형 판이 올라온
+   것"**으로 보였다(사용자 지적). 대신 가장자리가 부드럽게 사라지는
+   radial-gradient 마스크를 여러 겹 겹쳐 쓴다 — 자세한 것은 js의 `inkMask()`.
+
+   ★ `mask-repeat: no-repeat`이 필요하다. 마스크 레이어의 기본값이 `repeat`이라
+   그대로 두면 그라디언트가 타일처럼 반복될 수 있다.
 
    ★ `z-index`와 **불투명한 배경**이 둘 다 필요하다. philosophy는 원래 배경색이
-   `transparent`라(body 크림이 비쳐 보이던 것) 그대로 두면 원 안에 영상이 비친다.
-   크림을 깔아도 지금까지와 화면은 똑같다 — body가 같은 색이다.
+   `transparent`라(body 크림이 비쳐 보이던 것) 그대로 두면 번지는 자리에 영상이
+   비친다. 크림을 깔아도 지금까지와 화면은 똑같다 — body가 같은 색이다.
 
    ★ 인접 선택자다. 두 섹션 사이에 요소를 끼워 넣으면 조용히 끊긴다.
-   ★ 처음 상태(`circle(0%)`)는 **js가 준다.** css에 박아 두면 스크립트가
-     실패했을 때 섹션이 영영 안 보인다. */
+   ★ 처음 상태(마스크 0)는 **js가 준다.** css에 박아 두면 스크립트가 실패했을 때
+     섹션이 영영 안 보인다. */
 .bespoke_hero.is_hero_ready + .philosophy {
   position: relative;
   z-index: 1;
   margin-top: calc(var(--bespoke_hero_lift) * -1);
   background-color: var(--color_bg);
-  will-change: clip-path, transform;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  /* 합성 레이어로 올려 두면 마스크 다시 그리기가 눈에 띄게 가벼워진다. */
+  will-change: transform;
 }
 
 /* =========================================================
@@ -1609,11 +1731,10 @@
   }
 }
 
-/* 글 상자가 통째로 빠져나간다. 등장 애니메이션은 자식(title/desc)에 걸려
-   있어서 서로 덮어쓰지 않는다 — 그래서 대상이 자식이 아니라 이 상자다. */
-.philosophy.is_motion_ready .philosophy_body {
-  will-change: transform, opacity;
-}
+/* ※ 여기 있던 `.philosophy_body { will-change: transform, opacity }`를 지웠습니다.
+   글 상자를 통째로 흐리며 빼내던 **퇴장 트윈이 사라져서**(사용자 요청 — 다음
+   섹션으로 넘어갈 때 글이 그대로 남아 있어야 함) 이 힌트가 가리킬 대상이 없습니다.
+   남겨 두면 아무 일도 안 하는 합성 레이어만 하나 더 잡습니다. */
 
 /* =========================================================
    2) atelier — 왼쪽 글 / 가운데 사진 스토리 무대

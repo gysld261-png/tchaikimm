@@ -132,13 +132,9 @@
   var PHILOSOPHY_PARALLAX_SHIFT = 110; /* 배경이 위아래로 움직이는 거리(px)
      주의: 이 값을 올리면 css의 --philosophy_parallax_overscan도 같이 올려야
      한다. overscan은 이 값 + 배경 등장 이동(자기 높이의 2.5%)보다 커야 한다. */
-  /* 퇴장 — 아래 atelier로 넘겨주는 구간이다.
-     (2026-08-10 전에는 사이에 wordmark 무대가 있었고 그쪽으로 넘겼다.)
-     **끝(20%)을 더 일찍 잡으면 안 된다.** 글이 화면 위쪽에 아직 남아 있는 채로
-     사라져 버려서, 겹치는 순간 없이 뚝 끊긴다. */
-  var PHILOSOPHY_EXIT_SHIFT = 90; /* 글 상자가 위로 빠지는 거리(px) */
-  var PHILOSOPHY_EXIT_START = "bottom 88%"; /* 섹션 아랫변이 화면 88%에 오면 시작 */
-  var PHILOSOPHY_EXIT_END = "bottom 20%"; /* 아랫변이 20%에 오면 완전히 사라짐 */
+  /* ※ 퇴장 상수 3개(`PHILOSOPHY_EXIT_*`)를 지웠습니다 — 퇴장 트윈 자체가
+     사라졌기 때문입니다(아래 `initPhilosophyMotion` 안의 사유 주석 참고).
+     쓰이지 않는 상수를 남겨 두면 "여기 퇴장 연출이 있다"고 잘못 알려 줍니다. */
 
   function initPhilosophyMotion() {
     var section = document.querySelector(".philosophy");
@@ -158,43 +154,58 @@
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
+    /* ★★ 등장 트윈만 게이트가 다르다 (2026-08-10).
+
+       데스크톱에서는 히어로 전환(`initHeroTransition`)이 philosophy의 등장 순서를
+       **직접 쥔다** — 배경이 먹물처럼 퍼진 다음 제목, 그다음 설명이다.
+       여기 등장 트윈을 같이 돌리면 **원이 열리자마자 글이 함께 튀어나온다**
+       (스크롤 940 = 전환의 38% 지점에서 발동했다. 실제로 그렇게 보였다).
+
+       그래서 이 둘은 **히어로 전환이 꺼진 조건에서만** 켠다 —
+       `HERO_GATE`의 반대인 세로 화면이다. 모션 감소일 때는 어느 쪽도 돌지 않는다.
+       패럴랙스와 퇴장은 전환과 겹치지 않으므로 아래 블록에 그대로 둔다. */
+    gsap.matchMedia().add(
+      "(prefers-reduced-motion: no-preference) and (max-aspect-ratio: 1332/1000)",
+      function () {
+        /* 1) 등장 — 제목이 먼저, 본문이 조금 늦게 올라온다.
+              `from`이라 끝값은 CSS가 정한 값 그대로다(불투명도 1). */
+        gsap.from(contents, {
+          y: PHILOSOPHY_RISE,
+          opacity: 0,
+          duration: PHILOSOPHY_DURATION,
+          stagger: PHILOSOPHY_STAGGER,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: body,
+            start: PHILOSOPHY_START,
+            once: true
+          }
+        });
+
+        /* 배경도 같이 떠오르되 글보다 길고 느리게 안착한다.
+           끝 불투명도는 CSS의 .philosophy_bg(0.6)를 GSAP이 알아서 읽는다.
+
+           **이동을 y가 아니라 yPercent로 준다.** 아래 패럴랙스가 같은 요소의
+           y를 계속 쓰기 때문이다. GSAP은 y와 yPercent를 각각 따로 들고 있다가
+           더해서 그리므로, 두 트리거가 서로를 덮어쓰지 않는다. */
+        gsap.from(background, {
+          yPercent: PHILOSOPHY_BG_RISE,
+          opacity: 0,
+          duration: PHILOSOPHY_DURATION * 1.3,
+          ease: "power2.out",
+          scrollTrigger: {
+            trigger: body,
+            start: PHILOSOPHY_START,
+            once: true
+          }
+        });
+      }
+    );
+
     /* 조건이 어긋나면(모션 감소 설정으로 바꾸면) matchMedia가 아래에서 준
        정리 함수를 부르고, GSAP이 자기가 넣은 인라인 스타일도 되돌린다. */
     gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", function () {
       section.classList.add("is_motion_ready");
-
-      /* 1) 등장 — 제목이 먼저, 본문이 조금 늦게 올라온다.
-            `from`이라 끝값은 CSS가 정한 값 그대로다(불투명도 1). */
-      gsap.from(contents, {
-        y: PHILOSOPHY_RISE,
-        opacity: 0,
-        duration: PHILOSOPHY_DURATION,
-        stagger: PHILOSOPHY_STAGGER,
-        ease: "power3.out",
-        scrollTrigger: {
-          trigger: body,
-          start: PHILOSOPHY_START,
-          once: true
-        }
-      });
-
-      /* 배경도 같이 떠오르되 글보다 길고 느리게 안착한다.
-         끝 불투명도는 CSS의 .philosophy_bg(0.6)를 GSAP이 알아서 읽는다.
-
-         **이동을 y가 아니라 yPercent로 준다.** 아래 패럴랙스가 같은 요소의
-         y를 계속 쓰기 때문이다. GSAP은 y와 yPercent를 각각 따로 들고 있다가
-         더해서 그리므로, 두 트리거가 서로를 덮어쓰지 않는다. */
-      gsap.from(background, {
-        yPercent: PHILOSOPHY_BG_RISE,
-        opacity: 0,
-        duration: PHILOSOPHY_DURATION * 1.3,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: body,
-          start: PHILOSOPHY_START,
-          once: true
-        }
-      });
 
       /* 2) 패럴랙스 — 섹션이 화면을 지나가는 동안 배경을 아래로 흘린다.
             페이지가 위로 올라가는 만큼 배경이 아래로 상쇄돼서, 결과적으로
@@ -216,30 +227,15 @@
         }
       );
 
-      /* 3) 퇴장 — 섹션이 화면을 빠져나가는 동안 글 상자가 위로 사라진다.
-            아래 atelier가 화면 밑에서 올라오는 구간과 **겹친다**
-            (퇴장 끝 `bottom 20%` > atelier 등장 시작 `top 40%`).
-            그래서 두 콘텐츠가 잠깐 같이 보이고, philosophy → atelier가
-            끊긴 두 섹션이 아니라 한 흐름으로 읽힌다.
+      /* ※ 3) 퇴장 트윈을 **제거했습니다** (2026-08-10, 사용자 요청 —
+         "philosophy에서 다음 섹션으로 넘어갈 때 글씨가 사라지지 않고 그대로
+         남아 있어야 한다").
 
-            ★ 대상이 자식(title/desc)이 아니라 글 상자(.philosophy_body)다.
-            자식에는 위 등장 트윈이 이미 걸려 있어서, 같은 요소에 걸면
-            둘이 서로 덮어쓴다. */
-      gsap.fromTo(
-        body,
-        { opacity: 1, y: 0 },
-        {
-          opacity: 0,
-          y: -PHILOSOPHY_EXIT_SHIFT,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: PHILOSOPHY_EXIT_START,
-            end: PHILOSOPHY_EXIT_END,
-            scrub: 0.8
-          }
-        }
-      );
+         원래는 섹션이 화면을 빠져나가는 동안 글 상자가 위로 흐려지며 사라져서
+         atelier가 올라오는 구간과 겹치게 만들었습니다. 지금은 글이 끝까지
+         제자리에 있고 섹션과 함께 그냥 스크롤돼 나갑니다.
+         (되살리려면 `.philosophy_body`에 `opacity 1→0` + `y −90`을
+          `bottom 88% → bottom 20%` scrub으로 걸면 됩니다.) */
 
       return function () {
         section.classList.remove("is_motion_ready");
@@ -783,58 +779,76 @@
   /* 조절값 — 숫자 두 벌이다. 전환 **길이**는 css의 `--bespoke_hero_run`이 정하고,
      아래 값들은 그 안에서(진행도 0~1) 두 박자가 언제 일어나는지를 정한다.
 
-     ┌ 0.00 ───────── 영상 그대로 (첫 스크롤엔 변화 없음)
-     ├ 0.16 ───────── 영상이 가운데로 빨려 들어가기 시작
-     ├ 0.30 ───────── philosophy 원이 같은 중심에서 열리기 시작 (겹친다)
-     ├ 0.60 ───────── 영상 완전히 소멸
-     └ 0.86 ───────── philosophy 전체 표시
-  */
+     ┌ 0.00 ───────── 영상만. 아무 변화 없음
+     ├ 0.10 ───────── 배경이 가운데에서 먹물처럼 번지기 시작
+     ├ 0.62 ───────── 배경이 화면을 다 덮음 → philosophy_title 등장
+     ├ 0.82 ───────── philosophy_desc 등장
+     └ 1.00 ───────── 끝
 
-  /* ★★ 원의 반지름 단위가 **71%**인 이유. 두 가지가 걸려 있다.
+     ★ 영상에는 트윈이 하나도 없다(css 주석 참고). 스크롤 진행도는 philosophy에만
+     연결된다. 그래서 번지는 내내 뒤 영상이 **온전히 그대로** 보이고,
+     덮이지 않은 자리에도 빈 화면이 생기지 않는다. */
 
-     ① `circle(r% ...)`의 `%`는 요소 폭·높이가 아니라 `√(w²+h²)/√2` 기준이다.
-        사각형을 빈틈없이 덮으려면 **70.71%(=√2/2) 이상**이어야 한다.
-        100%로 두면 필요보다 41% 크게 잡혀 초반 축소가 화면에 보이지 않는다.
+  /* ── 먹물 마스크 ────────────────────────────────────────────────────
+     `clip-path: circle()`을 버린 이유는 css 주석에 있다(경계가 너무 또렷했다).
 
-     ② 71%는 그 최솟값 **바로 위**다(여유 약 4px). 이 값이 곧 "언제 다 덮이는가"를
-        정한다 — 75%로 뒀더니 원이 **진행도 0.58에서 이미 화면을 다 덮어**,
-        남은 42%(389px)가 아무 일도 안 일어나는 죽은 스크롤이 됐다(실측).
-        71%면 트윈이 끝나는 순간이 곧 다 덮이는 순간이라 죽은 구간이 없다. */
-  var HERO_CIRCLE_FULL = "71%";
+     중심이 조금씩 어긋난 radial-gradient 네 겹을 겹쳐 쓴다. 마스크 레이어는
+     기본이 `add` 합성이라 넷의 **합집합**이 되고, 가장자리가 한 겹씩 어긋나
+     원이 아니라 불규칙한 덩어리로 퍼진다.
 
-  /* 영상 — 가운데로 빨려 들어간다. `scale`과 `clip-path`가 함께 작용해서
-     실제 축소 속도는 둘의 곱이다(clip은 요소 좌표계에 걸리고 그 결과에 transform이
-     적용된다). 그래서 scale은 0.55 정도로 충분하다 — 더 줄이면 과장돼 보인다. */
-  var HERO_SHRINK_START = 0.15;
-  var HERO_SHRINK_END = 0.72;
-  var HERO_SHRINK_SCALE = 0.55;
-  /* ★ `power2.in`이 아니라 `power3.in`이다. 두 단계 더 뒤로 실린 곡선이라
-     초반에는 화면을 거의 그대로 채우고 있다가 끝에서 급격히 빨려 든다.
-     `power2.in`으로 뒀을 때는 중간에 영상이 너무 일찍 작아져서 원이 아직
-     그만큼 자라지 못한 구간에 **빈 화면이 20%** 생겼다(실측). */
-  var HERO_SHRINK_EASE = "power3.in";
-  /* 마지막에만 옅어진다. 점이 툭 끊기지 않고 스러지게 하는 용도다. */
-  var HERO_VIDEO_FADE_START = 0.56;
+     ★ `circle` 그라디언트의 `%`는 기본 크기가 `farthest-corner`라
+     **100%가 곧 화면 모서리까지의 거리**다. 그래서 가운데 겹의 진한 부분이
+     100%에 닿으면 화면이 정확히 다 덮인다.
 
-  /* philosophy 원형 reveal — 영상이 **다 사라지기 전에** 시작한다(사용자 승인 안 B).
-     ★ 이 겹침이 빈 화면을 막는다. 영상이 줄어들면 그 자리를 대신할 것이 크림
-     배경뿐이라, 순서대로 두면(영상 소멸 → 그 다음 원 시작) 화면의 90%가 빈
-     크림이 되는 구간이 생긴다. 원이 영상을 안쪽부터 먹어 들어가게 겹쳐서
-     그 구간을 없앴다. `HERO_REVEAL_START`를 0.6 뒤로 미루면 그 빈 화면이
-     그대로 돌아온다. */
-  var HERO_REVEAL_START = 0.24;
-  /* ★ 1.0이다. 원이 다 자라는 순간이 곧 전환이 끝나는 순간이어야 죽은 구간이
-     안 생긴다(위 `HERO_CIRCLE_FULL` 주석 참고). */
-  var HERO_REVEAL_END = 1;
-  var HERO_REVEAL_EASE = "power2.out"; /* 초반에 빠르게 열려 크림을 덜 보여 준다 */
+     ★ 진한 정지점을 `r − FEATHER`로 두는 것이 핵심이다. 그냥 `r`부터 흐리게
+     두면 **r = 0일 때도 가운데에 옅은 점이 이미 보인다.** 음수에서 시작하면
+     처음에 완전히 투명하다. */
+  var HERO_INK_FEATHER = 16; /* 번짐 폭(%). 키우면 더 뿌옇게 퍼진다 */
+  var HERO_INK_LOBES = [
+    { x: 50, y: 50, k: 1 },
+    { x: 41, y: 57, k: 0.86 },
+    { x: 60, y: 44, k: 0.9 },
+    { x: 47, y: 37, k: 0.8 }
+  ];
+  /* 가운데 겹의 진한 부분이 100%에 닿는 값 = 100 + FEATHER. */
+  var HERO_INK_END = 100 + HERO_INK_FEATHER;
 
-  /* 이 진행도를 넘으면 영상의 `data-header-theme`을 검정으로 돌린다.
+  var HERO_REVEAL_START = 0.1;
+  var HERO_REVEAL_END = 0.62;
+  var HERO_REVEAL_EASE = "power2.out"; /* 처음에 확 번지고 끝에서 잦아든다 */
 
-     ★ 이제는 안전망에 가깝다. **`clip-path`로 잘려 나간 영역은 히트 테스트에서도
-     빠지므로**, 영상 원이 헤더 띠보다 작아지는 순간 `elementsFromPoint`가 영상을
-     아예 잡지 못하고 헤더가 자동으로 검정이 된다(common.js의 판정 경로).
-     그 전까지는 원이 커서 영상이 진하므로 흰색이 맞다. */
-  var HERO_HEADER_SWITCH = 0.5;
+  /* ── 글 ─────────────────────────────────────────────────────────────
+     배경이 다 퍼진 **뒤에** 제목, 그다음 설명이다(사용자 요청 순서).
+     둘 다 philosophy 안에 있어 마스크에 함께 잘리므로, 이 시점엔 이미
+     마스크가 화면을 덮고 있어야 글이 온전히 보인다. */
+  var HERO_TITLE_START = 0.62;
+  var HERO_TITLE_END = 0.8;
+  var HERO_TITLE_RISE = 24; /* px */
+  var HERO_TITLE_SCALE = 1.02;
+
+  var HERO_DESC_START = 0.82;
+  var HERO_DESC_END = 1;
+  var HERO_DESC_RISE = 20; /* px */
+
+  /* 스크롤 안내는 **영상이 다가올 때 떠서 philosophy가 지나갈 때까지 그대로
+     떠 있다**(사용자 요청). 그래서 히어로 타임라인이 아니라 별도 트리거를 쓴다 —
+     히어로 타임라인은 philosophy가 다 퍼지는 지점에서 끝나 버린다.
+     아래 둘은 그 별도 구간(영상 진입 → philosophy 퇴장) 안에서의 비율이다. */
+  var HERO_HINT_IN = 0.06;
+  var HERO_HINT_OUT = 0.08;
+
+  /* ── 헤더 색 ────────────────────────────────────────────────────────
+     ★★ **`mask`는 `clip-path`와 달리 히트 테스트에 영향을 주지 않는다.**
+     마스크로 안 보이는 자리에서도 `elementsFromPoint`는 philosophy를 잡는다.
+     philosophy는 영상 위(z-index 1)라 그대로 두면 전환 시작부터 philosophy가
+     먼저 잡혀 `main[data-header-theme="black"]`이 이겨 버린다 —
+     **아직 화면을 채우고 있는 어두운 영상 위에 검은 로고**가 된다.
+
+     그래서 philosophy 자신에게 `data-header-theme`을 붙이고 타임라인이 뒤집는다.
+     기준은 감이 아니라 거리다: 헤더 띠의 좌우 표본점이 화면 중심에서
+     모서리까지 거리의 약 80%에 있으므로, 마스크의 진한 반지름이 그 지점을
+     넘으면 검정이다(아래 `HERO_HEADER_REACH`). */
+  var HERO_HEADER_REACH = 82; /* % — 100%가 화면 모서리 */
 
   var HERO_GATE =
     "(min-aspect-ratio: 1333/1000) and (prefers-reduced-motion: no-preference)";
@@ -857,8 +871,77 @@
       return;
     }
 
+    var title = banner.querySelector(".philosophy_title");
+    var desc = banner.querySelector(".philosophy_desc");
+    /* ★ 영상이 아니라 **섹션**에서 찾는다. 안내 표시는 무대의 쌓임 맥락을
+       벗어나야 philosophy 위로 올라올 수 있어서 섹션 직계 자식이다(html 주석 참고).
+       없어도 나머지는 그대로 돌아야 하므로 위 필수 요소들과 함께 묶지 않는다. */
+    var hint = section.querySelector(".bespoke_hero_scroll");
+
+    if (!title || !desc) {
+      return;
+    }
+
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
+
+    /* 먹물 마스크 문자열을 만든다. `r`은 0 → HERO_INK_END.
+       진한 정지점이 `r − FEATHER`라 r = 0이면 네 겹 모두 완전히 투명하다. */
+    function inkMask(r) {
+      var layers = [];
+      var index;
+
+      for (index = 0; index < HERO_INK_LOBES.length; index += 1) {
+        var lobe = HERO_INK_LOBES[index];
+        var edge = r * lobe.k;
+
+        layers.push(
+          "radial-gradient(circle at " + lobe.x + "% " + lobe.y + "%, #000 " +
+          (edge - HERO_INK_FEATHER).toFixed(2) + "%, transparent " +
+          edge.toFixed(2) + "%)"
+        );
+      }
+
+      return layers.join(", ");
+    }
+
+    /* 안내 표시가 화면 중심에서 얼마나 떨어져 있는지 — 모서리까지 거리를 100%로
+       본 값이다. 먹물의 진한 반지름이 이 값을 넘으면 표시 뒤가 philosophy로 바뀐다.
+       `position: fixed`라 스크롤과 무관하고, 창 크기가 바뀔 때만 다시 잰다. */
+    var hintReach = 100;
+
+    function measureHintReach() {
+      if (!hint) {
+        return 100;
+      }
+
+      var box = hint.getBoundingClientRect();
+      var cx = window.innerWidth / 2;
+      var cy = window.innerHeight / 2;
+      var corner = Math.sqrt(cx * cx + cy * cy);
+      var dx = Math.max(Math.abs(box.left - cx), Math.abs(box.right - cx));
+      var dy = Math.max(Math.abs(box.top - cy), Math.abs(box.bottom - cy));
+
+      return corner ? (Math.sqrt(dx * dx + dy * dy) / corner) * 100 : 100;
+    }
+
+    function paintInk(r) {
+      var mask = inkMask(r);
+      var solid = r - HERO_INK_FEATHER;
+
+      banner.style.webkitMaskImage = mask;
+      banner.style.maskImage = mask;
+      /* 마스크의 진한 반지름이 헤더 띠 표본점을 넘었는가 (위 주석 참고). */
+      banner.setAttribute(
+        "data-header-theme",
+        solid >= HERO_HEADER_REACH ? "black" : "white"
+      );
+
+      /* 표시 자리까지 번졌으면 글자를 어둡게 — 안 그러면 밝은 배경에서 사라진다. */
+      if (hint) {
+        hint.classList.toggle("is_on_light", solid >= hintReach);
+      }
+    }
 
     gsap.matchMedia().add(HERO_GATE, function () {
       /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것이 이 class다.
@@ -875,12 +958,23 @@
          재기가 끝나면 scrub이 현재 스크롤 위치의 값을 다시 씌운다. */
       function clearBannerShift() {
         gsap.set(banner, { y: 0 });
+        /* 안내 표시 자리도 창 크기에 따라 달라지므로 같이 다시 잰다. */
+        hintReach = measureHintReach();
       }
 
       window.ScrollTrigger.addEventListener("refreshInit", clearBannerShift);
+      hintReach = measureHintReach();
+
+      /* 먹물 트윈이 굴리는 값. 문자열은 `paintInk()`가 만든다 — GSAP이 gradient
+         문자열을 직접 보간하게 두면 네 겹의 정지점이 제각각 해석될 수 있다.
+         ★ 타임라인보다 **먼저** 선언해야 한다. 타임라인은 만들어지자마자 한 번
+         그려질 수 있고, 그때 아래 onUpdate가 `ink`를 읽는다. */
+      var ink = { r: 0 };
+
+      paintInk(0); /* 첫 화면(전환 시작 전) 상태 */
 
       /* ★ 시작은 **무대** 윗변, 끝은 **섹션** 아랫변이다.
-         − 시작: 섹션 윗변으로 잡으면 카피를 읽는 동안 이미 페이드가 진행된다.
+         − 시작: 섹션 윗변으로 잡으면 카피를 읽는 동안 이미 전환이 진행된다.
            무대 윗변이 화면 top에 닿는 순간 = 영상이 화면을 꽉 채우는 순간이다.
          − 끝: `endTrigger`로 섹션 아랫변을 쓰면 **sticky가 풀리는 지점과 자동으로
            같아진다.** 예전처럼 `"+=100%"` 같은 숫자로 적으면 css의 run 값과
@@ -892,46 +986,26 @@
           endTrigger: section,
           end: "bottom bottom",
           scrub: 0.3,
-          /* 위 `y` 함수값을 창 크기가 바뀔 때 다시 읽게 한다. */
-          invalidateOnRefresh: true,
-          onUpdate: function (self) {
-            video.setAttribute(
-              "data-header-theme",
-              self.progress < HERO_HEADER_SWITCH ? "white" : "black"
-            );
-          }
+          /* 아래 `y` 함수값을 창 크기가 바뀔 때 다시 읽게 한다. */
+          invalidateOnRefresh: true
+        },
+
+        /* ★ 마스크는 **타임라인 onUpdate**가 칠한다(먹물 트윈의 onUpdate가 아니다).
+           트윈 자신의 콜백에 두면 재생 구간(0.10~0.62) 밖에서는 호출되지 않아,
+           전환을 지나쳤다가 위로 되감았을 때 **마스크가 마지막 값(다 퍼진 상태)에
+           그대로 굳는다**(실측: 진행도 0인데 100%였다).
+           타임라인 onUpdate는 어느 지점이든 다시 그릴 때마다 호출된다. */
+        onUpdate: function () {
+          paintInk(ink.r);
         }
       });
 
-      /* ── ① 영상: 가운데로 빨려 들어간다 ─────────────────────────────── */
-      timeline.fromTo(
-        video,
-        { clipPath: "circle(" + HERO_CIRCLE_FULL + " at 50% 50%)", scale: 1 },
-        {
-          clipPath: "circle(0% at 50% 50%)",
-          scale: HERO_SHRINK_SCALE,
-          ease: HERO_SHRINK_EASE,
-          duration: HERO_SHRINK_END - HERO_SHRINK_START
-        },
-        HERO_SHRINK_START
-      );
-
-      timeline.to(
-        video,
-        {
-          opacity: 0,
-          ease: "none",
-          duration: HERO_SHRINK_END - HERO_VIDEO_FADE_START
-        },
-        HERO_VIDEO_FADE_START
-      );
-
-      /* ── ② philosophy: 화면에 붙여 둔다 ───────────────────────────────
-         ★★ 이것이 **두 원의 중심을 일치시키는 장치**다.
+      /* ── ① philosophy: 화면에 붙여 둔다 ───────────────────────────────
+         ★★ 이것이 **번지는 중심 = 화면 중심**을 보장하는 장치다.
 
          philosophy는 음수 margin 덕분에 전환 구간에 겹쳐 있지만, 그대로 두면
-         스크롤을 따라 `run`px만큼 **올라간다.** 그러면 `circle(... at 50% 50%)`의
-         기준점(요소 중심)이 매 프레임 움직여서, 영상이 사라진 화면 중심과 어긋난다.
+         스크롤을 따라 `run`px만큼 **올라간다.** 그러면 마스크의 기준점(요소 중심)이
+         매 프레임 움직여서, 화면 한가운데에서 번지는 것으로 보이지 않는다.
 
          `y`를 `−run → 0`으로 **선형(ease:"none")** 이동시키면 자연 스크롤을 정확히
          상쇄해 전환 내내 화면 top 0에 붙어 있다. philosophy 높이가 정확히
@@ -959,28 +1033,106 @@
         0
       );
 
-      /* ── ③ philosophy: 같은 중심에서 원이 열린다 ───────────────────── */
-      timeline.fromTo(
-        banner,
-        { clipPath: "circle(0% at 50% 50%)" },
+      /* ── ② 배경: 가운데에서 먹물처럼 번진다 ─────────────────────────
+         값 자체는 프록시 객체에 굴리고, 매 프레임 마스크 문자열을 다시 만든다.
+         GSAP이 gradient 문자열을 보간하게 두면 네 겹의 정지점이 제각각
+         해석될 수 있어서, 숫자 하나만 굴리고 문자열은 우리가 만든다. */
+      timeline.to(
+        ink,
         {
-          clipPath: "circle(" + HERO_CIRCLE_FULL + " at 50% 50%)",
+          r: HERO_INK_END,
           ease: HERO_REVEAL_EASE,
           duration: HERO_REVEAL_END - HERO_REVEAL_START
         },
         HERO_REVEAL_START
       );
 
+      /* ── ③ 제목: 배경이 다 퍼진 뒤 가운데에서 뜬다 ─────────────────── */
+      timeline.fromTo(
+        title,
+        { opacity: 0, y: HERO_TITLE_RISE, scale: HERO_TITLE_SCALE },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          ease: "power2.out",
+          duration: HERO_TITLE_END - HERO_TITLE_START
+        },
+        HERO_TITLE_START
+      );
+
+      /* ── ④ 설명: 가장 마지막에 스르륵 ──────────────────────────────── */
+      timeline.fromTo(
+        desc,
+        { opacity: 0, y: HERO_DESC_RISE },
+        {
+          opacity: 1,
+          y: 0,
+          ease: "power2.out",
+          duration: HERO_DESC_END - HERO_DESC_START
+        },
+        HERO_DESC_START
+      );
+
       /* 타임라인 길이를 정확히 1로 고정한다. 위 구간 상수가 곧 진행도가 된다. */
       timeline.to({}, { duration: 1 }, 0);
 
-      /* ★ GSAP은 자기가 넣은 인라인 스타일만 되돌린다. class와 위 onUpdate가
-         쓴 속성은 우리 것이라 직접 되돌린다 — 안 되돌리면 모션 감소로 바꿨을 때
-         헤더가 검정으로 굳은 채 남는다. */
+      /* ── ⑤ 스크롤 안내 ────────────────────────────────────────────────
+         ★ 위 타임라인에 태우지 않는다. 그 타임라인은 philosophy가 다 퍼지는
+         지점에서 끝나는데, 안내는 **philosophy가 지나갈 때까지** 떠 있어야 한다
+         (사용자 요청). 그래서 시작은 무대, 끝은 philosophy 아랫변으로 잡은
+         별도 구간을 쓴다. `position: fixed`라 그 사이 내내 같은 자리에 있다. */
+      if (hint) {
+        /* ★★ 끝 기준을 philosophy가 아니라 **그 다음 섹션**으로 잡는다.
+           philosophy는 위 ①이 `y`로 끌어올려 둔 상태라, 그것을 endTrigger로 쓰면
+           **끌어올린 위치로 길이를 잰다** — 실측에서 구간이 `−252→1206`으로
+           864px 짧게 나왔다(정상은 2232에서 끝난다).
+           `refreshInit` 훅이 잠깐 y를 0으로 되돌리지만, 그 뒤 히어로 트리거가
+           자기 값을 다시 씌운 다음에 이 트리거가 측정되는 순서라 소용이 없다.
+           다음 섹션(atelier)은 transform이 없어 항상 제 위치를 잰다. */
+        var afterBanner = banner.nextElementSibling;
+
+        var hintTimeline = gsap.timeline({
+          scrollTrigger: {
+            /* 영상이 화면을 꽉 채우는 순간부터 보인다. 더 일찍 잡으면 크림색
+               카피 위에 크림색 글자가 놓여 아무것도 안 보인다. */
+            trigger: stage,
+            start: "top top",
+            endTrigger: afterBanner || banner,
+            end: afterBanner ? "top 30%" : "bottom 30%",
+            scrub: 0.3
+          }
+        });
+
+        hintTimeline.fromTo(
+          hint,
+          { opacity: 0 },
+          { opacity: 1, ease: "none", duration: HERO_HINT_IN },
+          0
+        );
+
+        hintTimeline.to(
+          hint,
+          { opacity: 0, ease: "none", duration: HERO_HINT_OUT },
+          1 - HERO_HINT_OUT
+        );
+
+        hintTimeline.to({}, { duration: 1 }, 0);
+      }
+
+      /* ★ GSAP은 자기가 넣은 인라인 스타일만 되돌린다. 마스크와 헤더 속성은
+         우리가 직접 쓴 것이라 손으로 지운다 — 안 지우면 모션 감소로 바꿨을 때
+         philosophy가 마스크에 잘린 채, 헤더가 굳은 채 남는다. */
       return function () {
         window.ScrollTrigger.removeEventListener("refreshInit", clearBannerShift);
         section.classList.remove("is_hero_ready");
-        video.setAttribute("data-header-theme", "white");
+        banner.style.webkitMaskImage = "";
+        banner.style.maskImage = "";
+        banner.removeAttribute("data-header-theme");
+
+        if (hint) {
+          hint.classList.remove("is_on_light");
+        }
       };
     });
   }
