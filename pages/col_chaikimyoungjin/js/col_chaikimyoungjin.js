@@ -2069,24 +2069,66 @@
   /* 읽어 들일 크기(px). 평균 밝기만 쓰므로 클 이유가 없습니다. */
   var HERO_SAMPLE_SIZE = 16;
 
-  /* 이 밝기보다 밝으면 검은 글씨, 어두우면 크림 글씨입니다.
+  /* ★★ 2026-08-11: **평균 밝기로 고르던 것을 "최악 대비"로 바꿨습니다.**
 
-     ★ common.js의 헤더 판정값 0.55를 그대로 가져오면 안 됩니다. 그 값은
-     "배경이 밝은 편인가"를 보는 것이고, 여기서 필요한 것은 **두 글자색 중
-     어느 쪽이 더 잘 보이는가**의 갈림점입니다. 두 색의 대비가 같아지는 지점을
-     풀면 (L + 0.05)² = (0.0194 + 0.05)(0.9832 + 0.05)이고 L = 0.218입니다
-     (0.0194 = #262626, 0.9832 = #fffdf9의 상대 휘도).
-     0.55로 두면 중간 밝기(L 0.4쯤) 장면에서 크림 글씨를 골라 오히려 흐려집니다. */
-  var HERO_LIGHT_THRESHOLD = 0.218;
+     예전에는 글자 자리의 평균 밝기를 임계값(0.218)과 비교했습니다. 두 색의
+     대비가 같아지는 지점이라 계산 자체는 맞지만, **평균이 그 자리를 대표하지
+     못하는 것이 문제였습니다.**
 
-  /* ★ 갈림점에 여유를 둡니다 — 없으면 깜빡입니다.
-     `chaikimhero_web.mp4`의 제목 자리 밝기를 재 보면 0.198 / 0.243 / 0.246처럼
-     갈림점(0.218) **양옆을 오가는 구간**이 실제로 있습니다. 여유가 없으면 그동안
-     0.4초마다 검정 ↔ 크림이 뒤집혀 글자가 떱니다.
+     새 히어로 영상의 제목 자리를 실측하면 **한 순간에 밝기가 0.01 ~ 0.80까지
+     걸쳐 있습니다**(런웨이 조명 + 어두운 관객석). 평균은 0.25쯤이라 검은 글씨를
+     고르는데, 그 글자가 실제로는 밝은 부분과 어두운 부분에 동시에 얹힙니다 —
+     평균 대비는 4.3:1로 멀쩡해 보여도 **최악 대비가 1.09**라 글자의 일부가
+     배경에 묻힙니다. "안 보이는 순간"의 정체가 이것입니다.
 
-     그래서 한 번 정한 색은 반대쪽으로 이 값만큼 더 가야 바뀝니다
-     (검은 글씨 → 크림은 0.158 아래, 크림 → 검은 글씨는 0.278 위). */
-  var HERO_CONTRAST_HYSTERESIS = 0.06;
+     그래서 지금은 두 후보색 각각에 대해 **글자 자리 안에서 가장 불리한 곳의
+     대비**를 구하고, 그 값이 큰 쪽을 고릅니다. 평균이 아니라 최악을 기준으로
+     삼는 것이라 "실제로 텍스트가 놓인 영역의 가독성"에 곧바로 맞물립니다.
+
+     ★ 아래 두 값은 그 "가장 불리한 곳"을 어디로 볼지 정합니다. 0과 1(진짜
+     최소·최대)로 두면 픽셀 한 점 때문에 판정이 튀므로 양 끝을 조금 잘라냅니다. */
+  var HERO_CONTRAST_LOW_PERCENTILE = 0.1;
+  var HERO_CONTRAST_HIGH_PERCENTILE = 0.9;
+
+  /* ★★ 깜빡임 방지. **지금 색보다 이 배수만큼 더 나아야** 바꿉니다.
+     (예전에는 밝기 임계값에 ±0.06 여유를 뒀는데, 판정 기준이 밝기가 아니라
+     대비 점수로 바뀌었으므로 여유도 점수 기준이 되어야 합니다.)
+
+     ★ 이 값은 실측으로 정했습니다. 영상 전 구간을 0.4초 간격 56지점으로 훑어
+     두 색의 점수를 모아 두고 배수만 바꿔 가며 돌린 결과입니다:
+
+     | 배수 | 제목 전환 수 | 한 색 최소 유지 | 평균 최악 대비 |
+     |---|---|---|---|
+     | 1.12 | 6회 | — | 2.27 |
+     | 1.25 | 4회 | — | 2.25 |
+     | **1.35** | **2회** | **5.2초** | **2.20** |
+     | 1.7 | 0회 | 22.4초 | 2.13 |
+
+     1.12로 두면 **0.25초 만에 검정 → 크림 → 검정으로 뒤집히는 구간이 실제로
+     있었습니다**(3.5~5.5초). 그 구간은 두 색의 점수가 나란히 1.0~1.4라
+     **어느 쪽도 읽히지 않는 장면**이어서, 승자가 잡음으로 뒤바뀝니다.
+     1.35면 그 churn이 사라지고 **대비 손실은 0.07뿐**입니다.
+
+     더 올리면(1.7) 아예 안 바뀌어 장면 변화를 못 따라갑니다. */
+  var HERO_CONTRAST_SWITCH_MARGIN = 1.35;
+
+  /* ★★ **한 번 정한 색을 최소 이만큼(ms) 유지합니다.**(2026-08-11, 사용자 요청 —
+     "너무 자주 바뀐다")
+
+     위 `SWITCH_MARGIN`은 "얼마나 더 나아야 바꾸나"만 봅니다. 그래서 장면이 실제로
+     빠르게 오가면 조건을 매번 만족해 **0.4초 간격으로 계속 바뀔 수 있습니다.**
+     읽는 사람 입장에서는 글자 색이 안절부절못하는 것으로 보입니다.
+
+     이 값은 **빈도 자체에 상한**을 겁니다 — 아무리 조건이 맞아도 이 시간 안에는
+     두 번 바뀌지 않습니다. 둘의 역할이 다릅니다:
+     · `SWITCH_MARGIN` = 바꿀 만한 **이유**가 되는가
+     · `MIN_HOLD`      = 바꿔도 되는 **때**인가
+
+     ★ 이 값만 올리면 "덜 자주"가 곧바로 됩니다. 3000이면 22초짜리 이 영상에서
+     최대 7번까지만 바뀔 수 있습니다(실측은 그보다 훨씬 적습니다).
+     ★ 첫 판정은 이 제한을 받지 않습니다 — 로드 직후 색이 한 박자 늦게 잡히면
+     그게 더 눈에 띕니다. */
+  var HERO_CONTRAST_MIN_HOLD = 3000;
 
   function heroRelativeLuminance(r, g, b) {
     var channels = [r, g, b].map(function (value) {
@@ -2097,6 +2139,16 @@
     return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
   }
 
+  /* 두 후보 글자색의 상대 휘도.
+     ★ css와 한 쌍입니다 — `--collection_hero_title`(#262626)과
+     `--color_bg`(#fffdf9)입니다. css에서 색을 바꾸면 여기도 바꿔야 판정이 맞습니다. */
+  var HERO_TEXT_DARK_LUMINANCE = heroRelativeLuminance(38, 38, 38);
+  var HERO_TEXT_LIGHT_LUMINANCE = heroRelativeLuminance(255, 253, 249);
+
+  function heroContrastRatio(a, b) {
+    return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  }
+
   function initHeroContrast() {
     var hero = document.querySelector(".collection_hero");
     var video = document.querySelector(".collection_hero_video");
@@ -2105,10 +2157,51 @@
       return;
     }
 
+    /* ★★ **색을 입히는 요소와 밝기를 재는 요소가 다를 수 있습니다.**
+
+       탭이 그랬습니다. 색은 `.brand_tabs`(nav)가 물려주는데, 그 nav는
+       `left: 0; right: 0`이라 **상자가 화면 전체 폭(1600px)입니다.** 정작 글자는
+       가운데 좁은 영역뿐인데 밝기를 화면 끝까지 평균 내고 있었습니다 —
+       글자와 상관없는 자리가 판정을 좌우한 것입니다.
+
+       그래서 재는 것은 **실제 글자가 있는 링크(`.brand_tab_link`) 두 개**로
+       바꾸고, class는 예전 그대로 nav에 붙입니다(css를 고치지 않아도 됩니다).
+
+       ★★ 중간 단계로 `.brand_tab_list`(ul)를 썼다가 되돌렸습니다 — **ul은
+       block이라 상자가 여전히 화면의 92%입니다**(가운데 정렬은 그 안에서
+       일어납니다). 실측 1600 화면에서:
+
+       | 재는 대상 | 폭 | 화면 대비 |
+       |---|---|---|
+       | `.brand_tabs`(nav) | 1600 | 100% |
+       | `.brand_tab_list`(ul) | 1472 | 92% |
+       | **`.brand_tab_link` 두 개** | **382** | **24%** |
+
+       ★ 두 링크를 **각각 재서 합칩니다.** 하나의 큰 상자로 묶으면 두 링크
+       사이의 빈 간격(51px)까지 판정에 섞입니다 — 글자가 없는 자리입니다.
+
+       ★ 색은 하나뿐이라 두 링크 모두에게 맞아야 합니다. 그래서 두 링크의
+       밝기를 한 묶음으로 합쳐서 봅니다(한쪽만 보면 다른 쪽이 묻힙니다). */
+    var tabLinks = Array.prototype.slice.call(
+      document.querySelectorAll(".brand_tab_link")
+    );
+
     var targets = [
-      document.querySelector(".collection_hero_title"),
-      document.querySelector(".brand_tabs")
-    ].filter(Boolean);
+      { apply: document.querySelector(".collection_hero_title") },
+      {
+        apply: document.querySelector(".brand_tabs"),
+        measure: tabLinks
+      }
+    ].filter(function (entry) {
+      return Boolean(entry.apply);
+    }).map(function (entry) {
+      /* 잴 요소가 없으면 색을 입히는 요소를 그대로 씁니다(예전과 같은 동작). */
+      if (!entry.measure || entry.measure.length === 0) {
+        entry.measure = [entry.apply];
+      }
+
+      return entry;
+    });
 
     if (targets.length === 0) {
       return;
@@ -2130,20 +2223,23 @@
        매번 예외를 던지게 두면 400ms마다 조용히 비용만 나갑니다. */
     var isBlocked = false;
 
-    function sampleLuminance(element) {
+    /* 요소 하나가 덮는 자리의 밝기들을 `into` 배열에 담습니다.
+       ★ 여러 요소를 각각 부르고 한 배열에 모으면(탭 링크 두 개) 요소 사이의
+       빈 자리가 섞이지 않습니다. */
+    function collectLuminances(element, into) {
       var sourceWidth = video.videoWidth;
       var sourceHeight = video.videoHeight;
 
       /* HAVE_CURRENT_DATA 미만이면 아직 그릴 프레임이 없습니다. */
       if (!sourceWidth || !sourceHeight || video.readyState < 2) {
-        return null;
+        return false;
       }
 
       var videoRect = video.getBoundingClientRect();
       var rect = element.getBoundingClientRect();
 
       if (!videoRect.width || !videoRect.height || !rect.width || !rect.height) {
-        return null;
+        return false;
       }
 
       /* ★ object-fit의 매핑을 되짚어야 합니다. 요소의 화면 좌표를 그대로 영상
@@ -2173,7 +2269,7 @@
       var y1 = Math.max(0, Math.min(sourceHeight, bottom));
 
       if (x1 - x0 < 1 || y1 - y0 < 1) {
-        return null;
+        return false;
       }
 
       var pixels;
@@ -2183,18 +2279,50 @@
         pixels = context.getImageData(0, 0, HERO_SAMPLE_SIZE, HERO_SAMPLE_SIZE).data;
       } catch (error) {
         isBlocked = true;
+        return false;
+      }
+
+      /* ★ 평균 하나로 줄이지 않고 **분포를 그대로 모읍니다.** 평균은 밝은 곳과
+         어두운 곳이 섞인 자리를 대표하지 못합니다(위 상수 주석 참고). */
+      for (var index = 0; index < pixels.length; index += 4) {
+        into.push(
+          heroRelativeLuminance(pixels[index], pixels[index + 1], pixels[index + 2])
+        );
+      }
+
+      return true;
+    }
+
+    /* 요소 여러 개를 한 묶음으로 재서 정렬된 밝기 배열을 돌려줍니다. */
+    function sampleLuminances(elements) {
+      var luminances = [];
+
+      for (var index = 0; index < elements.length; index += 1) {
+        collectLuminances(elements[index], luminances);
+      }
+
+      if (luminances.length === 0) {
         return null;
       }
 
-      var total = 0;
-      var count = 0;
+      luminances.sort(function (a, b) {
+        return a - b;
+      });
 
-      for (var index = 0; index < pixels.length; index += 4) {
-        total += heroRelativeLuminance(pixels[index], pixels[index + 1], pixels[index + 2]);
-        count += 1;
-      }
+      return luminances;
+    }
 
-      return count === 0 ? null : total / count;
+    /* 글자 자리에서 이 색이 **가장 불리한 곳에서 내는 대비**.
+       어두운 쪽 끝과 밝은 쪽 끝 둘 다에 대고 재서 나쁜 쪽을 씁니다 —
+       한쪽만 보면 반대쪽 극단에서 묻히는 것을 놓칩니다. */
+    function heroWorstContrast(textLuminance, luminances) {
+      var lowIndex = Math.floor(HERO_CONTRAST_LOW_PERCENTILE * (luminances.length - 1));
+      var highIndex = Math.floor(HERO_CONTRAST_HIGH_PERCENTILE * (luminances.length - 1));
+
+      return Math.min(
+        heroContrastRatio(textLuminance, luminances[lowIndex]),
+        heroContrastRatio(textLuminance, luminances[highIndex])
+      );
     }
 
     function syncHeroContrast() {
@@ -2209,23 +2337,41 @@
         return;
       }
 
-      targets.forEach(function (target) {
-        var luminance = sampleLuminance(target);
+      targets.forEach(function (entry) {
+        var luminances = sampleLuminances(entry.measure);
 
-        if (luminance === null) {
+        if (luminances === null) {
           return;
         }
 
         /* 지금 검은 글씨인지. class가 아직 없으면 CSS 기본값이 검은 글씨이므로
            그쪽으로 봅니다 — 그래야 첫 판정이 기본 화면과 어긋나지 않습니다. */
-        var wasOnLight = !target.classList.contains("is_on_dark");
+        var wasOnLight = !entry.apply.classList.contains("is_on_dark");
 
-        var isOnLight = wasOnLight
-          ? luminance > HERO_LIGHT_THRESHOLD - HERO_CONTRAST_HYSTERESIS
-          : luminance > HERO_LIGHT_THRESHOLD + HERO_CONTRAST_HYSTERESIS;
+        var darkScore = heroWorstContrast(HERO_TEXT_DARK_LUMINANCE, luminances);
+        var lightScore = heroWorstContrast(HERO_TEXT_LIGHT_LUMINANCE, luminances);
 
-        target.classList.toggle("is_on_light", isOnLight);
-        target.classList.toggle("is_on_dark", !isOnLight);
+        /* 지금 쓰고 있는 색을 기준으로, 반대쪽이 **눈에 띄게 나을 때만** 바꿉니다.
+           점수가 비슷한 장면에서 0.4초마다 뒤집히는 것을 막습니다. */
+        var currentScore = wasOnLight ? darkScore : lightScore;
+        var rivalScore = wasOnLight ? lightScore : darkScore;
+
+        /* ★ 여기가 두 번째 잠금장치입니다 — 바꿀 이유가 충분해도 **아직 이를
+           때면** 그대로 둡니다. 첫 판정(lastSwitchAt이 없음)은 통과시킵니다. */
+        var now = Date.now();
+        var isHeld = entry.lastSwitchAt !== undefined &&
+          now - entry.lastSwitchAt < HERO_CONTRAST_MIN_HOLD;
+
+        var shouldSwitch = !isHeld &&
+          rivalScore > currentScore * HERO_CONTRAST_SWITCH_MARGIN;
+        var isOnLight = shouldSwitch ? !wasOnLight : wasOnLight;
+
+        if (shouldSwitch || entry.lastSwitchAt === undefined) {
+          entry.lastSwitchAt = now;
+        }
+
+        entry.apply.classList.toggle("is_on_light", isOnLight);
+        entry.apply.classList.toggle("is_on_dark", !isOnLight);
       });
     }
 
