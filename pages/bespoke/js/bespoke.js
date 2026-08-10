@@ -132,6 +132,12 @@
   var PHILOSOPHY_PARALLAX_SHIFT = 110; /* 배경이 위아래로 움직이는 거리(px)
      주의: 이 값을 올리면 css의 --philosophy_parallax_overscan도 같이 올려야
      한다. overscan은 이 값 + 배경 등장 이동(자기 높이의 2.5%)보다 커야 한다. */
+  /* 퇴장 — 아래 wordmark로 넘겨주는 구간이다.
+     **끝(20%)을 더 일찍 잡으면 안 된다.** 글이 화면 위쪽에 아직 남아 있는 채로
+     사라져 버려서, 겹치는 순간 없이 뚝 끊긴다. */
+  var PHILOSOPHY_EXIT_SHIFT = 90; /* 글 상자가 위로 빠지는 거리(px) */
+  var PHILOSOPHY_EXIT_START = "bottom 88%"; /* 섹션 아랫변이 화면 88%에 오면 시작 */
+  var PHILOSOPHY_EXIT_END = "bottom 20%"; /* 아랫변이 20%에 오면 완전히 사라짐 */
 
   function initPhilosophyMotion() {
     var section = document.querySelector(".philosophy");
@@ -209,6 +215,30 @@
         }
       );
 
+      /* 3) 퇴장 — 섹션이 화면을 빠져나가는 동안 글 상자가 위로 사라진다.
+            아래 wordmark가 화면 밑에서 올라오는 구간과 **겹친다.**
+            그래서 두 콘텐츠가 잠깐 같이 보이고, philosophy → wordmark가
+            끊긴 두 섹션이 아니라 한 흐름으로 읽힌다.
+
+            ★ 대상이 자식(title/desc)이 아니라 글 상자(.philosophy_body)다.
+            자식에는 위 등장 트윈이 이미 걸려 있어서, 같은 요소에 걸면
+            둘이 서로 덮어쓴다. */
+      gsap.fromTo(
+        body,
+        { opacity: 1, y: 0 },
+        {
+          opacity: 0,
+          y: -PHILOSOPHY_EXIT_SHIFT,
+          ease: "none",
+          scrollTrigger: {
+            trigger: section,
+            start: PHILOSOPHY_EXIT_START,
+            end: PHILOSOPHY_EXIT_END,
+            scrub: 0.8
+          }
+        }
+      );
+
       return function () {
         section.classList.remove("is_motion_ready");
       };
@@ -248,9 +278,12 @@
   var ATELIER_ZOOM_END = "bottom 65%"; /* 섹션 아랫변이 화면 65% 지점에 오면 최대 */
   var ATELIER_ZOOM_SCRUB = 1.2; /* 스크롤을 따라오는 지연(초). 여운의 크기다 */
   var ATELIER_ZOOM_EASE = "power2.out"; /* 끝으로 갈수록 느려지는 안착. 튕기지 않는다 */
-  /* 폭 조건을 걸지 않는다. 좁은 화면에서 사진이 위로 쌓여도 확대분은
-     여전히 상자 안에서만 일어나므로 레이아웃이 깨지지 않는다. */
-  var ATELIER_ZOOM_GATE = "(prefers-reduced-motion: no-preference)";
+  /* ★ 1280px 이상은 아래 `initAtelierStory()`가 사진을 통째로 맡는다.
+     같은 사진에 두 트리거가 scale을 쓰면 서로 덮어쓰고, 무엇보다 스토리
+     무대는 `object-fit: contain`으로 **사진 전체를 보여주는** 것이 목적이라
+     18% 확대(=잘림)와 목적이 정면으로 어긋난다.
+     그래서 이 확대는 스토리가 없는 폭에서만 돈다. */
+  var ATELIER_ZOOM_GATE = "(max-width: 1279px) and (prefers-reduced-motion: no-preference)";
 
   function initAtelierZoom() {
     var section = document.querySelector(".atelier");
@@ -323,7 +356,11 @@
      글 상자의 윗변이 화면 82% 지점에 오면 시작한다 — 그 순간 글의 약 3분의
      2가 이미 화면 안에 있다. */
   var ATELIER_TEXT_START = "top 82%";
-  var ATELIER_TEXT_GATE = "(prefers-reduced-motion: no-preference)";
+  /* ★ 확대와 같은 이유로 1280px 이상에서는 돌지 않는다. 스토리 무대에서는
+     글이 사진과 **순서를 맞춰** 떠올라야 하는데(사진이 가운데 안착한 뒤),
+     이 물결은 자기 트리거로 따로 재생돼서 그 순서를 지킬 수 없다.
+     그쪽은 `initAtelierStory()`가 블록 단위 stagger로 처리한다. */
+  var ATELIER_TEXT_GATE = "(max-width: 1279px) and (prefers-reduced-motion: no-preference)";
 
   /* 글을 단어 상자로 감싸고, 그 안을 다시 글자 상자로 나눈다.
      `perChar`가 false면 단어 상자 자체가 움직이는 단위가 된다.
@@ -675,45 +712,42 @@
   }
 
   /* ---------------------------------------------------------
-     wordmark — 사진이 화면을 채운 채 시작해 워드마크 자리로 수렴하고,
-     안착한 뒤 글자가 그 위로 떠오른다. (레퍼런스: tarubali.com)
+     wordmark — philosophy를 지나면 거대한 "TCHAI" 워터마크가 떠오르고,
+     그다음 atelier로 넘어간다.
 
-     philosophy·atelier와 같이 GSAP + ScrollTrigger scrub이다. 진행도가
-     스크롤 위치에 직접 묶여야 해서 IntersectionObserver로는 만들 수 없다.
-     무대 고정은 ScrollTrigger의 pin이 아니라 **CSS `position: sticky`**로
-     한다 — pin-spacer가 끼어들지 않아 아래 atelier 섹션의 좌표가 그대로다.
+     philosophy·atelier와 같이 GSAP + ScrollTrigger다. 다만 이쪽은 스크롤
+     위치에 1:1로 묶인 `scrub`이라 위로 되감으면 글자도 같이 내려간다.
 
-     타임라인 길이를 정확히 1로 맞춰 둔다. scrub이 트리거 진행도(0~1)를
-     타임라인 진행도에 그대로 옮기므로, 아래 구간 상수가 곧 스크롤 진행도다.
+     섹션은 시안 높이(986px) 그대로이고 sticky도 pin도 쓰지 않는다.
+     **이 섹션에 긴 스크롤 구간을 주면 안 된다** — 글자 한 줄뿐이라
+     아무 일도 일어나지 않는 빈 스크롤만 길어진다.
+     (사진이 화면을 채우다 줄어드는 버전에서는 220svh를 썼지만,
+      사진을 빼기로 하면서 같이 걷어냈다.)
 
-     ★ 크기는 transform(scale)로만 바꾼다. width/height를 건드리면 스크롤
-     한 프레임마다 레이아웃을 다시 계산하고, 사진 상자가 커지면서 아래
-     섹션까지 밀린다. scale은 합성 단계에서만 처리된다.
-
-     JS나 GSAP이 없거나 모션 감소 설정이면 아무것도 하지 않는다. 그때는
-     css의 기본 규칙대로 사진과 워드마크가 정지한 최종 화면으로 보인다.
+     JS나 GSAP이 없거나 모션 감소 설정이면 아무것도 하지 않는다.
+     그때는 css의 기본 규칙대로 워터마크가 그냥 보인다.
      --------------------------------------------------------- */
 
   /* 조절값 — 숫자만 바꾸면 된다 */
-  var WORDMARK_FILL_WIDTH = 0.94; /* 시작 시점에 사진이 덮는 화면 폭 비율 */
-  var WORDMARK_FILL_HEIGHT = 0.88; /* 같은 것의 세로 비율 (둘 중 작은 쪽이 이긴다) */
-  var WORDMARK_SETTLE_FROM = 1.04; /* 안착 직전 배율 — 1에 곧장 닿지 않고 살짝 남겨 둔다 */
-  var WORDMARK_DRIFT = 6; /* 사진이 함께 올라오는 거리(자기 높이의 %) */
-  var WORDMARK_TEXT_RISE = 30; /* 글자가 아래에서 올라오는 거리(px) */
-  /* 줄어드는 곡선. **power2(cubic) 이상으로 올리면 안 된다** — 실측에서
-     진행도 0.4에 이미 최종 크기(배율 1.12)에 닿아 버려서, 남은 구간이
-     아무 일도 없는 빈 스크롤이 됐다. power1(quad)은 0.5에서 1.10이라
-     구간 전체에 걸쳐 줄어드는 것이 보인다. */
-  var WORDMARK_SHRINK_EASE = "power1.out";
+  var WORDMARK_RISE = 48; /* 글자가 아래에서 올라오는 거리(px) */
+  /* 자간을 좁힌 상태에서 시작해 제자리로 펴진다. editorial 느낌의 핵심이다.
+     ★ **양수(넓게)에서 시작하면 안 된다.** 1920에서 글자 폭이 이미 1759px라
+     자간을 벌리면 화면(1920)을 넘어 무대 밖으로 잘린다. 좁혔다 펴야 안전하다. */
+  var WORDMARK_TRACK_FROM = "-0.045em";
 
-  /* 구간 — 전체 스크롤을 1로 봤을 때의 위치다.
-     사진이 다 줄어든(0.6) 뒤에 글자가 시작(0.7)하도록 떨어뜨려 두는 것이
-     이 연출의 핵심이다. 둘이 같이 나타나면 "수렴하고 나서 글자가 뜬다"는
-     순서가 사라진다. 0.9~1은 최종 화면을 눈에 남기는 여백이다. */
-  var WORDMARK_SHRINK_END = 0.6;
-  var WORDMARK_SETTLE_END = 0.75;
-  var WORDMARK_TEXT_START = 0.7;
-  var WORDMARK_TEXT_END = 0.9;
+  /* 등장(0~0.5) → 유지(0.5~1) 두 박자다.
+
+     ★ **퇴장 페이드를 두지 않는다.** sticky 무대는 구조상 마지막 100svh가
+     "무대가 위로 밀려 나가는" 구간인데, 그 전에 글자를 지워 버리면
+     **빈 크림색 화면이 한 화면 내내 지나간다**(실측 1080px). 글자를 켜 둔 채
+     무대째 밀려 나가야 아래 atelier가 올라오는 것과 이어진다.
+
+     ★ 시작을 "top top"이 아니라 "top 65%"로 잡는다. 섹션이 화면 밑에서
+     올라오는 동안 이미 글자가 떠오르기 시작해야, 위 philosophy가 사라지는
+     구간과 겹쳐서 한 흐름으로 읽힌다. "top top"이면 philosophy가 다 사라진
+     뒤에야 시작해 두 섹션 사이가 끊긴다(실측 216px 공백). */
+  var WORDMARK_REVEAL_END = 0.5;
+  var WORDMARK_START = "top 65%";
 
   function initWordmarkScroll() {
     var section = document.querySelector(".wordmark");
@@ -722,101 +756,193 @@
       return;
     }
 
-    var image = section.querySelector(".wordmark_image");
     var text = section.querySelector(".wordmark_text");
 
-    if (!image || !text || !window.gsap || !window.ScrollTrigger) {
+    if (!text || !window.gsap || !window.ScrollTrigger) {
       return;
     }
 
     var gsap = window.gsap;
     gsap.registerPlugin(window.ScrollTrigger);
 
-    /* 시작 배율은 박아둘 수 없다. 사진의 최종 크기가 clamp(vw)라 화면 폭마다
-       다르고, 채워야 할 화면도 매번 다르기 때문이다. 그래서 매 refresh마다
-       실제 크기에서 다시 구한다(아래 invalidateOnRefresh).
-
-       ★ getBoundingClientRect가 아니라 offsetWidth/Height를 읽는다.
-       rect는 이미 걸려 있는 scale이 반영된 값이라, 다시 잴 때마다 시작
-       배율이 제곱으로 커진다. offset*는 transform 이전의 레이아웃 크기다. */
-    function computeStartScale() {
-      var width = image.offsetWidth;
-      var height = image.offsetHeight;
-
-      if (!width || !height) {
-        return 1;
-      }
-
-      return Math.max(
-        1,
-        Math.min(
-          (window.innerWidth * WORDMARK_FILL_WIDTH) / width,
-          (window.innerHeight * WORDMARK_FILL_HEIGHT) / height
-        )
-      );
-    }
-
     gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", function () {
-      /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것은 이 class다.
+      /* 무대를 sticky로 바꾸고 스크롤 구간을 여는 것이 이 class다.
          트리거를 만들기 전에 붙여야 섹션 높이를 제대로 잰다. */
       section.classList.add("is_motion_ready");
 
       var timeline = gsap.timeline({
         scrollTrigger: {
           trigger: section,
-          start: "top top",
+          start: WORDMARK_START,
           end: "bottom bottom",
-          scrub: 1,
-          /* 창 크기가 바뀌면 위 computeStartScale을 다시 부른다. */
-          invalidateOnRefresh: true
+          scrub: 1
         }
       });
 
-      /* 1박자 (0 → 0.6) — 화면을 채우던 사진이 줄어들며 가운데로 모인다. */
+      /* 1박자 — 떠오른다.
+         끝 불투명도는 1이고, 시안의 7%는 css가 글자 **색**에 담고 있다.
+         (요소 opacity에 7%를 걸면 이 트윈과 서로 덮어쓴다.) */
       timeline.fromTo(
-        image,
-        { scale: computeStartScale, yPercent: WORDMARK_DRIFT },
+        text,
+        { opacity: 0, y: WORDMARK_RISE, scale: 0.97, letterSpacing: WORDMARK_TRACK_FROM },
         {
-          scale: WORDMARK_SETTLE_FROM,
-          yPercent: 0,
-          duration: WORDMARK_SHRINK_END,
-          ease: WORDMARK_SHRINK_EASE
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          letterSpacing: "0em",
+          duration: WORDMARK_REVEAL_END,
+          ease: "power2.out"
         },
         0
       );
 
-      /* 2박자 (0.6 → 0.75) — 남겨둔 4%를 마저 놓으며 최종 자리에 안착한다. */
-      timeline.to(
-        image,
-        {
-          scale: 1,
-          duration: WORDMARK_SETTLE_END - WORDMARK_SHRINK_END,
-          ease: "power1.inOut"
-        },
-        WORDMARK_SHRINK_END
-      );
-
-      /* 3박자 (0.7 → 0.9) — 사진이 거의 멎은 뒤 글자가 떠오른다.
-         끝 불투명도는 1이고, 시안의 7%는 css가 글자 색에 담고 있다. */
-      timeline.fromTo(
-        text,
-        { opacity: 0, y: WORDMARK_TEXT_RISE },
-        {
-          opacity: 1,
-          y: 0,
-          duration: WORDMARK_TEXT_END - WORDMARK_TEXT_START,
-          ease: "power2.out"
-        },
-        WORDMARK_TEXT_START
-      );
-
-      /* 4박자 (0.9 → 1) — 최종 화면을 그대로 두는 여백.
-         빈 트윈이지만 타임라인 길이를 1로 맞추는 역할을 한다. 이게 없으면
-         타임라인이 0.9에서 끝나 위 구간 상수와 실제 스크롤 진행도가 어긋난다. */
-      timeline.to({}, { duration: 1 - WORDMARK_TEXT_END }, WORDMARK_TEXT_END);
+      /* 2박자 — 그대로 둔다. 화면을 차지하는 순간이다.
+         빈 트윈이지만 타임라인 길이를 1로 맞추는 역할을 한다. */
+      timeline.to({}, { duration: 1 - WORDMARK_REVEAL_END }, WORDMARK_REVEAL_END);
 
       return function () {
         section.classList.remove("is_motion_ready");
+      };
+    });
+  }
+
+  /* ---------------------------------------------------------
+     atelier 스토리 무대 — 사진이 왼쪽에서 들어와 화면 가운데로 이동하고,
+     안착한 뒤 왼쪽에 글이 떠오른다. (레퍼런스: tarubali.com)
+
+     **1280px 이상 + 모션 감소 아님**에서만 켜진다. 그 밖에서는 이 함수가
+     아무것도 하지 않고, 시안 그대로 사진 위 · 글 아래로 쌓인다.
+
+     무대 고정은 CSS sticky다(ScrollTrigger pin 아님) — pin-spacer가 끼면
+     아래 quote·process의 문서 좌표가 전부 밀린다.
+
+     타임라인 길이를 정확히 1로 맞춰 두어서, 아래 구간 상수가 곧 스크롤
+     진행도가 된다. scrub이라 빠르게 굴리거나 위로 되감아도 값이 꼬이지
+     않는다 — 스크롤 위치에서 매번 다시 계산되기 때문이다.
+     --------------------------------------------------------- */
+
+  /* 조절값 — 숫자만 바꾸면 된다 */
+  var ATELIER_STORY_GATE = "(min-width: 1280px) and (prefers-reduced-motion: no-preference)";
+  var ATELIER_STORY_RISE = 48; /* 사진이 아래에서 올라오는 거리(px) */
+  var ATELIER_STORY_FROM_SCALE = 0.94; /* 등장 시작 배율 */
+  var ATELIER_STORY_TEXT_RISE = 32; /* 글이 아래에서 올라오는 거리(px) */
+  var ATELIER_STORY_TEXT_SPREAD = 0.1; /* 오른쪽 글 덩이 사이의 시차(진행도) */
+
+  /* 구간 — 전체 스크롤을 1로 봤을 때의 위치다.
+     사진(가운데) → 제목(왼쪽) → 설명(오른쪽) 순으로 자리를 잡는다.
+     ★ 사진은 **처음부터 화면 정중앙**에서 떠오른다. 왼쪽에서 가운데로
+     옮기던 이전 버전은 사용자 결정으로 걷어냈다 — 양옆이 글 자리라
+     사진이 지나가면 글 위를 덮는다. */
+  var ATELIER_STORY_ENTER_END = 0.4;
+  var ATELIER_STORY_HEAD_START = 0.34;
+  var ATELIER_STORY_HEAD_END = 0.62;
+  var ATELIER_STORY_TEXT_START = 0.52;
+  var ATELIER_STORY_TEXT_END = 0.88;
+  /* ★ "top top"이 아니다. 위 wordmark 무대가 밀려 나가는 동안 이 섹션이 아래에서
+     올라오는데, 사진이 무대 한가운데 있어서 **화면에 실제로 보이기 시작하는
+     시점**이 섹션 윗변이 화면 40%에 닿을 무렵이다. 그때부터 페이드를 시작해야
+     빈 구간 없이 이어진다. "top top"으로 두면 그 앞 400px가 빈 화면이 된다. */
+  var ATELIER_STORY_START = "top 40%";
+
+  function initAtelierStory() {
+    var section = document.querySelector(".atelier");
+
+    if (!section) {
+      return;
+    }
+
+    var stage = section.querySelector(".atelier_stage");
+    var image = section.querySelector(".atelier_image");
+    var head = section.querySelector(".atelier_head");
+    var parts = section.querySelectorAll(".atelier_body > *");
+
+    if (!stage || !image || !head || !parts.length || !window.gsap || !window.ScrollTrigger) {
+      return;
+    }
+
+    var gsap = window.gsap;
+    gsap.registerPlugin(window.ScrollTrigger);
+
+    gsap.matchMedia().add(ATELIER_STORY_GATE, function () {
+      /* 무대 레이아웃(sticky · 3열 그리드 · 가운데 사진)을 여는 것이 이 class다.
+         트리거를 만들기 전에 붙여야 섹션 높이와 무대 폭을 제대로 잰다. */
+      section.classList.add("is_story_ready");
+
+      var timeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: section,
+          start: ATELIER_STORY_START,
+          end: "bottom bottom",
+          scrub: 1,
+          invalidateOnRefresh: true /* 창이 바뀌면 시작값을 다시 잰다 */
+        }
+      });
+
+      /* Phase 1 — 사진이 화면 정중앙에서 떠오른다.
+         가로 위치는 그리드가 잡아 주므로 x를 건드리지 않는다. */
+      timeline.fromTo(
+        image,
+        { opacity: 0, scale: ATELIER_STORY_FROM_SCALE, y: ATELIER_STORY_RISE },
+        {
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          duration: ATELIER_STORY_ENTER_END,
+          ease: "power2.out"
+        },
+        0
+      );
+
+      /* Phase 2 — 왼쪽 제목이 떠오른다. 사진이 거의 자리를 잡을 무렵 시작해
+         조금 겹친다(0.34 < 0.4). */
+      timeline.fromTo(
+        head,
+        { opacity: 0, y: ATELIER_STORY_TEXT_RISE },
+        {
+          opacity: 1,
+          y: 0,
+          duration: ATELIER_STORY_HEAD_END - ATELIER_STORY_HEAD_START,
+          ease: "power2.out"
+        },
+        ATELIER_STORY_HEAD_START
+      );
+
+      /* Phase 3 — 오른쪽 설명이 위에서부터 차례로 떠오른다.
+
+         ★ `stagger`를 쓰지 않고 덩이마다 트윈을 따로 만든다.
+         staggered fromTo를 scrub 타임라인에 넣으면 **첫 대상만** 시작 상태를
+         유지하고 나머지는 자기 차례가 오기 전까지 원래 상태(opacity 1)로
+         보인다. 실측에서 진행도 0에 meta가 이미 1이었다가 0.7에서 0으로
+         **깜빡였다.** 트윈을 나누면 각자 자기 시작 상태를 지킨다. */
+      var partList = Array.prototype.slice.call(parts);
+      var textStep =
+        ATELIER_STORY_TEXT_SPREAD / Math.max(1, partList.length - 1);
+      var textDuration =
+        ATELIER_STORY_TEXT_END -
+        ATELIER_STORY_TEXT_START -
+        ATELIER_STORY_TEXT_SPREAD;
+
+      partList.forEach(function (part, index) {
+        timeline.fromTo(
+          part,
+          { opacity: 0, y: ATELIER_STORY_TEXT_RISE },
+          {
+            opacity: 1,
+            y: 0,
+            duration: textDuration,
+            ease: "power2.out"
+          },
+          ATELIER_STORY_TEXT_START + textStep * index
+        );
+      });
+
+      /* Phase 4 — 완성된 구도를 눈에 남기는 여백.
+         빈 트윈이지만 타임라인 길이를 1로 맞추는 역할을 한다. 이게 없으면
+         타임라인이 0.88에서 끝나 위 구간 상수와 실제 진행도가 어긋난다. */
+      timeline.to({}, { duration: 1 - ATELIER_STORY_TEXT_END }, ATELIER_STORY_TEXT_END);
+
+      return function () {
+        section.classList.remove("is_story_ready");
       };
     });
   }
@@ -826,6 +952,7 @@
   initPhilosophyMotion();
   initAtelierZoom();
   initWordmarkScroll();
+  initAtelierStory();
 
   /* 글 나누기는 **웹폰트가 적용된 뒤**에 해야 한다. 시스템 폰트로 재면 줄 폭이
      달라서 "글자로 나눠도 되는가" 판단이 뒤집힌다. 폰트를 못 기다리는

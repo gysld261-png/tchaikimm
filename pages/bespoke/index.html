@@ -76,35 +76,44 @@
 
   <!-- wordmark
        Figma 1966:7580 (1920 x 986) — 크림 배경 한가운데 거대한 "TCHAI" 한 줄.
+       시안 그대로 **글자만** 있다(사진 없음, 사용자 결정).
 
-       시안에는 글자만 있고 사진이 없다. 사진은 사용자 요청(레퍼런스 tarubali.com)으로
-       더한 것이다: 화면을 거의 채우던 사진이 스크롤에 맞춰 줄어들며 워드마크 자리로
-       수렴하고, 안착한 뒤 글자가 그 위로 떠오른다.
-
-       기본 상태(아래 마크업 그대로)는 **정지한 최종 화면**이다. JS나 GSAP이 없거나
-       모션 감소 설정이면 사진과 워드마크가 시안처럼 그냥 놓여 있다.
-       js/bespoke.js가 `.is_motion_ready`를 붙일 때만 sticky 무대와 스크롤 연출이 켜진다.
-       (philosophy·atelier와 같은 게이트 방식) -->
+       philosophy 다음에 이 워터마크가 떠오르고, 그다음 atelier로 넘어간다.
+       기본 상태는 글자가 그대로 보이는 것이고, js/bespoke.js가 `.is_motion_ready`를
+       붙일 때만 스크롤에 묶인 등장 연출이 켜진다(philosophy·atelier와 같은 게이트). -->
   <section class="wordmark" aria-label="Tchai Kim">
-    <div class="wordmark_sticky">
-      <div class="wordmark_image">
-        <img src="../../asset/main/bespoke/younjinimg.png" alt="Folded Tchai Kim garments stamped with the house mark" loading="lazy" decoding="async">
-      </div>
-      <div class="wordmark_content">
-        <p class="wordmark_text">TCHAI</p>
-      </div>
+    <div class="wordmark_stage">
+      <p class="wordmark_text">TCHAI</p>
     </div>
   </section>
 
-  <!-- atelier -->
+  <!-- atelier
+       `.atelier_stage`는 데스크톱 스토리 연출을 위한 무대다. JS가 `.is_story_ready`를
+       붙이기 전까지는 아무 스타일도 없는 투명한 래퍼라, 기존 2단 레이아웃
+       (사진 왼쪽 / 글 오른쪽)이 시안 그대로 보인다.
+       `.atelier_meta`만 새로 추가한 글이다 — 아래 desc의 어휘를 그대로 쓴다. -->
   <section class="atelier">
-    <div class="atelier_image">
-      <img src="assets/main/atelier.png" alt="A tailor's atelier lined with fabric bolts and a wooden work table">
-    </div>
-    <div class="atelier_body">
-      <h2 class="atelier_title">The Atelier</h2>
-      <p class="atelier_lead">A workshop built around one habit: looking closely.</p>
-      <p class="atelier_desc">Every garment passes through the same hands,<br> from pattern to final press.<br> Our tailors work in small batches,<br> by appointment only.</p>
+    <div class="atelier_stage">
+      <div class="atelier_head">
+        <h2 class="atelier_title">The Atelier</h2>
+        <p class="atelier_lead">A workshop built around one habit: looking closely.</p>
+      </div>
+
+      <div class="atelier_image">
+        <img src="assets/main/atelier.png" alt="A tailor's atelier lined with fabric bolts and a wooden work table">
+      </div>
+
+      <div class="atelier_body">
+        <p class="atelier_desc">Every garment passes through the same hands, from pattern to final press. Our tailors work in small batches, by appointment only.</p>
+        <p class="atelier_desc">Measurements, fabric and proportion are settled in the room rather than on a sheet. Nothing is cut until the three agree.</p>
+        <ul class="atelier_meta">
+          <li class="atelier_meta_item">Hand-drafted patterns</li>
+          <li class="atelier_meta_item">Small-batch making</li>
+          <li class="atelier_meta_item">Finished by hand</li>
+        </ul>
+        <a class="atelier_button" href="reservation.html">Request a reservation</a>
+        <p class="atelier_place">Seoul atelier — by appointment, or by video call.</p>
+      </div>
     </div>
   </section>
 
