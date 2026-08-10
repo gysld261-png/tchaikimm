@@ -1,6 +1,89 @@
 
 # Tchai Kim 현재 상태
 
+## Collection (Young Jin) 히어로 — 웹용 영상 생성 후 **커밋까지** (2026-08-11)
+
+### ★★★ 마크업은 고칠 게 없었습니다 — 파일이 없었을 뿐입니다
+
+`pages/col_chaikimyoungjin/index.html`은 이미
+`asset/tchaikimyoungjin_hero_web.mp4`를 가리키고 있었는데 **그 파일이 저장소에도
+디스크에도 없었습니다.** 커밋 `c8f7b90 컬렉션 히어로 교체`를 열어 보면
+**포스터(78KB)와 마크업만 들어갔고 mp4는 빠져 있습니다** — `.gitignore` 1행의
+`*.mp4`에 걸렸는데 `git add -f`를 안 한 것입니다.
+
+즉 이 히어로는 그동안 **다른 PC에서 pull 하면 영상이 없는 상태**였습니다.
+(`bespoke_re.mp4`와 **똑같은 사고가 두 번째**입니다.)
+
+### 새로 주신 원본도 그대로는 못 씁니다
+
+`asset/차이김영진히어로영상.MP4`(47.12MB)를 컨테이너 파싱으로 확인한 결과:
+
+| | 원본 | 만든 웹용 |
+|---|---|---|
+| 코덱 | **HEVC(hvc1) Main 10** | **H.264 High L4.0** |
+| 크기 | 2560 × 1440 | 1920 × 1080 |
+| moov | **파일 끝** | **선두(faststart)** |
+| 용량 | 47.12MB | **27.86MB** |
+
+HEVC는 **Firefox와 HEVC 디코더 없는 Chrome/Edge에서 재생되지 않습니다.**
+moov가 끝에 있으면 앞부분부터 재생할 수 없어 47MB를 거의 다 받아야 시작합니다.
+**이 함정은 로컬에서 안 보입니다** — 이 PC의 Chromium은 HEVC를 그냥 재생합니다.
+
+### ★★ ffmpeg이 없어 `avconvert`를 썼습니다 — 그래서 용량이 3배입니다
+
+이 PC에는 **ffmpeg·ffprobe·brew가 전부 없습니다.** macOS 내장 `avconvert`로
+변환했는데, **비트레이트/CRF를 지정할 수 없어** 프리셋 고정 비트레이트가 나옵니다.
+
+```
+avconvert --source 차이김영진히어로영상.MP4 --preset Preset1920x1080 \
+  --output tchaikimyoungjin_hero_web.mp4 --replace
+```
+
+프리셋별 실측: 1920×1080 **27.86MB** / 1280×720 19.4MB / 960×540 12.6MB /
+PresetMediumQuality 1.91MB(단 **568 × 320**이라 히어로에 못 씀).
+
+> **★ ffmpeg이 있으면 같은 1080p를 9.4MB로 만들 수 있습니다**(이전 세션 실적).
+> 용량을 3분의 1로 줄이려면 ffmpeg 설치 후 아래를 돌리고 파일만 갈아 끼우면 됩니다 —
+> **마크업은 그대로입니다.**
+> ```
+> ffmpeg -i 차이김영진히어로영상.MP4 -an -vf "scale=1920:-2:flags=lanczos" \
+>   -c:v libx264 -profile:v high -pix_fmt yuv420p -crf 23 -preset slow \
+>   -movflags +faststart tchaikimyoungjin_hero_web.mp4
+> ```
+> `avconvert`는 `-an`에 해당하는 옵션이 없어 **오디오 트랙이 남아 있습니다**
+> (`muted` 히어로라 재생되지는 않습니다).
+
+### 포스터는 그대로 뒀습니다
+
+기존 `tchaikimyoungjin_hero_poster.jpg`(1920 × 1080, 78KB)와 새 영상의 첫
+프레임을 캔버스로 비교하니 **평균 채널 차이 3.9**(JPEG 압축 오차 수준)였습니다.
+길이도 22.07초로 문서의 22.1초와 같습니다 — **주신 원본은 이전 세션이 쓰던 그
+영상과 같은 footage**입니다. 그래서 포스터를 새로 뽑지 않았습니다.
+
+### 검증 (Chromium, localhost:5690)
+
+- `error: null` · `readyState 4` · **1920 × 1080** · 22.07초 · 실패 요청 0.
+- **검은 상자 아님**: 0 / 6 / 12 / 18초 프레임 밝기 **80.7 / 91.6 / 141.4 / 148.4**.
+- `--collection_hero_ratio`가 영상에서 **1.7778**로 자동 반영 → 상자가 영상 비율을
+  따라가고, **영상 상자 = 히어로 상자**(1600 × 836).
+- 속성 유지: `autoplay muted loop playsinline preload="metadata"`, `object-fit: cover`.
+- **375(모바일)**: 영상 = 히어로(375 × 211), `cover` 크롭 좌우 각 **0.1px** ·
+  위아래 **0**, 가로 스크롤 0, 실패 요청 0.
+- 브랜드 탭·제목 정상, 깨진 이미지 0.
+
+### ★★ Git — 이번에는 `-f`로 강제 추가했습니다
+
+```
+git add -f pages/col_chaikimyoungjin/asset/tchaikimyoungjin_hero_web.mp4
+```
+
+**`.gitignore`는 건드리지 않았습니다**(`*.mp4` 규칙 그대로). 저장소의 다른 mp4
+22개도 전부 같은 방식으로 들어가 있습니다.
+
+> **원본 47MB HEVC(`차이김영진히어로영상.MP4`)는 커밋하지 않았습니다.**
+> 사이트가 쓰지 않는 마스터라 저장소만 무거워집니다. 필요하면
+> `git add -f`로 따로 넣으면 됩니다.
+
 ## Bespoke Reservation — 배너 배경 영상 교체 (2026-08-11)
 
 새로 넣어 주신 `pages/bespoke/assets/main/main_reservation.mp4`로 바꿨습니다.
