@@ -947,7 +947,71 @@
     });
   }
 
+  /* ---------------------------------------------------------
+     begin 카드 + 핀 — 눌러서 상세 내용을 열어 둔다
+
+     레퍼런스는 shop_detail의 `.look_pin`이다. 그쪽 동작을 그대로 따른다:
+     · 같은 핀을 다시 누르면 닫힌다
+     · 다른 핀을 누르면 앞의 것이 닫힌다(한 번에 하나)
+     · Escape로 전부 닫힌다
+     · 열림 상태는 class + `aria-expanded`로만 표현한다
+
+     **CSS가 모든 시각 변화를 맡는다.** 여기서는 class만 붙였다 뗀다.
+     인라인 스타일을 쓰지 않으므로 이 섹션에 GSAP이 나중에 붙어도
+     같은 속성을 두고 다투지 않는다(현재 begin에는 GSAP이 없다).
+
+     hover는 CSS `:hover`가 따로 처리하고, 이 class는 그것과 독립이다.
+     그래서 hover → click → 마우스 벗어남 순서에서도 열린 상태가 남는다.
+     --------------------------------------------------------- */
+
+  function initBeginCards() {
+    var pins = Array.prototype.slice.call(document.querySelectorAll(".begin_card_pin"));
+
+    if (!pins.length) {
+      return;
+    }
+
+    /* 열림일 때 `−`. 레퍼런스는 글자 그대로 `+`를 쓰므로 여기서도 글자를 바꾼다.
+       읽어 주는 이름은 `aria-expanded`가 맡으므로 글자는 `aria-hidden`이다. */
+    function setOpen(pin, shouldOpen) {
+      var card = pin.closest(".begin_card");
+      var glyph = pin.querySelector(".begin_card_pin_glyph");
+
+      if (card) {
+        card.classList.toggle("is_open", shouldOpen);
+      }
+
+      pin.setAttribute("aria-expanded", String(shouldOpen));
+
+      if (glyph) {
+        glyph.textContent = shouldOpen ? "−" : "+"; /* − (minus sign) */
+      }
+    }
+
+    pins.forEach(function (pin) {
+      pin.addEventListener("click", function () {
+        var wasOpen = pin.getAttribute("aria-expanded") === "true";
+
+        /* 하나만 열어 둔다 — 나머지는 접는다. */
+        pins.forEach(function (item) {
+          setOpen(item, item === pin && !wasOpen);
+        });
+      });
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      pins.forEach(function (pin) {
+        setOpen(pin, false);
+      });
+    });
+  }
+
   initProcessSteps();
+  initBeginCards();
   initMaterialsSelector();
   initPhilosophyMotion();
   initAtelierZoom();
