@@ -51,11 +51,11 @@
       "name": "tchaikimm_node_3",
       "runtimeExecutable": "C:/Program Files/nodejs/node.exe",
       "runtimeArgs": [
-        "C:/Users/EZEN/AppData/Local/Temp/claude/C--Users-EZEN-Desktop-----kbrand-tchaikimm/160ee008-c2dd-4470-965a-c8b918aba8ca/scratchpad/serve.js",
-        "5671"
+        "C:/Users/EZEN/AppData/Local/Temp/claude/C--Users-EZEN-Desktop-tchaikimm/1b77bf43-407e-499d-bd40-5f3937dd8060/scratchpad/serve.js",
+        "5617"
       ],
-      "port": 5671,
-      "url": "http://localhost:5671",
+      "port": 5617,
+      "url": "http://localhost:5617",
       "autoPort": false
     },
     {
