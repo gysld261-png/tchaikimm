@@ -78,6 +78,7 @@
    (예: "center 30%"로 하면 지금보다 사진이 조금 더 아래쪽을 기준으로 잘립니다) */
 .hero_panel_bespoke {
   --hero_img_position: center top;
+  background-color: #f3f1ed;
 }
 
 .hero_panel_img {
@@ -104,11 +105,11 @@
   transform-origin: center;
 }
 
-/* 왼쪽 히어로: 오른쪽 사진과 같은 확대감으로 인물 구도를 왼쪽에 맞춥니다. */
+/* 왼쪽 히어로: transform 확대 없이 패널 가로폭을 채우고 위쪽을 기준으로 잘라
+   얼굴과 상체가 먼저 보이게 합니다. */
 .hero_panel_bespoke .hero_panel_img {
   object-position: center top;
-  transform: scale(1.15) translate(-5%, 5%);
-  transform-origin: center;
+  transform: none;
 }
 
 .hero_panel_video {
@@ -1910,7 +1911,7 @@
 /* GSAP의 fixed pin 대신 브라우저 기본 sticky를 사용합니다.
    섹션이 원래 속도로 들어오다가 top에 닿는 순간 자연스럽게 머물러 위치 전환이 없습니다. */
 .collection_scroll.is_scroll_ready {
-  min-height: calc(100dvh + var(--collection_sticky_scroll, 28dvh));
+  min-height: calc(100dvh + var(--collection_sticky_scroll, 160dvh));
 }
 
 .collection_scroll.is_scroll_ready .collection {
@@ -1926,8 +1927,8 @@
 }
 
 /* ---------------------------------------------------------
-   자동 재생 + native sticky — js/main.js가 .is_scroll_ready를 붙였을 때만.
-   섹션은 자연스럽게 화면에 머물고 카드 흐름은 스크롤과 무관하게 시간으로 재생됩니다.
+   스크롤 연동 + native sticky — js/main.js가 .is_scroll_ready를 붙였을 때만.
+   섹션은 자연스럽게 화면에 머물고 카드 흐름은 스크롤 진행률에 맞춰 재생됩니다.
    붙지 않아도(모션 감소·GSAP 없음·1024px 미만) 기본 가로 배치를 유지합니다.
 
    ★ collection_scroll이 고정 구간의 실제 높이를 만들고 collection이 sticky로 머뭅니다.
@@ -2064,11 +2065,60 @@
   pointer-events: none;
 }
 
+.collection_scroll_hint {
+  display: none;
+}
+
+.collection.is_scroll_ready .collection_scroll_hint {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  color: rgba(10, 10, 10, 0.62);
+  font-family: var(--font_body);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  transition: color 240ms ease;
+}
+
+.collection_scroll_hint_track {
+  position: relative;
+  flex: 1;
+  height: 1px;
+  overflow: hidden;
+  background: rgba(10, 10, 10, 0.18);
+}
+
+.collection_scroll_hint_progress {
+  position: absolute;
+  inset: 0;
+  background: currentColor;
+  transform: scaleX(var(--collection_reveal_progress, 0));
+  transform-origin: left center;
+}
+
+.collection.is_reveal_complete .collection_scroll_hint {
+  color: rgba(10, 10, 10, 0.82);
+}
+
 .collection_bottom {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 32px;
+  gap: 20px;
+  width: 100%;
+}
+
+.collection.is_scroll_ready .collection_bottom {
+  /* 짧은 데스크톱에서는 무대와 겹치지 않게 덜 올리고, 1080px 높이에서는
+     설명과 진행선을 함께 충분히 올려 화면 하단 여백을 확보합니다. */
+  transform: translateY(clamp(-80px, calc(43px - 11.4vh), -48px));
+}
+
+.collection.is_scroll_ready .collection_desc {
+  transform: translateY(-10px);
 }
 
 .collection_desc {

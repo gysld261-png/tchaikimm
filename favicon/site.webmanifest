@@ -1,6 +1,8 @@
 {
   "name": "Tchai Kim | Contemporary Hanbok & Bespoke",
   "short_name": "Tchai Kim",
+  "start_url": "../pages/intro/",
+  "scope": "../",
   "icons": [
     {
       "src": "icon-192.png",

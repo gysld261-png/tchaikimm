@@ -296,7 +296,10 @@
   function loadComponent(slot) {
     var componentUrl = slot.getAttribute("data-component");
 
-    return fetch(componentUrl).then(function (response) {
+    /* 헤더·푸터는 작은 HTML 조각이고 모든 페이지에서 같은 파일을 공유합니다.
+       브라우저 캐시에 이전 마크업이 남아 수정 직후 페이지마다 다른 헤더가 보이지
+       않도록, 컴포넌트는 항상 현재 파일을 다시 가져옵니다. */
+    return fetch(componentUrl, { cache: "no-store" }).then(function (response) {
       if (!response.ok) {
         throw new Error("Failed to load shared component: " + componentUrl);
       }

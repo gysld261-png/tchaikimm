@@ -758,9 +758,9 @@ function syncHeroGallery() {
 syncHeroGallery();
 heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
-/* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)를 휠 한 번마다
-   정확히 한 칸씩 이동시킵니다. 스크롤 위치는 네 개의 정수 스텝에 맞추고,
-   화면의 진행도(progress)는 GSAP scrub으로 따라오게 해 부드러운 스냅 감각을 냅니다.
+/* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)를 휠 또는
+   프레임의 세로 마우스 드래그로 이동시킵니다. 스크롤 위치는 네 개의 정수 스텝에
+   맞추고, 화면의 진행도(progress)는 GSAP scrub으로 따라오게 해 부드럽게 스냅합니다.
    섹션이 화면 상단에 고정된 동안만 휠을 가로채며, 첫/마지막 가먼트 바깥 방향은
    그대로 흘려보내 앞·뒤 페이지 섹션으로 자연스럽게 이어지게 합니다. */
 (function () {
@@ -768,6 +768,7 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
   var section = document.getElementById("garment_story_section");
   var scrollWrap = document.querySelector(".garment_story_scroll");
+  var frame = section ? section.querySelector(".garment_story_frame") : null;
   var orbitList = document.getElementById("garment_orbit_list");
   var marker = document.querySelector(".garment_orbit_marker");
   var infoWrap = document.getElementById("garment_info");
@@ -776,6 +777,7 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   if (
     !section ||
     !scrollWrap ||
+    !frame ||
     !orbitList ||
     !infoWrap ||
     !mediaWrap ||
@@ -842,6 +844,10 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   /* 트랙패드 관성 입력을 한 제스처로 묶는 시간입니다.
      220ms에서 190ms로만 줄여 다음 조작을 조금 빨리 받을 수 있게 했습니다. */
   var SNAP_IDLE_DELAY = 190;
+  /* 마우스를 이 거리만큼 세로로 끌면 가먼트 한 칸을 이동합니다.
+     작을수록 민감하고 클수록 더 길게 끌어야 합니다. */
+  var DRAG_DISTANCE_PER_STEP = 320;
+  var DRAG_START_THRESHOLD = 6;
   /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
      한 항목에 머무르는 시간(=사용자가 쉬는 시간)이 늘어납니다.
      시안에 없는 값이라 추정치이며, 더 여유를 주고 싶으면 이 숫자를
@@ -856,6 +862,12 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   var isSnapAnimationDone = false;
   var snapIdleTimer = 0;
   var snapAnimationTimer = 0;
+  var activePointerId = null;
+  var dragStartY = 0;
+  var dragStartProgress = 0;
+  var dragProgress = 0;
+  var isDragging = false;
+  var shouldSuppressClick = false;
 
   function applyProgress() {
     var roundedIndex = Math.max(0, Math.min(STEP_COUNT - 1, Math.round(state.progress)));
@@ -941,6 +953,14 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
     return garmentTrigger.start + triggerDistance * timelineRatio;
   }
 
+  function getDragScrollY(progress) {
+    var triggerDistance = garmentTrigger.end - garmentTrigger.start;
+    var timelineRatio = LEAD_HOLD_RATIO +
+      progress / (STEP_COUNT - 1) * (1 - LEAD_HOLD_RATIO);
+
+    return garmentTrigger.start + triggerDistance * timelineRatio;
+  }
+
   function snapEasing(progress) {
     /* 양 끝에서 속도가 0에 가까워지는 easeInOutCubic입니다.
        휠 입력 직후 급발진하거나 도착점에서 딱 멈추는 느낌을 줄입니다. */
@@ -988,6 +1008,124 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
     window.clearTimeout(snapAnimationTimer);
     snapAnimationTimer = window.setTimeout(handleComplete, (SNAP_DURATION + 0.1) * 1000);
     setSnapScrollY(targetY, false);
+  }
+
+  function stopLenisForDrag() {
+    if (!window.tchaikimmLenis) {
+      return;
+    }
+
+    window.tchaikimmLenis.stop();
+    window.tchaikimmLenis.scrollTo(window.scrollY, {
+      immediate: true,
+      force: true
+    });
+  }
+
+  function startLenisAfterDrag() {
+    if (window.tchaikimmLenis) {
+      window.tchaikimmLenis.start();
+    }
+  }
+
+  function setDragProgress(progress) {
+    dragProgress = Math.max(0, Math.min(STEP_COUNT - 1, progress));
+    var targetY = getDragScrollY(dragProgress);
+
+    if (window.tchaikimmLenis) {
+      window.tchaikimmLenis.scrollTo(targetY, {
+        immediate: true,
+        force: true
+      });
+    } else {
+      window.scrollTo(0, targetY);
+    }
+
+    /* immediate 스크롤과 같은 프레임에 원·글·사진도 손을 따라오게 합니다. */
+    state.progress = dragProgress;
+    applyProgress();
+    ScrollTrigger.update();
+  }
+
+  function handlePointerDown(event) {
+    if (
+      event.button !== 0 ||
+      activePointerId !== null ||
+      !isSectionEngaged() ||
+      event.target.closest("a, button, input, textarea, select, [role='button']")
+    ) {
+      return;
+    }
+
+    window.clearTimeout(snapIdleTimer);
+    window.clearTimeout(snapAnimationTimer);
+    activePointerId = event.pointerId;
+    dragStartY = event.clientY;
+    dragStartProgress = state.progress;
+    dragProgress = state.progress;
+    isDragging = false;
+    shouldSuppressClick = false;
+    isSnapLocked = false;
+    isSnapAnimationDone = false;
+    stopLenisForDrag();
+    frame.setPointerCapture(event.pointerId);
+  }
+
+  function handlePointerMove(event) {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+
+    var dragDistance = dragStartY - event.clientY;
+
+    if (!isDragging && Math.abs(dragDistance) < DRAG_START_THRESHOLD) {
+      return;
+    }
+
+    if (!isDragging) {
+      isDragging = true;
+      shouldSuppressClick = true;
+      section.classList.add("is_dragging");
+    }
+
+    event.preventDefault();
+    setDragProgress(dragStartProgress + dragDistance / DRAG_DISTANCE_PER_STEP);
+  }
+
+  function finishPointerInteraction(event) {
+    if (event.pointerId !== activePointerId) {
+      return;
+    }
+
+    if (frame.hasPointerCapture(event.pointerId)) {
+      frame.releasePointerCapture(event.pointerId);
+    }
+
+    activePointerId = null;
+    section.classList.remove("is_dragging");
+    startLenisAfterDrag();
+
+    if (isDragging) {
+      isSnapLocked = true;
+      isSnapAnimationDone = false;
+      scrollToStep(Math.round(dragProgress));
+    }
+
+    isDragging = false;
+  }
+
+  function handleFrameClick(event) {
+    if (!shouldSuppressClick) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+    shouldSuppressClick = false;
+  }
+
+  function handleNativeDragStart(event) {
+    event.preventDefault();
   }
 
   function handleWheel(event) {
@@ -1065,6 +1203,13 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
     garmentTrigger = garmentTimeline.scrollTrigger;
     /* 한 번의 휠/트랙패드 제스처가 한 가먼트만 이동하도록 먼저 받습니다. */
     window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
+    section.classList.add("is_drag_ready");
+    frame.addEventListener("pointerdown", handlePointerDown);
+    frame.addEventListener("pointermove", handlePointerMove);
+    frame.addEventListener("pointerup", finishPointerInteraction);
+    frame.addEventListener("pointercancel", finishPointerInteraction);
+    frame.addEventListener("click", handleFrameClick, true);
+    frame.addEventListener("dragstart", handleNativeDragStart);
 
     /* GSAP은 자기가 만든 트윈·트리거만 되돌립니다. applyProgress()는
        element.style에 직접 쓰기 때문에 그 인라인 값은 남습니다 — 특히
@@ -1072,8 +1217,22 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
        여기서 손으로 지워야 CSS 값(opacity: 1)이 다시 이깁니다. */
     return function cleanupGarmentStory() {
       window.removeEventListener("wheel", handleWheel, true);
+      frame.removeEventListener("pointerdown", handlePointerDown);
+      frame.removeEventListener("pointermove", handlePointerMove);
+      frame.removeEventListener("pointerup", finishPointerInteraction);
+      frame.removeEventListener("pointercancel", finishPointerInteraction);
+      frame.removeEventListener("click", handleFrameClick, true);
+      frame.removeEventListener("dragstart", handleNativeDragStart);
       window.clearTimeout(snapIdleTimer);
       window.clearTimeout(snapAnimationTimer);
+      if (activePointerId !== null && frame.hasPointerCapture(activePointerId)) {
+        frame.releasePointerCapture(activePointerId);
+      }
+      startLenisAfterDrag();
+      section.classList.remove("is_drag_ready", "is_dragging");
+      activePointerId = null;
+      isDragging = false;
+      shouldSuppressClick = false;
       garmentTrigger = null;
       isSnapLocked = false;
       isSnapAnimationDone = false;

@@ -12,7 +12,7 @@
 <meta property="og:title" content="Tchai Kim — One house, two ways of wearing hanbok">
 <meta property="og:description" content="Tchai Kim is ready-to-wear, Tchai Kim Youngjin is bespoke — two expressions of the same aesthetic.">
 <meta property="og:url" content="https://gysld261-png.github.io/tchaikimm/pages/main/">
-<meta property="og:image" content="https://gysld261-png.github.io/tchaikimm/og-image.png">
+<meta property="og:image" content="https://gysld261-png.github.io/tchaikimm/common/assets/og/og-default.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Tchai Kim — Where tradition finds freedom">
@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="../../common/css/common.css?v=5">
 <link rel="stylesheet" href="../../common/css/layout.css?v=3">
   <link rel="stylesheet" href="../../common/css/shop_transition.css?v=3">
-<link rel="stylesheet" href="css/main.css?v=10">
+<link rel="stylesheet" href="css/main.css?v=13">
 </head>
 <body data-page="main" data-header-variant="white" data-scroll-hint-mode="persistent">
 
@@ -57,7 +57,7 @@
   </div>
 </div>
 
-<div class="common_header_slot" data-component="../../common/components/header.html?v=3">
+<div class="common_header_slot" data-component="../../common/components/header.html?v=4">
   <span class="a11y_hidden">Loading header</span>
 </div>
 
@@ -66,28 +66,13 @@
   <!-- hero -->
   <section class="hero" aria-label="Tchai Kim and Tchai Kim Youngjin">
     <article class="hero_panel hero_panel_bespoke">
-      <!-- _web.jpg는 원본(5867 × 4642, 5.27MB)을 3072px으로 다시 내보낸 것입니다.
-           데스크탑에서는 1534px로 그려지므로 레티나 2배(3068px)까지 덮고도 남습니다 —
-           늘리는 일이 없어 흐려지지 않습니다(화면 크기 비교 SSIM 0.996 / PSNR 51dB).
-           원본은 같은 폴더에 그대로 있습니다. 더 크게 쓰려면 원본에서 다시 뽑으세요.
-
-           ★ srcset — 360px 화면에서도 3072px을 받고 있었습니다(그려지는 크기 414px,
-             레티나로 쳐도 828px이면 충분). 두 장 합쳐 1.0MB를 모바일에서 그대로
-             내려받던 것을 0.16MB로 줄입니다.
-           ★ sizes를 100vw로 둔 것은 안전 쪽으로 기울인 값입니다. 1850~1990px 구간에서
-             common.css가 html에 zoom: 0.75를 걸어 vw 기준이 실제 화면보다 커지는데,
-             그래도 3072w가 뽑히도록(작은 것이 뽑혀 흐려지지 않도록) 하기 위함입니다.
-           ★ **WebP로 바꾸지 마세요.** 이 두 장의 원본은 yuvj444p(크로마 서브샘플링
-             없음)인데 WebP 손실 압축은 4:2:0만 지원합니다. 실제로 변환해 재보니
-             빨강 채널 SSIM이 0.982 → 0.873으로 떨어졌습니다. -->
       <img class="hero_panel_img"
-           src="assets/main/hero/bespoke2_web.jpg"
-           srcset="assets/main/hero/bespoke2_1024.jpg 1024w,
-                   assets/main/hero/bespoke2_1600.jpg 1600w,
-                   assets/main/hero/bespoke2_web.jpg 3072w"
-           sizes="100vw"
-           fetchpriority="high" alt="A model wearing a hand-painted bespoke hanbok beside a dark floral arrangement">
-      <video class="hero_panel_video" src="assets/main/hero/bespoke.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+           src="assets/main/hero/tchai_kyj2.jpg"
+           data-hero-edge="right"
+           data-hero-width-ratio="0.5"
+           fetchpriority="high" alt="A model wearing a vivid pink couture hanbok and a wide woven hat">
+      <!-- Bespoke 영상 속도: data-playback-rate의 숫자만 조절합니다. 1 = 원속도, 0.8 = 20% 느리게. -->
+      <video class="hero_panel_video" src="vid/tchai_kyj2.mp4" data-playback-rate="0.75" muted loop playsinline preload="none" aria-hidden="true"></video>
       <div class="hero_panel_body">
         <h2 class="hero_panel_title">Tchai Kim Youngjin</h2>
         <p class="hero_panel_desc">Haute couture and bespoke hanbok</p>
@@ -104,7 +89,7 @@
                    assets/main/hero/hero_shop4_web.jpg 3072w"
            sizes="100vw"
            fetchpriority="high" alt="A model wearing an everyday modern hanbok in soft daylight">
-      <video class="hero_panel_video" src="assets/main/hero/shop.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
+      <video class="hero_panel_video" src="vid/tchaikim.mp4" muted loop playsinline preload="none" aria-hidden="true"></video>
       <div class="hero_panel_body">
         <h2 class="hero_panel_title">Tchai Kim</h2>
         <p class="hero_panel_desc">Everyday modern hanbok</p>
@@ -414,6 +399,12 @@
 
       <div class="collection_bottom">
         <p class="collection_desc">From everyday wearable pieces to high-fashion couture.<br>Journey through the full spectrum of our signature creations</p>
+        <div class="collection_scroll_hint" aria-hidden="true">
+          <span class="collection_scroll_hint_text">Scroll to reveal</span>
+          <span class="collection_scroll_hint_track">
+            <span class="collection_scroll_hint_progress"></span>
+          </span>
+        </div>
       </div>
     </div>
   </section>
@@ -442,8 +433,8 @@
 <script src="https://cdn.jsdelivr.net/npm/lenis@1.3.26/dist/lenis.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-<script src="../../common/js/common.js?v=7"></script>
+<script src="../../common/js/common.js?v=8"></script>
   <script src="../../common/js/shop_transition.js?v=4"></script>
-<script src="js/main.js?v=21"></script>
+<script src="js/main.js?v=24"></script>
 </body>
 </html>

@@ -923,7 +923,14 @@
       .filter(Boolean);
 
     heroVideos.forEach(function (video) {
+      var requestedPlaybackRate = Number(video.getAttribute("data-playback-rate"));
+      var playbackRate = Number.isFinite(requestedPlaybackRate) && requestedPlaybackRate > 0
+        ? Math.min(2, Math.max(0.25, requestedPlaybackRate))
+        : 1;
+
       video.muted = true;
+      video.defaultPlaybackRate = playbackRate;
+      video.playbackRate = playbackRate;
     });
 
     function warmHeroVideos() {
@@ -988,8 +995,16 @@
             if (!el) {
               return;
             }
-            var vars = { width: maxWidth, left: "auto", right: "auto" };
-            vars[entry.edge] = 0;
+            var requestedEdge = el.getAttribute("data-hero-edge");
+            var mediaEdge = requestedEdge === "left" || requestedEdge === "right"
+              ? requestedEdge
+              : entry.edge;
+            var requestedWidthRatio = Number(el.getAttribute("data-hero-width-ratio"));
+            var mediaWidth = Number.isFinite(requestedWidthRatio) && requestedWidthRatio >= 0.25 && requestedWidthRatio <= 1
+              ? hero.getBoundingClientRect().width * requestedWidthRatio
+              : maxWidth;
+            var vars = { width: mediaWidth, left: "auto", right: "auto" };
+            vars[mediaEdge] = 0;
             gsap.set(el, vars);
           });
         });
@@ -1829,35 +1844,17 @@
 
   var CARD_INTERVAL = 620;
   var MAX_VISIBLE_CARDS = 9;
-  /* 첫 휠 입력 뒤 카드가 반응하기 시작하는 대기 시간입니다.
-     너무 크면 클릭처럼 늦게 보이므로 0.1초만 두고 바로 깊이감 있는 이동을 시작합니다. */
+  /* 좁은 화면의 시간 기반 자동 재생에서만 사용하는 첫 카드 대기 시간입니다. */
   var CARD_INTRO_DELAY = 100;
   var RIGHT_STREAM_OFFSET = 0.5;
-  /* ★ 컬렉션 고정 유지 거리입니다.
-     카드 자동재생 길이와 분리해, 고정된 뒤 다음 스크롤에서 바로 풀리게 합니다.
-     값을 키우면 더 오래 고정되고 줄이면 더 빨리 다음 섹션으로 넘어갑니다. */
-  var COLLECTION_STICKY_HOLD = 28;
+  /* 컬렉션이 고정된 채 사진을 드러내는 실제 스크롤 거리입니다.
+     wheel 이벤트를 가로채지 않고 이 거리의 진행률을 카드 움직임에 연결합니다. */
+  var COLLECTION_STICKY_HOLD = 160;
   /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
   var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)";
-  /* 트랙패드 한 번의 손동작이 여러 wheel 이벤트로 쪼개지는 시간을 한 제스처로 묶습니다. */
-  var COLLECTION_WHEEL_IDLE = 180;
-  /* 두 번째 휠에서 다음 섹션으로 내려가는 Lenis 이동 시간입니다. */
-  var COLLECTION_EXIT_DURATION = 1.15;
-  /* ★ 사진 당김 감도 조절 위치
-     첫 휠의 누적 입력량이 DISTANCE에 도달할 때까지 사진이 중앙 뒤에서 앞으로 끌려옵니다.
-     START_SCALE/Y를 크게 벌리면 당김이 더 선명하고, RELEASE_DURATION을 늘리면 놓이는 감각이 묵직해집니다. */
-  var COLLECTION_PULL_WHEEL_DISTANCE = 360;
-  var COLLECTION_PULL_START_SCALE = 0.84;
-  var COLLECTION_PULL_START_Y = 46;
-  var COLLECTION_PULL_SEED_PHASE = 1.15;
-  /* 이 진행도보다 적게 당기고 놓으면 자동재생하지 않고 처음으로 돌아갑니다.
-     짧은 휠 한 번이 재생 명령으로 해석되는 것을 막는 문턱입니다. */
-  var COLLECTION_PULL_COMMIT_PROGRESS = 0.18;
-  var COLLECTION_PULL_RELEASE_DURATION = 0.58;
-  /* 마지막 휠에서 섹션이 살짝 위로 당겨진 뒤 다음 구간으로 풀리는 값입니다. */
-  var COLLECTION_EXIT_PULL_SCALE = 0.985;
-  var COLLECTION_EXIT_PULL_Y = -18;
-  var COLLECTION_EXIT_PULL_DURATION = 0.34;
+  var COLLECTION_REVEAL_START = 0.06;
+  var COLLECTION_REVEAL_END = 0.76;
+  var COLLECTION_REVEAL_PHASE = 7.2;
   /* ★ 진입 안착(아래 "진입 안착" 주석 참고) 조절값.
      SHIFT — 컨테이너가 몇 px 아래에서 올라올지. 키우면 더 크게 움직입니다.
      START — 언제부터 따라오기 시작할지. "top bottom"은 섹션 윗변이 화면 아래에
@@ -1931,8 +1928,8 @@
     }
 
     hasStarted = true;
-    /* 휠로 당겨온 사진 위치에서 자동 재생이 그대로 이어지게 시간을 역산합니다.
-       모바일 자동 재생처럼 initialPhase가 없으면 기존 시작 타이밍을 유지합니다. */
+    /* 지정한 위치에서 자동 재생이 이어지도록 시간을 역산합니다.
+       initialPhase가 없으면 기존 시작 타이밍을 유지합니다. */
     startTime = Number.isFinite(initialPhase)
       ? performance.now() - CARD_INTRO_DELAY - initialPhase * CARD_INTERVAL
       : performance.now();
@@ -2019,8 +2016,8 @@
     new window.IntersectionObserver(function (entries) {
       isInView = entries[0].isIntersecting && entries[0].intersectionRatio >= 0.15;
 
-      /* 데스크탑은 고정된 뒤 첫 휠을 기다립니다. 휠이 없는 모바일·터치 화면은
-         기존처럼 화면에 들어왔을 때 자동으로 재생해 빈 무대가 남지 않게 합니다. */
+      /* 데스크탑은 스크롤 진행률로 재생합니다. 모바일·터치 화면은 기존처럼
+         화면에 들어왔을 때 자동으로 재생해 빈 무대가 남지 않게 합니다. */
       if (isInView && !hasStarted && !window.matchMedia(COLLECTION_SCROLL_MEDIA).matches) {
         startCollectionStream();
       }
@@ -2035,7 +2032,7 @@
   document.addEventListener("visibilitychange", syncPlayState);
 
   /* =========================================================
-     자동 재생 + native sticky — 카드는 시간으로 흐르고 섹션은 CSS로 머뭅니다.
+     스크롤 연동 + native sticky — 카드는 진행률로 흐르고 섹션은 CSS로 머뭅니다.
 
      GSAP pin이 section을 fixed로 바꾸던 순간의 "착 붙는" 느낌을 없애기 위해
      바깥 collection_scroll의 높이만 늘리고 브라우저 기본 sticky를 사용합니다.
@@ -2057,228 +2054,29 @@
       COLLECTION_STICKY_HOLD + "dvh"
     );
 
-    var interactionStep = 0;
-    var isWheelLocked = false;
-    var isExitingCollection = false;
-    var lastWheelTime = 0;
-    var firstStepTimer = 0;
-    var exitTimer = 0;
-    var pullProgress = 0;
-    var pullPhase = 0;
-    var nextSection = scrollStage.nextElementSibling;
+    var hintText = section.querySelector(".collection_scroll_hint_text");
 
-    function isCollectionPinned() {
-      var sectionRect = section.getBoundingClientRect();
-      var stageRect = scrollStage.getBoundingClientRect();
+    function clampCollectionProgress(value) {
+      return Math.min(1, Math.max(0, value));
+    }
 
-      return (
-        Math.abs(sectionRect.top) <= 4 &&
-        stageRect.top <= 4 &&
-        stageRect.bottom > window.innerHeight
+    function applyScrollProgress(progress) {
+      var revealProgress = clampCollectionProgress(
+        (progress - COLLECTION_REVEAL_START) /
+        (COLLECTION_REVEAL_END - COLLECTION_REVEAL_START)
       );
-    }
+      var easedProgress = revealProgress * revealProgress * (3 - 2 * revealProgress);
 
-    function stopLenisForInteraction() {
-      if (window.tchaikimmLenis && typeof window.tchaikimmLenis.stop === "function") {
-        var anchorY = window.scrollY;
-        window.tchaikimmLenis.stop();
-        window.tchaikimmLenis.scrollTo(anchorY, {
-          immediate: true,
-          force: true
-        });
+      renderPhase(easedProgress * COLLECTION_REVEAL_PHASE);
+      section.style.setProperty("--collection_reveal_progress", revealProgress.toFixed(4));
+      section.classList.toggle("is_reveal_complete", revealProgress >= 0.98);
+
+      if (hintText) {
+        hintText.textContent = revealProgress >= 0.98
+          ? "Continue scrolling"
+          : "Scroll to reveal";
       }
     }
-
-    function startLenisAfterInteraction() {
-      if (window.tchaikimmLenis && typeof window.tchaikimmLenis.start === "function") {
-        window.tchaikimmLenis.start();
-      }
-    }
-
-    function applyCollectionPull(deltaY) {
-      var wheelAmount = Math.max(0, deltaY);
-
-      pullProgress = Math.min(
-        1,
-        pullProgress + wheelAmount / COLLECTION_PULL_WHEEL_DISTANCE
-      );
-
-      /* 초반은 묵직하고 끝에서 조금 더 잘 따라오는 곡선입니다. */
-      var easedProgress = pullProgress * pullProgress * (3 - 2 * pullProgress);
-      var scale = COLLECTION_PULL_START_SCALE +
-        (1.02 - COLLECTION_PULL_START_SCALE) * easedProgress;
-      var translateY = COLLECTION_PULL_START_Y * (1 - easedProgress);
-
-      /* 최소 이동값을 더하지 않습니다. 작은 입력은 작은 만큼만 실시간 반영됩니다. */
-      pullPhase = COLLECTION_PULL_SEED_PHASE * easedProgress;
-      renderPhase(pullPhase);
-      window.gsap.set(row, {
-        y: translateY,
-        scale: scale,
-        transformOrigin: "50% 50%"
-      });
-    }
-
-    function completeCollectionPull() {
-      var shouldStartStream = pullProgress >= COLLECTION_PULL_COMMIT_PROGRESS;
-
-      if (shouldStartStream) {
-        startCollectionStream(pullPhase);
-      } else {
-        interactionStep = 0;
-        pullProgress = 0;
-        pullPhase = 0;
-        renderPhase(0);
-      }
-
-      /* 충분히 당겼다면 놓은 위치에서 자동재생으로 이어지고, 미세 입력이면
-         자동재생 없이 원위치로 돌아가 다음 제스처를 기다립니다. */
-      window.gsap.to(row, {
-        y: 0,
-        scale: 1,
-        duration: COLLECTION_PULL_RELEASE_DURATION,
-        ease: "back.out(1.6)",
-        clearProps: "transform",
-        overwrite: true,
-        onComplete: function () {
-          isWheelLocked = false;
-          startLenisAfterInteraction();
-        }
-      });
-    }
-
-    function scheduleCollectionPullRelease() {
-      window.clearTimeout(firstStepTimer);
-      firstStepTimer = window.setTimeout(
-        releaseFirstStepWhenIdle,
-        COLLECTION_WHEEL_IDLE
-      );
-    }
-
-    function releaseFirstStepWhenIdle() {
-      var idleTime = performance.now() - lastWheelTime;
-
-      if (idleTime < COLLECTION_WHEEL_IDLE) {
-        firstStepTimer = window.setTimeout(
-          releaseFirstStepWhenIdle,
-          COLLECTION_WHEEL_IDLE - idleTime
-        );
-        return;
-      }
-
-      completeCollectionPull();
-    }
-
-    function beginCollectionInteraction(initialDeltaY) {
-      interactionStep = 1;
-      isWheelLocked = true;
-      lastWheelTime = performance.now();
-      pullProgress = 0;
-      pullPhase = 0;
-      stopLenisForInteraction();
-
-      /* 사진이 나타나는 순간 무대 전체를 살짝 뒤에서 당겨와, 단순 재생 버튼처럼
-         띡 켜지지 않고 손에 걸렸다 놓이는 느낌을 만듭니다. */
-      window.gsap.killTweensOf(row);
-      applyCollectionPull(initialDeltaY);
-
-      /* 같은 마우스 한 칸/트랙패드 한 번이 두 번째 단계까지 통과하지 않도록
-         사진이 들어오는 동안 입력을 한 번만 소비합니다. */
-      scheduleCollectionPullRelease();
-    }
-
-    function finishCollectionExit() {
-      window.clearTimeout(exitTimer);
-      isExitingCollection = false;
-      startLenisAfterInteraction();
-      window.gsap.killTweensOf(section);
-      window.gsap.set(section, { clearProps: "transform" });
-    }
-
-    function scrollOutOfCollection() {
-      var targetTop = nextSection
-        ? window.scrollY + nextSection.getBoundingClientRect().top
-        : scrollStage.offsetTop + scrollStage.offsetHeight;
-
-      window.clearTimeout(exitTimer);
-      /* Lenis 이동이 브라우저 탭 전환 등으로 중단돼도 wheel 잠금이 남지 않는 안전장치입니다. */
-      exitTimer = window.setTimeout(
-        finishCollectionExit,
-        (COLLECTION_EXIT_DURATION + 0.35) * 1000
-      );
-
-      if (window.tchaikimmLenis) {
-        window.tchaikimmLenis.scrollTo(targetTop, {
-          duration: COLLECTION_EXIT_DURATION,
-          easing: function (progress) {
-            return progress < 0.5
-              ? 4 * progress * progress * progress
-              : 1 - Math.pow(-2 * progress + 2, 3) / 2;
-          },
-          lock: true,
-          force: true,
-          onComplete: finishCollectionExit
-        });
-        return;
-      }
-
-      window.scrollTo({ top: targetTop, behavior: "smooth" });
-    }
-
-    function exitCollection() {
-      interactionStep = 2;
-      isExitingCollection = true;
-      window.gsap.killTweensOf(section);
-
-      /* 바로 스크롤 좌표를 바꾸지 않고 섹션을 먼저 위로 살짝 당깁니다.
-         당김이 끝난 시점부터 Lenis가 다음 구간으로 부드럽게 풀어줍니다. */
-      window.gsap.to(section, {
-        y: COLLECTION_EXIT_PULL_Y,
-        scale: COLLECTION_EXIT_PULL_SCALE,
-        duration: COLLECTION_EXIT_PULL_DURATION,
-        ease: "power2.inOut",
-        overwrite: true,
-        onComplete: scrollOutOfCollection
-      });
-    }
-
-    function handleCollectionWheel(event) {
-      if (isExitingCollection) {
-        event.preventDefault();
-        return;
-      }
-
-      if (!isCollectionPinned() || event.deltaY <= 0) {
-        return;
-      }
-
-      event.preventDefault();
-      lastWheelTime = performance.now();
-
-      if (isWheelLocked) {
-        if (interactionStep === 1 && !hasStarted) {
-          applyCollectionPull(event.deltaY);
-          scheduleCollectionPullRelease();
-        }
-        return;
-      }
-
-      if (interactionStep === 0) {
-        beginCollectionInteraction(event.deltaY);
-        return;
-      }
-
-      if (interactionStep === 1) {
-        exitCollection();
-      }
-    }
-
-    /* 데스크탑에서만 두 번의 휠 제스처를 단계로 해석합니다.
-       모바일·터치·모션 감소 환경은 이 matchMedia에 들어오지 않아 기본 스크롤입니다. */
-    window.addEventListener("wheel", handleCollectionWheel, {
-      passive: false,
-      capture: true
-    });
 
     /* ---------------------------------------------------------
        진입 안착 — 고정되기 **전에** 컨테이너를 먼저 제자리에 앉힙니다.
@@ -2321,6 +2119,16 @@
       }
     });
 
+    function handleCollectionScroll() {
+      var stageRect = scrollStage.getBoundingClientRect();
+      var scrollDistance = Math.max(1, stageRect.height - window.innerHeight);
+      applyScrollProgress(clampCollectionProgress(-stageRect.top / scrollDistance));
+    }
+
+    window.addEventListener("scroll", handleCollectionScroll, { passive: true });
+    window.addEventListener("resize", handleCollectionScroll);
+    handleCollectionScroll();
+
     syncPlayState();
 
     /* ★ GSAP은 자기가 만든 것만 되돌립니다. 카드의 transform·opacity·z-index는
@@ -2330,14 +2138,8 @@
       /* 안착 트윈은 컨테이너의 element.style에 transform·opacity를 남기므로
          트리거만 죽이지 말고 되돌린 뒤 지웁니다. 빼먹으면 창을 좁혔을 때
          컨테이너가 120px 내려간 채(또는 opacity 0으로) 굳습니다. */
-      window.removeEventListener("wheel", handleCollectionWheel, true);
-      window.clearTimeout(firstStepTimer);
-      window.clearTimeout(exitTimer);
-      isWheelLocked = false;
-      isExitingCollection = false;
-      startLenisAfterInteraction();
-      window.gsap.killTweensOf([row, section]);
-      window.gsap.set([row, section], { clearProps: "transform" });
+      window.removeEventListener("scroll", handleCollectionScroll);
+      window.removeEventListener("resize", handleCollectionScroll);
 
       if (settle.scrollTrigger) {
         settle.scrollTrigger.kill();
@@ -2346,6 +2148,8 @@
       container.removeAttribute("style");
 
       section.classList.remove("is_scroll_ready");
+      section.classList.remove("is_reveal_complete");
+      section.style.removeProperty("--collection_reveal_progress");
       scrollStage.classList.remove("is_scroll_ready");
       scrollStage.style.removeProperty("--collection_sticky_scroll");
 

@@ -285,7 +285,7 @@
   transform: translateY(0);
 }
 
-/* 현재 실제 선택이 가능한 USD·KRW와 구분합니다.
+/* 현재 실제 선택이 가능한 USD와 구분합니다.
    disabled 속성도 함께 사용하므로 마우스와 키보드 모두 선택되지 않습니다. */
 .header_currency.is_open .header_currency_option:disabled {
   background-color: transparent;

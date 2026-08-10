@@ -339,6 +339,15 @@
   overflow: hidden;
 }
 
+.garment_story_section.is_drag_ready .garment_story_frame {
+  cursor: grab;
+}
+
+.garment_story_section.is_dragging .garment_story_frame {
+  cursor: grabbing;
+  user-select: none;
+}
+
 /* 원형 내비 — 중심(400,400) 반지름 436(라벨) / 400(마커) 기준.
    Figma 주석: "30도 간격 슬롯, 활성 슬롯 0도, 나머지 +30/+60/-30".
    슬롯 4개 = 가먼트 4개라 항상 전부 자리를 차지합니다(숨는 항목 없음). */
@@ -1299,8 +1308,9 @@
   width: 100%;
   padding: 250px 0;
   /* 상품 스트립이 컨테이너(1523px)보다 넓어 좌우로 흘러넘치는 디자인입니다.
-     넘친 만큼 가로 스크롤바가 생기지 않도록 섹션에서 잘라냅니다. */
-  overflow-x: hidden;
+     clip은 hidden과 달리 스크롤 컨테이너를 만들지 않아 아래 sticky를 막지 않습니다. */
+  overflow-x: clip;
+  overflow-y: visible;
   background-color: var(--color_bg_inverse);
 }
 
@@ -1311,8 +1321,8 @@
   width: 1523px;
 }
 
-/* 왼쪽 글 블록이 영상을 따라 내려오려면 위쪽에 붙어 있어야 하므로
-   stretch(기본값)가 아니라 flex-start로 둡니다. */
+/* 왼쪽 reference의 sticky 범위는 이 부모의 높이(= 오른쪽 영상 높이)로 제한됩니다.
+   영상 끝에 도달하면 reference도 함께 풀려 아래 related 영역으로 넘어갑니다. */
 .motif_hero {
   display: flex;
   align-items: flex-start;
@@ -1320,10 +1330,15 @@
 }
 
 .motif_reference {
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 18px;
   width: 380px;
+  height: 100vh;
+  align-self: flex-start;
   flex-shrink: 0;
 }
 
@@ -1659,6 +1674,12 @@
   .garment_story_scroll {
     zoom: calc(1 / var(--site_view_scale));
   }
+
+  /* html zoom으로 100vh가 화면상 810px로 줄어드는 것을 상쇄해,
+     발표 화면에서도 reference가 실제 뷰포트 1080px를 채우게 합니다. */
+  .motif_reference {
+    height: calc(100vh / var(--site_view_scale));
+  }
 }
 
 /* =========================================================
@@ -1969,6 +1990,9 @@
   }
 
   .motif_reference {
+    position: static;
+    height: auto;
+    justify-content: flex-start;
     width: 100%;
     max-width: 520px;
   }
