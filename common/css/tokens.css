@@ -55,6 +55,10 @@
   --layout_inner: 1600px;
   --layout_gutter: 20px;
   --header_height: 64px;
+  /* ★ 헤더 로고 크기는 여기서만 바꿉니다. 워드마크 원본이 300 × 45(가로세로 6.667:1)라
+     높이는 폭 ÷ 6.667입니다 — 150px → 22.5px, 180px → 27px, 225px → 34px.
+     데스크톱 값은 아래 1280px 블록에 있습니다. */
+  --header_logo_width: 150px;
 
   --radius_button: 5px;
 
@@ -74,6 +78,10 @@
   :root {
     --layout_gutter: 64px;
     --header_height: 64px;
+    /* 데스크톱 로고. 225px(높이 34px)일 때 20px 메뉴 글씨보다 눈에 띄게 커서
+       180px(높이 27px)로 줄였습니다. 더 줄이려면 165px(24.8px)까지가 무난하고,
+       150px 아래로는 워드마크가 읽히지 않습니다. */
+    --header_logo_width: 170px;
   }
 }
 

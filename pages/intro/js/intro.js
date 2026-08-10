@@ -19,12 +19,16 @@
   /* 조절값 — 숫자만 바꾸면 됩니다 */
   var OVERLAY_AT_SECONDS = 3; /* 버튼이 나타나는 영상 시점(초). 영상은 약 4.04초입니다 */
   var FALLBACK_DELAY_MS = 3600; /* 자동재생이 막혔을 때 대신 쓰는 대기 시간 */
+  var EXIT_DURATION_MS = 420;
 
+  var intro = document.querySelector(".intro");
   var section = document.querySelector(".scroll");
   var video = document.querySelector(".scroll_video");
   var overlay = document.querySelector(".scroll_overlay");
+  var skipLink = document.querySelector(".intro_skip");
+  var isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (!section || !video || !overlay) {
+  if (!intro || !section || !video || !overlay) {
     return;
   }
 
@@ -52,9 +56,45 @@
     }
   }
 
+  function handleSkipClick(event) {
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+
+    event.preventDefault();
+    intro.classList.add("is_leaving");
+    video.pause();
+
+    window.setTimeout(function () {
+      window.location.assign(skipLink.href);
+    }, isReducedMotion ? 0 : EXIT_DURATION_MS);
+  }
+
+  if (skipLink) {
+    skipLink.addEventListener("click", handleSkipClick);
+  }
+
+  window.addEventListener("pageshow", function (event) {
+    intro.classList.remove("is_leaving");
+
+    if (event.persisted && !isReducedMotion) {
+      var resumedPlay = video.play();
+      if (resumedPlay && typeof resumedPlay.catch === "function") {
+        resumedPlay.catch(function () {});
+      }
+    }
+  });
+
   /* 모션 감소 설정이면 영상을 재생하지 않고 버튼을 바로 보여줍니다.
      기다릴 이유가 없고, 기다리게 하면 들어갈 방법이 늦어집니다. */
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+  if (isReducedMotion) {
     video.removeAttribute("autoplay");
     video.pause();
     return;

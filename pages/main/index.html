@@ -33,7 +33,7 @@
 <link rel="stylesheet" href="../../common/css/common.css">
 <link rel="stylesheet" href="../../common/css/layout.css?v=2">
   <link rel="stylesheet" href="../../common/css/shop_transition.css?v=3">
-<link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/main.css?v=2">
 </head>
 <body data-page="main" data-header-variant="white">
 
@@ -143,10 +143,10 @@
         <!-- 돋보기가 들를 네 지점. 스크롤 연출에서만 보이며, 눌리는 요소가 아니라
              표식이라 읽기 도구에서는 감춥니다 — 같은 내용을 아래 설명이 글로 전합니다.
              js/main.js가 이 요소들의 좌표를 읽어 돋보기 경로를 만듭니다. -->
-        <span class="detail_marker" data-part="collar" aria-hidden="true"></span>
-        <span class="detail_marker" data-part="sleeve" aria-hidden="true"></span>
-        <span class="detail_marker" data-part="body" aria-hidden="true"></span>
-        <span class="detail_marker" data-part="skirt" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="collar" data-zoom-src="assets/main/detail/collar/zoom_upscale.png" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="sleeve" data-zoom-src="assets/main/detail/sleeve/zoom_upscale.png" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="body" data-zoom-src="assets/main/detail/body/zoom_upscale.png" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="skirt" data-zoom-src="assets/main/detail/skirt/zoom_upscale.png" aria-hidden="true"></span>
 
         <!-- 기본(버튼) 방식의 조작부. 스크롤 연출에서는 감춥니다.
              사진 바로 아래에 두어야 사진 → 버튼 → 설명 순서로 읽힙니다. -->
@@ -187,7 +187,12 @@
              background-position을 매 프레임 바꿨는데, 그건 합성만으로 처리되지 않아
              확대된 사진 전체를 다시 칠하게 만들어 스크롤이 버벅였습니다. -->
         <div class="detail_lens" aria-hidden="true">
-          <img class="detail_lens_img" src="assets/main/detail/img.png" alt="" loading="lazy" decoding="async">
+          <img class="detail_lens_img detail_lens_base" src="assets/main/detail/img.png" alt="" loading="lazy" decoding="async">
+          <span class="detail_lens_crop_matte"></span>
+          <img class="detail_lens_crop" data-part="collar" src="assets/main/detail/collar/zoom_upscale.png" alt="" loading="lazy" decoding="async">
+          <img class="detail_lens_crop" data-part="sleeve" src="assets/main/detail/sleeve/zoom_upscale.png" alt="" loading="lazy" decoding="async">
+          <img class="detail_lens_crop" data-part="body" src="assets/main/detail/body/zoom_upscale.png" alt="" loading="lazy" decoding="async">
+          <img class="detail_lens_crop" data-part="skirt" src="assets/main/detail/skirt/zoom_upscale.png" alt="" loading="lazy" decoding="async">
         </div>
       </div>
     </div>
@@ -273,7 +278,8 @@
   <!-- bespoke -->
   <section class="promo_wrap promo_bespoke_wrap" aria-labelledby="promo_bespoke_title">
     <div class="promo_media">
-      <video class="promo_media_video" id="promo_bespoke_video" src="assets/main/bespoke/bespokevod.mp4"></video>
+      <video class="promo_media_video" id="promo_bespoke_video" src="assets/main/bespoke/bespokevod.mp4"
+             muted loop playsinline preload="metadata"></video>
     </div>
     <div class="common_container">
       <div class="promo promo_bespoke">
@@ -296,7 +302,8 @@
   <!-- shop -->
   <section class="shop" aria-labelledby="promo_shop_title">
     <div class="promo_media">
-      <video class="promo_media_video" id="promo_shop_video" src="vid/bespoke_vid_nologo.mp4" autoplay muted loop playsinline aria-hidden="true"></video>
+      <video class="promo_media_video" id="promo_shop_video" src="vid/bespoke_vid_nologo.mp4"
+             muted loop playsinline preload="metadata" aria-hidden="true"></video>
     </div>
     <div class="common_container">
       <div class="promo promo_shop">
@@ -341,8 +348,14 @@
       <h2 class="collection_title" id="collection_title">Two lines.<br>One extraordinary aesthetic.</h2>
 
       <div class="collection_links">
-        <a class="collection_link" href="../col_chaikimyoungjin/index.html">← View Tchai Kim Youngjin Collection</a>
-        <a class="collection_link" href="../col_chaikim/index.html">View Tchai Kim Collection →</a>
+        <a class="collection_link" href="../col_chaikimyoungjin/index.html">
+          <span class="collection_link_arrow collection_link_arrow_left" aria-hidden="true">←</span>
+          <span>View Tchai Kim Youngjin Collection</span>
+        </a>
+        <a class="collection_link" href="../col_chaikim/index.html">
+          <span>View Tchai Kim Collection</span>
+          <span class="collection_link_arrow collection_link_arrow_right" aria-hidden="true">→</span>
+        </a>
       </div>
 
       <ul class="collection_row">
@@ -391,6 +404,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="../../common/js/common.js?v=2"></script>
   <script src="../../common/js/shop_transition.js?v=4"></script>
-<script src="js/main.js"></script>
+<script src="js/main.js?v=2"></script>
 </body>
 </html>

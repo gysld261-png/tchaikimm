@@ -15,33 +15,58 @@
 
 html,
 body {
-  height: 100%;
+  width: 100%;
+  min-height: 100%;
 }
 
 body {
-  /* 인트로에는 스크롤할 것이 없습니다. 주소창 높이 변화로 1~2px 스크롤이
-     생기는 것까지 막습니다. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
   overflow: hidden;
 }
 
+/* 인트로는 독립된 전체 화면이므로 공통 1920px 발표용 zoom을 적용하지 않습니다.
+   zoom이 0.75로 남으면 영상과 오버레이가 화면의 75%만 채우게 됩니다. */
+@media (min-width: 1850px) and (max-width: 1990px) {
+  html {
+    zoom: 1;
+  }
+}
+
 .intro {
-  /* dvh는 모바일 주소창이 접혔다 펴져도 화면 높이를 정확히 따라갑니다.
-     100vh만 쓰면 iOS에서 아래가 잘립니다. */
-  height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
 }
 
 .scroll {
   position: relative;
-  width: 100%;
-  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  height: 100vh;
+  min-height: 100vh;
   overflow: hidden;
 }
 
 .scroll_stage {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   height: 100%;
+  overflow: hidden;
+  transform: scale(1);
+  transition: opacity 0.38s ease,
+              transform 0.48s var(--easing_base);
 }
 
 /* ★ object-fit: cover라 화면 비율과 영상 비율(1840:1124)이 다르면 좌우 또는
@@ -50,9 +75,121 @@ body {
 .scroll_video {
   position: absolute;
   inset: 0;
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
+}
+
+.intro_skip {
+  position: absolute;
+  top: clamp(20px, 2.5vw, 48px);
+  right: clamp(20px, 2.5vw, 48px);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-width: 124px;
+  height: 44px;
+  padding: 0 17px;
+  overflow: hidden;
+  isolation: isolate;
+  border: 1px solid rgba(31, 67, 63, 0.54);
+  background: rgba(255, 253, 249, 0.76);
+  color: var(--color_point);
+  box-shadow: 0 8px 24px rgba(10, 10, 10, 0.1);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  font-family: var(--font_ui);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  line-height: 1;
+  animation: intro_skip_enter 0.7s var(--easing_base) 0.3s both;
+  transition: color 0.32s ease,
+              border-color 0.32s ease,
+              box-shadow 0.32s ease,
+              transform 0.32s var(--easing_base);
+}
+
+.intro_skip::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--color_point);
+  content: "";
+  transform: translateY(102%);
+  transition: transform 0.42s var(--easing_base);
+}
+
+.intro_skip_label,
+.intro_skip_arrow {
+  position: relative;
+  z-index: 1;
+}
+
+.intro_skip_arrow {
+  margin-right: -2px;
+  font-size: 16px;
+  letter-spacing: 0;
+  transition: transform 0.32s var(--easing_base);
+}
+
+.intro_skip:hover,
+.intro_skip:focus-visible {
+  border-color: var(--color_point);
+  color: var(--color_text_on_dark);
+  box-shadow: 0 12px 28px rgba(31, 67, 63, 0.24);
+  transform: translateY(-2px);
+}
+
+.intro_skip:focus-visible {
+  outline: 2px solid var(--color_point);
+  outline-offset: 3px;
+}
+
+.intro_skip:hover::before,
+.intro_skip:focus-visible::before {
+  transform: translateY(0);
+}
+
+.intro_skip:hover .intro_skip_arrow,
+.intro_skip:focus-visible .intro_skip_arrow {
+  transform: translateX(4px);
+}
+
+.intro_skip:active {
+  box-shadow: 0 5px 14px rgba(31, 67, 63, 0.2);
+  transform: translateY(0);
+  transition-duration: 0.08s;
+}
+
+.intro.is_leaving .scroll_stage {
+  opacity: 0;
+  transform: scale(1.015);
+}
+
+.intro.is_leaving .intro_skip {
+  opacity: 0;
+  translate: 0 -10px;
+  animation: none;
+  pointer-events: none;
+  transition: opacity 0.28s ease,
+              translate 0.32s var(--easing_base);
+}
+
+@keyframes intro_skip_enter {
+  from {
+    opacity: 0;
+    translate: 0 -10px;
+  }
+
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
 }
 
 /* ★ 기본값이 "보이는 상태"입니다. JS가 .is_timed를 붙여야 숨겨지고,
@@ -60,7 +197,7 @@ body {
    START 버튼이 영영 안 보여서 사이트에 들어갈 수 없게 됩니다. */
 .scroll_overlay {
   position: absolute;
-  top: 47.5%;
+  top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   display: flex;
@@ -153,6 +290,23 @@ body {
    ========================================================= */
 
 @media (max-width: 768px) {
+  body,
+  .intro,
+  .scroll {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  .intro_skip {
+    top: max(16px, env(safe-area-inset-top));
+    right: max(16px, env(safe-area-inset-right));
+    min-width: 108px;
+    height: 40px;
+    padding: 0 14px;
+    gap: 11px;
+    font-size: 10px;
+  }
+
   .scroll_overlay_book {
     width: 72px;
     height: 72px;
@@ -179,6 +333,14 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .intro_skip,
+  .intro_skip::before,
+  .intro_skip_arrow,
+  .scroll_stage {
+    animation: none;
+    transition: none;
+  }
+
   .scroll_overlay_book img {
     animation: none;
   }

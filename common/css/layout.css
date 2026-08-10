@@ -49,8 +49,10 @@
   align-items: center;
 }
 
+/* 크기는 common/css/tokens.css의 --header_logo_width에서 바꿉니다
+   (브레이크포인트별 값이 그곳에 모여 있습니다) */
 .header_logo_img {
-  width: 150px;
+  width: var(--header_logo_width);
   height: auto;
   transition: filter var(--duration_fast) var(--easing_base);
 }
@@ -439,9 +441,9 @@
 }
 
 @media (min-width: 1280px) {
-  .header_logo_img {
-    width: 225px;
-  }
+  /* 데스크톱 로고 크기는 tokens.css의 --header_logo_width가 정합니다.
+     여기 있던 `width: 225px`는 그 토큰을 덮어써서 지웠습니다 —
+     크기를 바꾸려고 이 파일을 고치지 마세요. */
 
   .header_toggle {
     display: none;

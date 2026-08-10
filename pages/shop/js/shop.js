@@ -598,14 +598,11 @@ function syncHeroGallery() {
 syncHeroGallery();
 heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
-/* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)가 휠 스크롤
-   양에 비례해 연속적으로 부드럽게 도는 원통형 인터랙션입니다(레퍼런스
-   orionix.framer.website/about의 연도 타임라인 참고). 정수 스텝 사이를
-   딱딱 끊어 전환하는 대신, "진행도"를 실수(progress)로 두고 GSAP 트윈으로
-   목표값까지 관성감 있게 따라가게 하면서 매 프레임 각도를 다시 계산합니다.
-   섹션이 화면 상단에 sticky로 붙어있는 동안 휠을 가로채고, 첫/마지막
-   가먼트에서 그 방향으로 더 스크롤하면 그대로 흘려보내 페이지 스크롤이
-   자연스럽게 이어지게 합니다. */
+/* garment_story — 원형 내비 4개(Baeja/Cheollik/Geodeul/Sapok baji)를 휠 한 번마다
+   정확히 한 칸씩 이동시킵니다. 스크롤 위치는 네 개의 정수 스텝에 맞추고,
+   화면의 진행도(progress)는 GSAP scrub으로 따라오게 해 부드러운 스냅 감각을 냅니다.
+   섹션이 화면 상단에 고정된 동안만 휠을 가로채며, 첫/마지막 가먼트 바깥 방향은
+   그대로 흘려보내 앞·뒤 페이지 섹션으로 자연스럽게 이어지게 합니다. */
 (function () {
   "use strict";
 
@@ -651,7 +648,33 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   /* 설명과 이미지가 맞닿아 보이지 않도록 한 화면 높이보다 더 떨어뜨립니다. */
   var CONTENT_SPACING_MULTIPLIER = 2;
   /* 숫자가 작을수록 적은 스크롤로 네 콘텐츠를 빠르게 통과합니다. */
-  var SCROLL_DISTANCE_PERCENT = 450;
+  var SCROLL_DISTANCE_PERCENT = 550;
+  /* ★ 섹션이 화면에 고정된 직후 **아무것도 진행하지 않고 첫 가먼트를 그대로
+     보여주는 구간**입니다(전체 스크롤 길이 대비 비율).
+
+     예전에는 0이라 섹션이 화면을 채우는 순간 곧바로 회전이 시작돼, 첫 화면
+     (Cheollik)의 사진과 설명을 읽기도 전에 다음으로 넘어갔습니다.
+     이 값만큼은 멈춰 있으므로 내용을 먼저 보고 넘어갑니다.
+
+     ★ 이 값을 올릴 때는 SCROLL_DISTANCE_PERCENT도 같이 올려야 회전 속도가
+       그대로입니다 — 대기 구간이 전체에서 떼어 가는 몫이기 때문입니다.
+       (450 → 550으로 올린 것이 0.18을 벌충한 값입니다: 450 ÷ (1 − 0.18) ≈ 549)
+
+     끝에서도 마지막 가먼트를 읽을 시간을 주고 싶으면 아래 timeline의 duration을
+     `1 - LEAD_HOLD_RATIO - TAIL` 로 바꾸면 됩니다. */
+  var LEAD_HOLD_RATIO = 0.18;
+  /* Wheel 한 번을 한 가먼트 이동으로 해석합니다. 트랙패드는 한 번의 손동작에서도
+     wheel 이벤트를 여러 번 보내므로, 이동 애니메이션과 관성 입력이 모두 끝날 때까지
+     잠금을 유지해야 두세 칸씩 건너뛰지 않습니다. */
+  var WHEEL_MIN_DELTA = 4;
+  /* ★ Garment Story 한 칸 이동 속도 조절 위치
+     숫자를 키우면 더 천천히, 줄이면 더 빠르게 이동합니다. 실제 스크롤 좌표를
+     이 시간 동안 움직이므로 이전처럼 먼저 튄 뒤 내용만 따라오지 않습니다. */
+  var SNAP_DURATION = 1.15;
+  /* 스크롤 위치를 따라가는 화면 요소의 미세한 잔상을 조절합니다.
+     너무 크게 올리면 입력보다 늦게 멈추므로 짧게 유지합니다. */
+  var SNAP_SCRUB = 0.18;
+  var SNAP_IDLE_DELAY = 220;
   /* 숫자가 클수록 가먼트 한 칸 넘어가는 데 휠을 더 많이 굴려야 해서,
      한 항목에 머무르는 시간(=사용자가 쉬는 시간)이 늘어납니다.
      시안에 없는 값이라 추정치이며, 더 여유를 주고 싶으면 이 숫자를
@@ -661,6 +684,11 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   var mediaImages = Array.prototype.slice.call(mediaWrap.querySelectorAll(".garment_media_img"));
 
   var state = { progress: 0 };
+  var garmentTrigger = null;
+  var isSnapLocked = false;
+  var isSnapAnimationDone = false;
+  var snapIdleTimer = 0;
+  var snapAnimationTimer = 0;
 
   function applyProgress() {
     var roundedIndex = Math.max(0, Math.min(STEP_COUNT - 1, Math.round(state.progress)));
@@ -716,35 +744,94 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
   }
 
   function isSectionEngaged() {
-    var rect = section.getBoundingClientRect();
-    return Math.abs(rect.top) <= STICKY_ENGAGED_TOLERANCE_PX;
+    return garmentTrigger && garmentTrigger.isActive;
   }
 
-  function animateTo(nextTarget) {
-    targetProgress = nextTarget;
+  function scheduleSnapUnlock() {
+    window.clearTimeout(snapIdleTimer);
+    snapIdleTimer = window.setTimeout(function () {
+      if (isSnapAnimationDone) {
+        isSnapLocked = false;
+      }
+    }, SNAP_IDLE_DELAY);
+  }
 
-    if (rotateTween) {
-      rotateTween.kill();
+  function getStepScrollY(index) {
+    var triggerDistance = garmentTrigger.end - garmentTrigger.start;
+    var stepRatio = index / (STEP_COUNT - 1);
+    var timelineRatio = LEAD_HOLD_RATIO + stepRatio * (1 - LEAD_HOLD_RATIO);
+
+    /* 첫 스텝과 마지막 스텝은 pin 경계에서 1px 안쪽에 둡니다. 정확히 경계에 놓으면
+       브라우저 반올림에 따라 섹션이 한 프레임 먼저 풀릴 수 있습니다. */
+    if (index === 0) {
+      return garmentTrigger.start + 1;
     }
 
-    /* duration을 늘리면 한 칸 넘어갈 때 도는 동작 자체가 더 느리고
-       부드러워집니다. ease를 "power1.out"처럼 더 약한 곡선으로 바꾸면
-       가속이 완만해져서 더 차분한 느낌을 줍니다. */
-    rotateTween = gsap.to(state, {
-      progress: targetProgress,
-      duration: 1.6,
-      ease: "power2.out",
-      onUpdate: applyProgress
-    });
+    if (index === STEP_COUNT - 1) {
+      return garmentTrigger.end - 1;
+    }
+
+    return garmentTrigger.start + triggerDistance * timelineRatio;
   }
 
-  function handleWheel(event) {
-    if (!isSectionEngaged()) {
+  function snapEasing(progress) {
+    /* 양 끝에서 속도가 0에 가까워지는 easeInOutCubic입니다.
+       휠 입력 직후 급발진하거나 도착점에서 딱 멈추는 느낌을 줄입니다. */
+    if (progress < 0.5) {
+      return 4 * progress * progress * progress;
+    }
+
+    return 1 - Math.pow(-2 * progress + 2, 3) / 2;
+  }
+
+  function setSnapScrollY(targetY, isImmediate) {
+    var shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var shouldMoveImmediately = isImmediate || shouldReduceMotion;
+
+    if (window.tchaikimmLenis) {
+      window.tchaikimmLenis.scrollTo(targetY, {
+        immediate: shouldMoveImmediately,
+        duration: SNAP_DURATION,
+        easing: snapEasing,
+        lock: !shouldMoveImmediately,
+        force: true
+      });
       return;
     }
 
-    var atStartGoingUp = targetProgress <= 0 && event.deltaY < 0;
-    var atEndGoingDown = targetProgress >= STEP_COUNT - 1 && event.deltaY > 0;
+    window.scrollTo({
+      top: targetY,
+      behavior: shouldMoveImmediately ? "auto" : "smooth"
+    });
+  }
+
+  function scrollToStep(index) {
+    var targetY = getStepScrollY(index);
+
+    function handleComplete() {
+      /* 원래 wheel 이벤트의 관성값이 남아 있어도 마지막에 정확한 스텝 좌표로
+         한 번 더 보정합니다. 이 보정 덕분에 라벨·글·사진 중심이 어긋나지 않습니다. */
+      setSnapScrollY(targetY, true);
+      state.progress = index;
+      applyProgress();
+      isSnapAnimationDone = true;
+      scheduleSnapUnlock();
+    }
+
+    window.clearTimeout(snapAnimationTimer);
+    snapAnimationTimer = window.setTimeout(handleComplete, (SNAP_DURATION + 0.1) * 1000);
+    setSnapScrollY(targetY, false);
+  }
+
+  function handleWheel(event) {
+    if (!isSectionEngaged() || Math.abs(event.deltaY) < WHEEL_MIN_DELTA) {
+      return;
+    }
+
+    var direction = event.deltaY > 0 ? 1 : -1;
+    var currentIndex = Math.max(0, Math.min(STEP_COUNT - 1, Math.round(state.progress)));
+    var atStartGoingUp = currentIndex === 0 && direction < 0;
+    var atEndGoingDown = currentIndex === STEP_COUNT - 1 && direction > 0;
 
     if (atStartGoingUp || atEndGoingDown) {
       /* 첫/마지막 가먼트를 넘어가려는 스크롤은 가로채지 않고 그대로
@@ -752,11 +839,16 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
       return;
     }
 
-    var proposed = targetProgress + event.deltaY * WHEEL_SENSITIVITY;
-    var clamped = Math.max(0, Math.min(STEP_COUNT - 1, proposed));
-
     event.preventDefault();
-    animateTo(clamped);
+    scheduleSnapUnlock();
+
+    if (isSnapLocked) {
+      return;
+    }
+
+    isSnapLocked = true;
+    isSnapAnimationDone = false;
+    scrollToStep(currentIndex + direction);
   }
 
   /* 1280 미만에서는 pin을 걸지 않습니다(css/shop.css의 max-width: 1279px
@@ -776,30 +868,48 @@ heroGalleryQuery.addEventListener("change", syncHeroGallery);
 
     var garmentTimeline = gsap.timeline({
       scrollTrigger: {
-        trigger: scrollWrap,
+        /* 위·아래 여백은 scrollWrap에 있고 실제 고정 시작점은 section입니다.
+           래퍼를 trigger로 쓰면 위쪽 여백이 화면 상단에 닿을 때 너무 일찍 고정됩니다. */
+        trigger: section,
         start: "top top",
         end: "+=" + SCROLL_DISTANCE_PERCENT + "%",
         pin: section,
         pinSpacing: true,
         anticipatePin: 1,
-        scrub: true,
+        /* 실제 스크롤 이동은 SNAP_DURATION으로 제어하고, 여기는 Wheel·글·사진이
+           그 위치를 살짝 부드럽게 따라오는 정도만 남깁니다. */
+        scrub: SNAP_SCRUB,
         invalidateOnRefresh: true
       }
     });
 
+    /* ★ 시작 위치(세 번째 인자)가 LEAD_HOLD_RATIO입니다. 타임라인 앞쪽 그만큼은
+       트윈이 없어 state.progress가 0에 머물고, 그동안 화면은 첫 가먼트를 그대로
+       보여줍니다. duration은 남은 구간이라 (1 − 대기)입니다 — 둘을 더해 1이 되어야
+       스크롤 끝에서 마지막 가먼트에 정확히 도착합니다. */
     garmentTimeline
       .to(state, {
         progress: STEP_COUNT - 1,
-        duration: 1,
+        duration: 1 - LEAD_HOLD_RATIO,
         ease: "none",
         onUpdate: applyProgress
-      });
+      }, LEAD_HOLD_RATIO);
+
+    garmentTrigger = garmentTimeline.scrollTrigger;
+    /* capture 단계에서 먼저 받아 Lenis의 연속 스크롤보다 한 칸 스냅을 우선합니다. */
+    window.addEventListener("wheel", handleWheel, { passive: false, capture: true });
 
     /* GSAP은 자기가 만든 트윈·트리거만 되돌립니다. applyProgress()는
        element.style에 직접 쓰기 때문에 그 인라인 값은 남습니다 — 특히
        opacity가 0으로 굳으면 세로 스택에서 사진과 글이 안 보입니다.
        여기서 손으로 지워야 CSS 값(opacity: 1)이 다시 이깁니다. */
     return function cleanupGarmentStory() {
+      window.removeEventListener("wheel", handleWheel, true);
+      window.clearTimeout(snapIdleTimer);
+      window.clearTimeout(snapAnimationTimer);
+      garmentTrigger = null;
+      isSnapLocked = false;
+      isSnapAnimationDone = false;
       state.progress = 0;
 
       orbitItems.forEach(function (item) {

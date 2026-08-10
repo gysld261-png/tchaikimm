@@ -324,7 +324,12 @@
    .garment_story_frame은 height:100%로 섹션 높이를 따라가므로 여기에
    직접 px 높이를 주지 마세요. */
 .garment_story_scroll {
+  /* ★ Garment Story 위·아래 여백 조절 위치
+     숫자를 키우면 앞·뒤 섹션과의 간격이 커집니다. Wheel이 잘리지 않도록
+     100vh인 section 내부가 아니라 바깥 scroll 래퍼에 여백을 둡니다. */
+  --garment_story_section_gap: clamp(160px, 18vh, 240px);
   position: relative;
+  padding-block: var(--garment_story_section_gap);
 }
 
 .garment_story_section {
@@ -354,13 +359,29 @@
    Figma 주석: "30도 간격 슬롯, 활성 슬롯 0도, 나머지 +30/+60/-30".
    슬롯 4개 = 가먼트 4개라 항상 전부 자리를 차지합니다(숨는 항목 없음). */
 .garment_orbit {
+  --garment_orbit_scale: 1;
   position: absolute;
   left: -335px;
   top: 50%;
-  transform: translateY(-50%);
+  transform: translateY(-50%) scale(var(--garment_orbit_scale));
+  transform-origin: left center;
   width: 968px;
   height: 912px;
   pointer-events: none;
+}
+
+/* 높이가 짧은 데스크톱에서는 912px Wheel이 화면 위아래로 잘리지 않도록
+   원·라벨·마커를 한 묶음으로 줄입니다. 일반적인 1080px 화면은 원래 크기입니다. */
+@media (min-width: 1280px) and (max-height: 920px) {
+  .garment_orbit {
+    --garment_orbit_scale: 0.82;
+  }
+}
+
+@media (min-width: 1280px) and (max-height: 760px) {
+  .garment_orbit {
+    --garment_orbit_scale: 0.74;
+  }
 }
 
 .garment_orbit_circle {
@@ -2035,6 +2056,10 @@
    --------------------------------------------------------- */
 @media (max-width: 1279px) {
 
+  .garment_story_scroll {
+    --garment_story_section_gap: 80px;
+  }
+
   /* JS가 초기화를 건너뛰므로 pin도 sticky도 없습니다.
      화면 높이 고정(100vh)을 풀고 일반 흐름으로 되돌립니다. */
   .garment_story_section {
@@ -2045,7 +2070,7 @@
     display: block;
     width: 100%;
     height: auto;
-    padding: 100px 32px;
+    padding: 128px 32px;
   }
 
   /* 원형 내비는 휠 회전 전용 장치라 재킹이 없으면 의미가 없습니다.
@@ -2107,6 +2132,10 @@
    --------------------------------------------------------- */
 @media (max-width: 767px) {
 
+  .garment_story_scroll {
+    --garment_story_section_gap: 56px;
+  }
+
   .hero_section_frame {
     gap: 28px;
     padding: 120px 20px 60px;
@@ -2133,7 +2162,7 @@
   }
 
   .garment_story_frame {
-    padding: 64px 20px;
+    padding: 88px 20px;
   }
 
   .garment_content {

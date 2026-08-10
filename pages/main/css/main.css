@@ -284,6 +284,11 @@
   min-height: 100dvh;
   padding: 0;
   overflow: clip;
+  /* Figma 2076:7413 — 위의 따뜻한 살구색이 페이지 기본 크림색으로 내려갑니다.
+     common_container에 직접 넣으면 1920px에서 좌우 단색 띠가 생기므로
+     모델 섹션 전체 배경에 적용해 full-bleed로 이어지게 합니다. */
+  background-color: var(--color_bg);
+  background-image: linear-gradient(to bottom, #ffe3af 0%, var(--color_bg) 100%);
 }
 
 .model_container {
@@ -299,6 +304,44 @@
   width: min(544px, 48dvh, 88vw);
   aspect-ratio: 544 / 720;
   flex: none;
+}
+
+/* 스크롤 연출이 실제로 초기화된 경우에만 GPU 레이어를 준비합니다.
+   GSAP 또는 영상이 동작하지 않으면 기존 정적 배치 그대로 유지됩니다. */
+.model.is_scroll_ready .model_figure {
+  will-change: transform;
+}
+
+/* 데스크탑 model flow — 화면을 pin하지 않고 실제로 긴 섹션을 내려갑니다.
+   ★ 전체 길이는 --model_flow_height, 첫 위치는 figure/text의 top에서 조절합니다. */
+@media (min-width: 1280px) {
+  .model.is_model_flow {
+    /* 560dvh = 화면에 보이는 100dvh + 실제 진행 460dvh입니다.
+       이전 720dvh의 약 75%라 네 번 정도였던 진행을 약 세 번으로 줄입니다. */
+    --model_flow_height: 300dvh;
+    min-height: var(--model_flow_height);
+  }
+
+  .model.is_model_flow .model_container {
+    position: relative;
+    display: block;
+    min-height: var(--model_flow_height);
+  }
+
+  .model.is_model_flow .model_figure {
+    position: absolute;
+    top: min(30dvh, 280px);
+    left: 50%;
+    translate: -50% 0;
+  }
+
+  .model.is_model_flow .model_text {
+    position: absolute;
+    top: 6dvh;
+    left: 50%;
+    width: min(760px, calc(100% - (var(--layout_gutter) * 2)));
+    translate: -50% 0;
+  }
 }
 
 .model_video {
@@ -339,6 +382,18 @@
 
   .model_figure {
     width: min(440px, 46dvh, 88vw);
+  }
+
+  /* 360px 화면에서는 88vw 모델이 좌우로 움직일 공간이 거의 없습니다.
+     스크롤 연출이 켜졌을 때만 폭을 줄여 양쪽 모두 화면 안에 남게 합니다. */
+  .model.is_scroll_ready .model_figure {
+    width: min(440px, 46dvh, 72vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .model_figure {
+    transform: none;
   }
 }
 
@@ -922,6 +977,17 @@
   text-align: left;
 }
 
+/* 데스크탑에서 brand_story_textbox와 제목 시작선을 맞춥니다.
+   common_container의 max-width가 1920px 화면에서 Detail만 안쪽으로 밀기 때문에
+   이 헤더에 한해서 폭 제한을 풀고 Brand와 동일한 120px 패딩을 사용합니다. */
+@media (min-width: 1280px) {
+  .detail_head.common_container {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: 120px;
+  }
+}
+
 .detail_title {
   color: var(--color_text);
   font-family: var(--font_display);
@@ -1416,6 +1482,58 @@
   will-change: transform;
 }
 
+/* 선명화 확대컷은 큰 원본 위에 미리 겹쳐 두고 디코딩이 끝난 이미지끼리 opacity로
+   전환합니다. src 교체가 없어 흰 화면이 끼지 않으며, 투명 영역의 흰 바탕까지
+   이미지와 함께 자연스럽게 페이드됩니다. */
+.detail_lens_crop_matte {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-color: var(--color_bg, #fffdf9);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+}
+
+.detail_lens_crop {
+  position: absolute;
+  top: 3.125%;
+  left: 3.125%;
+  width: 93.75%;
+  height: 93.75%;
+  max-width: none;
+  object-fit: contain;
+  border-radius: 50%;
+  background-color: var(--color_bg, #fffdf9);
+  opacity: 0;
+  transition: opacity 0.28s ease;
+  pointer-events: none;
+  will-change: auto;
+}
+
+/* 첫 번째 Collar 에셋은 640px 캔버스 안에 지름 600px 원이 들어 있어 이미 3.125%
+   여백이 있습니다. 나머지 세 장만 위에서 93.75%로 줄여 실제 원 크기를 맞춥니다. */
+.detail_lens_crop[data-part="collar"] {
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.detail_lens_crop.is_ready.is_active {
+  opacity: 1;
+}
+
+.detail_lens.has_active_crop .detail_lens_crop_matte {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .detail_lens_crop_matte,
+  .detail_lens_crop {
+    transition: none;
+  }
+}
+
 /* 섹션이 화면에 들어와 연출이 시작될 때 js/main.js가 켭니다.
    transform의 translate(-50%, -50%)는 돋보기 중심을 지점에 맞추는 것이라
    scale만 바뀝니다. */
@@ -1613,6 +1731,13 @@
     zoom: calc(1 / var(--site_view_scale));
   }
 
+  /* model flow는 더 이상 pin-spacer 안에 있지 않으므로 직접 zoom을 복원합니다.
+     이 보정이 없으면 1920px에서 긴 스크롤 구간이 0.75배로 짧아집니다. */
+  .model.is_model_flow {
+    width: 100%;
+    zoom: calc(1 / var(--site_view_scale));
+  }
+
   .pin-spacer:has(> .model),
   .pin-spacer:has(> .detail_pin),
   .pin-spacer:has(> .brand_word_pin),
@@ -1693,9 +1818,9 @@
 }
 
 /* ---------------------------------------------------------
-   스크롤 연출 — js/main.js가 .is_scroll_ready를 붙였을 때만.
-   섹션을 화면에 고정한 채 스크롤에 따라 카드가 한 장씩 흘러나옵니다.
-   붙지 않으면(모션 감소·GSAP 없음·1024px 미만) 예전처럼 시간으로 흐릅니다.
+   자동 재생 + pin — js/main.js가 .is_scroll_ready를 붙였을 때만.
+   섹션은 화면에 고정하지만 카드 흐름은 스크롤과 무관하게 시간으로 재생됩니다.
+   붙지 않아도(모션 감소·GSAP 없음·1024px 미만) 기본 가로 배치를 유지합니다.
 
    ★ 고정할 요소(.collection)의 부모는 main(block)이라 pinSpacing이 정상 동작합니다.
      detail에서 겪은 "부모가 flex면 ScrollTrigger가 자리를 확보하지 않는" 문제가
@@ -1880,30 +2005,80 @@
 
 .collection_link {
   position: relative;
-  padding-bottom: 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 6px 2px 9px;
   color: var(--color_point);
   font-family: var(--font_body);
   font-size: var(--fs_ui_16);
+  font-weight: 500;
   line-height: 1.63;
   text-decoration: none;
+  transition: color var(--duration_fast) var(--easing_base),
+              transform var(--duration_fast) var(--easing_base);
 }
 
+.collection_link::before,
 .collection_link::after {
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   height: 1px;
-  background-color: currentColor;
   content: "";
+}
+
+.collection_link::before {
+  background-color: var(--color_point);
+  opacity: 0.22;
+}
+
+.collection_link::after {
+  background-color: currentColor;
   transform: scaleX(0);
-  transform-origin: left center;
   transition: transform var(--duration_base) var(--easing_base);
+}
+
+.collection_link:first-child::after {
+  transform-origin: right center;
+}
+
+.collection_link:last-child::after {
+  transform-origin: left center;
+}
+
+.collection_link:hover,
+.collection_link:focus-visible {
+  color: #16332f;
+  transform: translateY(-2px);
 }
 
 .collection_link:hover::after,
 .collection_link:focus-visible::after {
   transform: scaleX(1);
+}
+
+.collection_link:active {
+  transform: translateY(0);
+}
+
+.collection_link_arrow {
+  display: inline-block;
+  font-size: 1.15em;
+  line-height: 1;
+  transition: transform var(--duration_fast) var(--easing_base);
+}
+
+.collection_link:hover .collection_link_arrow_left,
+.collection_link:focus-visible .collection_link_arrow_left {
+  transform: translateX(-6px) scale(1.06);
+}
+
+.collection_link:hover .collection_link_arrow_right,
+.collection_link:focus-visible .collection_link_arrow_right {
+  transform: translateX(6px) scale(1.06);
 }
 
 

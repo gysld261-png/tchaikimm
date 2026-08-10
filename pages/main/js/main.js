@@ -74,24 +74,53 @@
   (function setupModelScroll() {
     var section = document.querySelector(".model");
     var video = section ? section.querySelector(".model_video") : null;
+    var figure = section ? section.querySelector(".model_figure") : null;
     var text = section ? section.querySelector(".model_text") : null;
+    var detailHead = document.querySelector(".detail_head.common_container");
 
-    /* ★ 모델 섹션 스크롤 감각은 아래 네 값만 조절합니다.
-       - MODEL_SCROLL_LENGTH: 고정 구간의 전체 길이. 2.4는 화면 높이의 2.4배입니다.
-         작게 하면 모델 섹션이 짧아지고 영상 진행도 함께 빨라집니다. (권장 2.0 ~ 2.8)
-       - MODEL_TEXT_HOLD_RATIO: 텍스트를 완전히 보여주는 구간입니다.
-         크게 하면 문구가 더 오래 머뭅니다. (권장 0.15 ~ 0.28)
-       - MODEL_TEXT_FADE_RATIO: 텍스트가 사라지는 데 쓰는 구간입니다.
-         크게 하면 더 천천히 사라집니다. (권장 0.1 ~ 0.2)
-       - MODEL_VIDEO_START_RATIO: 영상이 움직이기 시작하는 지점입니다.
-         지금은 텍스트 페이드 후반과 살짝 겹치도록 0.25로 둡니다. */
-    var MODEL_SCROLL_LENGTH = 2.4;
-    var MODEL_TEXT_HOLD_RATIO = 0.7;
-    var MODEL_TEXT_FADE_RATIO = 0.14;
-    var MODEL_VIDEO_START_RATIO = 0.25;
+    /* 태블릿·모바일 고정형 구간 길이입니다.
+       데스크탑 길이는 main.css의 --model_flow_height에서 조절합니다. */
+    var MODEL_SCROLL_LENGTH_TABLET = 3.8;
+    var MODEL_SCROLL_LENGTH_MOBILE = 2.8;
+    /* ★ 모델 좌우 이동 폭 조절 위치
+       현재 화면 너비에 곱하는 비율입니다. 데스크탑 0.22는 화면 너비의 22%입니다. */
+    var MODEL_TRAVEL_DESKTOP = 0.22;
+    var MODEL_TRAVEL_TABLET = 0.16;
+    var MODEL_TRAVEL_MOBILE = 0.1;
+    var MODEL_TEXT_HOLD_RATIO = 0.2;
+    var MODEL_TEXT_FADE_RATIO = 0.12;
+    var MODEL_VIDEO_START_RATIO = 0.08;
+    /* ★ 데스크탑 모델 스크롤 감도 조절 위치
+       값을 키우면 스크롤을 놓은 뒤에도 더 천천히 따라와 묵직해집니다.
+       권장 범위: 0.8 ~ 1.5 / 현재 1.3
+       전체 도착 거리는 main.css의 --model_flow_height에서 조절합니다. */
+    var MODEL_DESKTOP_SCRUB = 1.5;
+    /* ★ 마지막 모델과 detail_head 사이 간격(px)입니다.
+       숫자를 줄이면 모델이 detail 제목에 더 가까워집니다. */
+    var MODEL_DETAIL_HEAD_GAP = 32;
 
-    if (!section || !video || !text) {
+    if (!section || !video || !figure || !text) {
       return;
+    }
+
+    function getModelScrollLength() {
+      if (window.innerWidth >= 768) {
+        return MODEL_SCROLL_LENGTH_TABLET;
+      }
+
+      return MODEL_SCROLL_LENGTH_MOBILE;
+    }
+
+    function getModelTravelDistance() {
+      var travelRatio = MODEL_TRAVEL_MOBILE;
+
+      if (window.innerWidth >= 1280) {
+        travelRatio = MODEL_TRAVEL_DESKTOP;
+      } else if (window.innerWidth >= 768) {
+        travelRatio = MODEL_TRAVEL_TABLET;
+      }
+
+      return document.documentElement.clientWidth * travelRatio;
     }
 
     video.pause();
@@ -151,20 +180,75 @@
        만들어져 버그가 안 보이는 탓에 재현이 들쭉날쭉했습니다.
        그래서 핀은 처음부터 만들고, duration이 필요한 재생 위치 계산만
        매 프레임 그때의 값으로 미룹니다. */
+    section.classList.add("is_scroll_ready");
+    var isDesktopModelFlow = window.matchMedia("(min-width: 1280px)").matches;
     var modelPlayhead = { progress: 0 };
+    var modelMotion = { progress: 0 };
+    var desktopSectionTravel = 0;
+    var desktopEndDrift = 0;
+
+    if (isDesktopModelFlow) {
+      section.classList.add("is_model_flow");
+    }
+
+    function measureDesktopModelMotion() {
+      var sectionRect = section.getBoundingClientRect();
+      var figureRect = figure.getBoundingClientRect();
+      var figureBaseTop = parseFloat(window.getComputedStyle(figure).top) || 0;
+
+      desktopSectionTravel = Math.max(0, sectionRect.height - window.innerHeight);
+
+      if (!detailHead) {
+        desktopEndDrift = window.innerHeight * 0.32;
+        return;
+      }
+
+      var sectionBottom = window.scrollY + sectionRect.top + sectionRect.height;
+      var detailHeadTop = window.scrollY + detailHead.getBoundingClientRect().top;
+      var detailHeadTopAtSectionEnd = window.innerHeight + detailHeadTop - sectionBottom;
+
+      desktopEndDrift = Math.max(
+        0,
+        detailHeadTopAtSectionEnd - MODEL_DETAIL_HEAD_GAP - figureRect.height - figureBaseTop
+      );
+    }
+
+    if (isDesktopModelFlow) {
+      measureDesktopModelMotion();
+    }
+
+    function applyDesktopModelMotion() {
+      var progress = modelMotion.progress;
+      var horizontalWave = Math.sin(progress * Math.PI * 3);
+      var horizontalPosition = -horizontalWave * getModelTravelDistance();
+
+      gsap.set(figure, {
+        x: horizontalPosition,
+        y: desktopSectionTravel * progress + desktopEndDrift * progress
+      });
+    }
 
     var timeline = gsap.timeline({
       scrollTrigger: {
         trigger: section,
         start: "top top",
         end: function () {
-          return "+=" + window.innerHeight * MODEL_SCROLL_LENGTH;
+          if (isDesktopModelFlow) {
+            return "bottom bottom";
+          }
+
+          return "+=" + window.innerHeight * getModelScrollLength();
         },
-        pin: true,
-        scrub: 0.2,
+        pin: !isDesktopModelFlow,
+        scrub: isDesktopModelFlow ? MODEL_DESKTOP_SCRUB : 0.35,
         anticipatePin: 1,
         invalidateOnRefresh: true,
-        fastScrollEnd: true
+        fastScrollEnd: true,
+        onRefresh: function () {
+          if (isDesktopModelFlow) {
+            measureDesktopModelMotion();
+          }
+        }
       }
     });
 
@@ -173,8 +257,47 @@
         text,
         { autoAlpha: 0, y: -20, duration: MODEL_TEXT_FADE_RATIO, ease: "none" },
         MODEL_TEXT_HOLD_RATIO
-      )
-      .to(
+      );
+
+    if (isDesktopModelFlow) {
+      /* 여러 트윈을 꺾어 붙이지 않고 하나의 연속 사인 곡선으로 좌우 위치를 계산합니다.
+         y는 실제 섹션 길이를 따라 내려가고 마지막에 화면 아래쪽으로 조금 더 이동합니다. */
+      timeline.to(
+        modelMotion,
+        {
+          progress: 1,
+          duration: 1,
+          ease: "none",
+          onUpdate: applyDesktopModelMotion
+        },
+        0
+      );
+    } else {
+      /* 태블릿·모바일은 직전의 고정형 좌우 이동을 그대로 유지합니다. */
+      timeline
+        .to(
+          figure,
+          { x: function () { return -getModelTravelDistance(); }, duration: 0.22, ease: "sine.inOut" },
+          0.08
+        )
+        .to(
+          figure,
+          { x: function () { return getModelTravelDistance(); }, duration: 0.3, ease: "sine.inOut" },
+          0.3
+        )
+        .to(
+          figure,
+          { x: function () { return -getModelTravelDistance() * 0.55; }, duration: 0.2, ease: "sine.inOut" },
+          0.6
+        )
+        .to(
+          figure,
+          { x: 0, duration: 0.2, ease: "sine.inOut" },
+          0.8
+        );
+    }
+
+    timeline.to(
         modelPlayhead,
         {
           progress: 1,
@@ -926,7 +1049,8 @@
   var pin = section && section.querySelector(".detail_pin");
   var stage = section && section.querySelector(".detail_stage");
   var lens = stage && stage.querySelector(".detail_lens");
-  var lensImage = lens && lens.querySelector(".detail_lens_img");
+  var lensImage = lens && lens.querySelector(".detail_lens_base");
+  var lensCrops = lens ? lens.querySelectorAll(".detail_lens_crop") : [];
   var image = stage && stage.querySelector(".detail_img");
   var texts = stage ? stage.querySelectorAll(".detail_text") : [];
   var markers = stage ? stage.querySelectorAll(".detail_marker") : [];
@@ -940,6 +1064,51 @@
 
   var activePart = "";
 
+  function markLensCropReady(crop) {
+    crop.classList.add("is_ready");
+    setLensSource(activePart);
+  }
+
+  /* src를 스크롤 도중 바꾸지 않고 확대컷 네 장을 처음부터 겹쳐 둡니다. 각 이미지가
+     실제로 디코딩된 뒤에만 페이드 인하므로 네트워크가 느려도 흰 화면이 끼지 않고,
+     준비 전에는 아래의 큰 원본 확대 화면이 그대로 보입니다. */
+  Array.prototype.forEach.call(lensCrops, function (crop) {
+    function handleCropLoad() {
+      if (typeof crop.decode === "function") {
+        crop.decode().then(
+          function () {
+            markLensCropReady(crop);
+          },
+          function () {
+            markLensCropReady(crop);
+          }
+        );
+        return;
+      }
+
+      markLensCropReady(crop);
+    }
+
+    if (crop.complete && crop.naturalWidth > 0) {
+      handleCropLoad();
+    } else {
+      crop.addEventListener("load", handleCropLoad, { once: true });
+    }
+  });
+
+  function setLensSource(part) {
+    var hasActiveCrop = false;
+
+    Array.prototype.forEach.call(lensCrops, function (crop) {
+      var isActive =
+        crop.classList.contains("is_ready") && crop.getAttribute("data-part") === part;
+      crop.classList.toggle("is_active", isActive);
+      hasActiveCrop = hasActiveCrop || isActive;
+    });
+
+    lens.classList.toggle("has_active_crop", hasActiveCrop);
+  }
+
   /* 어느 부위를 보여줄지 한 곳에서 정합니다. 빈 문자열이면 전부 끕니다
      (부위와 부위 사이를 이동하는 동안이 그렇습니다). */
   function setActivePart(part) {
@@ -947,6 +1116,7 @@
       return;
     }
     activePart = part;
+    setLensSource(part);
 
     Array.prototype.forEach.call(texts, function (text) {
       text.classList.toggle("is_active", text.getAttribute("data-part") === part);
@@ -1037,6 +1207,7 @@
     if (!lensImage) {
       return;
     }
+
     lensImage.style.width = stageWidth * DETAIL_LENS_ZOOM + "px";
     lensImage.style.height = stageHeight * DETAIL_LENS_ZOOM + "px";
   }
@@ -1161,8 +1332,8 @@
     var toKeywordProgress = (index + 1) / (stops.length - 1);
 
     setKeywordProgress(fromKeywordProgress + (toKeywordProgress - fromKeywordProgress) * eased);
-    paintLens(from.x + (to.x - from.x) * eased, from.y + (to.y - from.y) * eased);
     setActivePart("");
+    paintLens(from.x + (to.x - from.x) * eased, from.y + (to.y - from.y) * eased);
   }
 
   var isGsapReady = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
@@ -1217,6 +1388,7 @@
       section.classList.remove("is_scroll_ready");
       lens.classList.remove("is_active");
       lens.removeAttribute("style");
+      setActivePart("");
       if (lensImage) {
         lensImage.removeAttribute("style");
       }
@@ -1229,7 +1401,6 @@
       Array.prototype.forEach.call(keywords, function (keyword) {
         keyword.classList.remove("is_reached");
       });
-      setActivePart("");
     };
   });
 })();
@@ -1244,12 +1415,23 @@
   var MAX_VISIBLE_CARDS = 9;
   var CARD_INTRO_DELAY = 850;
   var RIGHT_STREAM_OFFSET = 0.5;
-  /* ★ 스크롤 연출에서 카드 한 장에 쓰는 스크롤 길이(화면 높이 %)입니다.
-     "너무 빨리 지나간다"면 올리고, "너무 길다"면 내리세요.
-     섹션 전체 길이 = 이 값 × (카드 흐름 전체 단계 수, 아래 phaseSpan). */
+  /* ★ 고정 구간의 스크롤 길이(카드 흐름 단계당 화면 높이 %)입니다.
+     카드 위치는 스크롤이 아니라 CARD_INTERVAL 시간으로 자동 재생됩니다. */
   var COLLECTION_SCROLL_PER_CARD = 32;
   /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
   var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
+  /* ★ 진입 안착(아래 "진입 안착" 주석 참고) 조절값 3개.
+     SHIFT — 컨테이너가 몇 px 아래에서 올라올지. 키우면 더 크게 움직입니다.
+     START — 언제부터 따라오기 시작할지. "top bottom"은 섹션 윗변이 화면 아래에
+             닿는 순간이라 화면 하나를 꽉 쓰는 가장 완만한 설정입니다.
+     SCRUB — 스크롤을 멈춘 뒤 더 따라오는 여운(초). 0이면 딱딱해집니다.
+     FADE  — 따라오기 시작할 때의 불투명도. 1이면 페이드 없이 움직임만 남고,
+             0에 가까울수록 화면 하나에 걸쳐 크게 나타납니다. 시안에 없는
+             연출이라 "흐릿하게 들어와 또렷해지는" 정도로만 두었습니다. */
+  var COLLECTION_SETTLE_SHIFT = 120;
+  var COLLECTION_SETTLE_START = "top bottom";
+  var COLLECTION_SETTLE_SCRUB = 1;
+  var COLLECTION_SETTLE_FADE = 0.4;
   /* 배열을 한 번 섞은 뒤 홀수·짝수 위치를 좌우로 나눕니다.
      같은 이미지를 복제하지 않아 한 화면 안에서 중복되어 보이지 않습니다. */
   var STREAM_ORDER = [0, 7, 4, 3, 8, 11, 2, 1, 10, 9, 6, 5];
@@ -1302,10 +1484,6 @@
   var pausedAt = null;
   var isInView = false;
   var hasStarted = false;
-  /* 스크롤이 카드를 밀고 있는 동안에는 시간 기반 반복을 멈춥니다.
-     둘이 동시에 돌면 서로의 위치를 덮어씁니다. */
-  var isScrollDriven = false;
-
   /* 흐름 전체를 한 번 다 보여주는 데 필요한 단계 수.
      카드 i는 phase가 i일 때 출발해 i + streamLength에서 한 바퀴를 끝냅니다.
      마지막 카드(index streamLength-1)까지 끝나려면 2 × streamLength − 1이 필요하고,
@@ -1364,13 +1542,13 @@
 
     renderPhase((elapsed - CARD_INTRO_DELAY) / CARD_INTERVAL);
 
-    if (isInView && !document.hidden && !isScrollDriven) {
+    if (isInView && !document.hidden) {
       frameId = window.requestAnimationFrame(render);
     }
   }
 
   function syncPlayState() {
-    if (isInView && hasStarted && !document.hidden && !isScrollDriven) {
+    if (isInView && hasStarted && !document.hidden) {
       if (pausedAt !== null) {
         startTime += performance.now() - pausedAt;
         pausedAt = null;
@@ -1410,11 +1588,10 @@
   document.addEventListener("visibilitychange", syncPlayState);
 
   /* =========================================================
-     스크롤 연출 — 섹션을 화면에 고정하고 스크롤이 카드를 밀게 합니다.
+     자동 재생 + pin — 섹션은 화면에 고정하고 카드는 시간으로 흐릅니다.
 
-     시간으로 흐르면 스크롤 속도에 따라 사용자가 사진 12장 중 일부만 보고
-     지나갑니다. 고정해 두면 스크롤한 만큼 정확히 진행하므로 끝까지 볼 수
-     있고, 되감으면 되돌아갑니다.
+     ScrollTrigger는 고정과 여백만 담당합니다. 카드 위치를 progress로 덮어쓰지
+     않아 사용자가 스크롤을 멈춰도 기존 자동 반복이 계속 재생됩니다.
 
      ★ 이 핀은 페이지에서 brand_word_pin보다 아래에 있으므로 refreshPriority가
        그보다 더 낮아야 합니다(-1 → -2). 핀은 "페이지 순서"대로 다시 계산돼야
@@ -1422,19 +1599,60 @@
        이 값을 지우면 위 핀이 자리를 잡기 전 좌표로 굳어 섹션이 겹칩니다.
      ========================================================= */
   var section = row.closest(".collection");
+  var container = section ? section.querySelector(".collection_container") : null;
   var isGsapReady = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
 
-  if (!section || !isGsapReady) {
+  if (!section || !container || !isGsapReady) {
     return;
   }
 
   window.gsap.matchMedia().add(COLLECTION_SCROLL_MEDIA, function () {
-    isScrollDriven = true;
-    syncPlayState(); /* 돌고 있던 시간 기반 반복을 멈춥니다 */
-
     section.classList.add("is_scroll_ready");
     /* 가운데 검은 프레임은 연출 내내 보여야 합니다 */
     row.classList.add("is_loop_active");
+
+    /* ---------------------------------------------------------
+       진입 안착 — 고정되기 **전에** 컨테이너를 먼저 제자리에 앉힙니다.
+
+       ★ 왜 필요한가
+         고정 자체에는 튀는 지점이 없습니다(섹션 top이 199.5 → 119.5 → 59.5 →
+         19.5 → 3.5 → -0.5로 이어지고 그대로 잠깁니다). "착 하고 떨어지는"
+         느낌은 위치가 어긋나서가 아니라, 섹션이 **스크롤 속도 그대로 올라오다가
+         한 프레임에 멈추기** 때문입니다. 멈추는 순간 속도가 0이 되니까 눈에는
+         부딪혀 선 것처럼 보입니다.
+
+         그래서 컨테이너를 페이지보다 느리게 따라오게 하고, 고정이 걸리는
+         지점(= "top top")에서 정확히 끝나도록 맞췄습니다. 잠기는 순간에는
+         컨테이너가 이미 멈춰 있어서, 고정이 "정지"가 아니라 "안착"으로 읽힙니다.
+
+       ★ ease가 핵심입니다
+         power2.out이라 움직임이 앞쪽에 몰립니다 — 진행도 50%에서 이미 목표의
+         75%까지 와 있고 마지막 20% 구간에서는 거의 제자리입니다. 선형(none)으로
+         두면 고정 직전까지 같은 속도로 움직여서 지금 문제가 그대로 남습니다.
+
+       ★ scrub 값이 여운입니다. 스크롤을 멈춰도 이 시간만큼 더 따라와 멎습니다.
+         0으로 두면 스크롤과 1:1로 붙어 딱딱해집니다.
+
+       조절: COLLECTION_SETTLE_SHIFT(내려앉는 거리) ·
+             COLLECTION_SETTLE_START(언제부터 따라올지) · COLLECTION_SETTLE_SCRUB
+       --------------------------------------------------------- */
+    var settle = window.gsap.fromTo(container, {
+      y: COLLECTION_SETTLE_SHIFT,
+      opacity: COLLECTION_SETTLE_FADE
+    }, {
+      y: 0,
+      opacity: 1,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: section,
+        start: COLLECTION_SETTLE_START,
+        /* ★ 끝이 고정 시작점과 같아야 합니다. 더 뒤로 두면 고정된 뒤에도
+           컨테이너가 계속 움직여 화면 안에서 따로 떠다닙니다. */
+        end: "top top",
+        scrub: COLLECTION_SETTLE_SCRUB,
+        refreshPriority: -2
+      }
+    });
 
     var trigger = window.ScrollTrigger.create({
       trigger: section,
@@ -1442,31 +1660,147 @@
       end: "+=" + COLLECTION_SCROLL_PER_CARD * phaseSpan + "%",
       pin: section,
       anticipatePin: 1,
-      refreshPriority: -2,
-      onUpdate: function (self) {
-        renderPhase(self.progress * phaseSpan);
-      }
+      refreshPriority: -2
     });
 
-    renderPhase(trigger.progress * phaseSpan);
+    syncPlayState();
 
     /* ★ GSAP은 자기가 만든 것만 되돌립니다. 카드의 transform·opacity·z-index는
        renderStreamCard가 element.style에 직접 쓰므로 여기서 손으로 지웁니다.
        빼먹으면 창을 좁혔을 때 카드가 마지막 위치에 굳은 채 남습니다. */
     return function cleanup() {
       trigger.kill();
+      /* 안착 트윈은 컨테이너의 element.style에 transform·opacity를 남기므로
+         트리거만 죽이지 말고 되돌린 뒤 지웁니다. 빼먹으면 창을 좁혔을 때
+         컨테이너가 120px 내려간 채(또는 opacity 0으로) 굳습니다. */
+      if (settle.scrollTrigger) {
+        settle.scrollTrigger.kill();
+      }
+      settle.revert();
+      container.removeAttribute("style");
+
       section.classList.remove("is_scroll_ready");
-      isScrollDriven = false;
 
       sourceItems.forEach(function (element) {
         element.removeAttribute("style");
         element.style.opacity = "0";
       });
 
-      /* 시간 기반 반복으로 되돌립니다 */
+      /* breakpoint가 바뀌어도 시간 기반 반복을 새 좌표에서 다시 시작합니다 */
       startTime = window.performance.now();
       pausedAt = null;
       syncPlayState();
     };
   });
+})();
+
+/* ---------------------------------------------------------
+   promo 배경 영상 자동재생 — bespoke · shop 두 개
+
+   ★ 이 블록은 위쪽 GSAP IIFE 밖에 있어야 합니다.
+     그 IIFE는 `if (!isGsapReady) return;`로 시작하므로, 안에 넣으면 CDN이
+     막힌 환경에서 두 영상이 같이 죽습니다. 여기서는 GSAP을 쓰지 않습니다.
+
+   ★ HTML에 autoplay 속성을 쓰지 않는 이유
+     두 영상은 문서 19000px 부근에 있는데 autoplay는 화면 밖이어도 즉시 전부
+     내려받습니다(합계 2.6MB). 화면에 다가올 때 재생하면 그만큼 첫 로딩에서
+     빠지고, "다른 페이지에 갔다가 돌아왔을 때 다시 재생"하는 경로도 여기
+     한 곳에 모입니다. preload="metadata"라 첫 프레임은 그대로 보입니다.
+   --------------------------------------------------------- */
+(function setupPromoVideos() {
+  "use strict";
+
+  var PROMO_VIDEO_IDS = ["promo_bespoke_video", "promo_shop_video"];
+  /* 화면 높이의 60%만큼 앞에서 미리 걸어, 실제로 보일 때는 이미 돌고 있습니다. */
+  var PROMO_VIEW_MARGIN_RATIO = 0.6;
+
+  var videos = PROMO_VIDEO_IDS
+    .map(function (id) {
+      return document.getElementById(id);
+    })
+    .filter(function (video) {
+      return video;
+    });
+
+  if (!videos.length) {
+    return;
+  }
+
+  /* ★ 판정을 IntersectionObserver가 아니라 좌표로 합니다.
+     관찰자 콜백은 "화면을 다시 그리는 단계"에서만 배달되기 때문에, 문서가
+     아직 보이지 않는 동안(백그라운드 탭에서 열림, bfcache에서 되살아난 직후)에는
+     한 번도 오지 않습니다. 첫 로딩과 되돌아온 순간이 정확히 그 시점이라
+     관찰자에만 맡기면 그 두 경우에 영상이 멈춘 채로 남습니다.
+     좌표는 언제 읽어도 답이 같으므로 아래 세 시점에서 직접 계산합니다. */
+  function isNearViewport(video) {
+    var rect = video.getBoundingClientRect();
+    var margin = window.innerHeight * PROMO_VIEW_MARGIN_RATIO;
+
+    return rect.bottom > -margin && rect.top < window.innerHeight + margin;
+  }
+
+  function playPromoVideo(video) {
+    /* 소리가 있는 영상은 자동재생이 거절됩니다. 속성만이 아니라 속성값도 켜 둡니다
+       — bfcache에서 되살아난 문서는 속성을 다시 읽지 않습니다. */
+    video.muted = true;
+
+    var attempt = video.play();
+
+    if (attempt && typeof attempt.catch === "function") {
+      /* 거절돼도 preload="metadata"의 첫 프레임이 남으므로 화면이 비지 않습니다. */
+      attempt.catch(function () {});
+    }
+  }
+
+  function syncPromoVideo(video) {
+    if (isNearViewport(video)) {
+      playPromoVideo(video);
+      return;
+    }
+
+    if (!video.paused) {
+      video.pause();
+    }
+  }
+
+  function syncPromoVideos() {
+    videos.forEach(syncPromoVideo);
+  }
+
+  /* 스크롤 중에는 관찰자가 값싸게 알려줍니다. 판정은 위 좌표 함수가 그대로 하므로
+     관찰자는 "지금 다시 확인해라"는 신호로만 씁니다. */
+  if (typeof window.IntersectionObserver === "function") {
+    var observer = new window.IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        syncPromoVideo(entry.target);
+      });
+    }, { rootMargin: (PROMO_VIEW_MARGIN_RATIO * 100) + "% 0px" });
+
+    videos.forEach(function (video) {
+      observer.observe(video);
+    });
+  } else {
+    window.addEventListener("scroll", syncPromoVideos, { passive: true });
+  }
+
+  /* ★ 아래 세 가지는 관찰자만으로 덮이지 않아서 따로 있습니다.
+     관찰자 콜백(과 scroll 이벤트)은 "화면을 다시 그리는 단계"에서만 배달되는데,
+     아래 세 시점은 그 단계가 아직 돌지 않았거나 화면이 그대로여서 콜백이
+     오지 않는 순간입니다.
+     - pageshow: 뒤로 가기로 bfcache에서 되살아나면 문서가 다시 실행되지 않고,
+       브라우저가 캐시에 넣을 때 영상을 멈춰 둡니다. 화면은 그대로라 관찰자도
+       조용합니다.
+     - load: 뒤로 가기로 문서가 다시 실행되는 경우, 맨 아래 첫 호출은 브라우저가
+       스크롤 위치를 되돌려 놓기 전에 돌아갑니다(그때 scrollY는 0이라 두 영상
+       모두 "멀리 있음"이 됩니다).
+     - visibilitychange: 백그라운드 탭에서 열렸다가 넘어온 경우. */
+  window.addEventListener("pageshow", syncPromoVideos);
+  window.addEventListener("load", syncPromoVideos);
+  document.addEventListener("visibilitychange", function () {
+    if (!document.hidden) {
+      syncPromoVideos();
+    }
+  });
+
+  syncPromoVideos();
 })();

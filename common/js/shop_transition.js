@@ -301,8 +301,23 @@
     });
   }
 
-  window.addEventListener("pageshow", function () {
+  window.addEventListener("pageshow", function (event) {
     document.documentElement.classList.remove("is_shop_detail_leaving");
+
+    if (!event || !event.persisted) {
+      return;
+    }
+
+    /* ★ 뒤로 가기로 bfcache에서 되살아난 문서는 스크립트가 다시 실행되지 않습니다.
+       그래서 Shop으로 떠날 때 켜 둔 오버레이(`is_active`)와 스크롤 잠금
+       (`is_shop_transitioning`)이 그대로 남아, 돌아온 화면을 크림색 조각 8개가
+       덮은 채 스크롤도 막힙니다("돌아오면 아무것도 안 보인다"). 되살아난
+       순간 걷어냅니다. 새로 로드된 경우에는 스크립트가 다시 돌아 이 상태가
+       애초에 남지 않으므로 persisted일 때만 처리합니다. */
+    document.documentElement.classList.remove("is_shop_transitioning");
+    transition.hidden = true;
+    transition.classList.remove("is_active", "is_exiting");
+    transition.setAttribute("aria-hidden", "true");
   });
 
   /* 이벤트 위임이라 common.js가 나중에 주입하는 헤더·푸터 링크도 잡힙니다. */
