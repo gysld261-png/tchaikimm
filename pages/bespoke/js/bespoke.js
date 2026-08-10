@@ -804,6 +804,9 @@
      두면 **r = 0일 때도 가운데에 옅은 점이 이미 보인다.** 음수에서 시작하면
      처음에 완전히 투명하다. */
   var HERO_INK_FEATHER = 16; /* 번짐 폭(%). 키우면 더 뿌옇게 퍼진다 */
+  /* 마스크를 다시 칠하는 최소 간격(%). `paintInk()` 주석 참고 —
+     0.2%는 이 화면에서 약 2px이라 눈에 안 보이고, 다시 칠하는 횟수를 줄인다. */
+  var HERO_INK_STEP = 0.2;
   var HERO_INK_LOBES = [
     { x: 50, y: 50, k: 1 },
     { x: 41, y: 57, k: 0.86 },
@@ -925,21 +928,53 @@
       return corner ? (Math.sqrt(dx * dx + dy * dy) / corner) * 100 : 100;
     }
 
-    function paintInk(r) {
-      var mask = inkMask(r);
-      var solid = r - HERO_INK_FEATHER;
+    /* ★★ 프레임마다 **바뀐 것만** 쓴다.
 
-      banner.style.webkitMaskImage = mask;
-      banner.style.maskImage = mask;
+       예전에는 이 함수가 호출될 때마다 style 두 번 · `setAttribute` 한 번 ·
+       `classList.toggle` 한 번을 무조건 실행했다. 값이 그대로여도 마찬가지였다.
+
+       `data-header-theme`을 매 프레임 다시 쓰는 것이 특히 비쌌다 —
+       `common.js`의 헤더 판정이 스크롤마다 `elementsFromPoint`와
+       `getComputedStyle`로 이 속성을 되짚기 때문에, 속성이 계속 흔들리면
+       스타일 재계산이 프레임마다 딸려 온다.
+
+       `mask-image`는 합성만으로 처리되지 않아 **바뀔 때마다 화면 한 장을 다시
+       칠한다.** 그래서 반지름을 아주 살짝 계단으로 만들어(HERO_INK_STEP) 값이
+       실제로 달라졌을 때만 문자열을 새로 쓴다. 계단폭 0.2%는 이 화면에서
+       약 2px이라 눈에 보이지 않고, 천천히 굴릴 때 다시 칠하는 횟수가 크게 준다.
+       ★ 계단폭을 키우면 번짐이 눈에 띄게 끊긴다. */
+    var lastMask = null;
+    var lastTheme = null;
+    var lastOnLight = null;
+
+    function paintInk(r) {
+      var stepped = Math.round(r / HERO_INK_STEP) * HERO_INK_STEP;
+      var solid = stepped - HERO_INK_FEATHER;
+
+      if (stepped !== lastMask) {
+        var mask = inkMask(stepped);
+
+        banner.style.webkitMaskImage = mask;
+        banner.style.maskImage = mask;
+        lastMask = stepped;
+      }
+
       /* 마스크의 진한 반지름이 헤더 띠 표본점을 넘었는가 (위 주석 참고). */
-      banner.setAttribute(
-        "data-header-theme",
-        solid >= HERO_HEADER_REACH ? "black" : "white"
-      );
+      var theme = solid >= HERO_HEADER_REACH ? "black" : "white";
+
+      if (theme !== lastTheme) {
+        banner.setAttribute("data-header-theme", theme);
+        lastTheme = theme;
+      }
 
       /* 표시 자리까지 번졌으면 글자를 어둡게 — 안 그러면 밝은 배경에서 사라진다. */
       if (hint) {
-        hint.classList.toggle("is_on_light", solid >= hintReach);
+        var onLight = solid >= hintReach;
+
+        if (onLight !== lastOnLight) {
+          hint.classList.toggle("is_on_light", onLight);
+          lastOnLight = onLight;
+        }
       }
     }
 
@@ -990,7 +1025,47 @@
           start: "top top",
           endTrigger: section,
           end: "bottom bottom",
-          scrub: 0.3,
+          /* ★★★ `scrub: true`여야 한다 — 숫자(0.3)를 쓰면 배너가 출렁인다.
+             2026-08-10 "스크롤할 때 울렁거린다"의 원인이 정확히 이것이었다.
+
+             아래 ①은 **자연 스크롤을 상쇄해서** philosophy를 화면 top 0에 붙여
+             두는 트윈이다. 상쇄가 성립하려면 트윈에 적용된 진행도가 스크롤에서
+             나온 진행도와 **같은 프레임에 같은 값**이어야 한다.
+
+             숫자 scrub은 진행도를 목표값으로 그 시간 동안 따라가게 만든다.
+             그래서 스크롤하는 동안 적용값이 뒤처지고, 그 차이가 그대로 어긋남이 된다:
+
+                 어긋남(px) = run × (적용 진행도 − 스크롤 진행도)
+
+             이 화면에서 run이 **720px**이다. 초당 1000px으로 굴리면 진행도가
+             초당 1.39씩 변하므로 0.3초 상수에서 진행도 차이가 0.2 언저리가 되고,
+             **100px이 넘게 밀린다.** 멈추면 0으로 되돌아온다 — 이것이 "출렁"이다.
+
+             게다가 영상은 `position: sticky`라 **지연이 0**이다. 배너만 늦으니
+             둘이 서로 미끄러지고, 번지는 중심도 화면 중심에서 벗어난다.
+
+             `scrub: true`는 스크롤 위치에서 진행도를 곧바로 낸다. 부드러움은
+             Lenis가 이미 스크롤 자체를 다듬어서 그대로 남는다 —
+             **없어지는 것은 부드러움이 아니라 어긋남뿐이다.**
+             ★ 숫자로 되돌리지 마세요. 그 순간 출렁임이 그대로 돌아옵니다. */
+          scrub: true,
+          /* ★★ 이 트리거를 **맨 나중에** 재게 한다.
+
+             아래 ①이 philosophy에 `y`를 씌우는데, philosophy에는 자기 트리거가
+             넷(등장 둘 · 패럴랙스 · 퇴장) 따로 있다. 그것들이 **끌어올려진
+             상태에서 길이를 재면** 전부 run(이 화면에서 720px)만큼 어긋난다.
+
+             `refreshInit` 훅이 재기 직전에 y를 0으로 되돌리지만, 그것만으로는
+             부족하다 — 이 트리거가 자기 차례에 값을 **다시 씌운 뒤** philosophy
+             트리거가 측정되면 그때는 이미 어긋나 있다. `scrub: true`로 바꾸면서
+             값이 그 자리에서 곧바로 적용되기 때문에 이 순서가 실제로 드러났다
+             (실측: philosophy 구간이 473~2273 → **−247~1553**으로 720 밀렸다).
+
+             우선순위를 낮추면 philosophy 트리거들이 **먼저**(y가 0인 상태에서)
+             재고, 이 트리거는 그 뒤에 잰다. 이 트리거가 재는 대상(무대·섹션)에는
+             transform이 없어서 순서가 뒤로 밀려도 자기 값은 정확하다.
+             main.js의 `brand_word_pin`이 같은 이유로 쓰는 방법이다. */
+          refreshPriority: -1,
           /* 아래 `y` 함수값을 창 크기가 바뀔 때 다시 읽게 한다. */
           invalidateOnRefresh: true
         },
@@ -1134,6 +1209,14 @@
         banner.style.webkitMaskImage = "";
         banner.style.maskImage = "";
         banner.removeAttribute("data-header-theme");
+
+        /* ★ 위 `paintInk()`의 "바뀐 것만 쓴다" 캐시를 반드시 비운다.
+           방금 실제 값을 지웠으므로 캐시를 남겨 두면, 창 크기를 되돌려 이
+           구간에 다시 들어왔을 때 `paintInk(0)`이 "그대로네" 하고 건너뛴다 —
+           마스크가 안 걸린 채로 philosophy가 처음부터 다 보인다. */
+        lastMask = null;
+        lastTheme = null;
+        lastOnLight = null;
 
         if (hint) {
           hint.classList.remove("is_on_light");
@@ -1372,6 +1455,19 @@
     });
   }
 
+  /* ★★ 모바일 주소창이 접히고 펴질 때 길이를 다시 재지 않는다.
+
+     주소창이 오르내리면 `resize`가 발생하고, 기본 설정이면 ScrollTrigger가
+     모든 구간을 다시 재면서 **스크롤 중에 시작·끝 지점이 갑자기 바뀐다** —
+     화면이 한 번 툭 튄다. 세로 길이만 달라진 것이라 다시 잴 이유가 없다.
+
+     css가 히어로 높이에 `svh`(작은 뷰포트 높이)를 쓰고 있어서 주소창 상태와
+     무관하게 상자 크기가 고정이므로, 다시 재지 않아도 값이 맞는다.
+     가로가 바뀌는 진짜 회전·창 크기 변경은 이 설정과 무관하게 그대로 다시 잰다. */
+  if (window.ScrollTrigger && window.ScrollTrigger.config) {
+    window.ScrollTrigger.config({ ignoreMobileResize: true });
+  }
+
   initProcessSteps();
   initBeginCards();
   initMaterialsSelector();
@@ -1386,8 +1482,26 @@
   /* 글 나누기는 **웹폰트가 적용된 뒤**에 해야 한다. 시스템 폰트로 재면 줄 폭이
      달라서 "글자로 나눠도 되는가" 판단이 뒤집힌다. 폰트를 못 기다리는
      환경에서는 바로 실행한다. */
+  /* ★★ 글 나누기가 끝난 **뒤에** 구간을 다시 잰다.
+
+     웹폰트가 늦게 적용되면 히어로 카피의 높이가 달라지고, 카피 높이가 곧
+     전환이 시작되는 스크롤 위치다(무대 윗변이 화면 top에 닿는 지점).
+     `initAtelierText()`가 글을 글자 단위로 쪼개는 것도 같은 종류의 변화다.
+
+     ScrollTrigger가 그 전에 잰 값을 들고 있으면 시작·끝이 어긋난 채로 남고,
+     나중에 무언가가 refresh를 부르는 순간 화면이 툭 튄다.
+     여기서 한 번 명시적으로 다시 재면 그 창이 닫힌다. */
+  function refreshTriggers() {
+    if (window.ScrollTrigger) {
+      window.ScrollTrigger.refresh();
+    }
+  }
+
   if (document.fonts && document.fonts.ready) {
-    document.fonts.ready.then(initAtelierText);
+    document.fonts.ready.then(function () {
+      initAtelierText();
+      refreshTriggers();
+    });
   } else {
     initAtelierText();
   }
