@@ -369,30 +369,43 @@
       <p class="begin_desc">Before creating your bespoke hanbok, explore the materials, timeline, and investment.</p>
     </div>
 
+    <!-- 카드는 기본 상태에서 **사진만** 보이고, hover(또는 키보드 포커스)에서만
+         사진이 흐려지면서 글이 떠오른다. 글 묶음이 `.begin_card_content` 한 겹으로
+         묶여 있어야 다섯 요소가 한꺼번에 페이드된다.
+
+         사진은 `.jpg`다 — 원본 `.png` 3장은 **알파가 전 픽셀 76(29.8%)으로
+         구워져 있어** 무슨 수를 써도 선명해지지 않는다. 알파만 걷어낸 것이고
+         RGB는 손대지 않았다. png는 마스터로 남겨 두었다. -->
     <ul class="begin_cards">
       <li class="begin_card">
-        <img class="begin_card_bg" src="assets/main/material.png" alt="" aria-hidden="true">
-        <p class="begin_card_num">01</p>
-        <h3 class="begin_card_title">Material</h3>
-        <p class="begin_card_label">Fabric Guide</p>
-        <p class="begin_card_desc">Six signature fabrics, drawn from a wider range of premium materials.</p>
-        <button class="begin_card_link" type="button">View Guide →</button>
+        <img class="begin_card_bg" src="assets/main/material.jpg" alt="" aria-hidden="true">
+        <div class="begin_card_content">
+          <p class="begin_card_num">01</p>
+          <h3 class="begin_card_title">Material</h3>
+          <p class="begin_card_label">Fabric Guide</p>
+          <p class="begin_card_desc">Six signature fabrics, drawn from a wider range of premium materials.</p>
+          <button class="begin_card_link" type="button">View Guide →</button>
+        </div>
       </li>
       <li class="begin_card">
-        <img class="begin_card_bg" src="assets/main/timeline.png" alt="" aria-hidden="true">
-        <p class="begin_card_num">02</p>
-        <h3 class="begin_card_title">Timeline</h3>
-        <p class="begin_card_label">Production Time</p>
-        <p class="begin_card_desc">From consultation to completion, expect an average of 6 to 8 weeks.</p>
-        <button class="begin_card_link" type="button">View Process →</button>
+        <img class="begin_card_bg" src="assets/main/timeline.jpg" alt="" aria-hidden="true">
+        <div class="begin_card_content">
+          <p class="begin_card_num">02</p>
+          <h3 class="begin_card_title">Timeline</h3>
+          <p class="begin_card_label">Production Time</p>
+          <p class="begin_card_desc">From consultation to completion, expect an average of 6 to 8 weeks.</p>
+          <button class="begin_card_link" type="button">View Process →</button>
+        </div>
       </li>
       <li class="begin_card">
-        <img class="begin_card_bg" src="assets/main/contact.png" alt="" aria-hidden="true">
-        <p class="begin_card_num">03</p>
-        <h3 class="begin_card_title">Contact</h3>
-        <p class="begin_card_label">Description</p>
-        <p class="begin_card_desc">Guide to booking &amp; direct link to the booking page</p>
-        <a class="begin_card_link" href="#">Contact →</a>
+        <img class="begin_card_bg" src="assets/main/contact.jpg" alt="" aria-hidden="true">
+        <div class="begin_card_content">
+          <p class="begin_card_num">03</p>
+          <h3 class="begin_card_title">Contact</h3>
+          <p class="begin_card_label">Description</p>
+          <p class="begin_card_desc">Guide to booking &amp; direct link to the booking page</p>
+          <a class="begin_card_link" href="#">Contact →</a>
+        </div>
       </li>
     </ul>
   </section>

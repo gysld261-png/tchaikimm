@@ -318,6 +318,108 @@ CSS `.process`의 변수만 바꾸면 됩니다.
 
 ---
 
+## Begin 섹션 — 카드 hover로 사진 흐리기 + 글 등장 (2026-08-10)
+
+카드 사진이 **처음부터 흐릿하게** 보이던 것을 고치고, 흐림과 글을 hover로 옮겼습니다.
+
+- `index.html` — 카드 세 장의 글을 `.begin_card_content` 한 겹으로 묶고, 사진을 `.jpg`로 교체
+- `css/bespoke.css` — begin 카드 hover 블록 추가
+- `assets/main/material.jpg` · `timeline.jpg` · `contact.jpg` — 신규
+
+JS는 건드리지 않았습니다. 이 섹션에는 원래 스크립트가 없고 hover는 CSS만으로 됩니다.
+
+### ★ 흐릿함의 원인이 **두 개**였습니다 — CSS만 고치면 안 됩니다
+
+1. `.begin_card_bg { opacity: 0.3 }`
+2. **에셋 자체의 알파.** `material/timeline/contact.png`는 알파가 **전 픽셀
+   정확히 76**(= 76/255 = 29.8%)으로 구워져 있었습니다. `alphaextract`로 재면
+   min = avg = max = 76입니다.
+
+둘이 곱해져서 **실제로는 9%**로 그려지고 있었습니다(1840px 이상에서는 CSS가
+`opacity: 1`이라 29.8%). 그래서 **CSS만 고쳐서는 절대 선명해지지 않습니다.**
+
+> RGB는 멀쩡했습니다(luma 1~250 전 범위). 그래서 합성하지 않고 **알파 채널만
+> 버렸습니다** — `ffmpeg -vf "format=rgb24"`. 크림색 위에 합성하면 지금 보이는
+> 흐린 그림이 그대로 구워지므로 **합성하면 안 됩니다.**
+> PNG는 straight alpha라 RGB가 미리 곱해져 있지 않아 이 방법이 성립합니다.
+
+```
+ffmpeg -i <이름>.png -vf "format=rgb24" -q:v 2 <이름>.jpg
+```
+
+용량도 같이 줄었습니다: 359 → 78KB / 361 → 61KB / 307 → 63KB.
+**PNG 3장은 마스터로 그대로 두었습니다.**
+
+이전 세션의 "이미 흐리게 처리된 상태로 저장돼 있다"는 기록은 절반만 맞았습니다 —
+흐린 것은 픽셀이 아니라 알파였고, 되살릴 수 있었습니다.
+
+### 동작
+
+| | 사진 | 스크림 | 글 |
+|---|---|---|---|
+| 기본 | 원본 그대로 (`filter: none`, `opacity: 1`) | 0 | `opacity: 0` |
+| hover · focus | `blur(6px)` + `scale(1.06)` | 크림색 0.55 | `opacity: 1`, `translateY 6 → 0` |
+
+- 전환은 전부 기존 토큰(`--duration_base` 0.4s / `--easing_base`)입니다. 그래서
+  `prefers-reduced-motion`에서 토큰이 0.01ms가 되며 자동으로 즉시 전환됩니다.
+- **글 묶음은 `opacity`로만 숨깁니다.** `display: none`이면 카드 높이가 hover
+  전후로 달라집니다. 실측에서 600px로 고정 확인.
+- **`scale(1.06)`이 필요합니다.** `blur()`는 가장자리를 반투명하게 만들어 카드
+  테두리 안쪽에 옅은 띠를 남깁니다. 살짝 키워 그 가장자리를 밖으로 밀어냅니다
+  (`overflow: hidden`이라 레이아웃은 그대로).
+- 스크림은 `.begin_card::after`입니다. `::after`가 자식들보다 뒤에 그려지므로
+  같은 `z-index: 0`에서도 사진을 덮고, 글(`z-index: 1`)보다는 아래입니다.
+
+### ★ `:hover`와 `:focus-within`을 나눠 둡니다
+
+`:hover` 규칙만 `@media (hover: hover) and (pointer: fine)` 안에 있습니다.
+터치 기기에서 hover 상태가 눌린 채 남는 것을 막습니다.
+
+**`:focus-within`은 미디어쿼리 밖에 있어야 합니다.** 카드 안에 버튼·링크가 있어서,
+이걸 빼면 **보이지 않는 요소가 포커스를 받습니다.**
+
+### 알아둘 것 — 터치 기기에서는 글이 안 보입니다
+
+사용자 요청("hover가 없는 환경에서는 텍스트가 기본적으로 노출되지 않도록")을
+그대로 따른 결과입니다. 360px에서 `(hover: hover)`가 false라 hover 규칙이 죽고,
+글은 카드 안 버튼이 포커스를 받을 때만 나타납니다.
+
+모바일에서 글을 보이게 하려면 아래 한 블록만 추가하면 됩니다:
+
+```css
+@media (hover: none) {
+  .begin_card_content { opacity: 1; transform: none; }
+  .begin_card_bg { filter: blur(6px); transform: scale(1.06); }
+  .begin_card::after { opacity: 0.55; }
+}
+```
+
+### 검증 (Chromium, localhost:5661)
+
+- **기본 상태**: `filter: none` · `opacity: 1` · transform 없음 · 스크림 0 · 글 0.
+  사진은 `material.jpg` 500 × 600으로 로드.
+- **활성 상태**(트랜지션을 끄고 측정): `blur(6px)` · `scale(1.06)` · 스크림 0.55 ·
+  글 1 · translate 해제.
+- **해제 후 기본값과 완전히 일치**(깜빡임·잔여 상태 없음).
+- **카드 높이 600px이 세 상태 내내 불변** — 레이아웃이 움직이지 않습니다.
+- 카드 3장 전부 500 × 600(1920) 그대로, 360px에서도 크기·가로 스크롤 이상 없음,
+  깨진 이미지 0, 콘솔 오류 0, CSS 중괄호 233/233.
+- 1840 블록의 `.begin_card_bg { opacity: 1 }`은 이제 기본값과 같아 하는 일이
+  없습니다. 그 블록의 "주석부터 파일 끝까지 삭제하면 되돌아간다" 계약을 지키려고
+  지우지 않고 주석만 갱신했습니다.
+
+### 확인하지 못한 부분
+
+- **실제 마우스 hover를 직접 걸어보지 못했습니다.** 이 미리보기 패널이 프레임을
+  합성하지 않아 좌표 기반 hover를 쓸 수 없습니다. 대신 (a) hover 규칙이 CSSOM에
+  `(hover: hover) and (pointer: fine)` 조건으로 실제 존재하는 것과,
+  (b) **선언이 완전히 동일한** `:focus-within` 경로가 위 표대로 동작하는 것을
+  확인했습니다. **눈으로 보는 blur 세기(6px)와 스크림 농도(0.55)는 사용자 확인이
+  필요합니다.**
+- 트랜지션이 흐르는 모습(0.4초). 프레임이 돌지 않아 목표값만 읽었습니다.
+
+---
+
 ## 이 폴더의 남은 문제
 
 `docs/PROJECT_CONTEXT.md`의 "Bespoke 다음 작업"과 같은 내용입니다.
