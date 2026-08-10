@@ -368,7 +368,7 @@
   var lastScrollY = window.scrollY;
   var headerScrollTicking = false;
   var CURRENCY_STORAGE_KEY = "tchaikimm_currency";
-  var CART_STORAGE_KEY = "tchaikim_cart_count";
+  var CART_SESSION_KEY = "tchaikim_cart_count";
   var headerCart = document.querySelector(".header_cart");
   var headerCartCount = document.querySelector("[data-cart-count]");
   var cartCount = 0;
@@ -406,7 +406,7 @@
 
   function readCartCount() {
     try {
-      var storedCount = parseInt(window.localStorage.getItem(CART_STORAGE_KEY), 10);
+      var storedCount = parseInt(window.sessionStorage.getItem(CART_SESSION_KEY), 10);
       return Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0;
     } catch (error) {
       return 0;
@@ -431,9 +431,9 @@
     cartCount = Math.max(0, Math.floor(Number(nextCount) || 0));
 
     try {
-      window.localStorage.setItem(CART_STORAGE_KEY, String(cartCount));
+      window.sessionStorage.setItem(CART_SESSION_KEY, String(cartCount));
     } catch (error) {
-      /* The in-page count still works when persistent storage is unavailable. */
+      /* The in-page count still works when session storage is unavailable. */
     }
 
     renderCartCount();
@@ -441,6 +441,14 @@
       detail: { count: cartCount }
     }));
     return cartCount;
+  }
+
+  /* 이전 버전에서 남긴 영구 장바구니 수는 더 이상 사용하지 않습니다.
+     sessionStorage는 같은 탭의 페이지 이동·새로고침 동안만 유지되고 탭을 닫으면 초기화됩니다. */
+  try {
+    window.localStorage.removeItem(CART_SESSION_KEY);
+  } catch (error) {
+    /* Storage may be blocked; the in-memory counter still works. */
   }
 
   cartCount = readCartCount();
@@ -456,7 +464,7 @@
   };
 
   window.addEventListener("storage", function (event) {
-    if (event.key === CART_STORAGE_KEY) {
+    if (event.storageArea === window.sessionStorage && event.key === CART_SESSION_KEY) {
       cartCount = readCartCount();
       renderCartCount();
     }

@@ -137,6 +137,38 @@
 
     video.pause();
 
+    /* ★ 첫 화면 대역폭을 히어로 사진에 먼저 줍니다.
+       이 영상은 두 번째 섹션인데 html의 preload="auto"로 두면 히어로 사진 두 장과
+       동시에 1MB를 받기 시작해 첫 화면이 그만큼 늦어집니다. 그래서 html은
+       preload="metadata"(moov만, 수 KB)로 두고, 첫 화면이 다 그려진 뒤인
+       window load 시점에 여기서 auto로 올려 미리 받아 둡니다.
+       사용자가 이 섹션에 닿기까지는 스크롤 한 화면 분량의 시간이 있습니다. */
+    /* ★ load()는 재생 위치를 0으로 되돌립니다. 이 시점에는 아래 primeModelFirstFrame()
+       (또는 모션 감소일 때 seekToRestPose())이 이미 위치를 잡아 둔 뒤라, 그냥 부르면
+       모델이 첫 프레임으로 튑니다. 그래서 위치를 기억했다가 다시 맞춥니다. */
+    function warmModelVideo() {
+      if (video.preload === "auto") {
+        return;
+      }
+
+      var resumeTime = video.currentTime;
+
+      video.preload = "auto";
+      video.load();
+
+      if (resumeTime > 0) {
+        video.addEventListener("loadedmetadata", function () {
+          requestVideoTime(resumeTime);
+        }, { once: true });
+      }
+    }
+
+    if (document.readyState === "complete") {
+      warmModelVideo();
+    } else {
+      window.addEventListener("load", warmModelVideo, { once: true });
+    }
+
     /* 스크롤 프레임마다 currentTime을 바로 바꾸면 이전 영상 탐색이 끝나기도 전에
        새 디코딩 요청이 계속 쌓여 섹션 진입 순간 스크롤까지 잠깐 멎습니다.
        가장 최근 재생 위치만 기억하고 seek가 끝난 뒤 다음 위치를 적용합니다. */
@@ -774,19 +806,54 @@
     var HERO_HOVER_MEDIA = "(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)";
     var canUseHoverVideo = window.matchMedia(HERO_HOVER_MEDIA).matches;
 
-    panels.forEach(function (panel) {
-      var video = panel.querySelector(".hero_panel_video");
-      if (video) {
-        video.muted = true;
+    /* 히어로 영상은 두 파일을 합쳐 약 1.9MB이고, **호버해야만 쓰입니다.**
 
-        /* 히어로 영상은 두 파일을 합쳐 약 1.9MB입니다. 호버 가능한 화면에서는
-           첫 호버 전에 받아 두고, 모바일에서는 쓰지 않는 영상을 내려받지 않습니다. */
-        if (canUseHoverVideo) {
-          video.preload = "auto";
-          video.load();
-        }
-      }
+       ★ 예전에는 여기서 곧바로 preload="auto" + load()를 했습니다. 그러면 첫 화면에
+         보이는 사진 두 장(1.0MB)과 같은 순간에 1.9MB를 받기 시작해, 정작 사용자가
+         보고 있는 사진이 뒤로 밀렸습니다. 실측에서 첫 화면 전송량의 33%가 이
+         "아직 아무도 호버하지 않은 영상"이었습니다.
+
+       지금은 두 신호 중 먼저 오는 쪽에 받습니다.
+         · 히어로에 포인터가 들어옴 — 곧 필요합니다. 즉시 받습니다.
+         · window load 뒤 한가할 때 — 사진·폰트가 끝난 다음이라 아무것도 밀지 않습니다.
+       모바일에서는 호버 자체가 없으므로 예전처럼 한 바이트도 받지 않습니다. */
+    var heroVideos = panels
+      .map(function (panel) { return panel.querySelector(".hero_panel_video"); })
+      .filter(Boolean);
+
+    heroVideos.forEach(function (video) {
+      video.muted = true;
     });
+
+    function warmHeroVideos() {
+      heroVideos.forEach(function (video) {
+        if (video.preload === "auto") {
+          return;
+        }
+
+        video.preload = "auto";
+        video.load();
+      });
+    }
+
+    if (canUseHoverVideo) {
+      hero.addEventListener("pointerenter", warmHeroVideos, { once: true });
+
+      /* requestIdleCallback이 없는 브라우저(Safari 구버전)에서는 짧은 타이머로 대신합니다 */
+      var scheduleIdleWarm = function () {
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(warmHeroVideos, { timeout: 3000 });
+        } else {
+          window.setTimeout(warmHeroVideos, 1200);
+        }
+      };
+
+      if (document.readyState === "complete") {
+        scheduleIdleWarm();
+      } else {
+        window.addEventListener("load", scheduleIdleWarm, { once: true });
+      }
+    }
 
     gsap.matchMedia().add(HERO_HOVER_MEDIA, function () {
       var activePanel = null;

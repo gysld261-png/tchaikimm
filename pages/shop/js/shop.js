@@ -111,9 +111,9 @@ import * as THREE from "three";
     }
 
     try {
-      var storedCount = parseInt(window.localStorage.getItem("tchaikim_cart_count"), 10);
+      var storedCount = parseInt(window.sessionStorage.getItem("tchaikim_cart_count"), 10);
       var nextCount = (Number.isFinite(storedCount) && storedCount > 0 ? storedCount : 0) + 1;
-      window.localStorage.setItem("tchaikim_cart_count", String(nextCount));
+      window.sessionStorage.setItem("tchaikim_cart_count", String(nextCount));
     } catch (error) {
       /* The common header API will take over when it becomes available. */
     }
@@ -167,6 +167,45 @@ import * as THREE from "three";
       }
 
       cartButton.addEventListener("click", addCartItem);
+    }
+  });
+})();
+
+(function initBannerReveal() {
+  var banner = document.querySelector(".banner");
+  var bannerItems = banner ? Array.prototype.slice.call(banner.querySelectorAll(
+    ".banner_eyebrow, .banner_title, .banner_divider, .banner_crosslink_label, .banner_crosslink_link"
+  )) : [];
+  var shouldReduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  if (
+    !banner ||
+    !bannerItems.length ||
+    shouldReduceMotion ||
+    typeof window.gsap === "undefined" ||
+    typeof window.ScrollTrigger === "undefined"
+  ) {
+    return;
+  }
+
+  var gsap = window.gsap;
+  gsap.registerPlugin(window.ScrollTrigger);
+  banner.classList.add("is_revealing");
+
+  gsap.from(bannerItems, {
+    autoAlpha: 0,
+    y: 32,
+    duration: 0.82,
+    stagger: 0.13,
+    ease: "power3.out",
+    clearProps: "opacity,visibility,transform",
+    onComplete: function () {
+      banner.classList.remove("is_revealing");
+    },
+    scrollTrigger: {
+      trigger: banner,
+      start: "top 76%",
+      once: true
     }
   });
 })();

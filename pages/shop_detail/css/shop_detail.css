@@ -942,22 +942,6 @@ html.has_purchase_modal {
 .look_product > a { color: #343330; text-align: right; line-height: 2; }
 
 @media (max-width: 1439px) {
-  .page_shop_detail .header_toggle { display: block; }
-  .page_shop_detail .header_inner {
-    position: absolute;
-    top: 100%;
-    right: 0;
-    left: 0;
-    display: none;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 24px;
-    padding: 24px var(--layout_gutter) 32px;
-    background: var(--color_bg);
-  }
-  .page_shop_detail .header_inner.is_open { display: flex; }
-  .page_shop_detail .header_menu { flex-direction: column; gap: 18px; }
-  .page_shop_detail .header_right { gap: 32px; }
   .product_hero { min-height: 1860px; }
   .product_hero_inner { grid-template-columns: minmax(620px, 832px) 400px; width: min(100%, 1232px); }
   .product_gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); padding-left: 32px; }

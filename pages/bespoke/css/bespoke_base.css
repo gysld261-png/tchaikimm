@@ -876,4 +876,19 @@
     --fs_ui_15: 15px;
     --fs_ui_14: 14px;
   }
+
+  /* 예약·완료 화면에서도 공통 헤더는 다른 페이지와 같은 토큰을 사용합니다. */
+  .common_header_slot {
+    --layout_inner: 1600px;
+    --layout_gutter: 64px;
+    --fs_ui_20: 20px;
+    --fs_ui_16: 16px;
+    --fs_ui_15: 15px;
+    --fs_ui_14: 14px;
+  }
+
+  .common_header_slot .header {
+    font-size: 16px;
+    line-height: 1.5;
+  }
 }

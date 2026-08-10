@@ -82,6 +82,21 @@
     --layout_gutter: 64px;
   }
 
+  /* 본문 확대 토큰은 유지하되 공통 헤더 안에서는 원래 공통값으로 복원합니다. */
+  .common_header_slot {
+    --layout_inner: 1600px;
+    --layout_gutter: 64px;
+    --fs_ui_20: 20px;
+    --fs_ui_16: 16px;
+    --fs_ui_15: 15px;
+    --fs_ui_14: 14px;
+  }
+
+  .common_header_slot .header {
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
 }
 
 /* Bespoke footer spacing differs from the shared Main/Shop footer. */

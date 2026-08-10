@@ -287,6 +287,11 @@
   color: var(--color_text_secondary);
 }
 
+/* 스태거 등장 중에는 공통 버튼의 hover용 transform transition과 충돌하지 않게 합니다. */
+.banner.is_revealing .banner_crosslink_link {
+  transition: none;
+}
+
 /* =========================================================
    garment_story
    ========================================================= */
