@@ -101,7 +101,91 @@
     </div>
   </section>
 
-  <!-- brand_story -->
+  <!-- detail — 저고리 한 장을 부위별로 확대해 보여줍니다.
+
+       기본 구조(스크립트·GSAP이 없거나, 모션을 줄이는 설정이거나, 1024px 미만)는
+       사진 + 버튼 4개 + 설명 하나입니다. 버튼을 눌러 부위를 고릅니다.
+
+       조건이 맞으면 js/main.js가 .is_scroll_ready를 붙여 스크롤 연출로 바뀝니다 —
+       섹션이 화면에 고정된 채, 스크롤에 따라 돋보기가 Collar → Sleeve → Body →
+       Skirt를 차례로 훑고 그 옆에 설명이 하나씩 나타납니다. 마우스 호버는 쓰지
+       않으므로 터치 기기에서도 같은 방식으로 동작합니다. -->
+  <!-- data-header-theme — 이 섹션은 밝은 크림 배경이라 흰 헤더가 읽히지 않습니다.
+       common.js가 배경 밝기로 자동 판정하지만, 고정 구간에서는 헤더 아래에 놓이는
+       .detail_pin이 배경 없는 요소라 판정이 흔들립니다. 여기서 검정으로 못박습니다. -->
+  <section class="detail" data-header-theme="black" aria-labelledby="detail_title">
+    <header class="detail_head common_container">
+      <h2 class="detail_title" id="detail_title">Traditional motifs,<br>reimagined</h2>
+      <p class="detail_subtitle">A Joseon-era silhouette, reinterpreted into modern fashion through Tchai Kim's own hand.</p>
+    </header>
+
+    <!-- 스크롤 연출에서 화면에 고정되는 부분입니다. 위 헤더는 평소처럼 지나갑니다 —
+         헤더까지 묶으면 세로가 화면보다 커져서 아래쪽 설명이 잘립니다. -->
+    <div class="detail_pin">
+      <!-- 스크롤 연출의 현재 부위를 보여주는 텍스트 인디케이터입니다.
+           버튼 방식에서는 아래의 실제 조작 버튼(.detail_parts)을 사용하므로 감춥니다. -->
+      <ol class="detail_keywords" aria-label="Garment detail progress">
+        <li><span class="detail_keyword" data-detail-keyword="collar">Collar</span></li>
+        <li><span class="detail_keyword" data-detail-keyword="sleeve">Sleeve</span></li>
+        <li><span class="detail_keyword" data-detail-keyword="body">Body</span></li>
+        <li><span class="detail_keyword" data-detail-keyword="skirt">Skirt</span></li>
+      </ol>
+
+      <!-- data-active-part — 버튼 방식일 때 어느 설명을 보여줄지 정합니다. JS가 버튼으로
+           바꾸지만, 스크립트가 없어도 이 초기값 덕분에 Collar 설명이 그대로 보입니다.
+           스크롤 연출에서는 이 속성을 쓰는 규칙이 없어 아무 영향이 없습니다. -->
+      <div class="detail_stage" data-active-part="collar">
+        <img loading="lazy" decoding="async" class="detail_img" src="assets/main/detail/img.png" alt="A Joseon-era cheollik robe laid flat with its sleeves spread wide">
+
+        <!-- 돋보기가 들를 네 지점. 스크롤 연출에서만 보이며, 눌리는 요소가 아니라
+             표식이라 읽기 도구에서는 감춥니다 — 같은 내용을 아래 설명이 글로 전합니다.
+             js/main.js가 이 요소들의 좌표를 읽어 돋보기 경로를 만듭니다. -->
+        <span class="detail_marker" data-part="collar" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="sleeve" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="body" aria-hidden="true"></span>
+        <span class="detail_marker" data-part="skirt" aria-hidden="true"></span>
+
+        <!-- 기본(버튼) 방식의 조작부. 스크롤 연출에서는 감춥니다.
+             사진 바로 아래에 두어야 사진 → 버튼 → 설명 순서로 읽힙니다. -->
+        <div class="detail_parts" role="group" aria-label="Choose a garment detail">
+          <button type="button" class="detail_part_tab" data-part="collar" aria-pressed="true">Collar</button>
+          <button type="button" class="detail_part_tab" data-part="sleeve" aria-pressed="false">Sleeve</button>
+          <button type="button" class="detail_part_tab" data-part="body" aria-pressed="false">Body</button>
+          <button type="button" class="detail_part_tab" data-part="skirt" aria-pressed="false">Skirt</button>
+        </div>
+
+        <div class="detail_text" data-part="collar">
+          <h3 class="detail_part_title">Collar</h3>
+          <p class="detail_part_lead">Balanced Proportions</p>
+          <p class="detail_part_desc">Refined to frame the silhouette with quiet elegance.</p>
+        </div>
+
+        <div class="detail_text" data-part="sleeve">
+          <h3 class="detail_part_title">Sleeve</h3>
+          <p class="detail_part_lead">Soft Curves</p>
+          <p class="detail_part_desc">Inspired by the traditional baerae, redesigned for natural movement.</p>
+        </div>
+
+        <div class="detail_text" data-part="body">
+          <h3 class="detail_part_title">Body</h3>
+          <p class="detail_part_lead">Contemporary Structure</p>
+          <p class="detail_part_desc">A modern silhouette rooted in traditional form.</p>
+        </div>
+
+        <div class="detail_text" data-part="skirt">
+          <h3 class="detail_part_title">Skirt</h3>
+          <p class="detail_part_lead">Flowing Volume</p>
+          <p class="detail_part_desc">Lightweight volume designed to move effortlessly.</p>
+        </div>
+
+        <!-- 스크롤에 따라 부위를 옮겨 다니는 돋보기. 배경 이미지는 js/main.js가
+             .detail_img의 src로 채웁니다(원본 경로를 한 곳에서만 관리하기 위함). -->
+        <div class="detail_lens" aria-hidden="true"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- brand_story — 글과 배너를 한 덩어리로 읽히게 검은 배경이 배너까지 감쌉니다 -->
   <section class="brand_story">
     <div class="brand_story_textbox">
       <h2 class="brand_story_title">One house,<br>two ways of wearing hanbok</h2>
@@ -113,53 +197,6 @@
     </div>
     <img loading="lazy" decoding="async" class="brand_story_banner" src="assets/main/banner.png"
          alt="A man in a hanbok coat walking past a large ink landscape painting in a gallery">
-  </section>
-
-  <!-- detail — 사진 위에서 돋보기가 커서를 따라다니며 원본을 계속 확대해 보여주고,
-       collar/sleeve/body/skirt 영역을 지날 때 그 부위 설명이 나타납니다.
-       돋보기는 js/main.js가 만들고, 부위 설명은 .is_active로 켜집니다. -->
-  <section class="detail" aria-labelledby="detail_title">
-    <header class="detail_head common_container">
-      <h2 class="detail_title" id="detail_title">Traditional motifs,<br>reimagined</h2>
-      <p class="detail_subtitle">A Joseon-era silhouette, reinterpreted into modern fashion through Tchai Kim's own hand.</p>
-    </header>
-
-    <div class="detail_stage">
-      <img loading="lazy" decoding="async" class="detail_img" src="assets/main/detail/img.png" alt="A Joseon-era cheollik robe laid flat with its sleeves spread wide">
-
-      <div class="detail_hotspot" data-part="collar" tabindex="0" aria-label="Collar detail"></div>
-      <div class="detail_hotspot" data-part="sleeve" tabindex="0" aria-label="Sleeve detail"></div>
-      <div class="detail_hotspot" data-part="body" tabindex="0" aria-label="Body detail"></div>
-      <div class="detail_hotspot" data-part="skirt" tabindex="0" aria-label="Skirt detail"></div>
-
-      <div class="detail_text" data-part="collar">
-        <h3 class="detail_part_title">Collar</h3>
-        <p class="detail_part_lead">Balanced Proportions</p>
-        <p class="detail_part_desc">Refined to frame the silhouette with quiet elegance.</p>
-      </div>
-
-      <div class="detail_text" data-part="sleeve">
-        <h3 class="detail_part_title">Sleeve</h3>
-        <p class="detail_part_lead">Soft Curves</p>
-        <p class="detail_part_desc">Inspired by the traditional baerae, redesigned for natural movement.</p>
-      </div>
-
-      <div class="detail_text" data-part="body">
-        <h3 class="detail_part_title">Body</h3>
-        <p class="detail_part_lead">Contemporary Structure</p>
-        <p class="detail_part_desc">A modern silhouette rooted in traditional form.</p>
-      </div>
-
-      <div class="detail_text" data-part="skirt">
-        <h3 class="detail_part_title">Skirt</h3>
-        <p class="detail_part_lead">Flowing Volume</p>
-        <p class="detail_part_desc">Lightweight volume designed to move effortlessly.</p>
-      </div>
-
-      <!-- 커서를 따라다니는 돋보기. 배경 이미지는 js/main.js가 .detail_img의 src로
-           채웁니다(원본 경로를 한 곳에서만 관리하기 위함). -->
-      <div class="detail_lens" aria-hidden="true"></div>
-    </div>
   </section>
 
   <!-- 브랜드 분기 — 스크롤에 따라 두 이름이 중앙에서 나타난 뒤 좌우로 벌어지고,

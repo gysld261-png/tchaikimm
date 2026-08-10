@@ -19,12 +19,18 @@
     </nav>
 
     <div class="header_right">
-      <div class="header_currency">
-        <label class="a11y_hidden" for="header_currency_select">Currency</label>
-        <select class="header_currency_select" id="header_currency_select">
-          <option value="usd" selected>USD</option>
-        </select>
-        <img class="header_currency_icon" src="../../common/assets/icons/caret_down_white.svg" alt="" aria-hidden="true" width="13" height="8">
+      <div class="header_currency" data-currency-menu>
+        <button class="header_currency_trigger" type="button" id="header_currency_trigger" aria-haspopup="menu" aria-expanded="false" aria-controls="header_currency_menu" aria-label="Currency, USD">
+          <span data-currency-value>USD</span>
+          <img class="header_currency_icon" src="../../common/assets/icons/caret_down_white.svg" alt="" aria-hidden="true" width="13" height="8">
+        </button>
+        <div class="header_currency_menu" id="header_currency_menu" role="menu" aria-label="Currency">
+          <button class="header_currency_option" type="button" role="menuitemradio" aria-checked="true" data-currency="USD">USD</button>
+          <button class="header_currency_option" type="button" role="menuitemradio" aria-checked="false" data-currency="KRW">KRW</button>
+          <button class="header_currency_option" type="button" role="menuitemradio" aria-checked="false" data-currency="EUR">EUR</button>
+          <button class="header_currency_option" type="button" role="menuitemradio" aria-checked="false" data-currency="JPY">JPY</button>
+          <button class="header_currency_option" type="button" role="menuitemradio" aria-checked="false" data-currency="GBP">GBP</button>
+        </div>
       </div>
 
       <a class="header_cart" href="#">

@@ -76,6 +76,20 @@
     var video = section ? section.querySelector(".model_video") : null;
     var text = section ? section.querySelector(".model_text") : null;
 
+    /* ★ 모델 섹션 스크롤 감각은 아래 네 값만 조절합니다.
+       - MODEL_SCROLL_LENGTH: 고정 구간의 전체 길이. 2.4는 화면 높이의 2.4배입니다.
+         작게 하면 모델 섹션이 짧아지고 영상 진행도 함께 빨라집니다. (권장 2.0 ~ 2.8)
+       - MODEL_TEXT_HOLD_RATIO: 텍스트를 완전히 보여주는 구간입니다.
+         크게 하면 문구가 더 오래 머뭅니다. (권장 0.15 ~ 0.28)
+       - MODEL_TEXT_FADE_RATIO: 텍스트가 사라지는 데 쓰는 구간입니다.
+         크게 하면 더 천천히 사라집니다. (권장 0.1 ~ 0.2)
+       - MODEL_VIDEO_START_RATIO: 영상이 움직이기 시작하는 지점입니다.
+         지금은 텍스트 페이드 후반과 살짝 겹치도록 0.25로 둡니다. */
+    var MODEL_SCROLL_LENGTH = 2.4;
+    var MODEL_TEXT_HOLD_RATIO = 0.7;
+    var MODEL_TEXT_FADE_RATIO = 0.14;
+    var MODEL_VIDEO_START_RATIO = 0.25;
+
     if (!section || !video || !text) {
       return;
     }
@@ -144,7 +158,7 @@
         trigger: section,
         start: "top top",
         end: function () {
-          return "+=" + window.innerHeight * 3;
+          return "+=" + window.innerHeight * MODEL_SCROLL_LENGTH;
         },
         pin: true,
         scrub: 0.2,
@@ -155,12 +169,16 @@
     });
 
     timeline
-      .to(text, { autoAlpha: 0, y: -20, duration: 0.15, ease: "none" }, 0)
+      .to(
+        text,
+        { autoAlpha: 0, y: -20, duration: MODEL_TEXT_FADE_RATIO, ease: "none" },
+        MODEL_TEXT_HOLD_RATIO
+      )
       .to(
         modelPlayhead,
         {
           progress: 1,
-          duration: 0.85,
+          duration: 1 - MODEL_VIDEO_START_RATIO,
           ease: "none",
           onUpdate: function () {
             /* 메타데이터가 아직 안 왔으면 duration이 NaN이라 건너뜁니다. */
@@ -170,7 +188,7 @@
             requestVideoTime(video.duration * 0.9 * modelPlayhead.progress);
           }
         },
-        0.15
+        MODEL_VIDEO_START_RATIO
       );
   })();
 
@@ -292,6 +310,15 @@
           end: "+=" + window.innerHeight * 10,
           pin: true,
           scrub: 1,
+          /* ★ 이 핀은 페이지에서 제일 아래에 있으므로 **가장 나중에** 계산돼야 합니다.
+             ScrollTrigger는 기본적으로 "만들어진 순서"대로 다시 계산하는데, detail의
+             핀은 이 파일 아래쪽 별도 IIFE에서 나중에 만들어집니다. 그대로 두면 이
+             트리거가 detail의 pin-spacer(화면 높이 3.4배)가 생기기 전의 위치로
+             굳어서, detail 스크롤이 끝나기도 전에 여기가 고정되며 detail 위로
+             겹쳐 올라옵니다(실제로 겪음 — 시작 지점 6307 vs detail 끝 8129).
+             음수 우선순위를 주면 다른 핀들이 자리를 다 잡은 뒤에 계산합니다.
+             위 model 핀과 같은 종류의 문제이며, 그 사연은 이 파일 위쪽 주석에 있습니다. */
+          refreshPriority: -1,
           invalidateOnRefresh: true,
           fastScrollEnd: true
         }
@@ -823,65 +850,64 @@
 })();
 
 /* =========================================================
-   detail — 사진 위 돋보기 + 부위 설명
+   detail — 스크롤에 따라 돋보기가 부위를 훑는 연출
 
-   이전에는 부위별로 미리 잘라 둔 확대컷 4장을 CSS의 :hover ~ 형제 선택자로
-   각자 자리에 띄웠습니다. 지금은 돋보기 하나가 커서를 따라다니며 원본 사진을
-   실시간으로 확대하고, collar/sleeve/body/skirt 영역을 지날 때 그 부위 설명이
-   함께 나타납니다.
+   기본 동작은 사진 아래 버튼 4개로 부위를 고르는 것입니다(GSAP이 없어도, 모션을
+   줄이는 설정이어도, 좁은 화면이어도 이 방식). 조건이 맞을 때만 .detail에
+   .is_scroll_ready를 붙여 스크롤 연출로 바꿉니다 — 섹션이 화면에 고정된 채
+   스크롤에 따라 돋보기가 Collar → Sleeve → Body → Skirt를 차례로 훑고,
+   그 자리에 설명이 하나씩 나타납니다.
+
+   ★ 마우스 호버는 쓰지 않습니다. 예전에는 커서를 따라다니는 돋보기였는데,
+     올려보기 전에는 인터랙션이 있는지 알 수 없고 손가락으로는 "지나간다"가 없어
+     터치 기기에서 아예 성립하지 않았습니다. 스크롤은 두 환경에서 동일합니다.
+
+   ★ 이 블록은 위쪽 GSAP IIFE(GSAP이 없으면 통째로 return) 밖에 있어야 합니다.
+     버튼 방식은 GSAP 없이도 동작해야 하기 때문입니다.
 
    ★ 배율의 상한은 에셋이 정합니다. img.png는 4380 × 1905인데 화면에는 1460px로
      그려지므로 원본이 정확히 3배입니다. DETAIL_LENS_ZOOM을 3보다 크게 올리면
      없는 픽셀을 늘리는 것이라 흐려집니다.
-
-   ★ 이 블록은 GSAP을 쓰지 않으므로 위쪽 IIFE(GSAP이 없으면 통째로 return) 밖에
-     있어야 합니다. 안에 넣으면 CDN이 막힌 환경에서 돋보기까지 같이 죽습니다.
    ========================================================= */
 (function () {
   "use strict";
 
   /* 조절값 — 숫자만 바꾸면 됩니다 */
   var DETAIL_LENS_ZOOM = 2.5; /* 확대 배율. 3까지가 원본 해상도 안쪽입니다 */
+  var DETAIL_PART_ORDER = ["collar", "sleeve", "body", "skirt"]; /* 훑는 순서 */
+  /* ★ 부위 사이를 옮겨가는 속도는 아래 두 값의 곱이 정합니다.
+       이동 거리 = DETAIL_SCROLL_PER_PART × (1 − DETAIL_HOLD_RATIO) × 화면 높이
+     "너무 빨리 휙 바뀐다"면 PER_PART를 올리거나 HOLD_RATIO를 낮추면 됩니다.
+     - PER_PART를 올리면: 머무는 시간과 이동이 함께 길어집니다(섹션 전체가 길어짐)
+     - HOLD_RATIO를 낮추면: 섹션 길이는 그대로 두고 이동에만 더 배분합니다
+                            (대신 설명을 읽는 구간이 짧아집니다) */
+  var DETAIL_SCROLL_PER_PART = 115; /* 부위 하나에 쓰는 스크롤 길이(화면 높이 %) */
+  /* 한 부위 구간에서 앞의 이만큼은 머무르고, 나머지에서 다음 부위로 옮겨갑니다.
+     올리면 설명을 읽는 시간이 길어지고 이동이 빨라집니다(0 ~ 1). */
+  var DETAIL_HOLD_RATIO = 0.45;
+  /* 스크롤 연출을 켜는 조건. 좁은 화면에서는 사진 위에 겹치는 설명이 들어갈
+     자리가 없어 버튼 방식을 그대로 씁니다. */
+  var DETAIL_SCROLL_MEDIA = "(min-width: 1024px) and (prefers-reduced-motion: no-preference)";
 
-  var stage = document.querySelector(".detail_stage");
+  var section = document.querySelector(".detail");
+  var pin = section && section.querySelector(".detail_pin");
+  var stage = section && section.querySelector(".detail_stage");
   var lens = stage && stage.querySelector(".detail_lens");
   var image = stage && stage.querySelector(".detail_img");
   var texts = stage ? stage.querySelectorAll(".detail_text") : [];
+  var markers = stage ? stage.querySelectorAll(".detail_marker") : [];
+  var tabs = stage ? stage.querySelectorAll(".detail_part_tab") : [];
+  var keywordList = section ? section.querySelector(".detail_keywords") : null;
+  var keywords = section ? section.querySelectorAll("[data-detail-keyword]") : [];
 
-  if (!stage || !lens || !image || !texts.length) {
+  if (!section || !pin || !stage || !lens || !image || !texts.length) {
     return;
   }
 
-  /* 손가락으로는 "지나간다"는 동작이 없어 돋보기가 성립하지 않습니다.
-     터치 기기에서는 아무것도 걸지 않고 기존 정적 레이아웃 그대로 둡니다. */
-  var finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-
-  var isBound = false;
-  var frameId = 0;
-  var pendingEvent = null;
   var activePart = "";
 
-  /* 원본 경로는 마크업 한 곳(.detail_img)에만 두고 여기서 읽어옵니다 */
-  function applyLensImage() {
-    lens.style.backgroundImage = 'url("' + image.currentSrc + '")';
-  }
-
-  function clamp(value, min, max) {
-    if (max < min) {
-      return min;
-    }
-    return Math.min(Math.max(value, min), max);
-  }
-
-  /* 커서 밑에 어느 부위가 있는지 — elementFromPoint를 쓰면 겹친 영역의 우선순위가
-     이전 :hover 방식과 정확히 같아집니다(위에 쌓인 것이 이깁니다).
-     .detail_lens와 .detail_text는 pointer-events: none이라 잡히지 않습니다. */
-  function findPart(clientX, clientY) {
-    var target = document.elementFromPoint(clientX, clientY);
-    var hotspot = target && target.closest ? target.closest(".detail_hotspot") : null;
-    return hotspot ? hotspot.getAttribute("data-part") : "";
-  }
-
+  /* 어느 부위를 보여줄지 한 곳에서 정합니다. 빈 문자열이면 전부 끕니다
+     (부위와 부위 사이를 이동하는 동안이 그렇습니다). */
   function setActivePart(part) {
     if (part === activePart) {
       return;
@@ -891,110 +917,271 @@
     Array.prototype.forEach.call(texts, function (text) {
       text.classList.toggle("is_active", text.getAttribute("data-part") === part);
     });
+
+    Array.prototype.forEach.call(markers, function (marker) {
+      marker.classList.toggle("is_active", marker.getAttribute("data-part") === part);
+    });
+
+    Array.prototype.forEach.call(keywords, function (keyword) {
+      var isActive = keyword.getAttribute("data-detail-keyword") === part;
+      keyword.classList.toggle("is_active", isActive);
+
+      if (isActive) {
+        keyword.setAttribute("aria-current", "step");
+      } else {
+        keyword.removeAttribute("aria-current");
+      }
+    });
   }
 
-  function render() {
-    frameId = 0;
+  function findText(part) {
+    return stage.querySelector('.detail_text[data-part="' + part + '"]');
+  }
 
-    var event = pendingEvent;
-    if (!event) {
-      return;
+  /* 왼쪽 세로선은 각 부위에서 멈추고, 돋보기가 다음 부위로 이동할 때만 함께
+     내려갑니다. 지난 점은 point color로 남고 텍스트는 현재 부위만 활성화합니다. */
+  function setKeywordProgress(progress) {
+    var safeProgress = clamp(progress, 0, 1);
+
+    if (keywordList) {
+      keywordList.style.setProperty("--detail_progress", safeProgress);
     }
 
-    var stageRect = stage.getBoundingClientRect();
-    var lensRect = lens.getBoundingClientRect();
+    Array.prototype.forEach.call(keywords, function (keyword, index) {
+      var stepProgress = keywords.length > 1 ? index / (keywords.length - 1) : 0;
+      keyword.classList.toggle("is_reached", safeProgress + 0.001 >= stepProgress);
+    });
+  }
 
-    var pointerX = event.clientX - stageRect.left;
-    var pointerY = event.clientY - stageRect.top;
+  /* =========================================================
+     기본 — 버튼으로 부위 고르기
 
-    /* 돋보기 중심을 커서에 맞춥니다. translate(-50%, -50%)는 CSS가 갖고 있습니다 */
+     실제 표시는 main.css의 .detail:not(.is_scroll_ready) 규칙이 하고,
+     여기서는 상태(data-active-part, aria-pressed)만 바꿉니다.
+     ========================================================= */
+  function handlePartTabClick(event) {
+    var part = event.currentTarget.getAttribute("data-part");
+
+    stage.setAttribute("data-active-part", part);
+
+    Array.prototype.forEach.call(tabs, function (tab) {
+      tab.setAttribute("aria-pressed", tab.getAttribute("data-part") === part ? "true" : "false");
+    });
+  }
+
+  Array.prototype.forEach.call(tabs, function (tab) {
+    tab.addEventListener("click", handlePartTabClick);
+  });
+
+  /* =========================================================
+     스크롤 연출
+     ========================================================= */
+
+  /* 매 프레임 다시 재면 스타일을 쓰는 도중에 레이아웃을 읽게 되어 느려집니다.
+     크기는 여기서 한 번만 재고, ScrollTrigger가 새로고침할 때 다시 잽니다. */
+  var stops = [];
+  var stageWidth = 0;
+  var stageHeight = 0;
+  var lensSize = 0;
+  var verticalRoom = 0; /* 사진 위(아래)로 설명이 걸칠 수 있는 여유 높이 */
+
+  /* 설명과 돋보기 사이 간격, 화면 가장자리에서 남길 여백 */
+  var TEXT_GAP = 28;
+  var EDGE_MARGIN = 16;
+
+  function clamp(value, min, max) {
+    if (max < min) {
+      return min;
+    }
+    return Math.min(Math.max(value, min), max);
+  }
+
+  /* 원본 경로는 마크업 한 곳(.detail_img)에만 두고 여기서 읽어옵니다 */
+  function applyLensImage() {
+    lens.style.backgroundImage = 'url("' + (image.currentSrc || image.src) + '")';
+  }
+
+  /* 돋보기가 들를 지점은 화면에 보이는 점(.detail_marker) 위치를 그대로 씁니다.
+     좌표를 CSS와 JS 두 곳에 두면 어긋나기 때문입니다. */
+  function measure() {
+    stageWidth = stage.offsetWidth;
+    stageHeight = stage.offsetHeight;
+    /* 사진은 고정 구간(.detail_pin) 안에서 세로 가운데에 있습니다. 그래서 위아래로
+       남는 공간은 각각 (고정구간 높이 − 사진 높이) ÷ 2 입니다. 설명이 사진 밖으로
+       걸칠 때 이 안쪽까지만 나가야 화면에서 잘리지 않습니다. */
+    verticalRoom = Math.max(0, (pin.offsetHeight - stageHeight) / 2);
+    /* ★ offsetWidth로 읽습니다. getBoundingClientRect는 transform이 반영된 값이라
+       돋보기가 켜지는 중(scale 0.9 → 1)에는 실제보다 작게 나옵니다. */
+    lensSize = lens.offsetWidth;
+
+    stops = [];
+
+    DETAIL_PART_ORDER.forEach(function (part) {
+      var marker = stage.querySelector('.detail_marker[data-part="' + part + '"]');
+
+      if (!marker) {
+        return;
+      }
+
+      stops.push({
+        part: part,
+        x: marker.offsetLeft + marker.offsetWidth / 2,
+        y: marker.offsetTop + marker.offsetHeight / 2
+      });
+    });
+  }
+
+  /* 돋보기를 스테이지 안 (x, y) 지점에 그립니다 */
+  function paintLens(pointerX, pointerY) {
+    /* 돋보기 중심을 지점에 맞춥니다. translate(-50%, -50%)는 CSS가 갖고 있습니다 */
     lens.style.left = pointerX + "px";
     lens.style.top = pointerY + "px";
 
-    var zoomedWidth = stageRect.width * DETAIL_LENS_ZOOM;
-    var zoomedHeight = stageRect.height * DETAIL_LENS_ZOOM;
+    var zoomedWidth = stageWidth * DETAIL_LENS_ZOOM;
+    var zoomedHeight = stageHeight * DETAIL_LENS_ZOOM;
 
     /* 확대된 사진에서 잘라 보여줄 위치. 가장자리에서 배경이 비지 않도록 가둡니다 —
        가두지 않으면 사진 밖 빈 영역이 돋보기 안에 초승달 모양으로 남습니다. */
     var backgroundX = clamp(
-      pointerX * DETAIL_LENS_ZOOM - lensRect.width / 2,
+      pointerX * DETAIL_LENS_ZOOM - lensSize / 2,
       0,
-      Math.max(0, zoomedWidth - lensRect.width)
+      Math.max(0, zoomedWidth - lensSize)
     );
     var backgroundY = clamp(
-      pointerY * DETAIL_LENS_ZOOM - lensRect.height / 2,
+      pointerY * DETAIL_LENS_ZOOM - lensSize / 2,
       0,
-      Math.max(0, zoomedHeight - lensRect.height)
+      Math.max(0, zoomedHeight - lensSize)
     );
 
     lens.style.backgroundSize = zoomedWidth + "px " + zoomedHeight + "px";
     lens.style.backgroundPosition = -backgroundX + "px " + -backgroundY + "px";
-
-    setActivePart(findPart(event.clientX, event.clientY));
   }
 
-  function handlePointerMove(event) {
-    pendingEvent = event;
-    if (!frameId) {
-      frameId = window.requestAnimationFrame(render);
+  /* 설명을 돋보기 바로 옆에 놓습니다. 돋보기가 사진 오른쪽에 있으면 왼쪽에,
+     왼쪽에 있으면 오른쪽에 붙여 사진 밖으로 밀려나지 않게 합니다.
+     세로는 돋보기 중심에 맞추되, 고정 구간 밖으로 나가지 않도록 가둡니다 —
+     시안의 고정 좌표를 그대로 쓰면 짧은 화면에서 Skirt 설명이 잘렸습니다. */
+  function placeText(part, lensX, lensY) {
+    var text = findText(part);
+
+    if (!text) {
+      return;
     }
+
+    var width = text.offsetWidth;
+    var height = text.offsetHeight;
+    var half = lensSize / 2;
+
+    var left =
+      lensX > stageWidth / 2
+        ? lensX - half - TEXT_GAP - width
+        : lensX + half + TEXT_GAP;
+
+    text.style.left = clamp(left, EDGE_MARGIN, stageWidth - width - EDGE_MARGIN) + "px";
+    text.style.top =
+      clamp(
+        lensY - height / 2,
+        -(verticalRoom - EDGE_MARGIN),
+        stageHeight + verticalRoom - height - EDGE_MARGIN
+      ) + "px";
   }
 
-  function handlePointerEnter(event) {
-    applyLensImage();
-    stage.classList.add("is_lens_active");
-    lens.classList.add("is_active");
-    handlePointerMove(event);
-  }
-
-  function handlePointerLeave() {
-    if (frameId) {
-      window.cancelAnimationFrame(frameId);
-      frameId = 0;
+  /* 진행도 0~1을 네 구간으로 나눕니다. 한 구간은 "그 부위에 머무르기 → 다음
+     부위로 옮겨가기" 두 토막이고, 마지막 구간은 갈 곳이 없어 계속 머무릅니다.
+     그래서 스크롤을 내리면 설명이 하나씩 차례로 뜹니다. */
+  function applyProgress(progress) {
+    if (!stops.length) {
+      return;
     }
-    pendingEvent = null;
-    stage.classList.remove("is_lens_active");
-    lens.classList.remove("is_active");
+
+    var segment = 1 / stops.length;
+    var index = clamp(Math.floor(progress / segment), 0, stops.length - 1);
+    var local = (progress - index * segment) / segment;
+    var from = stops[index];
+    var to = stops[index + 1];
+    var fromKeywordProgress = stops.length > 1 ? index / (stops.length - 1) : 0;
+
+    if (!to || local <= DETAIL_HOLD_RATIO) {
+      setKeywordProgress(fromKeywordProgress);
+      paintLens(from.x, from.y);
+      placeText(from.part, from.x, from.y);
+      setActivePart(from.part);
+      return;
+    }
+
+    /* 이동 중에는 설명을 끕니다 — 글이 사진 위를 함께 날아다니지 않도록.
+       smoothstep이라 출발과 도착에서 부드럽게 붙습니다. */
+    var travel = (local - DETAIL_HOLD_RATIO) / (1 - DETAIL_HOLD_RATIO);
+    var eased = travel * travel * (3 - 2 * travel);
+    var toKeywordProgress = (index + 1) / (stops.length - 1);
+
+    setKeywordProgress(fromKeywordProgress + (toKeywordProgress - fromKeywordProgress) * eased);
+    paintLens(from.x + (to.x - from.x) * eased, from.y + (to.y - from.y) * eased);
     setActivePart("");
   }
 
-  function bind() {
-    if (isBound) {
-      return;
-    }
-    isBound = true;
-    stage.addEventListener("pointerenter", handlePointerEnter);
-    stage.addEventListener("pointermove", handlePointerMove);
-    stage.addEventListener("pointerleave", handlePointerLeave);
+  var isGsapReady = typeof window.gsap !== "undefined" && typeof window.ScrollTrigger !== "undefined";
+
+  if (!isGsapReady) {
+    return;
   }
 
-  function unbind() {
-    if (!isBound) {
-      return;
-    }
-    isBound = false;
-    stage.removeEventListener("pointerenter", handlePointerEnter);
-    stage.removeEventListener("pointermove", handlePointerMove);
-    stage.removeEventListener("pointerleave", handlePointerLeave);
-    handlePointerLeave();
-  }
+  window.gsap.matchMedia().add(DETAIL_SCROLL_MEDIA, function () {
+    /* ★ class를 먼저 붙여야 합니다. 이 class가 레이아웃(사진 폭, 설명 위치)을
+       바꾸므로, 먼저 재면 버튼 방식의 크기를 재게 됩니다. */
+    section.classList.add("is_scroll_ready");
+    measure();
+    applyLensImage();
 
-  function syncPointerMode() {
-    if (finePointer.matches) {
-      bind();
-    } else {
-      unbind();
-    }
-  }
+    var trigger = window.ScrollTrigger.create({
+      trigger: pin,
+      start: "top top",
+      end: "+=" + DETAIL_SCROLL_PER_PART * stops.length + "%",
+      pin: pin,
+      anticipatePin: 1,
+      onRefresh: function () {
+        measure();
+      },
+      onUpdate: function (self) {
+        applyProgress(self.progress);
+      },
+      /* 고정 구간에 들어와 있는 동안만 돋보기를 띄웁니다. onEnter/onLeave 네 개를
+         따로 두는 대신 onToggle 하나로 처리하면 위·아래 어느 방향으로 지나가도
+         상태가 어긋나지 않습니다. */
+      onToggle: function (self) {
+        lens.classList.toggle("is_active", self.isActive);
 
-  syncPointerMode();
+        /* 구간을 벗어나면 설명도 같이 끕니다. 끄지 않으면 마지막 지점(진행도 1)에서
+           돋보기만 사라지고 Skirt 설명이 남습니다. */
+        if (!self.isActive) {
+          setActivePart("");
+        }
+      }
+    });
 
-  /* 마우스를 꽂거나 뽑았을 때, 태블릿에서 키보드를 붙였을 때 다시 판정합니다 */
-  if (typeof finePointer.addEventListener === "function") {
-    finePointer.addEventListener("change", syncPointerMode);
-  } else if (typeof finePointer.addListener === "function") {
-    finePointer.addListener(syncPointerMode);
-  }
+    applyProgress(trigger.progress);
+
+    /* ★ GSAP은 자기가 만든 것(트리거·pin)만 되돌립니다. 위에서 element.style에
+       직접 쓴 돋보기 좌표와 배경, 그리고 우리가 붙인 class는 여기서 손으로
+       지워야 합니다. 빼먹으면 창을 좁혔을 때 버튼 방식 화면에 돋보기 잔재가
+       남습니다. */
+    return function cleanup() {
+      trigger.kill();
+      section.classList.remove("is_scroll_ready");
+      lens.classList.remove("is_active");
+      lens.removeAttribute("style");
+      Array.prototype.forEach.call(texts, function (text) {
+        text.removeAttribute("style");
+      });
+      if (keywordList) {
+        keywordList.style.removeProperty("--detail_progress");
+      }
+      Array.prototype.forEach.call(keywords, function (keyword) {
+        keyword.classList.remove("is_reached");
+      });
+      setActivePart("");
+    };
+  });
 })();
 
 /* =========================================================

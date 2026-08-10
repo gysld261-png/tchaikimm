@@ -5,6 +5,10 @@
    ========================================================= */
 
 .header {
+  --header_text_color: var(--color_text_on_dark_menu);
+  --header_icon_filter: none;
+  --header_panel_background: rgba(10, 10, 10, 0.92);
+  --header_dropdown_border: rgba(255, 255, 255, 0.2);
   position: fixed;
   top: 0;
   left: 0;
@@ -121,7 +125,7 @@
   flex-direction: column;
   gap: 24px;
   padding: 24px var(--layout_gutter) 32px;
-  background-color: rgba(10, 10, 10, 0.92);
+  background-color: var(--header_panel_background);
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -153,7 +157,7 @@
 .header_menu_link {
   display: inline-flex;
   align-items: center;
-  color: var(--color_text_on_dark_menu);
+  color: var(--header_text_color);
   font-family: var(--font_ui);
   font-size: 20px;
   transition: color var(--duration_fast) var(--easing_base);
@@ -161,6 +165,10 @@
 
 /* Header variants: white is used over imagery, black on light backgrounds. */
 .header.is_black {
+  --header_text_color: var(--color_text);
+  --header_icon_filter: brightness(0);
+  --header_panel_background: var(--color_bg);
+  --header_dropdown_border: var(--color_line);
   background-color: transparent;
 }
 
@@ -168,22 +176,6 @@
 .header.is_black .header_toggle_bar::before,
 .header.is_black .header_toggle_bar::after {
   background-color: var(--color_text);
-}
-
-.header.is_black .header_inner {
-  background-color: var(--color_bg);
-}
-
-.header.is_black .header_menu_link,
-.header.is_black .header_currency_select,
-.header.is_black .header_currency_select option,
-.header.is_black .header_cart {
-  color: var(--color_text);
-}
-
-.header.is_black .header_currency_icon,
-.header.is_black .header_cart_icon {
-  filter: brightness(0);
 }
 
 .header.is_black .header_menu_link:hover,
@@ -206,30 +198,95 @@
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
 }
 
-.header_currency_select {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--color_text_on_dark_menu);
+.header_currency_trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 4px 0;
+  color: var(--header_text_color);
   font-family: var(--font_ui);
   font-size: var(--fs_ui_16);
   font-weight: 500;
   cursor: pointer;
-  appearance: none;
-}
-
-.header_currency_select option {
-  color: var(--color_text);
 }
 
 .header_currency_icon {
   width: 13px;
   height: 8px;
-  pointer-events: none;
+  filter: var(--header_icon_filter);
+  transition: filter var(--duration_fast) var(--easing_base),
+              transform var(--duration_fast) var(--easing_base);
 }
+
+.header_currency.is_open .header_currency_icon {
+  transform: rotate(180deg);
+}
+
+.header_currency_menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 1;
+  display: grid;
+  min-width: 100px;
+  padding: 8px;
+  border: 1px solid var(--header_dropdown_border);
+  border-radius: 4px;
+  background-color: var(--header_panel_background);
+  box-shadow: 0 12px 30px rgba(10, 10, 10, 0.14);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-8px);
+  transition: opacity var(--duration_fast) var(--easing_base),
+              transform var(--duration_fast) var(--easing_base),
+              visibility 0s linear var(--duration_fast);
+}
+
+.header_currency.is_open .header_currency_menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition-delay: 0s;
+}
+
+.header_currency_option {
+  width: 100%;
+  padding: 7px 10px;
+  border-radius: 3px;
+  color: var(--header_text_color);
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_14);
+  font-weight: 500;
+  text-align: left;
+  opacity: 0;
+  transform: translateY(-6px);
+  transition: color var(--duration_fast) var(--easing_base),
+              background-color var(--duration_fast) var(--easing_base),
+              opacity var(--duration_base) var(--easing_base),
+              transform var(--duration_base) var(--easing_base);
+}
+
+.header_currency_option:hover,
+.header_currency_option:focus-visible,
+.header_currency_option[aria-checked="true"] {
+  background-color: rgba(127, 127, 127, 0.14);
+}
+
+.header_currency.is_open .header_currency_option {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.header_currency.is_open .header_currency_option:nth-child(1) { transition-delay: 0.04s; }
+.header_currency.is_open .header_currency_option:nth-child(2) { transition-delay: 0.08s; }
+.header_currency.is_open .header_currency_option:nth-child(3) { transition-delay: 0.12s; }
+.header_currency.is_open .header_currency_option:nth-child(4) { transition-delay: 0.16s; }
+.header_currency.is_open .header_currency_option:nth-child(5) { transition-delay: 0.2s; }
 
 .header_cart {
   display: flex;
@@ -237,15 +294,23 @@
   justify-content: center;
   width: 25px;
   height: 25px;
+  color: var(--header_text_color);
 }
 
 .header_cart_icon {
   width: 21px;
   height: 18px;
+  filter: var(--header_icon_filter);
+  transition: filter var(--duration_fast) var(--easing_base);
 }
 
 /* 모바일 메뉴 스태거 — 패널이 열린 뒤 항목이 위에서부터 차례로 내려옵니다. */
 @media (max-width: 1279px) {
+  .header_currency_menu {
+    right: auto;
+    left: 0;
+  }
+
   .header_menu_item,
   .header_currency,
   .header_cart {
@@ -327,10 +392,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .header_currency_menu,
+  .header_currency_option,
+  .header_currency_icon,
   .header_inner.is_open .header_menu_item,
   .header_inner.is_open .header_currency,
   .header_inner.is_open .header_cart {
     transition-delay: 0s;
+    transition-duration: 0s;
   }
 }
 

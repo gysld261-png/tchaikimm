@@ -285,8 +285,13 @@
   var headerToggle = document.getElementById("header_toggle");
   var headerInner = document.getElementById("header_inner");
   var header = document.querySelector(".header");
+  var currency = document.querySelector("[data-currency-menu]");
+  var currencyTrigger = document.getElementById("header_currency_trigger");
+  var currencyValue = document.querySelector("[data-currency-value]");
+  var currencyOptions = Array.prototype.slice.call(document.querySelectorAll("[data-currency]"));
   var lastScrollY = window.scrollY;
   var headerScrollTicking = false;
+  var CURRENCY_STORAGE_KEY = "tchaikimm_currency";
 
   // 헤더가 fixed라 아래로 지나가는 배경이 밝은지 어두운지에 따라 글씨가 안 보일 수 있습니다.
   // 헤더가 덮고 있는 지점의 배경색을 읽어 밝기로 흑/백 변형을 고릅니다.
@@ -412,12 +417,26 @@
   function updateHeaderTheme() {
     var sampleY = Math.max(header.offsetHeight / 2, 1);
     var viewportWidth = document.documentElement.clientWidth;
-    var explicitTheme = explicitHeaderThemeAt(Math.round(viewportWidth / 2), sampleY);
+    var explicitThemes = [];
     var total = 0;
     var found = 0;
 
-    if (explicitTheme === "black" || explicitTheme === "white") {
-      setHeaderTheme(header, explicitTheme);
+    for (var themeIndex = 0; themeIndex < BACKDROP_SAMPLE_RATIOS.length; themeIndex++) {
+      var explicitTheme = explicitHeaderThemeAt(
+        Math.round(viewportWidth * BACKDROP_SAMPLE_RATIOS[themeIndex]),
+        sampleY
+      );
+
+      if (explicitTheme === "black" || explicitTheme === "white") {
+        explicitThemes.push(explicitTheme);
+      }
+    }
+
+    if (explicitThemes.length > 0) {
+      var blackThemeCount = explicitThemes.filter(function (theme) {
+        return theme === "black";
+      }).length;
+      setHeaderTheme(header, blackThemeCount > explicitThemes.length / 2 ? "black" : "white");
       return;
     }
 
@@ -448,7 +467,8 @@
 
     var currentScrollY = Math.max(window.scrollY, 0);
     var scrollDelta = currentScrollY - lastScrollY;
-    var menuIsOpen = headerInner && headerInner.classList.contains("is_open");
+    var menuIsOpen = (headerInner && headerInner.classList.contains("is_open")) ||
+      (currency && currency.classList.contains("is_open"));
 
     header.classList.toggle("is_scrolled", currentScrollY > 16);
 
@@ -497,6 +517,103 @@
     }
   }
 
+  function setCurrencyOpen(isOpen, shouldFocusOption) {
+    if (!currency || !currencyTrigger) {
+      return;
+    }
+
+    currency.classList.toggle("is_open", isOpen);
+    currencyTrigger.setAttribute("aria-expanded", String(isOpen));
+
+    if (isOpen) {
+      header.classList.remove("is_hidden");
+    }
+
+    if (isOpen && shouldFocusOption) {
+      var selectedOption = currencyOptions.filter(function (option) {
+        return option.getAttribute("aria-checked") === "true";
+      })[0];
+      (selectedOption || currencyOptions[0]).focus();
+    }
+  }
+
+  function setCurrency(currencyCode, shouldStore) {
+    var selectedOption = currencyOptions.filter(function (option) {
+      return option.getAttribute("data-currency") === currencyCode;
+    })[0];
+
+    if (!selectedOption || !currencyValue || !currencyTrigger) {
+      return;
+    }
+
+    currencyOptions.forEach(function (option) {
+      option.setAttribute("aria-checked", String(option === selectedOption));
+    });
+    currencyValue.textContent = currencyCode;
+    currencyTrigger.setAttribute("aria-label", "Currency, " + currencyCode);
+
+    if (shouldStore) {
+      try {
+        window.localStorage.setItem(CURRENCY_STORAGE_KEY, currencyCode);
+      } catch (error) {
+        // 저장소가 차단된 환경에서도 현재 페이지의 선택 동작은 유지합니다.
+      }
+    }
+  }
+
+  function getStoredCurrency() {
+    try {
+      return window.localStorage.getItem(CURRENCY_STORAGE_KEY);
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function moveCurrencyFocus(currentOption, direction) {
+    var currentIndex = currencyOptions.indexOf(currentOption);
+    var nextIndex = (currentIndex + direction + currencyOptions.length) % currencyOptions.length;
+    currencyOptions[nextIndex].focus();
+  }
+
+  function handleCurrencyTriggerClick() {
+    setCurrencyOpen(!currency.classList.contains("is_open"), false);
+  }
+
+  function handleCurrencyOptionClick(event) {
+    setCurrency(event.currentTarget.getAttribute("data-currency"), true);
+    setCurrencyOpen(false, false);
+    currencyTrigger.focus();
+  }
+
+  function handleCurrencyKeydown(event) {
+    var currentOption = event.target.closest("[data-currency]");
+
+    if (event.target === currencyTrigger && (event.key === "ArrowDown" || event.key === "ArrowUp")) {
+      event.preventDefault();
+      setCurrencyOpen(true, true);
+      if (event.key === "ArrowUp") {
+        currencyOptions[currencyOptions.length - 1].focus();
+      }
+      return;
+    }
+
+    if (!currentOption) {
+      return;
+    }
+
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault();
+      moveCurrencyFocus(currentOption, event.key === "ArrowDown" ? 1 : -1);
+    } else if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      currencyOptions[event.key === "Home" ? 0 : currencyOptions.length - 1].focus();
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      setCurrencyOpen(false, false);
+      currencyTrigger.focus();
+    }
+  }
+
   function handleToggleClick() {
     var isOpen = headerToggle.getAttribute("aria-expanded") === "true";
     setMenuOpen(!isOpen);
@@ -507,18 +624,21 @@
       return;
     }
 
-    if (headerInner && headerInner.classList.contains("is_open")) {
+    if (currency && currency.classList.contains("is_open")) {
+      setCurrencyOpen(false, false);
+      currencyTrigger.focus();
+    } else if (headerInner && headerInner.classList.contains("is_open")) {
       setMenuOpen(false);
       headerToggle.focus();
     }
   }
 
   function handleDocumentClick(event) {
-    if (!headerInner || !headerInner.classList.contains("is_open")) {
-      return;
+    if (currency && currency.classList.contains("is_open") && !event.target.closest(".header_currency")) {
+      setCurrencyOpen(false, false);
     }
 
-    if (!event.target.closest(".header")) {
+    if (headerInner && headerInner.classList.contains("is_open") && !event.target.closest(".header")) {
       setMenuOpen(false);
     }
   }
@@ -531,9 +651,22 @@
 
   if (headerToggle && headerInner) {
     headerToggle.addEventListener("click", handleToggleClick);
+    window.addEventListener("resize", handleWindowResize);
+  }
+
+  if (currency && currencyTrigger && currencyOptions.length > 0) {
+    var storedCurrency = getStoredCurrency();
+    setCurrency(storedCurrency || "USD", false);
+    currencyTrigger.addEventListener("click", handleCurrencyTriggerClick);
+    currency.addEventListener("keydown", handleCurrencyKeydown);
+    currencyOptions.forEach(function (option) {
+      option.addEventListener("click", handleCurrencyOptionClick);
+    });
+  }
+
+  if ((headerToggle && headerInner) || (currency && currencyTrigger)) {
     document.addEventListener("keydown", handleDocumentKeydown);
     document.addEventListener("click", handleDocumentClick);
-    window.addEventListener("resize", handleWindowResize);
   }
 
   if (header) {
