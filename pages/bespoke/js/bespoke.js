@@ -192,12 +192,9 @@
      때 등장이 시작돼 화면 밖에서 다 끝나 버린다(실측: 시작 시점 노출 0%).
      글 상자의 윗변이 화면 82% 지점에 오면 시작한다. */
   var PHILOSOPHY_START = "top 82%";
-  var PHILOSOPHY_PARALLAX_SHIFT = 110; /* 배경이 위아래로 움직이는 거리(px)
-     주의: 이 값을 올리면 css의 --philosophy_parallax_overscan도 같이 올려야
-     한다. overscan은 이 값 + 배경 등장 이동(자기 높이의 2.5%)보다 커야 한다. */
-  /* ※ 퇴장 상수 3개(`PHILOSOPHY_EXIT_*`)를 지웠습니다 — 퇴장 트윈 자체가
-     사라졌기 때문입니다(아래 `initPhilosophyMotion` 안의 사유 주석 참고).
-     쓰이지 않는 상수를 남겨 두면 "여기 퇴장 연출이 있다"고 잘못 알려 줍니다. */
+  /* ※ 퇴장 상수 3개(`PHILOSOPHY_EXIT_*`)와 `PHILOSOPHY_PARALLAX_SHIFT`를
+     지웠습니다 — 해당 트윈 자체가 사라졌기 때문입니다(아래 사유 주석 참고).
+     쓰이지 않는 상수를 남겨 두면 "여기 그 연출이 있다"고 잘못 알려 줍니다. */
 
   function initPhilosophyMotion() {
     var section = document.querySelector(".philosophy");
@@ -270,25 +267,26 @@
     gsap.matchMedia().add("(prefers-reduced-motion: no-preference)", function () {
       section.classList.add("is_motion_ready");
 
-      /* 2) 패럴랙스 — 섹션이 화면을 지나가는 동안 배경을 아래로 흘린다.
-            페이지가 위로 올라가는 만큼 배경이 아래로 상쇄돼서, 결과적으로
-            배경이 글보다 천천히 지나가는 것처럼 보인다.
-            `scrub: true`라 스크롤 위치에 1:1로 묶이고, `ease: "none"`이라
-            구간 내내 속도가 일정하다. */
-      gsap.fromTo(
-        background,
-        { y: -PHILOSOPHY_PARALLAX_SHIFT },
-        {
-          y: PHILOSOPHY_PARALLAX_SHIFT,
-          ease: "none",
-          scrollTrigger: {
-            trigger: section,
-            start: "top bottom",
-            end: "bottom top",
-            scrub: true
-          }
-        }
-      );
+      /* ※ 2) 배경 패럴랙스를 **제거했습니다** (2026-08-11, 사용자 요청 —
+         "이미지가 흔들린다. 스크롤을 내리면서 절대 화면이 움직이지 않도록").
+
+         원래는 섹션이 화면을 지나가는 내내 배경을 `y −110 → +110`으로
+         흘렸습니다(`scrub: true`). 스크롤 위치에 1:1로 묶여 있어서 **스크롤하는
+         동안 배경만 220px을 계속 움직였습니다** — 이것이 흔들림의 정체입니다.
+
+         ★★ 히어로 전환 구간에서 특히 두드러졌습니다. 그 구간에서는
+         `initHeroTransition`의 ①이 philosophy 섹션을 화면 top 0에 **붙여 둡니다.**
+         섹션은 못 박혀 있는데 그 안의 배경만 패럴랙스로 흐르니, 먹물이 퍼지는
+         동안 배경이 혼자 미끄러졌습니다. 두 연출이 같은 구간에서 서로 반대로
+         움직이고 있었던 셈입니다.
+
+         지금 배경에는 **스크롤에 묶인 트윈이 하나도 없습니다.** 아래 등장 트윈만
+         남는데 그것은 `once: true`인 데다 세로 화면에서만 돕니다. 즉 데스크톱에서는
+         배경에 걸리는 transform이 아예 없어 섹션과 완전히 함께 움직입니다.
+
+         ★ 되살리지 마세요. 되살리려면 css의 `--philosophy_bg_overscan`(배경을
+         키워 두는 값)도 그 이동량에 맞춰 같이 올려야 합니다 — 안 그러면 섹션
+         위아래에 빈 줄이 드러납니다. */
 
       /* ※ 3) 퇴장 트윈을 **제거했습니다** (2026-08-10, 사용자 요청 —
          "philosophy에서 다음 섹션으로 넘어갈 때 글씨가 사라지지 않고 그대로
