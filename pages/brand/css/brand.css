@@ -1211,6 +1211,29 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     transform: none;
   }
 }
+
+/* 공통 1920px zoom은 common/css/common.css에서 관리합니다.
+   Brand의 pin 섹션은 ScrollTrigger 계산에 공통 zoom이 한 번 더 반영되어
+   높이가 잘리거나 고정 순간 왼쪽으로 이동합니다. 섹션만 키우면 pin 여유 공간과
+   크기가 달라져 다음 섹션이 겹치므로, ScrollTrigger 바깥 공간까지 함께 복원합니다. */
+@media (min-width: 1850px) and (max-width: 1990px) {
+  .pin-spacer:has(> .mood),
+  .pin-spacer:has(> .tchaikim),
+  .pin-spacer:has(> .heritage) {
+    max-width: 100%;
+    zoom: calc(1 / var(--site_view_scale));
+  }
+
+  .pin-spacer > .mood,
+  .pin-spacer > .tchaikim,
+  .pin-spacer > .heritage {
+    /* ScrollTrigger가 pin 순간 2540px 인라인 폭을 넣으므로 이 두 속성만
+       1920px 화면 폭으로 덮어씁니다. 인라인 스타일보다 우선해야 해 !important가 필요합니다. */
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
 /* =========================================================
    MOOD RESPONSIVE
    Breakpoints — 1919.98px / 767px / 390px

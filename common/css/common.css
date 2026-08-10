@@ -106,6 +106,22 @@ body[data-header-variant="black"] .common_header_slot {
   }
 }
 
+/* 1920px 발표 화면에서는 Shop과 동일하게 전체 콘텐츠를 2560px 화면 비율로 축소합니다.
+   조절: --site_view_scale만 바꾸면 됩니다. 푸터는 다른 페이지와 통일된 원래 크기를 유지합니다. */
+@media (min-width: 1850px) and (max-width: 1990px) {
+  :root {
+    --site_view_scale: 0.75;
+  }
+
+  html {
+    zoom: var(--site_view_scale);
+  }
+
+  .common_footer_slot {
+    zoom: calc(1 / var(--site_view_scale));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
