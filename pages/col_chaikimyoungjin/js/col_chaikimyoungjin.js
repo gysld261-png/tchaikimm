@@ -122,10 +122,9 @@
   /* 연도를 바꿀 때 이전 세트가 사라지는 시간. 이 사이에 새 사진이 내려받기를 시작합니다. */
   var ARCHIVE_SWAP_FADE = 0.25;
 
-  /* 연도를 바꿨을 때 다시 한 번 날아드는 트윈의 길이(초). 이쪽은 스크롤과 무관한
-     한 번짜리 재생이라 스크롤용 값과 따로 둡니다. */
-  var ARCHIVE_REPLAY_DURATION = 0.95;
-  var ARCHIVE_REPLAY_STAGGER = 0.18;
+  /* ★ ARCHIVE_REPLAY_* 는 2026-08-11에 지웠습니다. 연도를 바꾸면 이제 같은
+     타임라인을 `timeline.play(0)`으로 다시 돌리므로 첫 등장과 속도가
+     저절로 같습니다. */
 
   /* pin이 시작되는 지점. 프레임(920px)이 화면 한가운데에 놓인 순간 고정됩니다.
      화면(1080px)보다 작으므로 위아래에 여백이 남아 어느 카드도 잘리지 않습니다. */
@@ -1043,10 +1042,6 @@
     };
   }
 
-  /* 연도를 바꿨을 때 한 번만 다시 날아드는 트윈. 아래 onUpdate가 들고 있어야 해서
-     함수 밖에 둡니다. 스크롤이 들어오면 즉시 끊깁니다. */
-  var archiveReplay = null;
-
   /* showcase 하단 갤러리와 같이 figure는 가만히 두고 안쪽 img만 움직입니다.
 
      프레임(920px)이 화면(1080px)보다 작아 통째로 pin할 수 있습니다.
@@ -1060,7 +1055,17 @@
        자기 차례에 갑자기 화면 밖으로 튀었다 다시 들어옵니다. */
     gsap.set(images, enterVars);
 
-    var timeline = gsap.timeline();
+    /* ★★ `paused: true` — 2026-08-11 사용자 요청으로 **스크롤 연동(scrub)을
+       걷어냈습니다.** "스크롤 말고 한번에 차례대로 나오게."
+
+         예전: scrub. 스크롤 진행도가 곧 등장 진행도라, 사진을 다 보려면
+               그만큼 스크롤해야 했고 되감으면 다시 사라졌습니다.
+         지금: 섹션에 닿으면 타임라인이 **자기 속도로** 한 번 재생됩니다.
+               다섯 장이 ARCHIVE_STAGGER 간격으로 차례로 놓입니다.
+
+       ★ `paused`가 없으면 타임라인이 만들어지는 즉시 재생돼, 사용자가 이
+       섹션에 닿기도 전에 등장이 끝나 있습니다. */
+    var timeline = gsap.timeline({ paused: true });
 
     timeline
       .fromTo(
@@ -1081,24 +1086,31 @@
          다섯 장이 다 놓인 화면을 읽을 수 있습니다. */
       .to({}, { duration: ARCHIVE_HOLD });
 
+    /* ★★ pin은 그대로 둡니다(사용자 요청 "사진이 다 뜰 때까지는 고정").
+       화면이 붙잡혀 있는 거리를 **타임라인 길이에서 그대로 뽑기** 때문에,
+       등장이 끝나기 전에 다음 섹션으로 넘어가지 않습니다 —
+       ARCHIVE_DURATION·ARCHIVE_STAGGER·ARCHIVE_HOLD를 바꾸면 고정 거리도
+       저절로 따라옵니다.
+
+       ★ `scrub`이 없으므로 `animation:`으로 붙이지 않습니다. 붙이면
+       ScrollTrigger가 스크롤 위치로 타임라인을 되돌려 자기 속도로 재생하지
+       못합니다. 재생은 아래 onEnter가 시작합니다. */
     window.ScrollTrigger.create({
-      animation: timeline,
       trigger: archive,
       start: ARCHIVE_START,
       end: "+=" + Math.round(timeline.duration() * ARCHIVE_PX_PER_UNIT),
       pin: true,
       pinSpacing: true,
-      scrub: 1,
       anticipatePin: 1,
       invalidateOnRefresh: true,
-      /* 연도 전환 다시보기가 도는 중에 스크롤이 들어오면 두 트윈이 같은 값을
-         서로 덮어씁니다. 스크롤 쪽을 진실로 삼고 다시보기를 끊습니다.
-         스크롤이 정하는 값은 언제나 올바른 상태라 화면이 튀지 않습니다. */
-      onUpdate: function () {
-        if (archiveReplay) {
-          archiveReplay.kill();
-          archiveReplay = null;
-        }
+      /* play()는 "현재 위치에서 이어서"입니다. 그래서 처음 닿았을 때만
+         0 → 1로 돌고, 이미 다 놓인 뒤에 다시 들어오면 아무 일도 없습니다
+         (되감아 올라가도 사진이 다시 날아가지 않습니다). */
+      onEnter: function () {
+        timeline.play();
+      },
+      onEnterBack: function () {
+        timeline.play();
       }
     });
 
@@ -1131,14 +1143,16 @@
       ARCHIVE_LAYOUTS[year] = centerArchiveLayouts(ARCHIVE_LAYOUTS[year]);
     });
 
-    /* css의 .archive_photo_1~5 기본값은 시안 좌표 그대로라 아직 왼쪽에 쏠려 있습니다.
-       첫 화면에도 정규화된 자리를 쓰도록 기본 연도에 한 번 적용합니다
-       (사진 파일은 HTML에 이미 있으므로 배치만 씁니다). */
-    ARCHIVE_LAYOUTS[currentYear].forEach(function (layout, index) {
-      if (figures[index] && layout) {
-        applyLayout(figures[index], layout);
-      }
-    });
+    /* ★★ 첫 화면을 ARCHIVE_DEFAULT_YEAR에 **완전히** 맞춥니다(2026-08-11).
+
+       예전에는 배치(좌표)만 다시 썼습니다. "사진 파일은 HTML에 이미 있다"는
+       전제였는데, 그건 HTML에 적힌 사진과 기본 연도가 같을 때만 참입니다.
+       기본 연도를 바꾸는 순간 **HTML의 옛 연도 사진이 새 연도 좌표에 놓여**
+       사진과 왼쪽 연도 표시가 어긋납니다.
+
+       applyYearPhotos는 사진·좌표·빈 칸(is_empty)을 한 번에 맞추므로
+       이제 기본 연도를 바꿔도 HTML을 손댈 필요가 없습니다. */
+    applyYearPhotos(figures, currentYear);
 
     /* 1280px 미만과 모션 감소 설정에서는 타임라인을 만들지 않습니다.
        그때는 이 값이 계속 null이고, 사진은 CSS 레이아웃 그대로 보입니다. */
@@ -1193,11 +1207,6 @@
         fadeTween.kill();
       }
 
-      if (archiveReplay) {
-        archiveReplay.kill();
-        archiveReplay = null;
-      }
-
       fadeTween = window.gsap.to(images, {
         opacity: 0,
         duration: ARCHIVE_SWAP_FADE,
@@ -1210,23 +1219,11 @@
              기록해 둔 시작값을 버려야 위 함수형 값이 새 배치로 다시 계산됩니다. */
           timeline.invalidate();
 
-          /* scrub 타임라인은 값이 스크롤 위치에 묶여 있어 restart()로 다시 재생할 수
-             없습니다. 대신 같은 값을 한 번만 재생하는 트윈을 따로 만듭니다.
-             스크롤이 들어오면 위 onUpdate가 이 트윈을 끊고 스크롤 값이 이깁니다. */
-          window.gsap.set(images, enterVars);
-          archiveReplay = window.gsap.to(images, {
-            x: 0,
-            y: 0,
-            rotation: 0,
-            scale: 1,
-            opacity: 1,
-            ease: "power3.out",
-            duration: ARCHIVE_REPLAY_DURATION,
-            stagger: ARCHIVE_REPLAY_STAGGER,
-            onComplete: function () {
-              archiveReplay = null;
-            }
-          });
+          /* ★ 스크롤에 묶이지 않은 평범한 타임라인이라 그냥 처음부터 다시
+             돌리면 됩니다. (scrub이던 시절에는 값이 스크롤 위치에 묶여 있어
+             restart()가 듣지 않아, 같은 값을 한 번 재생하는 트윈을 따로
+             만들어야 했습니다 — 이제 필요 없습니다.) */
+          timeline.play(0);
         }
       });
     }
@@ -1253,11 +1250,6 @@
         if (fadeTween) {
           fadeTween.kill();
           fadeTween = null;
-        }
-
-        if (archiveReplay) {
-          archiveReplay.kill();
-          archiveReplay = null;
         }
 
         gsap.set(images, { clearProps: "all" });

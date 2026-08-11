@@ -76,15 +76,16 @@
          밑줄은 두 가지입니다 — JS가 없으면 활성 탭의 ::after(고정),
          JS가 붙으면 .brand_tab_indicator(미끄러짐). css의 is_slide_ready가 가릅니다.
 
-         ★ 자매 페이지와 순서가 같아야 합니다(TCHAI KIM → TCHAI KIM YOUNG JIN).
+         ★ 자매 페이지와 순서가 같아야 합니다
+         (2026-08-11 사용자 요청으로 TCHAI KIM YOUNG JIN → TCHAI KIM으로 바꿨습니다).
          순서가 다르면 이동한 뒤 밑줄이 반대쪽에서 튀어나온 것처럼 보입니다. -->
       <nav class="brand_tabs" aria-label="Collection brand">
         <ul class="brand_tab_list">
-          <li class="brand_tab_item is_active">
-            <a class="brand_tab_link" href="index.html" aria-current="page">TCHAI KIM</a>
-          </li>
           <li class="brand_tab_item">
             <a class="brand_tab_link" href="../col_chaikimyoungjin/index.html">TCHAI KIM YOUNG JIN</a>
+          </li>
+          <li class="brand_tab_item is_active">
+            <a class="brand_tab_link" href="index.html" aria-current="page">TCHAI KIM</a>
           </li>
         </ul>
         <span class="brand_tab_indicator" aria-hidden="true"></span>
@@ -169,20 +170,20 @@
                  button입니다. 나머지 연도는 연결할 데이터가 없어 정적 링크입니다. -->
               <div class="archive_years" role="group" aria-label="Collection years">
                 <ul class="archive_year_list">
-                  <li class="archive_year_item">
-                    <button class="archive_year_link archive_year_button" type="button" data-year="2021">2021</button>
+                  <li class="archive_year_item is_active">
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2021"
+                      aria-current="true">2021</button>
                   </li>
                   <li class="archive_year_item">
                     <button class="archive_year_link archive_year_button" type="button" data-year="2020">2020</button>
                   </li>
-                  <li class="archive_year_item is_active">
-                    <button class="archive_year_link archive_year_button" type="button" data-year="2019"
-                      aria-current="true">2019</button>
+                  <li class="archive_year_item">
+                    <button class="archive_year_link archive_year_button" type="button" data-year="2019">2019</button>
                   </li>
-                  <li class="archive_year_item"><a class="archive_year_link" href="#">2018</a></li>
-                  <li class="archive_year_item"><a class="archive_year_link" href="#">2017</a></li>
-                  <li class="archive_year_item"><a class="archive_year_link" href="#">2015</a></li>
-                  <li class="archive_year_item"><a class="archive_year_link" href="#">2013</a></li>
+                  <li class="archive_year_item"><button class="archive_year_link" type="button" disabled>2018</button></li>
+                  <li class="archive_year_item"><button class="archive_year_link" type="button" disabled>2017</button></li>
+                  <li class="archive_year_item"><button class="archive_year_link" type="button" disabled>2015</button></li>
+                  <li class="archive_year_item"><button class="archive_year_link" type="button" disabled>2013</button></li>
                 </ul>
               </div>
             </div>
