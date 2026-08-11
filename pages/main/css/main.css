@@ -43,12 +43,29 @@
 }
 
 .hero_panel {
+  --hero_copy_shade: 0.48;
   position: relative;
   overflow: hidden;
   width: 100%;
   min-height: 520px;
   height: 80vh;
   transition: box-shadow var(--duration_base) var(--easing_base);
+}
+
+/* 사진의 밝은 영역 위에서도 흰 카피가 안정적으로 읽히도록 텍스트가 놓이는
+   하단만 어둡힙니다. 사진 전체를 덮지 않아 원본 색감과 인물은 유지됩니다. */
+.hero_panel::before {
+  position: absolute;
+  inset: 34% 0 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(10, 10, 10, 0) 0%,
+    rgba(10, 10, 10, 0.08) 30%,
+    rgba(10, 10, 10, var(--hero_copy_shade)) 100%
+  );
+  content: "";
+  pointer-events: none;
 }
 
 /* hover 중 반대편 패널만 은은하게 어둡게 해 선택한 히어로에 시선을 모읍니다. */
@@ -78,6 +95,7 @@
    (예: "center 30%"로 하면 지금보다 사진이 조금 더 아래쪽을 기준으로 잘립니다) */
 .hero_panel_bespoke {
   --hero_img_position: center top;
+  --hero_copy_shade: 0.58;
   background-color: #f3f1ed;
 }
 
@@ -95,6 +113,7 @@
 
 /* 오른쪽 히어로 (지금 작업한 확대+이동) */
 .hero_panel_shop {
+  --hero_copy_shade: 0.42;
   position: relative;
   overflow: hidden;
 }
@@ -139,6 +158,7 @@
   font-weight: 600;
   line-height: var(--lh_display_48);
   letter-spacing: var(--ls_tight);
+  text-shadow: 0 1px 8px rgba(10, 10, 10, 0.24);
 }
 
 .hero_panel_desc {
@@ -149,6 +169,7 @@
   font-size: var(--fs_body_20);
   font-weight: 400;
   line-height: var(--lh_body_20);
+  text-shadow: 0 1px 7px rgba(10, 10, 10, 0.28);
 }
 
 .hero_panel_button {
