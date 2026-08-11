@@ -1897,16 +1897,20 @@
 
   var CARD_INTERVAL = 620;
   var MAX_VISIBLE_CARDS = 9;
-  /* 좁은 화면의 시간 기반 자동 재생에서만 사용하는 첫 카드 대기 시간입니다. */
+  /* 첫 카드가 나오기까지의 대기 시간입니다. */
   var CARD_INTRO_DELAY = 100;
   var RIGHT_STREAM_OFFSET = 0.5;
-  /* 컬렉션이 고정된 채 사진을 드러내는 실제 스크롤 거리입니다.
-     wheel 이벤트를 가로채지 않고 이 거리의 진행률을 카드 움직임에 연결합니다. */
+  /* 컬렉션이 고정돼 있는 스크롤 거리입니다.
+     ★ 사진은 이 구간에서 **스스로** 재생됩니다 — 스크롤은 섹션에 들어오고
+       빠져나가는 데만 쓰이고 카드 움직임과 연결되어 있지 않습니다.
+       길게 두면 다 본 뒤에도 스크롤을 더 해야 빠져나갑니다. */
   var COLLECTION_STICKY_HOLD = 160;
   /* 고정 연출을 켜는 조건. 좁은 화면에서는 무대가 낮아 고정할 이점이 없습니다. */
   var COLLECTION_SCROLL_MEDIA = "(min-width: 1024px) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)";
-  var COLLECTION_REVEAL_START = 0.06;
-  var COLLECTION_REVEAL_END = 0.76;
+  /* 고정 구간 진행률이 이 값을 넘으면 자동 재생을 시작합니다. 0에 가까운 값이라
+     실제로는 섹션이 화면 위에 붙는 순간과 같습니다. */
+  var COLLECTION_AUTOPLAY_START = 0.02;
+  /* 사진이 전부 드러나는 phase. 힌트 막대가 이 값 대비 진행률을 그립니다. */
   var COLLECTION_REVEAL_PHASE = 7.2;
   /* ★ 진입 안착(아래 "진입 안착" 주석 참고) 조절값.
      SHIFT — 컨테이너가 몇 px 아래에서 올라올지. 키우면 더 크게 움직입니다.
@@ -2026,8 +2030,15 @@
     setCardPosition(element, position / visibleCardCount, direction);
   }
 
-  /* 두 줄을 한 시점(phase)으로 그립니다. 시간 기반 반복과 스크롤 연출이 같은
-     경로를 쓰도록 분리해 두었습니다 — 어느 쪽이 밀든 화면 결과는 같습니다. */
+  /* 카드가 그려질 때마다 지금 phase를 알립니다. 고정 연출에서 힌트 막대가
+     이 값으로 "얼마나 드러났는지"를 그립니다. 없으면 아무 일도 하지 않습니다. */
+  var onPhaseRender = null;
+  /* 화면 안팎이 바뀐 것을 고정 연출에 알립니다. 관찰자 콜백은 비동기라
+     이미 섹션 안에서 페이지가 열린 경우 아래 scroll 리스너보다 늦게 옵니다 —
+     그때 시작 조건을 다시 보지 않으면 재생이 걸리지 않습니다. */
+  var onViewChange = null;
+
+  /* 두 줄을 한 시점(phase)으로 그립니다. */
   function renderPhase(phase) {
     leftItems.forEach(function (element, index) {
       renderStreamCard(element, index, phase, -1, leftItems.length);
@@ -2035,6 +2046,10 @@
     rightItems.forEach(function (element, index) {
       renderStreamCard(element, index, phase - RIGHT_STREAM_OFFSET, 1, rightItems.length);
     });
+
+    if (onPhaseRender) {
+      onPhaseRender(phase);
+    }
   }
 
   function render(time) {
@@ -2069,13 +2084,18 @@
     new window.IntersectionObserver(function (entries) {
       isInView = entries[0].isIntersecting && entries[0].intersectionRatio >= 0.15;
 
-      /* 데스크탑은 스크롤 진행률로 재생합니다. 모바일·터치 화면은 기존처럼
-         화면에 들어왔을 때 자동으로 재생해 빈 무대가 남지 않게 합니다. */
+      /* 데스크탑은 섹션이 화면에 고정되는 순간부터 재생합니다(아래 고정 블록).
+         모바일·터치 화면은 기존처럼 화면에 들어왔을 때 자동으로 재생해
+         빈 무대가 남지 않게 합니다. */
       if (isInView && !hasStarted && !window.matchMedia(COLLECTION_SCROLL_MEDIA).matches) {
         startCollectionStream();
       }
 
       syncPlayState();
+
+      if (onViewChange) {
+        onViewChange();
+      }
     }, { threshold: [0, 0.15] }).observe(row);
   } else {
     isInView = true;
@@ -2085,7 +2105,14 @@
   document.addEventListener("visibilitychange", syncPlayState);
 
   /* =========================================================
-     스크롤 연동 + native sticky — 카드는 진행률로 흐르고 섹션은 CSS로 머뭅니다.
+     자동 재생 + native sticky — 섹션은 CSS로 머물고, 사진은 스스로 흐릅니다.
+
+     ★ 스크롤은 "언제 시작할지"만 정합니다.
+       예전에는 고정 구간의 스크롤 진행률을 카드 phase에 그대로 연결해서,
+       사용자가 계속 스크롤해야 사진이 한 장씩 나왔습니다(수동 재생).
+       지금은 섹션이 화면 위에 붙는 순간 한 번만 시간 기반 재생을 켜고,
+       그 뒤로는 스크롤과 무관하게 rAF가 카드를 흘려보냅니다.
+       그래서 모바일 경로와 완전히 같은 재생을 씁니다 — 시작 신호만 다릅니다.
 
      GSAP pin이 section을 fixed로 바꾸던 순간의 "착 붙는" 느낌을 없애기 위해
      바깥 collection_scroll의 높이만 늘리고 브라우저 기본 sticky를 사용합니다.
@@ -2113,23 +2140,20 @@
       return Math.min(1, Math.max(0, value));
     }
 
-    function applyScrollProgress(progress) {
-      var revealProgress = clampCollectionProgress(
-        (progress - COLLECTION_REVEAL_START) /
-        (COLLECTION_REVEAL_END - COLLECTION_REVEAL_START)
-      );
-      var easedProgress = revealProgress * revealProgress * (3 - 2 * revealProgress);
+    /* 힌트 막대는 이제 "스크롤한 양"이 아니라 "재생이 얼마나 진행됐는지"입니다.
+       renderPhase가 매 프레임 불러 주므로 별도 타이머가 필요 없습니다. */
+    onPhaseRender = function (phase) {
+      var revealProgress = clampCollectionProgress(phase / COLLECTION_REVEAL_PHASE);
 
-      renderPhase(easedProgress * COLLECTION_REVEAL_PHASE);
       section.style.setProperty("--collection_reveal_progress", revealProgress.toFixed(4));
       section.classList.toggle("is_reveal_complete", revealProgress >= 0.98);
 
       if (hintText) {
         hintText.textContent = revealProgress >= 0.98
           ? "Continue scrolling"
-          : "Scroll to reveal";
+          : "Revealing";
       }
-    }
+    };
 
     /* ---------------------------------------------------------
        진입 안착 — 고정되기 **전에** 컨테이너를 먼저 제자리에 앉힙니다.
@@ -2172,12 +2196,27 @@
       }
     });
 
+    /* 섹션이 화면 위에 붙으면 자동 재생을 켭니다. startCollectionStream 안에
+       hasStarted 가드가 있어 두 번 시작되지 않습니다.
+
+       ★ isInView를 함께 봅니다. 화면 밖에서 시작하면 rAF가 돌지 않는 동안에도
+         startTime만 흘러가서, 나중에 보이는 순간 카드가 중간부터 튀어나옵니다
+         (syncPlayState의 일시정지 보정은 이미 돌고 있던 프레임에만 걸립니다). */
     function handleCollectionScroll() {
+      if (hasStarted || !isInView) {
+        return;
+      }
+
       var stageRect = scrollStage.getBoundingClientRect();
       var scrollDistance = Math.max(1, stageRect.height - window.innerHeight);
-      applyScrollProgress(clampCollectionProgress(-stageRect.top / scrollDistance));
+      var progress = clampCollectionProgress(-stageRect.top / scrollDistance);
+
+      if (progress >= COLLECTION_AUTOPLAY_START) {
+        startCollectionStream();
+      }
     }
 
+    onViewChange = handleCollectionScroll;
     window.addEventListener("scroll", handleCollectionScroll, { passive: true });
     window.addEventListener("resize", handleCollectionScroll);
     handleCollectionScroll();
@@ -2193,6 +2232,10 @@
          컨테이너가 120px 내려간 채(또는 opacity 0으로) 굳습니다. */
       window.removeEventListener("scroll", handleCollectionScroll);
       window.removeEventListener("resize", handleCollectionScroll);
+      onViewChange = null;
+      /* 힌트 훅을 남기면 좁은 화면(힌트가 display:none)에서도 매 프레임
+         CSS 변수를 쓰게 됩니다. */
+      onPhaseRender = null;
 
       if (settle.scrollTrigger) {
         settle.scrollTrigger.kill();

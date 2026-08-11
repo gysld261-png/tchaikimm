@@ -251,6 +251,7 @@ body[data-header-variant="black"] .common_header_slot {
 
 .top_button {
   --top_button_right: 12px;
+  --top_button_fill: #16332f;
   position: fixed;
   /* TOP 버튼 위치 조절: 화면 크기별 --top_button_right와 아래 bottom을 수정합니다. */
   right: var(--top_button_right);
@@ -259,14 +260,16 @@ body[data-header-variant="black"] .common_header_slot {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid var(--color_line);
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 1px solid var(--color_point);
   border-radius: 50%;
-  background-color: var(--color_bg);
-  color: var(--color_text);
+  background-color: var(--color_point);
+  color: var(--color_text_on_dark);
   font-family: var(--font_ui);
   font-size: var(--fs_ui_14);
+  isolation: isolate;
   opacity: 0;
   pointer-events: none;
   transform: translateY(12px);
@@ -274,6 +277,19 @@ body[data-header-variant="black"] .common_header_slot {
               transform var(--duration_fast) var(--easing_base),
               background-color var(--duration_fast) var(--easing_base),
               color var(--duration_fast) var(--easing_base);
+}
+
+/* 메인 Discover 버튼과 같은 아래→위 채움 레이어입니다. */
+.top_button::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: 50% 50% 0 0;
+  background-color: var(--top_button_fill);
+  translate: 0 101%;
+  transition: border-radius 0.9s cubic-bezier(0.35, 0.35, 0, 1),
+              translate 0.9s cubic-bezier(0.35, 0.35, 0, 1);
+  content: "";
 }
 
 .top_button.is_visible {
@@ -284,8 +300,13 @@ body[data-header-variant="black"] .common_header_slot {
 
 .top_button:hover,
 .top_button:focus-visible {
-  background-color: var(--color_point);
   color: var(--color_text_on_dark);
+}
+
+.top_button:hover::before,
+.top_button:focus-visible::before {
+  border-radius: 0;
+  translate: 0 0;
 }
 
 @media (min-width: 768px) {
@@ -301,7 +322,7 @@ body[data-header-variant="black"] .common_header_slot {
 }
 
 /* 1920px 발표 화면에서는 Shop과 동일하게 전체 콘텐츠를 2560px 화면 비율로 축소합니다.
-   조절: --site_view_scale만 바꾸면 됩니다. 푸터는 다른 페이지와 통일된 원래 크기를 유지합니다. */
+   조절: --site_view_scale만 바꾸면 됩니다. 푸터·팝업·TOP 버튼은 원래 크기와 화면 기준 위치를 유지합니다. */
 @media (min-width: 1850px) and (max-width: 1990px) {
   :root {
     --site_view_scale: 0.75;
@@ -315,7 +336,12 @@ body[data-header-variant="black"] .common_header_slot {
     zoom: calc(1 / var(--site_view_scale));
   }
 
-  /* 공통 zoom 안에서도 TOP 버튼은 원래 48px 크기와 화면 기준 위치를 유지합니다. */
+  /* body로 옮긴 dialog가 축소된 좌표계가 아닌 실제 화면 중앙을 사용하게 합니다. */
+  .cart_drawer {
+    zoom: calc(1 / var(--site_view_scale));
+  }
+
+  /* 공통 zoom 안에서도 TOP 버튼은 원래 56px 크기와 화면 기준 위치를 유지합니다. */
   .top_button {
     zoom: calc(1 / var(--site_view_scale));
   }
@@ -324,5 +350,9 @@ body[data-header-variant="black"] .common_header_slot {
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
+  }
+
+  .top_button::before {
+    transition-duration: 0.01ms;
   }
 }

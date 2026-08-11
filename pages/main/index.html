@@ -400,7 +400,9 @@
       <div class="collection_bottom">
         <p class="collection_desc">From everyday wearable pieces to high-fashion couture.<br>Journey through the full spectrum of our signature creations</p>
         <div class="collection_scroll_hint" aria-hidden="true">
-          <span class="collection_scroll_hint_text">Scroll to reveal</span>
+          <!-- 재생이 시작되면 js가 "Revealing" → "Continue scrolling"으로 바꿉니다.
+               이 기본값은 섹션이 아직 화면 위에 붙기 전에만 보입니다. -->
+          <span class="collection_scroll_hint_text">Scroll to enter</span>
           <span class="collection_scroll_hint_track">
             <span class="collection_scroll_hint_progress"></span>
           </span>
@@ -435,6 +437,6 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="../../common/js/common.js?v=10"></script>
   <script src="../../common/js/shop_transition.js?v=5"></script>
-<script src="js/main.js?v=26"></script>
+<script src="js/main.js?v=27"></script>
 </body>
 </html>

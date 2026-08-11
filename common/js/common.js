@@ -375,6 +375,10 @@
   var headerCart = document.querySelector(".header_cart");
   var headerCartCount = document.querySelector("[data-cart-count]");
   var cartDrawer = document.getElementById("cart_drawer");
+  /* 헤더 슬롯의 화면 축소와 분리해 dialog가 실제 뷰포트를 기준으로 배치되게 합니다. */
+  if (cartDrawer && cartDrawer.parentElement !== document.body) {
+    document.body.appendChild(cartDrawer);
+  }
   var cartDrawerCloseButtons = cartDrawer
     ? Array.prototype.slice.call(cartDrawer.querySelectorAll("[data-cart-drawer-close]"))
     : [];
