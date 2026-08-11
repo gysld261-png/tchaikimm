@@ -315,8 +315,8 @@
   .model.is_model_flow {
     /* ★ 데스크탑 진행 길이 조절 위치입니다.
        값을 줄이면 모델 섹션의 빈 여백과 도착까지 필요한 스크롤이 함께 짧아집니다.
-       현재 250dvh는 시간 지연 없이도 움직임을 긴 스크롤 거리에 나눠 천천히 보여줍니다. */
-    --model_flow_height: 250dvh;
+       현재 170dvh는 도착까지 필요한 스크롤을 더 줄여 움직임을 빠르게 보여줍니다. */
+    --model_flow_height: 170dvh;
     min-height: var(--model_flow_height);
     /* 마지막 모델이 다음 detail_head 영역까지 이어져 보이도록 세로 클리핑만 해제합니다. */
     overflow: visible;

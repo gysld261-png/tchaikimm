@@ -84,8 +84,8 @@
     var MODEL_SCROLL_LENGTH_MOBILE = 2.2;
     /* ★ 모델 좌우 이동 폭 조절 위치
        현재 화면 너비에 곱하는 비율입니다. 값을 줄이면 좌우 움직임이 차분해집니다.
-       권장 범위: 0.14 ~ 0.22 / 현재 데스크탑 0.2 */
-    var MODEL_TRAVEL_DESKTOP = 0.2;
+       권장 범위: 0.14 ~ 0.22 / 현재 데스크탑 0.14 */
+    var MODEL_TRAVEL_DESKTOP = 0.14;
     var MODEL_TRAVEL_TABLET = 0.16;
     var MODEL_TRAVEL_MOBILE = 0.1;
     /* =========================================================
