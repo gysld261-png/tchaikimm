@@ -1,6 +1,98 @@
 
 # Tchai Kim 현재 상태
 
+## ★★★ Brand — 배포에서만 섹션이 통째로 겹치던 문제 (2026-08-11)
+
+"배포 사이트로 보면 깨져서 나오고 인터랙션도 안 나온다."
+
+**로컬에서는 절대 재현되지 않는 종류의 버그**입니다. 원인을 찾고 실제로
+재현해서 고쳤습니다. 파일 2개(`pages/brand/js/brand.js` ·
+`pages/brand/index.html`)이고 **CSS와 공통 파일은 건드리지 않았습니다.**
+
+### ★★★ 원인 — 늦게 만들어진 pin이 아래 트리거를 2635px 밀어냈습니다
+
+`initMoodReveal()`은 배경 사진 `.mood_room`이 다 온 **뒤에야** mood pin을
+만듭니다("사진이 아직 안 왔는데 문이 열리면 빈 칸이 드러납니다").
+
+```js
+if (room.complete && room.naturalWidth > 0) { play(); }
+else { room.addEventListener("load", play, { once: true }); }
+```
+
+- **로컬**: `mood_inner.png`가 디스크에서 즉시 와서 `room.complete`가 이미
+  true → mood pin이 **다른 트리거보다 먼저** 만들어집니다. 정상.
+- **배포**: 사진이 늦게 도착 → `init()`이 먼저 돌아 tchaikim·heritage pin이
+  이미 만들어지고 좌표까지 굳습니다. 그 뒤 사진이 오면 mood pin이 생기며
+  GSAP이 **문서 맨 위에 `MOOD_PIN_LENGTH`(244svh = 2635px)짜리 pin-spacer를
+  끼워 넣어** 아래 전부를 밀어냅니다. 두 pin은 옛 좌표 그대로라 **실제보다
+  2635px 일찍 화면을 붙잡습니다.**
+
+그래서 kimyoungjin 글 위에 tchaikim 탭이, 그 위에 heritage 사진이 겹쳐
+보이고 "인터랙션이 안 나오는" 것처럼 보였습니다.
+
+### ★★★ `ScrollTrigger.refresh()`만으로는 안 고쳐집니다
+
+실측입니다 — refresh는 트리거를 **등록된 순서**대로 다시 재는데, 늦게
+만들어진 mood pin은 목록 맨 뒤라 tchaikim·heritage를 먼저 재고 **그 다음에**
+mood의 자리를 넣습니다. 그래서 어긋남이 그대로 남습니다.
+
+| | tchaikim | heritage |
+|---|---|---|
+| mood pin을 뒤늦게 만든 직후 | **−2635** | **−2635** |
+| `refresh()`만 | **−2635** | **−2635** |
+| `refresh()` + 0.6초 뒤 | −2635 | −2635 |
+| `refresh(true)` | −2635 | −2635 |
+| **`sort()` + `refresh()`** | **0** | **0** |
+
+### 처리 — 세 가지
+
+1. **`refreshScrollTriggers()`** = `ScrollTrigger.sort()` + `.refresh()`.
+2. **세 pin에 `refreshPriority`** — mood **2** → tchaikim **1** →
+   heritage **0**(문서에 놓인 순서). 이러면 창 크기 변경처럼 **GSAP이 스스로
+   부르는 refresh에도** 같은 순서가 적용됩니다.
+3. **부르는 자리 세 곳** — ① 사진을 기다렸다가 pin을 만든 직후
+   (`playAndRefresh`), ② `window load`, ③ `document.fonts.ready`.
+   ②③은 웹폰트·나중 사진이 높이를 바꾸는 경우까지 덮는 그물입니다
+   (bespoke.js가 이미 쓰는 방식과 같습니다).
+
+> **★ 이 페이지에 pin을 하나 더 추가하면 `refreshPriority`를 문서 순서대로
+> 다시 매기세요.** 아래쪽 pin일수록 낮은 값입니다.
+>
+> **★ `.mood_room`을 `loading="lazy"`로 바꾸지 마세요.** 지금은 `auto`라
+> 즉시 받습니다. lazy로 바꾸면 pin이 훨씬 더 늦게 만들어집니다.
+
+### 검증 — 실제로 재현하고 고친 것을 확인했습니다
+
+검증 서버에서 **`mood_inner.png`만 2500ms 늦게 보내도록** 만들어 배포의
+콜드 로드를 그대로 재현했습니다(`SLOW_MOOD_MS` 환경변수, 스크래치패드
+`serve.js`). 1920 × 1080에서 실제 페이지를 로드해 잰 값입니다.
+
+| | mood | tchaikim | heritage |
+|---|---|---|---|
+| **수정 전** (배포와 같은 코드) | 0 | **−2635** | **−2635** |
+| **수정 후** | **0** | **0** | **0** |
+
+- 수정 후 섹션 순서·간격 정상: mood 0 / kimyoungjin 3715 / tchaikim 6275 /
+  atelier 8699 / heritage 10288, **사이 간격 전부 0, 겹침 0**, 문서 높이 15864,
+  가로 스크롤 0, mood 타임라인 존재.
+- `refreshPriority`가 실제로 **2 / 1 / 0**으로 적용된 것을 확인했습니다.
+- `node --check` 통과, 콘솔 오류 0.
+- 캐시 무효화로 **`brand.js?v=2`**로 올렸습니다 — 이 파일은 그동안 버전
+  파라미터가 없어서, 안 올리면 **돌아온 방문자는 캐시된 옛 스크립트를 그대로
+  써서 계속 깨져 보입니다.**
+
+### 확인하지 못한 부분
+
+- **화면 캡처를 못 했습니다**(이 패널이 프레임을 합성하지 않습니다).
+  위 값은 전부 `ScrollTrigger` 좌표와 `getBoundingClientRect` 측정입니다.
+  **배포에 올린 뒤 실제로 스크롤해서 확인해 주세요.**
+- **1920 미만 폭은 이번 원인과 무관합니다** — mood pin은
+  `MOOD_MIN_WIDTH = 1920` 이상에서만 만들어지므로 그 아래에서는 이 어긋남이
+  애초에 생기지 않습니다(그래서 좁은 화면에서는 멀쩡해 보였을 것입니다).
+- 이 저장소의 **다른 페이지에도 같은 위험이 있는지는 확인하지 않았습니다** —
+  "사진 로드를 기다렸다가 pin을 만드는" 패턴을 쓰는 곳이 또 있으면 같은
+  증상이 납니다.
+
 ## Bespoke 예약 완료 — `done_links` 지도 링크를 `.bespoke_button`으로 (2026-08-11)
 
 "`done_links` 섹션 버튼이 너무 작다. 디자인시스템의 다른 버튼 디자인을 써 달라."

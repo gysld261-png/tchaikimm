@@ -253,6 +253,45 @@
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
+  /* ★★★ 이 함수가 없으면 **배포에서만** 페이지가 겹쳐 보입니다.
+
+     ScrollTrigger는 트리거를 만드는 그 순간의 문서 좌표로 start/end를
+     굳힙니다. 그런데 이 페이지의 mood pin은 배경 사진(.mood_room)이
+     다 온 뒤에야 만들어집니다(아래 initMoodReveal 끝부분). pin이 생기면
+     GSAP이 **문서 맨 위에 MOOD_PIN_LENGTH(244svh ≈ 2600px)짜리
+     pin-spacer를 끼워 넣어** 그 아래 모든 것을 그만큼 밀어냅니다.
+     이때 먼저 만들어져 있던 tchaikim·heritage pin은 옛 좌표를 그대로
+     들고 있어서, **실제보다 2600px 일찍 화면을 붙잡습니다** — 그 결과
+     kimyoungjin 글 위에 tchaikim 탭이, 그 위에 heritage 사진이 겹쳐
+     보입니다.
+
+     로컬에서는 사진이 디스크에서 즉시 와서 `room.complete`가 이미 true라
+     mood pin이 **다른 트리거보다 먼저** 만들어집니다. 그래서 이 문제가
+     로컬에서는 드러나지 않고 배포에서만 나타납니다.
+
+     ★★ `ScrollTrigger.refresh()`만 부르면 **고쳐지지 않습니다.** 실측으로
+     확인했습니다 — refresh는 트리거를 "등록된 순서"대로 다시 재는데,
+     늦게 만들어진 mood pin은 목록 맨 뒤라 tchaikim·heritage를 먼저 재고
+     그 다음에 mood의 자리를 넣습니다. 결과가 그대로 −2635px입니다.
+
+       refresh()만          → drift −2635 (안 고쳐짐)
+       sort() + refresh()   → drift 0
+
+     그래서 문서 순서대로 다시 정렬한 뒤에 재야 합니다. 아래 세 pin에
+     붙인 `refreshPriority`(mood 2 → tchaikim 1 → heritage 0)가 그 순서를
+     정합니다. 창 크기 변경처럼 GSAP이 스스로 부르는 refresh에도 같은
+     순서가 적용됩니다.
+
+     ★ 새 pin을 나중에 만들 일이 생기면 반드시 이걸 같이 부르세요. */
+  function refreshScrollTriggers() {
+    if (typeof window.ScrollTrigger === "undefined") {
+      return;
+    }
+
+    window.ScrollTrigger.sort();
+    window.ScrollTrigger.refresh();
+  }
+
   /* mood 문 열림. 스크립트가 body 끝에 있어 이 함수는 DOMContentLoaded를
      기다리지 않고 바로 실행됩니다 — CSS 기본값은 "다 열리고 다 보이는"
      완성된 모습이라, gsap.set()으로 닫힌 초기 상태를 최대한 빨리 되돌려야
@@ -325,7 +364,12 @@
               start: "top top",
               end: MOOD_PIN_LENGTH,
               pin: true,
-              scrub: 1
+              scrub: 1,
+              /* ★ 페이지 맨 위의 pin이라 **가장 먼저** 재야 합니다.
+                 아래 pin들(tchaikim 1 · heritage 0)이 이 pin이 만든
+                 자리까지 반영해서 자기 위치를 잡습니다. 자세한 이유는
+                 refreshScrollTriggers() 주석에 있습니다. */
+              refreshPriority: 2
             }
           });
 
@@ -400,12 +444,22 @@
           }, slideStart + REVEAL_TEXT_SLIDE_DURATION);
         }
 
-        /* 사진이 아직 안 왔는데 문이 열리면 빈 칸이 드러납니다. */
+        /* 사진이 아직 안 왔는데 문이 열리면 빈 칸이 드러납니다.
+
+           ★★★ 사진을 기다렸다가 pin을 만들 때는 **반드시**
+           refreshScrollTriggers()를 같이 불러야 합니다. 그 이유는 위
+           refreshScrollTriggers 주석에 있습니다 — 안 부르면 배포에서
+           아래 섹션들이 통째로 겹칩니다. */
+        function playAndRefresh() {
+          play();
+          refreshScrollTriggers();
+        }
+
         if (room.complete && room.naturalWidth > 0) {
           play();
         } else {
-          room.addEventListener("load", play, { once: true });
-          room.addEventListener("error", play, { once: true });
+          room.addEventListener("load", playAndRefresh, { once: true });
+          room.addEventListener("error", playAndRefresh, { once: true });
         }
       }
     );
@@ -500,7 +554,9 @@
           trigger: section,
           start: "top+=" + TCHAIKIM_PAUSE_START_OFFSET + " top",
           end: TCHAIKIM_PAUSE_LENGTH,
-          pin: true
+          pin: true,
+          /* ★ mood(2) 다음, heritage(0) 앞. 문서에 놓인 순서 그대로입니다. */
+          refreshPriority: 1
         });
 
         return function () {
@@ -575,7 +631,10 @@
             pin: true,
             scrub: 1,
             anticipatePin: 1,
-            invalidateOnRefresh: true
+            invalidateOnRefresh: true,
+            /* ★ 페이지에서 가장 아래에 있는 pin이라 **맨 나중에** 재야
+               위 두 pin이 만든 자리가 전부 반영된 좌표를 얻습니다. */
+            refreshPriority: 0
           }
         });
 
@@ -1150,5 +1209,23 @@
     document.addEventListener("DOMContentLoaded", init);
   } else {
     init();
+  }
+
+  /* 그물 — 위 mood pin 말고도 좌표를 늦게 바꾸는 것이 둘 더 있습니다.
+
+     ① 웹폰트(Montserrat / Trirong)가 늦게 적용되면 글 높이가 달라지고,
+        그 높이가 곧 각 섹션이 시작하는 스크롤 위치입니다.
+     ② 첫 화면 밖 사진들이 늦게 도착합니다.
+
+     둘 다 **로컬에서는 거의 즉시**라 드러나지 않고 배포에서만 어긋납니다.
+     refresh는 여러 번 불러도 안전합니다(같은 값이면 그대로 둡니다). */
+  if (document.readyState === "complete") {
+    refreshScrollTriggers();
+  } else {
+    window.addEventListener("load", refreshScrollTriggers, { once: true });
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(refreshScrollTriggers);
   }
 })();
