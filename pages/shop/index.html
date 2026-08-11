@@ -39,15 +39,7 @@
   <link rel="stylesheet" href="../../common/css/shop_transition.css?v=3">
   <link rel="stylesheet" href="css/shop.css?v=10">
 
-  <script>
-    try {
-      if (window.sessionStorage.getItem("tchaikim_shop_transition") === "1") {
-        document.documentElement.classList.add("has_shop_transition_entry");
-      }
-    } catch (error) {
-      /* 저장소 접근이 막히면 일반 Shop 진입으로 계속합니다. */
-    }
-  </script>
+  <script src="../../common/js/page_transition_boot.js?v=1"></script>
 
   <script type="importmap">
 {
@@ -623,20 +615,20 @@
                 <div class="card_product_media">
                   <a class="card_product_media_link" href="#" aria-hidden="true" tabindex="-1"><img loading="lazy" decoding="async" class="card_product_img" src="assets/images/product_shop_5_web.webp"
                     data-hover-src="assets/images/product_shop_5_hover_web.webp"
-                    alt="A model wearing a wool-check jacket with puff sleeves and a rounded collar"></a>
+                    alt="A model wearing the Flower Chess Geodeul Sundress, a column-length dress with diagonal panel lines and a vivid floral-check motif"></a>
                   <button class="card_product_action" type="button">
                     <img loading="lazy" decoding="async" class="card_product_action_icon" src="assets/icons/icon_heart.svg" alt="">
-                    <span class="a11y_hidden">Add Four Gracious Plants Jeogori Shirt to wishlist</span>
+                    <span class="a11y_hidden">Add Flower Chess Geodeul Sundress to wishlist</span>
                   </button>
                   <a class="card_product_action" href="#">
                     <img loading="lazy" decoding="async" class="card_product_action_icon" src="assets/icons/icon_bag.svg" alt="">
-                    <span class="a11y_hidden">View Four Gracious Plants Jeogori Shirt details</span>
+                    <span class="a11y_hidden">View Flower Chess Geodeul Sundress details</span>
                   </a>
                 </div>
                 <div class="card_product_content">
                   <div class="card_product_primary">
                     <div class="card_product_header">
-                      <h3 class="card_product_name"><a class="card_product_link" href="#">Four Gracious Plants Jeogori Shirt</a></h3>
+                      <h3 class="card_product_name"><a class="card_product_link" href="#">Flower Chess<br>Geodeul Sundress</a></h3>
                       <p class="card_product_price">$275</p>
                     </div>
                     <div class="card_product_swatches">
@@ -645,9 +637,9 @@
                     </div>
                   </div>
                   <div class="card_product_supporting">
-                    <p class="card_product_desc">Wool-check jacket with puff sleeves and a rounded collar</p>
+                    <p class="card_product_desc">A column-length sundress defined by diagonal panel lines and a vivid floral-check motif.</p>
                     <div class="card_product_tags">
-                      <span class="card_product_tag">Jeogori</span>
+                      <span class="card_product_tag">Dress</span>
                     </div>
                   </div>
                 </div>
@@ -903,7 +895,7 @@
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
   <script src="../../common/js/common.js?v=10"></script>
-  <script src="../../common/js/shop_transition.js?v=4"></script>
+  <script src="../../common/js/shop_transition.js?v=5"></script>
   <script type="module" src="js/shop.js?v=13"></script>
 </body>
 

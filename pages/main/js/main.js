@@ -902,7 +902,9 @@
     var SETTLE_THRESHOLD = 0.0008;
     var FADE_DURATION = 0.75;
     var ACTIVATION_MOVEMENT_PX = 18;
-    var CENTER_DEAD_ZONE_RATIO = 0.08;
+    var LEFT_SWITCH_RATIO = 0.44;
+    var RIGHT_SWITCH_RATIO = 0.56;
+    var SWITCH_INTENT_DELAY_MS = 100;
     var MIN_VISIBLE_RATIO = 0.65;
     var HERO_HOVER_MEDIA = "(min-width: 768px) and (hover: hover) and (prefers-reduced-motion: no-preference)";
     var canUseHoverVideo = window.matchMedia(HERO_HOVER_MEDIA).matches;
@@ -972,6 +974,8 @@
       var pointerEntryY = 0;
       var hasIntentionalPointerMove = false;
       var heroVisibilityObserver = null;
+      var switchIntentPanel = null;
+      var switchIntentTimer = null;
 
       gsap.set([panelA, panelB], { width: "50%" });
 
@@ -1105,6 +1109,34 @@
         });
       }
 
+      function clearSwitchIntent() {
+        if (switchIntentTimer !== null) {
+          window.clearTimeout(switchIntentTimer);
+          switchIntentTimer = null;
+        }
+        switchIntentPanel = null;
+      }
+
+      function schedulePanelSwitch(nextPanel) {
+        if (nextPanel === activePanel) {
+          clearSwitchIntent();
+          return;
+        }
+
+        if (switchIntentPanel === nextPanel) {
+          return;
+        }
+
+        clearSwitchIntent();
+        switchIntentPanel = nextPanel;
+        switchIntentTimer = window.setTimeout(function () {
+          var intendedPanel = switchIntentPanel;
+          switchIntentTimer = null;
+          switchIntentPanel = null;
+          applyActivePanel(intendedPanel);
+        }, SWITCH_INTENT_DELAY_MS);
+      }
+
       function isHeroMostlyVisible(rect) {
         var visibleHeight = Math.max(
           0,
@@ -1121,6 +1153,7 @@
         pointerEntryX = event.clientX;
         pointerEntryY = event.clientY;
         hasIntentionalPointerMove = false;
+        clearSwitchIntent();
       }
 
       function handleHeroPointerMove(event) {
@@ -1137,10 +1170,12 @@
           pointerEntryX = event.clientX;
           pointerEntryY = event.clientY;
           hasIntentionalPointerMove = false;
+          clearSwitchIntent();
           return;
         }
 
         if (!isHeroMostlyVisible(rect)) {
+          clearSwitchIntent();
           applyActivePanel(null);
           return;
         }
@@ -1152,22 +1187,39 @@
           hasIntentionalPointerMove = true;
         }
 
+        /* 중앙 44~56%는 현재 상태를 유지하는 완충 구간입니다. 반대편 기준선을
+           100ms 이상 넘었을 때만 전환해, 작은 포인터 흔들림에는 안정적이면서도
+           축소된 패널의 끝까지 찾아갈 필요는 없게 합니다. */
         var xRatio = (event.clientX - rect.left) / rect.width;
-        var leftBoundary = 0.5 - CENTER_DEAD_ZONE_RATIO;
-        var rightBoundary = 0.5 + CENTER_DEAD_ZONE_RATIO;
 
-        if (xRatio < leftBoundary) {
+        if (activePanel === panelA) {
+          if (xRatio > RIGHT_SWITCH_RATIO) {
+            schedulePanelSwitch(panelB);
+          } else {
+            clearSwitchIntent();
+          }
+          return;
+        }
+
+        if (activePanel === panelB) {
+          if (xRatio < LEFT_SWITCH_RATIO) {
+            schedulePanelSwitch(panelA);
+          } else {
+            clearSwitchIntent();
+          }
+          return;
+        }
+
+        if (xRatio < LEFT_SWITCH_RATIO) {
           applyActivePanel(panelA);
-        } else if (xRatio > rightBoundary) {
+        } else if (xRatio > RIGHT_SWITCH_RATIO) {
           applyActivePanel(panelB);
-        } else {
-          /* 중앙 16%에서는 어느 쪽도 쫓아오지 않고 50:50으로 돌아갑니다. */
-          applyActivePanel(null);
         }
       }
 
       function handleHeroPointerLeave() {
         hasIntentionalPointerMove = false;
+        clearSwitchIntent();
         applyActivePanel(null);
       }
 
@@ -1205,6 +1257,7 @@
         if (heroVisibilityObserver) {
           heroVisibilityObserver.disconnect();
         }
+        clearSwitchIntent();
         gsap.ticker.remove(updateRatio);
         activePanel = null;
 

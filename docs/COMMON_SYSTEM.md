@@ -232,3 +232,54 @@ Replace `YOUR-DOMAIN.com` when the deployment domain is confirmed. Put the image
 2. Keep page-specific behavior in the page folder.
 3. Announce shared breaking changes before merging.
 4. Verify Main, Shop, and Bespoke after every shared-file change.
+# 공통 페이지 진입 전환
+
+Shop 진입에서 사용하는 8단 크림 패널과 문구 리빌을 다른 페이지에서도 선택적으로
+쓸 수 있습니다. 파일을 불러오기만 해서는 실행되지 않고, **출발 링크와 도착 페이지를
+둘 다 명시적으로 설정한 경우에만** 작동합니다.
+
+## 1. 출발·도착 페이지 공통
+
+`head`에서 스타일을 불러오고, `body` 끝에서 런타임을 불러옵니다.
+
+```html
+<link rel="stylesheet" href="../../common/css/shop_transition.css?v=3">
+<!-- body 끝 -->
+<script src="../../common/js/shop_transition.js?v=5"></script>
+```
+
+## 2. 도착 페이지
+
+첫 화면이 전환 패널 아래에서 잠깐 보이지 않도록 `head` 안에서 스타일 링크 다음,
+페이지 전용 스타일보다 앞에 초기 감지 스크립트를 둡니다.
+
+```html
+<script src="../../common/js/page_transition_boot.js?v=1"></script>
+```
+
+도착 화면에서 이미지 로딩까지 기다린 뒤 패널을 열고 싶으면 해당 이미지에
+`data-page-transition-critical`을 붙입니다. 없으면 최소 연출 시간만 기다립니다.
+
+```html
+<img src="..." alt="..." data-page-transition-critical>
+```
+
+## 3. 출발 링크
+
+효과를 적용할 링크에만 `data-page-transition`과 문구를 설정합니다.
+
+```html
+<a href="../brand/index.html"
+   data-page-transition
+   data-transition-kicker="The house · Seoul"
+   data-transition-line-one="One house,"
+   data-transition-line-two="two expressions.">
+  Discover our story
+</a>
+```
+
+- 같은 출처의 실제 페이지 링크에만 작동합니다.
+- `data-transition-line-one`, `data-transition-line-two`가 큰 중앙 문구입니다.
+- 문구를 생략하면 공통 기본 문구가 사용됩니다.
+- 새 페이지에 자동 적용되지 않습니다. 위 설정을 복사한 페이지와 링크만 참여합니다.
+- 기존 Shop 링크의 `data-shop-transition`은 호환을 위해 그대로 지원합니다.

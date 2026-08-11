@@ -8,6 +8,7 @@
   window.tchaikimShopTransitionInitialized = true;
 
   var TRANSITION_KEY = "tchaikim_shop_transition";
+  var PAGE_TRANSITION_KEY = "tchaikim_page_transition";
   var DETAIL_TRANSITION_KEY = "tchaikim_shop_detail_transition";
   /* Resource warm-up runs in parallel with these shorter editorial intro timings. */
   var MIN_EXIT_DELAY_MS = 450;
@@ -18,6 +19,10 @@
   var DETAIL_MAX_WAIT_MS = 800;
   var DETAIL_ENTRY_DURATION_MS = 620;
   var isReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function normalizePath(pathname) {
+    return pathname.replace(/\/index\.html$/, "/").replace(/\/{2,}/g, "/");
+  }
 
   function createTransition() {
     var element = document.createElement("div");
@@ -47,6 +52,59 @@
   }
 
   var transition = document.querySelector(".shop_transition") || createTransition();
+
+  function setTransitionCopy(config) {
+    if (!config) {
+      return;
+    }
+
+    var kicker = transition.querySelector(".shop_transition_kicker span");
+    var phrase = transition.querySelector(".shop_transition_phrase");
+    var requestedLines = Array.isArray(config.lines) ? config.lines : [];
+    var lines = requestedLines
+      .filter(function (line) { return typeof line === "string" && line.trim(); })
+      .slice(0, 2);
+
+    if (typeof config.kicker === "string" && config.kicker.trim()) {
+      kicker.textContent = config.kicker.trim();
+    }
+
+    if (!lines.length) {
+      return;
+    }
+
+    phrase.textContent = "";
+    phrase.setAttribute("aria-label", lines.join(" "));
+
+    lines.forEach(function (line) {
+      var lineElement = document.createElement("span");
+      lineElement.className = "shop_transition_line";
+
+      line.trim().split(/\s+/).forEach(function (word) {
+        var wordElement = document.createElement("span");
+        wordElement.className = "shop_transition_word";
+        wordElement.textContent = word;
+        lineElement.appendChild(wordElement);
+      });
+
+      phrase.appendChild(lineElement);
+    });
+  }
+
+  function getPendingPageTransition() {
+    try {
+      var serializedEntry = window.sessionStorage.getItem(PAGE_TRANSITION_KEY);
+      var entry = serializedEntry ? JSON.parse(serializedEntry) : null;
+
+      if (!entry || normalizePath(entry.targetPath || "") !== normalizePath(window.location.pathname)) {
+        return null;
+      }
+
+      return entry;
+    } catch (error) {
+      return null;
+    }
+  }
 
   function wait(delay) {
     return new Promise(function (resolve) {
@@ -100,11 +158,42 @@
     ]);
   }
 
+  function warmPageEntry(targetUrl) {
+    return fetchResource(new URL(targetUrl, window.location.href).href);
+  }
+
+  function getPageTransitionConfig(link) {
+    var targetUrl;
+
+    if (!link.hasAttribute("data-page-transition")) {
+      return null;
+    }
+
+    try {
+      targetUrl = new URL(link.href, window.location.href);
+    } catch (error) {
+      return null;
+    }
+
+    if (targetUrl.origin !== window.location.origin) {
+      return null;
+    }
+
+    return {
+      targetPath: normalizePath(targetUrl.pathname),
+      kicker: link.getAttribute("data-transition-kicker") || "Tchai Kim · Seoul",
+      lines: [
+        link.getAttribute("data-transition-line-one") || "Where tradition",
+        link.getAttribute("data-transition-line-two") || "finds freedom."
+      ]
+    };
+  }
+
   function isShopLink(link) {
     var targetUrl;
     var href = link.getAttribute("href");
 
-    if (!href || href.charAt(0) === "#") {
+    if (!link.hasAttribute("data-shop-transition") || !href || href.charAt(0) === "#") {
       return false;
     }
 
@@ -168,6 +257,7 @@
 
   function handleDocumentClick(event) {
     var link = event.target.closest("a[href]");
+    var pageTransitionConfig;
 
     if (
       !link ||
@@ -185,6 +275,36 @@
     if (isCurrentShopPage() && isShopDetailLink(link)) {
       event.preventDefault();
       navigateToShopDetail(link);
+      return;
+    }
+
+    pageTransitionConfig = getPageTransitionConfig(link);
+
+    if (pageTransitionConfig) {
+      if (pageTransitionConfig.targetPath === normalizePath(window.location.pathname)) {
+        event.preventDefault();
+        return;
+      }
+
+      event.preventDefault();
+      setTransitionCopy(pageTransitionConfig);
+      setTransitionVisible();
+
+      try {
+        window.sessionStorage.setItem(PAGE_TRANSITION_KEY, JSON.stringify(pageTransitionConfig));
+      } catch (error) {
+        /* 저장소가 막혀도 출발 화면의 전환과 페이지 이동은 계속합니다. */
+      }
+
+      Promise.race([
+        Promise.all([
+          wait(isReducedMotion ? 120 : MIN_NAVIGATION_DELAY_MS),
+          warmPageEntry(link.href)
+        ]),
+        wait(MAX_WAIT_MS)
+      ]).then(function () {
+        window.location.assign(link.href);
+      });
       return;
     }
 
@@ -220,18 +340,23 @@
 
   function revealShopPage() {
     var hasTransitionEntry = document.documentElement.classList.contains("has_shop_transition_entry");
+    var pendingPageTransition = getPendingPageTransition();
 
     if (!hasTransitionEntry) {
       return;
     }
 
     document.documentElement.classList.add("is_shop_transition_ready");
+    setTransitionCopy(pendingPageTransition);
     transition.hidden = false;
     transition.classList.add("is_active");
     transition.setAttribute("aria-hidden", "false");
 
     try {
       window.sessionStorage.removeItem(TRANSITION_KEY);
+      if (pendingPageTransition) {
+        window.sessionStorage.removeItem(PAGE_TRANSITION_KEY);
+      }
     } catch (error) {
       /* 저장소가 막혀 있어도 아래 화면 공개는 계속합니다. */
     }
@@ -239,7 +364,7 @@
     /* The 3D gallery uses optimized JPG textures. Its large PNG fallback is not
        allowed to hold the intro open in browsers where WebGL is available. */
     var criticalImages = Array.prototype.slice.call(document.querySelectorAll(
-      ".hero_section_bg"
+      "[data-page-transition-critical], .hero_section_bg"
     ));
     var imagePromises = criticalImages.map(function (image) {
       if (image.complete) {
