@@ -958,26 +958,22 @@
 }
 
 /* 바탕이 옅어서(`--process_fill_color` 알파 0.16) 글자를 뒤집지 않는다.
-   활성 상태에서는 번호만 포인트 색으로 올라온다. */
-.process_step.is_active .process_step_num {
+   대신 **번호와 제목이 함께 포인트 색으로 올라온다.**
+
+   ★ 2026-08-11(사용자 요청): 제목을 `:hover`가 아니라 `.is_active`에 걸었다.
+   같은 날 hover 경로를 걷어냈기 때문이다(js의 `mouseover` 리스너 포함) —
+   이제 활성 단계를 옮기는 것은 **스크롤**이므로, 스크롤을 내리면 번호·바탕·제목이
+   한꺼번에 따라온다. **여기에 `:hover`를 다시 넣지 말 것.**
+
+   전환 시간이 둘 다 `--process_fill_duration`이라 함께 움직인다. */
+.process_step.is_active .process_step_num,
+.process_step.is_active .process_step_title {
   color: var(--color_point);
 }
 
-/* ★ 2026-08-11(사용자 요청): **마우스를 올리면 제목도 포인트 색**이 된다.
-   예전에는 번호만 바뀌어서, 행을 짚었을 때 반응이 왼쪽 끝 52px 칸에서만
-   일어났다 — 정작 읽고 있는 글씨는 그대로였다.
-
-   ★ 활성(`.is_active`)이 아니라 `:hover`에 건 이유: 넓은 화면에서는 **스크롤이
-   활성 단계를 옮깁니다**(`.is_scroll_ready` 고정 구간). 활성에 걸면 스크롤만
-   내려도 제목 색이 계속 바뀌는데, 요청은 "호버될 때"입니다. 그래서 실제로
-   포인터·키보드로 짚은 행에서만 바뀐다.
-
-   ※ 짚는 순간 js가 `is_active`도 같이 붙이므로(`mouseover`/`focusin` →
-   `setActiveKey`) 화면에서는 번호·바탕·제목이 한꺼번에 반응한다.
-
-   ★ `:focus-visible`을 함께 두는 것은 키보드도 같은 경로를 타기 때문이다 —
-   js가 `focusin`에서도 같은 단계를 켠다. 빼면 키보드 사용자만 제목 색을 못 본다. */
-.process_step_head:hover .process_step_title,
+/* ★ js가 없을 때만 의미가 있는 규칙이다. js가 살아 있으면 `focusin`이 그 단계를
+   활성으로 만들어 위 규칙이 이미 제목을 포인트 색으로 올린다. js가 죽으면 단계가
+   아예 안 바뀌므로, 이것이 키보드 사용자가 자기가 짚은 행을 알아볼 유일한 표시다. */
 .process_step_head:focus-visible .process_step_title {
   color: var(--color_point);
 }

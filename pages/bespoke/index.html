@@ -33,7 +33,9 @@
 <link rel="stylesheet" href="../../common/css/common.css">
 <link rel="stylesheet" href="../../common/css/layout.css?v=6">
   <link rel="stylesheet" href="../../common/css/shop_transition.css?v=3">
-<link rel="stylesheet" href="css/bespoke.css">
+<!-- ?v=2 — 캐시 무효화. 이 파일은 그동안 버전 파라미터가 없어서, 올리지 않으면
+     돌아온 방문자가 캐시된 옛 css를 그대로 써서 process 제목이 계속 hover에 반응한다. -->
+<link rel="stylesheet" href="css/bespoke.css?v=2">
 </head>
 <!-- ★ `data-header-variant`는 black입니다 — **페이지 첫 화면이 크림색 카피 블록**이기
      때문입니다. `common.js`는 스크롤 16px 이하에서 배경색을 재지 않고 이 값을 그대로
@@ -472,6 +474,8 @@
 <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
 <script src="../../common/js/common.js?v=10"></script>
   <script src="../../common/js/shop_transition.js?v=5"></script>
-<script src="js/bespoke.js"></script>
+<!-- ?v=2 — 캐시 무효화(css와 같은 이유). 옛 js가 캐시돼 있으면 hover 리스너가
+     그대로 살아 있어 목록 위를 지나가기만 해도 단계가 바뀐다. -->
+<script src="js/bespoke.js?v=2"></script>
 </body>
 </html>
