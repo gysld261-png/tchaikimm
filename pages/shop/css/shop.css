@@ -1330,26 +1330,6 @@
   gap: 90px;
 }
 
-.shop_more_button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 194px;
-  height: 64px;
-  padding: 15px 20px;
-  background-color: var(--color_point);
-  font-family: var(--font_body);
-  font-weight: 600;
-  font-size: 18px;
-  letter-spacing: 1.08px;
-  color: var(--color_text_on_dark);
-  text-align: center;
-}
-
-.shop_more_button:hover,
-.shop_more_button:focus-visible {
-  opacity: 0.85;
-}
 
 /* =========================================================
    motif_detail

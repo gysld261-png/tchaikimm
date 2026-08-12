@@ -438,28 +438,8 @@ html.has_cart_drawer {
   line-height: 1.7;
 }
 
-.cart_drawer_action {
-  display: flex;
+.cart_drawer_panel > .ui_button {
   flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  min-height: 54px;
-  border: 1px solid var(--color_point);
-  border-radius: 0;
-  background-color: var(--color_point);
-  color: var(--color_text_inverse);
-  font-family: var(--font_ui);
-  font-size: var(--fs_ui_14);
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  transition: background-color var(--duration_fast) var(--easing_base),
-              border-color var(--duration_fast) var(--easing_base);
-}
-
-.cart_drawer_action:hover,
-.cart_drawer_action:focus-visible {
-  border-color: var(--color_point_hover);
-  background-color: var(--color_point_hover);
 }
 
 @keyframes cart_drawer_backdrop_in {

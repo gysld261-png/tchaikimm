@@ -756,29 +756,8 @@ heritage
   color: var(--color_text);
 }
 
-.heritage_button {
+.heritage .ui_button {
   margin-top: 24px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 200px;
-  height: 60px;
-  background-color: var(--color_point);
-  font-family: var(--font_body);
-  font-weight: 600;
-  font-size: 11px;
-  line-height: 1.55;
-  letter-spacing: 2.42px;
-  color: var(--color_text_inverse);
-  text-transform: uppercase;
-  transition:
-    background-color var(--duration_base, 0.4s)
-    ease;
-}
-
-.heritage_button:hover,
-.heritage_button:focus-visible {
-  background-color: var(--color_text);
 }
 
 
@@ -1019,7 +998,7 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
      text-align:center)에서는 버튼도 같이 가운데로 와야 하는데, flex
      자식이라 auto margin이 없으면 왼쪽에 붙어 위 문단(가운데 정렬)과
      어긋나 보였습니다. */
-  .heritage_button {
+  .heritage .ui_button {
     margin-inline: auto;
   }
 
@@ -1249,7 +1228,7 @@ MOOD_MIN_WIDTH=1920, "min-width: 1920px")와 맞물리는 max-width: 1920px을
     max-width: 320px;
   }
 
-  .heritage_button {
+  .heritage .ui_button {
     width: 100%;
     max-width: 240px;
   }

@@ -610,7 +610,7 @@
         section.classList.add("is_pinned");
 
         var title = titleStage.querySelector(".heritage_headline");
-        var button = document.querySelector(".heritage_button");
+        var button = document.querySelector(".heritage .ui_button");
 
         /* 시작 상태 — 제목만 보이고 사진 세 장·오른쪽 텍스트·버튼은 투명합니다. */
         gsap.set(imageStages, { opacity: 0 });

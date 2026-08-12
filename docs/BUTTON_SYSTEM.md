@@ -3,8 +3,8 @@
 ## Current status: phase 2 - shared Button foundation
 
 The existing UI has multiple page-owned button, CTA, link-action, and selection-control
-families. The class freeze remains active while those families are migrated. Bespoke is
-the first area using the shared boxed Button foundation.
+families. The class freeze remains active while those families are migrated. Bespoke,
+Brand, Shop, Shop Detail, and the cart drawer now use the shared boxed Button foundation.
 
 From this point, do not add another page-specific interactive-control class. A new
 control must either reuse an approved class or wait for a reviewed shared component.
@@ -92,6 +92,16 @@ hover, focus, disabled, or loading states.
 
 `.bespoke_button` is no longer present in production CSS or markup. Historical references
 must migrate to `.ui_button` rather than restoring the legacy alias.
+
+## Migration status
+
+| Area | Legacy classes removed | Shared result |
+|---|---|---|
+| Bespoke | `.bespoke_button`, `.atelier_button`, `.reservation_button` | Primary, secondary, responsive large, and shared rows |
+| Brand | `.heritage_button` | Primary large; GSAP selects the shared Button inside Heritage |
+| Shop | `.shop_more_button` | Primary large |
+| Shop Detail | `.purchase_button`, `.purchase_complete_button` | Primary/secondary large and completion Primary |
+| Cart drawer | `.cart_drawer_action` | Primary medium; drawer CSS owns flex placement only |
 
 ## Planned shared families
 
