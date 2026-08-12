@@ -1,0 +1,360 @@
+@charset "utf-8";
+
+/* Shared controls used by both Collection pages.
+   Page stylesheets own only collection-specific content and section layout. */
+
+.brand_tabs {
+  position: absolute;
+  right: 0;
+  /* 히어로 윗변에서 띄우는 거리. 좁은 화면일수록 붙습니다.
+
+     ★ 헤더 높이를 더하지 않습니다. `common.css`의
+     `body[data-header-variant="black"] .common_header_slot`이 헤더 높이만큼
+     자리를 이미 잡아 두어서, 히어로 top 0이 곧 헤더 바로 아래입니다.
+     여기에 --header_height를 또 더하면 그만큼 아래로 밀립니다. */
+  top: clamp(28px, 4vw, 72px);
+  left: 0;
+  /* 영상(z-index 없음) 위, 제목과 같은 층. 서로 겹치지 않습니다. */
+  z-index: 2;
+  padding-inline: var(--layout_gutter);
+  color: var(--collection_hero_title);
+  transition: color 0.35s ease;
+}
+
+.brand_tab_list {
+  display: flex;
+  gap: clamp(22px, 3.2vw, 64px);
+  justify-content: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.brand_tab_link {
+  display: block;
+  /* 밑줄이 앉을 자리입니다. 이 값을 줄이면 글자와 선이 붙습니다. */
+  padding-bottom: 10px;
+  color: inherit;
+  font-family: var(--font_body);
+  font-size: clamp(11px, 1vw, 16px);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+  /* 두 탭이 한 줄에 나란히 서야 합니다. "TCHAI KIM YOUNG JIN"이 접히면
+     탭 높이가 달라져 밑줄 위치가 서로 어긋납니다. */
+  white-space: nowrap;
+  /* 선택되지 않은 브랜드는 옅게. 색만으로 구분하지 않도록 밑줄이 함께 붙습니다. */
+  opacity: 0.45;
+  transition: opacity var(--duration_base) ease;
+}
+
+.brand_tab_item.is_active .brand_tab_link {
+  opacity: 1;
+}
+
+.brand_tab_link:hover,
+.brand_tab_link:focus-visible {
+  opacity: 0.8;
+}
+
+.brand_tab_item.is_active .brand_tab_link:hover,
+.brand_tab_item.is_active .brand_tab_link:focus-visible {
+  opacity: 1;
+}
+
+.brand_tab_item.is_active .brand_tab_link::after {
+  display: block;
+  height: 1px;
+  margin-top: 9px;
+  background-color: currentColor;
+  content: "";
+}
+
+.brand_tabs.is_slide_ready .brand_tab_item.is_active .brand_tab_link::after {
+  display: none;
+}
+
+.brand_tab_indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: currentColor;
+  opacity: 0;
+}
+
+.brand_tabs.is_slide_ready .brand_tab_indicator {
+  opacity: 1;
+  transition:
+    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+    width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.collection_hero_title.is_on_light,
+.brand_tabs.is_on_light {
+  color: var(--collection_hero_title);
+}
+
+.collection_hero_title.is_on_dark,
+.brand_tabs.is_on_dark {
+  color: var(--color_bg);
+}
+
+.archive_year_list {
+  display: flex;
+  flex-direction: column;
+  gap: 19px;
+  align-items: flex-start;
+}
+
+.archive_year_item {
+  display: flex;
+  transition: padding-left var(--duration_base) var(--easing_base);
+}
+
+.archive_year_link {
+  display: inline-block;
+  color: var(--color_point);
+  font-family: var(--font_body);
+  font-size: 16px;
+  font-weight: 300;
+  line-height: 1;
+  text-align: left;
+  /* 왼쪽 기준으로 커져야 목록의 세로선이 흔들리지 않습니다. */
+  transform-origin: left center;
+  transition:
+    opacity var(--duration_fast) var(--easing_base),
+    transform var(--duration_base) var(--easing_base),
+    font-size var(--duration_base) var(--easing_base);
+}
+
+.archive_year_link:hover {
+  opacity: 0.6;
+  transform: scale(1.12);
+}
+
+.archive_year_item.is_active {
+  padding-left: 41px;
+}
+
+.archive_year_item.is_active .archive_year_link {
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.banner_crosslink_link {
+  display: inline-flex;
+  gap: 5px;
+  align-items: center;
+  border-bottom: 1px solid var(--color_point);
+  color: var(--color_point);
+  transition: opacity var(--duration_fast) var(--easing_base);
+}
+
+.banner_crosslink_link:hover {
+  opacity: 0.6;
+}
+
+.banner_crosslink_text {
+  font-family: var(--font_body);
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.55;
+  letter-spacing: 2.42px;
+}
+
+.banner_crosslink_icon {
+  width: 11.25px;
+  height: 9.375px;
+}
+
+.archive_more {
+  height: 27px;
+}
+
+.archive_more .banner_crosslink_text {
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.63;
+  letter-spacing: normal;
+}
+
+.archive_more .banner_crosslink_icon {
+  width: 15px;
+  height: 12.5px;
+}
+
+.asworn_tags {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+}
+
+.asworn_tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 16px;
+  border: 1px solid var(--collection_tag_line);
+  border-radius: 28px;
+  background-color: #ffffff;
+  color: var(--color_text_sub);
+  font-family: var(--font_body);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 1.04px;
+  white-space: nowrap;
+  transition: border-color var(--duration_fast) var(--easing_base),
+              color var(--duration_fast) var(--easing_base);
+}
+
+.asworn_tag:hover:not(:disabled),
+.asworn_tag:focus-visible {
+  border-color: var(--color_point);
+  color: var(--color_point);
+}
+
+.asworn_tag.is_active {
+  border-color: var(--color_point);
+  background-color: var(--color_point);
+  color: #ffffff;
+}
+
+.asworn_tag:disabled {
+  border-style: dashed;
+  opacity: 0.45;
+  cursor: default;
+}
+
+.showcase_carousel_button {
+  display: none;
+}
+
+@media (max-width:1279px) {
+  .showcase_carousel {
+      position: static;
+      width: 100%;
+      align-self: center;
+    }
+
+  .showcase_carousel_viewport {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+      height: auto;
+      aspect-ratio: 710 / 959;
+      margin-inline: auto;
+    }
+
+  .showcase_carousel_button {
+      position: absolute;
+      top: 50%;
+      z-index: 2;
+      display: flex;
+      width: 44px;
+      height: 44px;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      border-radius: 50%;
+      background-color: rgba(18, 18, 16, 0.42);
+      cursor: pointer;
+      transform: translateY(-50%);
+      transition: background-color var(--duration_fast) var(--easing_base);
+    }
+
+  .showcase_carousel_button:hover {
+      background-color: rgba(18, 18, 16, 0.72);
+    }
+
+  .showcase_carousel_prev {
+      left: 12px;
+    }
+
+  .showcase_carousel_next {
+      right: 12px;
+    }
+
+  .showcase_carousel_icon {
+      width: 15px;
+      height: 12.5px;
+      /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
+      filter: brightness(0) invert(1);
+    }
+
+  .showcase_carousel_prev .showcase_carousel_icon {
+      transform: scaleX(-1);
+    }
+
+  .archive_year_list {
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 14px 22px;
+      align-items: baseline;
+    }
+
+  .archive_year_item.is_active {
+      padding-left: 0;
+    }
+
+  .archive_more {
+      position: absolute;
+      left: 50%;
+      bottom: var(--archive_pad_bottom);
+      z-index: 30;
+      display: inline-flex;
+      width: 74%;
+      max-width: 320px;
+      height: 52px;
+      justify-content: center;
+      border: 1px solid var(--collection_tag_line);
+      border-bottom-color: var(--collection_tag_line);
+      border-radius: 30px;
+      transform: translateX(-50%);
+      transition:
+        border-color var(--duration_fast) var(--easing_base),
+        background-color var(--duration_fast) var(--easing_base);
+    }
+
+  .archive_more:hover {
+      border-color: var(--color_point);
+      opacity: 1;
+    }
+
+  .asworn_tags {
+      flex-wrap: wrap;
+      gap: 10px 12px;
+      justify-content: center;
+    }
+
+  .asworn_tag {
+      padding: 8px 16px;
+      font-size: 14px;
+    }
+
+  .asworn_list .asworn_body .banner_crosslink_link {
+      border-bottom-color: rgba(255, 255, 255, 0.55);
+      color: var(--color_text_inverse);
+    }
+
+  .asworn_list .asworn_body .banner_crosslink_icon {
+      filter: brightness(0) invert(1);
+    }
+}
+
+@media (max-width:767px) {
+  .brand_tab_list {
+      gap: 18px;
+    }
+
+  .brand_tab_link {
+      letter-spacing: 0.08em;
+    }
+
+  .archive_year_list {
+      gap: 10px 16px;
+    }
+}

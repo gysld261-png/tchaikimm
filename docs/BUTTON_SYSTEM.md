@@ -102,6 +102,7 @@ must migrate to `.ui_button` rather than restoring the legacy alias.
 | Shop | `.shop_more_button` | Primary large |
 | Shop Detail | `.purchase_button`, `.purchase_complete_button` | Primary/secondary large and completion Primary |
 | Cart drawer | `.cart_drawer_action` | Primary medium; drawer CSS owns flex placement only |
+| Collections | 23 duplicated contextual rules across two files | Shared tabs, year links, crosslinks, carousel buttons, and As Worn tags in `collection_controls.css` |
 
 ## Planned shared families
 

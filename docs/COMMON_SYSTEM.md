@@ -10,6 +10,7 @@ common/
 │  ├─ tokens.css
 │  ├─ reset.css
 │  ├─ common.css
+│  ├─ collection_controls.css
 │  └─ layout.css
 ├─ components/
 │  ├─ header.html
@@ -22,17 +23,20 @@ common/
 
 - `tokens.css`: colors, typography, layout dimensions, radii, and motion values.
 - `reset.css`: browser-default normalization only.
-- `common.css`: body defaults, accessibility helpers, focus styles, and shared small components such as `.top_button`.
+- `common.css`: body defaults, accessibility helpers, focus styles, and shared components such as `.ui_button` and `.top_button`.
+- `collection_controls.css`: shared tabs, archive links, carousel controls, crosslinks, and As Worn tags for both Collection pages.
 - `layout.css`: shared header and footer layout.
 - Page CSS (`main.css`, `shop.css`, `bespoke.css`): page-specific sections and intentional page overrides only.
 
-Load shared CSS before page CSS:
+Load shared CSS before page CSS. Feature-specific shared CSS such as
+`collection_controls.css` also loads before its page stylesheet:
 
 ```html
 <link rel="stylesheet" href="../../common/css/tokens.css">
 <link rel="stylesheet" href="../../common/css/reset.css">
 <link rel="stylesheet" href="../../common/css/common.css">
 <link rel="stylesheet" href="../../common/css/layout.css">
+<link rel="stylesheet" href="../../common/css/collection_controls.css">
 <link rel="stylesheet" href="css/page.css">
 ```
 

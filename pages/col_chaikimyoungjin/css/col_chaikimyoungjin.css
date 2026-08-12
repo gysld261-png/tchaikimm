@@ -98,111 +98,14 @@
   transform: translate(-50%, -50%);
 }
 
-/* ---------------------------------------------------------
-   brand tabs — 히어로 상단 중앙 overlay (TCHAI KIM / TCHAI KIM YOUNG JIN)
-
-   ★ 히어로 안에 absolute로 얹습니다. 히어로 높이(1182px)도, 가운데 제목의
-   `top: 50%` 기준도, 영상의 object-fit도 바뀌지 않습니다. 문서 높이도 그대로입니다.
-   탭을 히어로 밖 별도 섹션으로 빼면 이 세 가지가 전부 어긋납니다.
-
-   ★ 글자 색은 js가 영상 밝기를 읽어 정합니다(아래 is_on_light / is_on_dark).
-   여기 있는 --collection_hero_title은 영상을 읽을 수 없을 때의 기본값입니다.
-
-   ★ 자매 페이지 col_chaikim.css에 같은 블록이 있습니다. 한쪽만 고치면
-   브랜드를 오갈 때 탭이 튑니다 — 반드시 둘 다 고치세요.
-   --------------------------------------------------------- */
-
-.brand_tabs {
-  position: absolute;
-  right: 0;
-  /* 히어로 윗변에서 띄우는 거리. 좁은 화면일수록 붙습니다.
-
-     ★ 헤더 높이를 더하지 않습니다. `common.css`의
-     `body[data-header-variant="black"] .common_header_slot`이 헤더 높이만큼
-     자리를 이미 잡아 두어서, 히어로 top 0이 곧 헤더 바로 아래입니다.
-     여기에 --header_height를 또 더하면 그만큼 아래로 밀립니다. */
-  top: clamp(28px, 4vw, 72px);
-  left: 0;
-  /* 영상(z-index 없음) 위, 제목과 같은 층. 서로 겹치지 않습니다. */
-  z-index: 2;
-  padding-inline: var(--layout_gutter);
-  color: var(--collection_hero_title);
-  transition: color 0.35s ease;
-}
-
-.brand_tab_list {
-  display: flex;
-  gap: clamp(22px, 3.2vw, 64px);
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.brand_tab_link {
-  display: block;
-  /* 밑줄이 앉을 자리입니다. 이 값을 줄이면 글자와 선이 붙습니다. */
-  padding-bottom: 10px;
-  color: inherit;
-  font-family: var(--font_body);
-  font-size: clamp(11px, 1vw, 16px);
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-decoration: none;
-  /* 두 탭이 한 줄에 나란히 서야 합니다. "TCHAI KIM YOUNG JIN"이 접히면
-     탭 높이가 달라져 밑줄 위치가 서로 어긋납니다. */
-  white-space: nowrap;
-  /* 선택되지 않은 브랜드는 옅게. 색만으로 구분하지 않도록 밑줄이 함께 붙습니다. */
-  opacity: 0.45;
-  transition: opacity var(--duration_base) ease;
-}
-
-.brand_tab_item.is_active .brand_tab_link {
-  opacity: 1;
-}
-
-.brand_tab_link:hover,
-.brand_tab_link:focus-visible {
-  opacity: 0.8;
-}
-
-.brand_tab_item.is_active .brand_tab_link:hover,
-.brand_tab_item.is_active .brand_tab_link:focus-visible {
-  opacity: 1;
-}
 
 /* 폴백 밑줄 — JS가 없을 때 활성 탭 아래에 그대로 그려집니다.
    JS가 미끄러지는 밑줄을 켜면(is_slide_ready) 이쪽을 끕니다. 둘 다 보이면 겹칩니다. */
-.brand_tab_item.is_active .brand_tab_link::after {
-  display: block;
-  height: 1px;
-  margin-top: 9px;
-  background-color: currentColor;
-  content: "";
-}
 
-.brand_tabs.is_slide_ready .brand_tab_item.is_active .brand_tab_link::after {
-  display: none;
-}
 
 /* 미끄러지는 밑줄. 위치와 폭은 js가 활성 탭을 재서 인라인으로 씁니다.
    기본값이 폭 0이라 js가 켜기 전까지는 보이지 않습니다. */
-.brand_tab_indicator {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 0;
-  height: 1px;
-  background-color: currentColor;
-  opacity: 0;
-}
 
-.brand_tabs.is_slide_ready .brand_tab_indicator {
-  opacity: 1;
-  transition:
-    transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
-    width 0.5s cubic-bezier(0.22, 1, 0.36, 1);
-}
 
 /* 히어로 위 글자는 뒤에 지나가는 영상 밝기에 따라 색이 바뀝니다.
    `js`의 initHeroContrast()가 영상 프레임을 읽어 이 class를 붙입니다.
@@ -210,15 +113,7 @@
    ★ 기본값(class 없음)이 그대로 살아 있어야 합니다. 캔버스로 영상을 읽을 수
    없는 환경(교차 출처 · file:// · 영상 실패)에서는 class가 붙지 않고
    지금까지의 --collection_hero_title이 그대로 쓰입니다. */
-.collection_hero_title.is_on_light,
-.brand_tabs.is_on_light {
-  color: var(--collection_hero_title);
-}
 
-.collection_hero_title.is_on_dark,
-.brand_tabs.is_on_dark {
-  color: var(--color_bg);
-}
 
 /* 브랜드를 바꿀 때 — 떠날 때는 영상과 제목만 옅어지고 탭은 남습니다.
    탭까지 같이 사라지면 밑줄이 옮겨 가는 게 안 보입니다.
@@ -585,54 +480,18 @@
   letter-spacing: -0.48px;
 }
 
-.archive_year_list {
-  display: flex;
-  flex-direction: column;
-  gap: 19px;
-  align-items: flex-start;
-}
 
 /* inline-block 링크의 line box strut이 시안 간격(19px)을 벌리지 않도록 flex로 둡니다.
    들여쓰기는 활성 연도가 바뀔 때 부드럽게 움직입니다. */
-.archive_year_item {
-  display: flex;
-  transition: padding-left var(--duration_base) var(--easing_base);
-}
+
 
 /* 사진을 바꾸는 2019 / 2020 / 2021은 button, 아직 연결할 데이터가 없는
    나머지 연도는 기존 그대로 정적 a입니다. 두 요소가 같은 모양을 갖도록
    한 선택자에 모아 둡니다. reset.css가 button의 배경·테두리·padding을 이미 지웁니다. */
-.archive_year_link {
-  display: inline-block;
-  color: var(--color_point);
-  font-family: var(--font_body);
-  font-size: 16px;
-  font-weight: 300;
-  line-height: 1;
-  text-align: left;
-  /* 왼쪽 기준으로 커져야 목록의 세로선이 흔들리지 않습니다. */
-  transform-origin: left center;
-  transition:
-    opacity var(--duration_fast) var(--easing_base),
-    transform var(--duration_base) var(--easing_base),
-    font-size var(--duration_base) var(--easing_base);
-}
 
-.archive_year_link:hover {
-  opacity: 0.6;
-  transform: scale(1.12);
-}
 
 /* 선택된 연도는 시안대로 41px 들여쓰고 크게 표시합니다. */
-.archive_year_item.is_active {
-  padding-left: 41px;
-}
 
-.archive_year_item.is_active .archive_year_link {
-  font-size: 25px;
-  font-weight: 600;
-  line-height: 1;
-}
 
 /* 사진 5장은 서로 겹쳐 쌓입니다. 액자 없이 이미지 자체만 떠 있는 형태라
    padding / background-color / 테두리 / 기본 그림자를 두지 않습니다.
@@ -724,52 +583,9 @@
   --archive_photo_layer: 3;
 }
 
-/* =========================================================
-   banner_crosslink_link — 시안 공용 링크 컴포넌트
-   ========================================================= */
-
-.banner_crosslink_link {
-  display: inline-flex;
-  gap: 5px;
-  align-items: center;
-  border-bottom: 1px solid var(--color_point);
-  color: var(--color_point);
-  transition: opacity var(--duration_fast) var(--easing_base);
-}
-
-.banner_crosslink_link:hover {
-  opacity: 0.6;
-}
-
-.banner_crosslink_text {
-  font-family: var(--font_body);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1.55;
-  letter-spacing: 2.42px;
-}
-
-.banner_crosslink_icon {
-  width: 11.25px;
-  height: 9.375px;
-}
 
 /* archive의 링크는 시안에서 20px 아이콘 슬롯 + 16px 본문입니다. */
-.archive_more {
-  height: 27px;
-}
 
-.archive_more .banner_crosslink_text {
-  font-size: 16px;
-  font-weight: 400;
-  line-height: 1.63;
-  letter-spacing: normal;
-}
-
-.archive_more .banner_crosslink_icon {
-  width: 15px;
-  height: 12.5px;
-}
 
 /* =========================================================
    as worn — colaboration(1710:3903)
@@ -801,50 +617,12 @@
   text-align: center;
 }
 
-.asworn_tags {
-  display: flex;
-  gap: 22px;
-  align-items: center;
-}
-
-.asworn_tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px 16px;
-  border: 1px solid var(--collection_tag_line);
-  border-radius: 28px;
-  background-color: #ffffff;
-  color: var(--color_text_sub);
-  font-family: var(--font_body);
-  font-size: 13px;
-  font-weight: 500;
-  line-height: 1.38;
-  letter-spacing: 1.04px;
-  white-space: nowrap;
-  transition: border-color var(--duration_fast) var(--easing_base),
-              color var(--duration_fast) var(--easing_base);
-}
-
-.asworn_tag:hover:not(:disabled),
-.asworn_tag:focus-visible {
-  border-color: var(--color_point);
-  color: var(--color_point);
-}
 
 /* 누른 태그의 카드가 가운데에 있는 동안 그 태그를 표시합니다. */
-.asworn_tag.is_active {
-  border-color: var(--color_point);
-  background-color: var(--color_point);
-  color: #ffffff;
-}
+
 
 /* 연결할 카드가 아직 없는 태그. 색만으로 구분하지 않도록 disabled 속성도 함께 씁니다. */
-.asworn_tag:disabled {
-  border-style: dashed;
-  opacity: 0.45;
-  cursor: default;
-}
+
 
 /* 시안의 세 카드 폭 합계(2475px)가 캔버스(1920px)보다 넓습니다.
    스크롤바 없이 읽히도록 카드가 스스로 왼쪽으로 흐르는 띠로 둡니다(js/collection.js).
@@ -985,9 +763,6 @@
    버튼만 감추면 됩니다.
    ========================================================= */
 
-.showcase_carousel_button {
-  display: none;
-}
 
 /* =========================================================
    반응형 — 1279px 이하 (2026-08-09, 2차 개선)
@@ -1203,21 +978,9 @@
      좁은 화면에서는 그 흩뿌림이 성립하지 않아 다섯 장을 한 자리에 겹쳐 놓고
      <> 버튼으로 넘깁니다. */
 
-  .showcase_carousel {
-    position: static;
-    width: 100%;
-    align-self: center;
-  }
 
   /* 시안에서 가장 큰 사진(710 × 959)의 비율을 그대로 씁니다. */
-  .showcase_carousel_viewport {
-    position: relative;
-    width: 100%;
-    max-width: 460px;
-    height: auto;
-    aspect-ratio: 710 / 959;
-    margin-inline: auto;
-  }
+
 
   /* 다섯 장이 같은 자리에 겹쳐 있고 현재 한 장만 보입니다.
      visibility까지 끄는 이유: opacity만 0으로 두면 보이지 않는 사진이
@@ -1257,46 +1020,10 @@
 
   /* 버튼은 사진 좌우 안쪽에 겹쳐 둡니다. 바깥에 두면 화면이 좁아질 때
      사진을 그만큼 더 줄여야 합니다. */
-  .showcase_carousel_button {
-    position: absolute;
-    top: 50%;
-    z-index: 2;
-    display: flex;
-    width: 44px;
-    height: 44px;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid rgba(255, 255, 255, 0.55);
-    border-radius: 50%;
-    background-color: rgba(18, 18, 16, 0.42);
-    cursor: pointer;
-    transform: translateY(-50%);
-    transition: background-color var(--duration_fast) var(--easing_base);
-  }
 
-  .showcase_carousel_button:hover {
-    background-color: rgba(18, 18, 16, 0.72);
-  }
-
-  .showcase_carousel_prev {
-    left: 12px;
-  }
-
-  .showcase_carousel_next {
-    right: 12px;
-  }
-
-  .showcase_carousel_icon {
-    width: 15px;
-    height: 12.5px;
-    /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
-    filter: brightness(0) invert(1);
-  }
 
   /* 하나뿐인 svg를 좌우로 뒤집어 이전 화살표로 씁니다. */
-  .showcase_carousel_prev .showcase_carousel_icon {
-    transform: scaleX(-1);
-  }
+
 
   /* ---------- archive ----------
      레퍼런스(obsidianassembly)의 `-gc sticky`와 같은 방식입니다 —
@@ -1349,44 +1076,13 @@
   }
 
   /* 세로 목록은 자리를 너무 차지해 가로로 눕힙니다. */
-  .archive_year_list {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 14px 22px;
-    align-items: baseline;
-  }
 
-  .archive_year_item.is_active {
-    padding-left: 0;
-  }
 
   /* ★ 링크는 카드 더미 "아래"에 따로 놓입니다.
      레퍼런스의 EXPLORE OBJECTS 버튼과 같은 자리입니다 — 사진 위에 겹치지 않습니다.
      (한 번 사진 한가운데에 얹었다가 되돌렸습니다. 사진을 가려 읽기도 보기도 나빴습니다.)
      카드 폭과 같은 폭으로 두어 더미와 한 덩어리로 읽힙니다. */
-  .archive_more {
-    position: absolute;
-    left: 50%;
-    bottom: var(--archive_pad_bottom);
-    z-index: 30;
-    display: inline-flex;
-    width: 74%;
-    max-width: 320px;
-    height: 52px;
-    justify-content: center;
-    border: 1px solid var(--collection_tag_line);
-    border-bottom-color: var(--collection_tag_line);
-    border-radius: 30px;
-    transform: translateX(-50%);
-    transition:
-      border-color var(--duration_fast) var(--easing_base),
-      background-color var(--duration_fast) var(--easing_base);
-  }
 
-  .archive_more:hover {
-    border-color: var(--color_point);
-    opacity: 1;
-  }
 
   /* ---------- 카드 덱 ---------- */
 
@@ -1538,16 +1234,6 @@
     font-size: clamp(28px, 6.4vw, 48px);
   }
 
-  .asworn_tags {
-    flex-wrap: wrap;
-    gap: 10px 12px;
-    justify-content: center;
-  }
-
-  .asworn_tag {
-    padding: 8px 16px;
-    font-size: 14px;
-  }
 
   /* 카드가 서로 붙어 보이지 않도록 사이를 넓혔습니다(예전 20px). */
   .asworn_list {
@@ -1619,15 +1305,9 @@
     line-height: 1.6;
   }
 
-  .asworn_list .asworn_body .banner_crosslink_link {
-    border-bottom-color: rgba(255, 255, 255, 0.55);
-    color: var(--color_text_inverse);
-  }
 
   /* 화살표 svg가 짙은 색이라 흰색으로 뒤집습니다. */
-  .asworn_list .asworn_body .banner_crosslink_icon {
-    filter: brightness(0) invert(1);
-  }
+
 }
 
 /* =========================================================
@@ -1639,13 +1319,7 @@
      두 탭 글자 합이 화면 폭에 가까워집니다. 자간을 줄여 한 줄을 지킵니다.
      ★ 여기서 white-space를 풀면 "TCHAI KIM YOUNG JIN"이 두 줄이 되어
      두 탭의 높이가 달라지고 밑줄이 서로 다른 높이에 앉습니다. */
-  .brand_tab_list {
-    gap: 18px;
-  }
 
-  .brand_tab_link {
-    letter-spacing: 0.08em;
-  }
 
   /* 좁은 화면일수록 사진을 더 줄입니다. 화면을 꽉 채우면 스크롤이
      "사진 한 장 = 한 화면"이 되어 페이지가 끝없이 길어집니다.
@@ -1659,9 +1333,6 @@
     padding-top: clamp(64px, 14vw, 96px);
   }
 
-  .archive_year_list {
-    gap: 10px 16px;
-  }
 
   .archive_photo {
     width: 76%;
