@@ -4,5 +4,6 @@
 - [Project context](./PROJECT_CONTEXT.md): current implementation status and known issues
 - [Design analysis](./design-analysis.md): source design and screen analysis
 - [Common system](./COMMON_SYSTEM.md): shared CSS, JavaScript, layout, SEO, and page-template rules
+- [Button system](./BUTTON_SYSTEM.md): interactive-control class freeze and migration rules
 
 Repository-wide coding rules live in [`../AGENTS.md`](../AGENTS.md).

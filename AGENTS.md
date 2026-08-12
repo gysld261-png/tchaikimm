@@ -41,6 +41,7 @@
 ## CSS
 
 - 기존 CSS 변수와 디자인 토큰을 먼저 사용합니다.
+- 버튼·CTA·선택 컨트롤의 새 페이지 전용 class를 추가하지 않습니다. `docs/BUTTON_SYSTEM.md`의 동결 및 변경 절차를 따릅니다.
 - CSS class와 HTML id는 snake_case를 사용합니다.
 - 상태 class는 is_active, is_open, is_selected 형식으로 작성합니다.
 - 오류 class는 has_error 형식으로 작성합니다.
@@ -80,6 +81,7 @@
 
 ## 검증과 결과 보고
 
+- 버튼·인터랙티브 컨트롤 class 동결: `node scripts/check-button-class-freeze.mjs`
 - [실제 lint 명령]
 - [실제 테스트 명령]
 - [실제 build 명령]

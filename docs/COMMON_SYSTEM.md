@@ -36,6 +36,19 @@ Load shared CSS before page CSS:
 <link rel="stylesheet" href="css/page.css">
 ```
 
+## Button and interactive-control changes
+
+The current button families are frozen while they are migrated into shared components.
+Do not add a page-specific button, CTA, link-action, icon-action, or selection-control
+class. Follow [`BUTTON_SYSTEM.md`](./BUTTON_SYSTEM.md) and run:
+
+```powershell
+node scripts/check-button-class-freeze.mjs
+```
+
+Shared component additions and baseline changes require an explicit design-system
+decision and a documented migration path.
+
 ## JavaScript responsibilities
 
 `common/js/common.js` loads the shared header/footer and owns global navigation, newsletter, top-button, product-card, and smooth-scroll behavior. Lenis, GSAP, and ScrollTrigger are shared page dependencies; Three.js and section animations remain page-specific dependencies.
