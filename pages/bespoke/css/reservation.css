@@ -156,17 +156,17 @@
   cursor: pointer;
 }
 
-.reservation_mode_option .bespoke_button {
+.reservation_mode_option .ui_button {
   width: 100%;
 }
 
-.reservation_mode_option:has(input:checked) .bespoke_button {
+.reservation_mode_option:has(input:checked) .ui_button {
   border-color: var(--color_point);
   background-color: var(--color_point);
   color: var(--color_text_inverse);
 }
 
-.reservation_mode_option:has(input:focus-visible) .bespoke_button {
+.reservation_mode_option:has(input:focus-visible) .ui_button {
   outline: 2px solid var(--color_point);
   outline-offset: 3px;
 }

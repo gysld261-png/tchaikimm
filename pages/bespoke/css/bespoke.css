@@ -1551,32 +1551,9 @@
   font-size: var(--fs_ui_16);
 }
 
-/* 예약 버튼 — **항상 보인다.**
-
-   ★ 한 번 hover에서만 나타나게 만들었다가 사용자 결정으로 되돌렸다
-   ("원래 호버가 되도록 명령했는데 지금 모습이 좋으니 이대로 유지"). 그래서 이
-   블록은 영상 교체 이전과 완전히 같은 상태다 — 다시 숨기지 마세요.
-   되살릴 일이 생기면 `opacity` 하나로 감추되, `display: none`이나
-   `visibility: hidden`은 쓰면 안 된다(각각 글 덩어리가 튀고, 키보드 초점이
-   닿지 않아 이 밴드의 유일한 CTA에 도달할 수 없게 된다). */
-.reservation_button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+/* 공통 Button의 시각 규칙은 common.css가 맡고, 이 섹션은 배치만 정합니다. */
+.reservation .ui_button {
   margin-top: 16px;
-  padding: 20px 32px;
-  background-color: var(--color_point);
-  color: var(--color_text_inverse);
-  font-family: var(--font_ui);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  transition: opacity var(--duration_fast) var(--easing_base);
-}
-
-.reservation_button:hover,
-.reservation_button:focus-visible {
-  opacity: 0.85;
 }
 
 
@@ -1979,34 +1956,10 @@
   }
 }
 
-/* 예약 버튼 — `.reservation_button`과 같은 값이다. 그 class를 그대로 쓰지 않는 건
-   이 자리에서 위쪽 여백이 다르고, hover 방식도 달라야 하기 때문이다.
-
-   ★ hover를 opacity로 만들면 안 된다(`.reservation_button`은 그렇게 한다).
-   이 버튼의 opacity는 스크롤 타임라인이 쥐고 있어서, CSS transition이
-   같은 속성에 걸리면 매 스크롤 단계마다 전환이 끼어들어 값이 어긋난다.
-   실제로 이 버그를 겪었다 — 등장이 끝난 뒤에도 버튼만 opacity 0으로 남았다.
-   그래서 hover는 배경색으로 처리하고 opacity는 GSAP에게 온전히 넘긴다. */
-.atelier_button {
-  display: inline-flex;
+/* 공통 Button의 시각 규칙은 common.css가 맡고, GSAP은 opacity만 제어합니다. */
+.atelier .ui_button {
   align-self: flex-start;
-  align-items: center;
-  justify-content: center;
   margin-top: 8px;
-  padding: 20px 32px;
-  background-color: var(--color_point);
-  color: var(--color_text_inverse);
-  font-family: var(--font_ui);
-  font-size: 18px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  transition: background-color var(--duration_fast) var(--easing_base);
-}
-
-.atelier_button:hover,
-.atelier_button:focus-visible {
-  background-color: #1b3936; /* color-mix를 모르는 브라우저용 */
-  background-color: color-mix(in srgb, var(--color_point) 86%, #000000);
 }
 
 .atelier_place {
@@ -2343,11 +2296,9 @@
     gap: calc(8 * var(--bespoke_unit));
   }
 
-  .reservation_button {
+  .reservation .ui_button {
     align-self: flex-start;
-    min-width: calc(340 * var(--bespoke_unit));
     margin-top: calc(40 * var(--bespoke_unit));
-    padding: calc(26 * var(--bespoke_unit)) calc(32 * var(--bespoke_unit));
   }
 
   /* --- begin: 1360 -------------------------------------------------------

@@ -776,7 +776,7 @@
 .brand_stack_action {
   --brand_stack_action_bottom: 12%; /* 숫자가 클수록 버튼이 위로 올라갑니다 */
   /* 호버에서 차오르는 더 짙은 초록. 기본색과 같으면 차오르는 게 안 보입니다 */
-  --brand_stack_action_deep: #16332f;
+  --brand_stack_action_deep: var(--color_point_hover);
 
   position: absolute;
   right: 18%;

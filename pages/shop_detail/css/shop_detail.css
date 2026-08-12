@@ -5,7 +5,7 @@
   --detail_secondary: #4a4a42;
   --detail_border: #e2ddd5;
   --detail_green: #1f433f;
-  --detail_green_dark: #16332f;
+  --detail_green_dark: var(--color_point_hover);
   --detail_ivory: #f0ebe0;
 }
 

@@ -31,8 +31,149 @@ body {
   display: block;
 }
 
+/* Shared boxed action. Page styles may position it, but must not redefine its visual states. */
+.ui_button {
+  --button_focus_color: var(--button_focus_light);
+  --button_spinner_color: var(--color_point);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--button_min_width_md);
+  min-height: var(--button_height_md);
+  padding: var(--button_padding_md);
+  border: 1px solid transparent;
+  border-radius: var(--button_radius_default);
+  appearance: none;
+  font-family: var(--font_ui);
+  font-size: var(--fs_ui_16);
+  font-weight: 500;
+  line-height: 1.38;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color var(--button_motion_duration) var(--button_motion_easing),
+              border-color var(--button_motion_duration) var(--button_motion_easing),
+              color var(--button_motion_duration) var(--button_motion_easing),
+              transform var(--duration_fast) var(--button_motion_easing);
+}
+
+.ui_button.is_sm {
+  min-width: 0;
+  min-height: var(--button_height_sm);
+  padding: var(--button_padding_sm);
+  font-size: var(--fs_ui_14);
+}
+
+.ui_button.is_lg {
+  min-width: var(--button_min_width_md);
+  min-height: var(--button_height_md);
+  padding: var(--button_padding_md);
+}
+
+.ui_button.is_primary {
+  --button_spinner_color: var(--color_text_inverse);
+
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.ui_button.is_primary:hover:not(:disabled, [aria-disabled="true"], .is_loading),
+.ui_button.is_primary:focus-visible:not(:disabled, [aria-disabled="true"], .is_loading) {
+  background-color: var(--color_point_hover);
+}
+
+.ui_button.is_secondary {
+  border-color: var(--color_border);
+  background-color: var(--color_surface);
+  color: var(--color_text);
+}
+
+.ui_button.is_secondary:hover:not(:disabled, [aria-disabled="true"], .is_loading),
+.ui_button.is_secondary:focus-visible:not(:disabled, [aria-disabled="true"], .is_loading) {
+  border-color: var(--color_point);
+  background-color: var(--color_surface_subtle);
+}
+
+.ui_button.is_outline {
+  border-color: var(--color_point);
+  background-color: transparent;
+  color: var(--color_point);
+}
+
+.ui_button.is_outline:hover:not(:disabled, [aria-disabled="true"], .is_loading),
+.ui_button.is_outline:focus-visible:not(:disabled, [aria-disabled="true"], .is_loading) {
+  background-color: var(--color_point);
+  color: var(--color_text_inverse);
+}
+
+.ui_button:focus-visible {
+  outline-color: var(--button_focus_color);
+}
+
+.ui_button:active:not(:disabled, [aria-disabled="true"], .is_loading) {
+  transform: translateY(1px);
+}
+
+.ui_button:disabled,
+.ui_button[aria-disabled="true"] {
+  border-color: var(--color_border_disabled);
+  background-color: var(--color_surface_muted);
+  color: var(--color_text_subtle);
+  cursor: not-allowed;
+}
+
+.ui_button.is_loading {
+  color: transparent;
+  pointer-events: none;
+}
+
+.ui_button.is_loading::after {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--color_border);
+  border-top-color: var(--button_spinner_color);
+  border-radius: var(--button_radius_circle);
+  content: "";
+  animation: ui_button_spin 0.8s linear infinite;
+}
+
+.ui_button_row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+@media (min-width: 768px) {
+  .ui_button.is_lg {
+    min-width: var(--button_min_width_lg);
+    min-height: var(--button_height_lg);
+    padding: var(--button_padding_lg);
+  }
+
+  .ui_button_row {
+    gap: 30px;
+  }
+}
+
+@keyframes ui_button_spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui_button.is_loading::after {
+    animation: none;
+  }
+}
+
 /* Shared text-link button used across page sections. */
-.main_button {
+:is(.ui_text_button, .main_button) {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -49,8 +190,8 @@ body {
               transform var(--duration_fast) var(--easing_base);
 }
 
-.main_button::before,
-.main_button::after {
+:is(.ui_text_button, .main_button)::before,
+:is(.ui_text_button, .main_button)::after {
   position: absolute;
   right: 0;
   bottom: 0;
@@ -59,34 +200,34 @@ body {
   content: "";
 }
 
-.main_button::before {
+:is(.ui_text_button, .main_button)::before {
   background-color: var(--color_point);
   opacity: 0.22;
 }
 
-.main_button::after {
+:is(.ui_text_button, .main_button)::after {
   background-color: currentColor;
   transform: scaleX(0);
   transform-origin: left center;
   transition: transform var(--duration_base) var(--easing_base);
 }
 
-.main_button:has(.main_button_arrow_left)::after {
+:is(.ui_text_button, .main_button):has(.main_button_arrow_left)::after {
   transform-origin: right center;
 }
 
-.main_button:hover,
-.main_button:focus-visible {
-  color: #16332f;
+:is(.ui_text_button, .main_button):hover,
+:is(.ui_text_button, .main_button):focus-visible {
+  color: var(--color_point_hover);
   transform: translateY(-2px);
 }
 
-.main_button:hover::after,
-.main_button:focus-visible::after {
+:is(.ui_text_button, .main_button):hover::after,
+:is(.ui_text_button, .main_button):focus-visible::after {
   transform: scaleX(1);
 }
 
-.main_button:active {
+:is(.ui_text_button, .main_button):active {
   transform: translateY(0);
 }
 
@@ -96,18 +237,18 @@ body {
    ★ ::after(차오르는 밑줄)에는 규칙이 없습니다. 그 선은 `currentColor`라
      위의 color 두 줄만 바꾸면 기본·호버 모두 저절로 따라옵니다.
    ★ 이 modifier를 쓰는 곳은 지금 pages/main뿐입니다. 그래도 규칙을 여기 두는 것은
-     .main_button 본체가 여기 있기 때문입니다 — 한 컴포넌트를 두 파일에 쪼개면
+     :is(.ui_text_button, .main_button) 본체가 여기 있기 때문입니다 — 한 컴포넌트를 두 파일에 쪼개면
      나중에 한쪽만 고치게 됩니다. */
-.main_button.is_pink {
+:is(.ui_text_button, .main_button).is_pink {
   color: var(--color_point_pink);
 }
 
-.main_button.is_pink::before {
+:is(.ui_text_button, .main_button).is_pink::before {
   background-color: var(--color_point_pink);
 }
 
-.main_button.is_pink:hover,
-.main_button.is_pink:focus-visible {
+:is(.ui_text_button, .main_button).is_pink:hover,
+:is(.ui_text_button, .main_button).is_pink:focus-visible {
   color: var(--color_point_pink_deep);
 }
 
@@ -115,7 +256,7 @@ body {
    `:focus-visible { outline: 2px solid var(--color_point) }`이라, 두지 않으면
    핑크 버튼에 **초록 링**이 뜹니다. 밝은 쪽(#966658, 크림 대비 4.76)이 아니라
    짙은 쪽을 쓰는 것은 포커스 표시가 3:1 이상이어야 하기 때문입니다 — 5.90입니다. */
-.main_button.is_pink:focus-visible,
+:is(.ui_text_button, .main_button).is_pink:focus-visible,
 .brand_stack_action[data-brand="youngjin"]:focus-visible {
   outline-color: var(--color_point_pink_deep);
 }
@@ -127,13 +268,13 @@ body {
   transition: transform var(--duration_fast) var(--easing_base);
 }
 
-.main_button:hover .main_button_arrow_left,
-.main_button:focus-visible .main_button_arrow_left {
+:is(.ui_text_button, .main_button):hover .main_button_arrow_left,
+:is(.ui_text_button, .main_button):focus-visible .main_button_arrow_left {
   transform: translateX(-6px) scale(1.06);
 }
 
-.main_button:hover .main_button_arrow_right,
-.main_button:focus-visible .main_button_arrow_right {
+:is(.ui_text_button, .main_button):hover .main_button_arrow_right,
+:is(.ui_text_button, .main_button):focus-visible .main_button_arrow_right {
   transform: translateX(6px) scale(1.06);
 }
 
@@ -251,7 +392,7 @@ body[data-header-variant="black"] .common_header_slot {
 
 .top_button {
   --top_button_right: 12px;
-  --top_button_fill: #16332f;
+  --top_button_fill: var(--color_point_hover);
   position: fixed;
   /* TOP 버튼 위치 조절: 화면 크기별 --top_button_right와 아래 bottom을 수정합니다. */
   right: var(--top_button_right);

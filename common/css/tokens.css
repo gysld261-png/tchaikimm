@@ -7,6 +7,7 @@
   --color_text: #0a0a0a;
   --color_text_sub: #2e2e2e;
   --color_point: #1f433f;
+  --color_point_hover: #16332f;
   /* 두 번째 포인트 색(핑크). 기존 --color_point(딥그린)와 나란히 씁니다.
      ★ 기존 이름을 --color_point_green으로 바꾸지 마세요 — 9개 페이지가 쓰고 있습니다.
 
@@ -34,9 +35,7 @@
      올라가는 것과 같은 방향입니다(호버하면 더 잘 읽혀야 합니다).
      ★ 한쪽만 바꾸면 이 관계가 깨집니다. --color_point_pink를 바꾸면 이 값도
        같은 방법으로 다시 계산하세요.
-     ★ 그린 쪽 짙은 값(#16332f)은 아직 토큰이 아닙니다 — pages/main/css/main.css의
-       --brand_stack_action_deep과 common.css의 .main_button:hover에 각각 적혀
-       있습니다. 이번 범위 밖이라 그대로 뒀습니다. */
+     ★ 그린 쪽 짙은 값은 --color_point_hover로 공통 관리합니다. */
   --color_point_pink_deep: #83594d;
   --color_line: rgba(0, 0, 0, 0.5);
   --color_text_on_dark: #ffffff;
@@ -96,6 +95,22 @@
   --duration_fast: 0.2s;
   --duration_base: 0.4s;
   --easing_base: cubic-bezier(0.33, 1, 0.68, 1);
+
+  --button_height_sm: 44px;
+  --button_height_md: 56px;
+  --button_height_lg: 70px;
+  --button_min_width_md: 180px;
+  --button_min_width_lg: 260px;
+  --button_padding_sm: 10px 18px;
+  --button_padding_md: 10px 24px;
+  --button_padding_lg: 12px 32px;
+  --button_radius_default: var(--radius_button);
+  --button_radius_pill: 999px;
+  --button_radius_circle: 50%;
+  --button_focus_light: var(--color_point_hover);
+  --button_focus_dark: var(--color_surface);
+  --button_motion_duration: var(--duration_base);
+  --button_motion_easing: var(--easing_base);
 }
 
 @media (min-width: 768px) {

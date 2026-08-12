@@ -458,8 +458,8 @@ html.has_cart_drawer {
 
 .cart_drawer_action:hover,
 .cart_drawer_action:focus-visible {
-  border-color: #16332f;
-  background-color: #16332f;
+  border-color: var(--color_point_hover);
+  background-color: var(--color_point_hover);
 }
 
 @keyframes cart_drawer_backdrop_in {

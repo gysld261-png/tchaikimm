@@ -1,10 +1,10 @@
 # Button system
 
-## Current status: phase 1 ? class freeze
+## Current status: phase 2 - shared Button foundation
 
 The existing UI has multiple page-owned button, CTA, link-action, and selection-control
-families. They remain in place during phase 1 so this governance change does not alter
-the visual design or behavior of any page.
+families. The class freeze remains active while those families are migrated. Bespoke is
+the first area using the shared boxed Button foundation.
 
 From this point, do not add another page-specific interactive-control class. A new
 control must either reuse an approved class or wait for a reviewed shared component.
@@ -43,18 +43,55 @@ intentionally introduces or renames a shared component.
    baseline diff.
 5. Run the normal check again.
 
+## Approved API
+
+### Boxed Button
+
+Use `.ui_button` with exactly one visual variant.
+
+| Class | Use when | Default visual |
+|---|---|---|
+| `.is_primary` | The single strongest action in a section or step | Deep green fill, cream text |
+| `.is_secondary` | A supporting or equal-weight alternative | White surface, neutral border, dark text |
+| `.is_outline` | An action over a plain surface that needs less weight than Primary | Transparent surface, green border and text |
+
+Size is independent of visual hierarchy:
+
+| Class | Height | Minimum width | Use when |
+|---|---:|---:|---|
+| `.is_sm` | 44px | content | Compact utility actions |
+| default (md) | 56px | 180px | Standard actions |
+| `.is_lg` | 56px below 768px; 70px from 768px | 180px / 260px | Prominent page and form CTAs |
+
+`.is_loading` is visual state only. JavaScript must also set `aria-busy="true"` and
+prevent duplicate submission. Native `disabled` is preferred; links that cannot be
+activated use `aria-disabled="true"` and must suppress navigation.
+
+### Text Button
+
+Use `.ui_text_button` for a text-and-arrow action without a box. `.main_button`
+remains as a temporary compatibility alias and must not be used for new markup.
+
+Text Button supports the existing `.is_pink` tone. Primary/Secondary/Outline do not
+apply to Text Button.
+
+### Layout
+
+Use `.ui_button_row` only for wrapping and the shared gap. Page CSS may position a
+Button or set container-driven width, but must not redefine color, typography, border,
+hover, focus, disabled, or loading states.
+
 ## Existing seeds
 
 | Existing class | Current role | Direction |
 |---|---|---|
 | `.main_button` | Shared text CTA used by Main and Shop | Rename/migrate to a shared text-button API |
-| `.bespoke_button` | Primary and secondary boxed button | Use as the behavioral seed for the shared Button |
+| `.bespoke_button` | Legacy boxed-button class | Migrated to `.ui_button`; do not use in new markup |
 | `.top_button` | Unique scroll-to-top control | Keep specialized; inherit shared tokens |
 | `.brand_stack_action` | Campaign-specific animated action | Keep as a documented marketing exception |
 
-Using `.bespoke_button` on an unrelated page is not the final system. It is preferable
-to adding another one-off class only when its existing design and behavior already fit
-the intended action exactly.
+`.bespoke_button` is no longer present in production CSS or markup. Historical references
+must migrate to `.ui_button` rather than restoring the legacy alias.
 
 ## Planned shared families
 
@@ -70,7 +107,7 @@ The migration target is seven families rather than one oversized Button:
 | CardChoice | Image cards, visit modes, and time choices |
 | Select/Menu | Currency and shop-category selection |
 
-Phase 2 will define the shared Button tokens and API before any legacy CTA is migrated.
+The shared Button tokens and API are now defined. Remaining legacy CTAs migrate one page at a time.
 
 ## Minimum state and accessibility contract
 

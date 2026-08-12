@@ -7,13 +7,10 @@
     "archive_year_button",
     "archive_year_link",
     "asworn_tag",
-    "atelier_button",
     "banner_crosslink_link",
     "begin_card_link",
     "begin_card_pin",
     "begin_card_pin_glyph",
-    "bespoke_button",
-    "bespoke_button_row",
     "bespoke_check_input",
     "bespoke_check_label",
     "bespoke_choice",
@@ -67,6 +64,7 @@
     "hero_panel_button",
     "intro_skip",
     "is_active",
+    "is_lg",
     "is_next",
     "is_pink",
     "is_plain",
@@ -93,7 +91,6 @@
     "product_option",
     "purchase_button",
     "purchase_complete_button",
-    "reservation_button",
     "reservation_calendar_nav",
     "reservation_day",
     "reservation_mode_option",
@@ -121,6 +118,9 @@
     "size_guide",
     "size_unit_button",
     "tchaikim_tab",
-    "top_button"
+    "top_button",
+    "ui_button",
+    "ui_button_row",
+    "ui_text_button"
   ]
 }
