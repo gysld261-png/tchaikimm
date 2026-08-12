@@ -1018,7 +1018,7 @@
 
   if (!topButton) {
     topButton = document.createElement("button");
-    topButton.className = "top_button";
+    topButton.className = "ui_icon_button is_lg top_button";
     topButton.type = "button";
     topButton.setAttribute("aria-label", "Back to top");
     topButton.textContent = "Top";

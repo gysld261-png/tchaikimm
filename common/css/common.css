@@ -31,6 +31,35 @@ body {
   display: block;
 }
 
+/* Shared icon-only action. The child icon keeps its own visual size. */
+.ui_icon_button {
+  --icon_button_size: var(--icon_button_size_md);
+
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  width: var(--icon_button_size);
+  min-width: var(--icon_button_size);
+  height: var(--icon_button_size);
+  min-height: var(--icon_button_size);
+  padding: 0;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ui_icon_button.is_sm {
+  --icon_button_size: var(--icon_button_size_sm);
+}
+
+.ui_icon_button.is_lg {
+  --icon_button_size: var(--icon_button_size_lg);
+}
+
+.ui_icon_button:disabled,
+.ui_icon_button[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Shared boxed action. Page styles may position it, but must not redefine its visual states. */
 .ui_button {
   --button_focus_color: var(--button_focus_light);
@@ -398,11 +427,6 @@ body[data-header-variant="black"] .common_header_slot {
   right: var(--top_button_right);
   bottom: 24px;
   z-index: 40;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
   overflow: hidden;
   border: 1px solid var(--color_point);
   border-radius: 50%;

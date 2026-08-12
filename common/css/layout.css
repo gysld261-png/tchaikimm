@@ -60,16 +60,13 @@
 /* 시안에 없는 모바일 전용 메뉴 버튼 */
 .header_toggle {
   position: relative;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
 }
 
 .header_toggle_bar,
 .header_toggle_bar::before,
 .header_toggle_bar::after {
   position: absolute;
-  left: 4px;
+  left: 8px;
   width: 24px;
   height: 1px;
   background-color: var(--color_text_on_dark);
@@ -307,11 +304,6 @@
 
 .header_cart {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 25px;
-  height: 25px;
   color: var(--header_text_color);
 }
 
@@ -379,8 +371,6 @@ html.has_cart_drawer {
 
 .cart_drawer_close {
   position: relative;
-  width: 40px;
-  height: 40px;
 }
 
 .cart_drawer_close span::before,
@@ -753,15 +743,6 @@ a.footer_policy_link:hover {
 
 .footer_email_input:focus-visible {
   outline-offset: 2px;
-}
-
-.footer_email_submit {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 26px;
-  height: 26px;
 }
 
 .footer_email_submit img {

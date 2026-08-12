@@ -23,7 +23,7 @@ common/
 
 - `tokens.css`: colors, typography, layout dimensions, radii, and motion values.
 - `reset.css`: browser-default normalization only.
-- `common.css`: body defaults, accessibility helpers, focus styles, and shared components such as `.ui_button` and `.top_button`.
+- `common.css`: body defaults, accessibility helpers, focus styles, and shared components such as `.ui_button`, `.ui_icon_button`, and `.top_button`.
 - `collection_controls.css`: shared tabs, archive links, carousel controls, crosslinks, and As Worn tags for both Collection pages.
 - `layout.css`: shared header and footer layout.
 - Page CSS (`main.css`, `shop.css`, `bespoke.css`): page-specific sections and intentional page overrides only.

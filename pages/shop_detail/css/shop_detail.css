@@ -756,7 +756,7 @@ html.has_purchase_modal {
 .accordion_item.is_open .accordion_panel > p { padding-bottom: 22px; }
 
 .look_section {
-  --look-pin-size: 36px;
+  --look-pin-size: var(--icon_button_size_sm);
   --look-card-gap: 14px;
   padding: 120px 0;
 }
@@ -788,11 +788,6 @@ html.has_purchase_modal {
 .look_pin {
   position: absolute;
   z-index: 4;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--look-pin-size);
-  height: var(--look-pin-size);
   border: 0;
   border-radius: 50%;
   background: #fffdf9;

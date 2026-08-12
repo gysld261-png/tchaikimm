@@ -253,15 +253,10 @@
       position: absolute;
       top: 50%;
       z-index: 2;
-      display: flex;
-      width: 44px;
-      height: 44px;
-      align-items: center;
-      justify-content: center;
+      display: inline-grid;
       border: 1px solid rgba(255, 255, 255, 0.55);
       border-radius: 50%;
       background-color: rgba(18, 18, 16, 0.42);
-      cursor: pointer;
       transform: translateY(-50%);
       transition: background-color var(--duration_fast) var(--easing_base);
     }

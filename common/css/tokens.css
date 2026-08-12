@@ -111,6 +111,10 @@
   --button_focus_dark: var(--color_surface);
   --button_motion_duration: var(--duration_base);
   --button_motion_easing: var(--easing_base);
+
+  --icon_button_size_sm: 40px;
+  --icon_button_size_md: 44px;
+  --icon_button_size_lg: 56px;
 }
 
 @media (min-width: 768px) {

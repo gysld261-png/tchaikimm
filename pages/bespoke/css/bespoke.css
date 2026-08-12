@@ -1706,18 +1706,13 @@
    --------------------------------------------------------- */
 
 .begin_card_pin {
-  --begin_pin_size: 36px;
+  --begin_pin_size: var(--icon_button_size);
   --begin_pin_inset: 16px;
 
   position: absolute;
   z-index: 2;
   top: calc(50% - var(--begin_pin_size) / 2);
   right: calc(50% - var(--begin_pin_size) / 2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--begin_pin_size);
-  height: var(--begin_pin_size);
   border: 0;
   border-radius: 50%;
   background: var(--color_bg);
@@ -1725,7 +1720,6 @@
   font-family: var(--font_ui);
   font-size: 18px;
   line-height: 1;
-  cursor: pointer;
   transition:
     top var(--duration_base) var(--easing_base),
     right var(--duration_base) var(--easing_base),
@@ -1742,7 +1736,7 @@
 /* 터치 기기에서는 손가락에 맞게 키운다(디자인은 그대로, 크기만). */
 @media (hover: none) {
   .begin_card_pin {
-    --begin_pin_size: 44px;
+    --icon_button_size: var(--icon_button_size_md);
   }
 }
 

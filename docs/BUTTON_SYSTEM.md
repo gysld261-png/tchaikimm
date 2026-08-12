@@ -75,6 +75,21 @@ remains as a temporary compatibility alias and must not be used for new markup.
 Text Button supports the existing `.is_pink` tone. Primary/Secondary/Outline do not
 apply to Text Button.
 
+### Icon Button
+
+Use `.ui_icon_button` for icon-only controls. The shared class owns the hit area and
+centering; feature classes own icon artwork, position, surface, and specialized motion.
+
+| Size | Class | Hit area | Typical use |
+|---|---|---:|---|
+| sm | `.is_sm` | 40px | Header, footer, calendar, product actions, compact pins |
+| md | default | 44px | Carousel controls |
+| lg | `.is_lg` | 56px | TOP and other isolated floating actions |
+
+Every Icon Button requires an accessible name through `aria-label` or an
+`.a11y_hidden` text label. Decorative child images use empty `alt` or
+`aria-hidden="true"`. A feature stylesheet must not shrink the shared hit area.
+
 ### Layout
 
 Use `.ui_button_row` only for wrapping and the shared gap. Page CSS may position a
@@ -102,7 +117,8 @@ must migrate to `.ui_button` rather than restoring the legacy alias.
 | Shop | `.shop_more_button` | Primary large |
 | Shop Detail | `.purchase_button`, `.purchase_complete_button` | Primary/secondary large and completion Primary |
 | Cart drawer | `.cart_drawer_action` | Primary medium; drawer CSS owns flex placement only |
-| Collections | 23 duplicated contextual rules across two files | Shared tabs, year links, crosslinks, carousel buttons, and As Worn tags in `collection_controls.css` |
+| Collections | 50 duplicated contextual rules across two files | Shared tabs, year links, crosslinks, carousel buttons, and As Worn tags in `collection_controls.css` |
+| Icon actions | 25-44px one-off hit areas | Shared 40/44/56px API for global controls, product actions, calendar, carousel, and special pins |
 
 ## Planned shared families
 
